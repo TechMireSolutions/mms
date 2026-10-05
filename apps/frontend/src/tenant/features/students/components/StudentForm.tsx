@@ -4,7 +4,8 @@ import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { FormFooterEntityChip, FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { FormFooterEntityChip } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { StudentFormTabContent } from "@/tenant/features/students/components/StudentFormTabContent";
 import { useStudentFormState } from "@/tenant/features/students/hooks/useStudentFormState";
 import type { Student } from "@mms/shared";
@@ -29,9 +30,9 @@ export const StudentForm = (function StudentForm({
       <FormFooterEntityChip>{form.linkedContact.name}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
         {form.isFieldEnabled("grNumber") && form.studentDraft.grNumber ? (
-          <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+          <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
             {form.t("students.grPrefix")}: {form.studentDraft.grNumber}
-          </FormFooterBadge>
+          </Badge>
         ) : null}
         {form.isFieldEnabled("status") ? (
           <StatusBadge status={form.studentDraft.status || "active"} size="sm" config={form.statusBadgeConfig} />

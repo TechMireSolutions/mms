@@ -1,7 +1,7 @@
 import React from "react";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { getGenderCardAccent } from "@/lib/genderUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Student } from "@mms/shared";
@@ -29,9 +29,9 @@ export function StudentDetailHeroCard({
     >
       <StatusBadge status={student.status || "active"} config={statusBadgeConfig} />
       {student.grNumber ? (
-        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+        <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
           {t("students.grPrefix")}: {student.grNumber}
-        </FormFooterBadge>
+        </Badge>
       ) : null}
     </PersonDetailHeroCard>
   );

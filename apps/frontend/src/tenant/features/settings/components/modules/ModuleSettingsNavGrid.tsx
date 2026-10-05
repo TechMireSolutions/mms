@@ -11,8 +11,9 @@ import {
 import { resolveModuleIcon } from '@/lib/config/moduleIcons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Switch } from '@/components/ui/switch';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface ModuleToggleCardProps {
   module: ModuleDefinition;
@@ -61,7 +62,7 @@ function ModuleToggleCard({
             <p id={descId} className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p>
           </div>
           {module.required ? (
-            <SettingsMetaBadge variant="muted">{requiredLabel}</SettingsMetaBadge>
+            <Badge as="span" tone="muted" size="sm">{requiredLabel}</Badge>
           ) : (
             <Switch
               id={toggleId}
@@ -173,12 +174,12 @@ export default function ModuleSettingsNavGrid({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
-        <SettingsMetaBadge variant="primary">
+        <Badge as="span" tone="primary" size="sm">
           {t('module.system.stats', {
             enabled: moduleStats.enabled,
             total: moduleStats.total,
           })}
-        </SettingsMetaBadge>
+        </Badge>
       </div>
       <p className="text-xs text-muted-foreground">{t('module.system.hint')}</p>
       <div className="space-y-4">{blocks}</div>

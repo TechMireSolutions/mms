@@ -3,11 +3,12 @@ import { Shield, Lock } from 'lucide-react';
 import { workspaceRoleLabel } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
 import { RoleFormModal } from '@/tenant/features/users/components/RoleFormModal';
 import { RolesListSidebar } from '@/tenant/features/users/components/RolesListSidebar';
 import { useRolesPermissionsController } from '@/tenant/features/users/hooks/useRolesPermissionsController';
+import { Badge } from '@/components/ui/badge';
 
 export interface RolesPermissionsProps {
   onDirtyChange?: (dirty: boolean) => void;
@@ -80,15 +81,15 @@ export function RolesPermissions({
                   </p>
                   {displayRole.isSystem ? <Lock className="h-3 w-3 text-muted-foreground" aria-hidden /> : null}
                   {displayRole.id === 'super_admin' && !isSuperAdmin ? (
-                    <SettingsMetaBadge variant="primary">
+                    <Badge as="span" tone="primary" size="sm">
                       {t('users.permissions.superAdminProtectedBadge')}
-                    </SettingsMetaBadge>
+                    </Badge>
                   ) : null}
                 </div>
                 {canManageDisplayRole ? (
                   <div className="flex items-center gap-2">
                     {permDirty ? (
-                      <SettingsMetaBadge variant="warning">{t('users.permissions.unsaved')}</SettingsMetaBadge>
+                      <Badge as="span" tone="warning" size="sm">{t('users.permissions.unsaved')}</Badge>
                     ) : null}
                     <Button
                       type="button"

@@ -8,7 +8,7 @@ import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactA
 import { PersonIdentityMeta } from "@/components/ui/PersonIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
 import type {
   StudentsListContentMessagingRecipient,
@@ -108,9 +108,9 @@ export function renderStudentsListDesktopTableCell({
     }
     case "grNumber":
       return studentRow.grNumber ? (
-        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+        <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
           {t("students.grPrefix")}: {studentRow.grNumber}
-        </FormFooterBadge>
+        </Badge>
       ) : (
         <span className="text-sm text-muted-foreground">{emptyDash}</span>
       );

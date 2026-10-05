@@ -13,11 +13,11 @@ import CornerStyleSelector from '@/tenant/features/settings/components/CornerSty
 import { FieldHint } from '@/components/branding/BrandingShared';
 import {
   SettingsColoursBadge,
-  SettingsMetaBadge,
   SettingsPanel,
 } from '@/components/ui/SettingsShell';
 import { ThemeSettingsColoursSection } from '@/tenant/features/settings/components/ThemeSettingsColoursSection';
 import { ThemeSettingsFooterSection } from '@/tenant/features/settings/components/ThemeSettingsFooterSection';
+import { Badge } from '@/components/ui/badge';
 
 /**
  * All visual theming — display mode, brand colours, and footer (single settings tab).
@@ -93,13 +93,13 @@ export default function ThemeSettings(): React.JSX.Element {
     >
       <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
         <span className="text-muted-foreground">{t('theme.activeConfig')}:</span>
-        <SettingsMetaBadge variant="primary">{displayModeSummary}</SettingsMetaBadge>
-        <SettingsMetaBadge variant="muted">
+        <Badge as="span" tone="primary" size="sm">{displayModeSummary}</Badge>
+        <Badge as="span" tone="muted" size="sm">
           {t(
             cornerStyleLabelKey(normalizeBrandingCornerStyle(data.cornerStyle)),
             { radius: resolveBrandingCornerRadius(normalizeBrandingCornerStyle(data.cornerStyle)) }
           )}
-        </SettingsMetaBadge>
+        </Badge>
         <SettingsColoursBadge
           primaryColor={data.primaryColor}
           secondaryColor={data.secondaryColor}

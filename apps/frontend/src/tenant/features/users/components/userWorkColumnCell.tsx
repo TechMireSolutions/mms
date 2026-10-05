@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SystemUser } from "@mms/shared";
-import { SettingsMetaBadge } from "@/components/ui/SettingsShell";
+import { Badge } from "@/components/ui/badge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
   UserRoleBadge,
@@ -31,9 +31,9 @@ export function renderUserWorkColumnValue(
       return <span className="font-mono">{user.createdDate}</span>;
     case "twoFactor":
       return (
-        <SettingsMetaBadge variant={user.twoFactorEnabled ? "success" : "muted"}>
+        <Badge as="span" tone={user.twoFactorEnabled ? "success" : "muted"} size="sm">
           {user.twoFactorEnabled ? t("users.twoFactorOn") : t("users.twoFactorOff")}
-        </SettingsMetaBadge>
+        </Badge>
       );
     default:
       return emptyFallback;

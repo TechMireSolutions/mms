@@ -7,11 +7,12 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FieldErrorMessage } from '@/components/ui/FormField';
-import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { SettingsCallout } from '@/components/ui/SettingsShell';
 import { useSmsIntegrationPanel } from '@/tenant/features/settings/components/useSmsIntegrationPanel';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 /**
  * One active provider at a time — Twilio, Vonage, MSG91, Infobip, or Telesign.
@@ -67,9 +68,9 @@ export default function SmsIntegrationPanel(): React.JSX.Element {
           <p className="text-xs text-muted-foreground">{t('sms.integrationDesc')}</p>
         </div>
         {form.connected && form.lastTestOk ? (
-          <SettingsMetaBadge variant="success">{t('sms.statusConnected')}</SettingsMetaBadge>
+          <Badge as="span" tone="success" size="sm">{t('sms.statusConnected')}</Badge>
         ) : (
-          <SettingsMetaBadge variant="muted">{t('sms.statusNotConnected')}</SettingsMetaBadge>
+          <Badge as="span" tone="muted" size="sm">{t('sms.statusNotConnected')}</Badge>
         )}
       </div>
 

@@ -1,11 +1,10 @@
 import React from 'react';
 import { toTitleCase, type AppTranslationKey } from '@mms/shared';
 import {
-  FormFooterBadge,
   FormFooterEntityChip,
   FormFooterErrorChip,
-  type FormFooterBadgeTone,
 } from '@/components/ui/FormFooterChip';
+import { Badge, type BadgeTone } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface SessionFormFooterProps {
@@ -35,7 +34,7 @@ export function SessionFormFooter({
     );
   }
 
-  const statusTone: FormFooterBadgeTone =
+  const statusTone: BadgeTone =
     sessionStatus === 'active'
       ? 'success'
       : sessionStatus === 'completed'
@@ -46,8 +45,8 @@ export function SessionFormFooter({
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <FormFooterEntityChip>{sessionName}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
-        <FormFooterBadge>{sessionType}</FormFooterBadge>
-        <FormFooterBadge tone={statusTone}>{statusLabel}</FormFooterBadge>
+        <Badge as="span" tone="primary" size="sm">{sessionType}</Badge>
+        <Badge as="span" tone={statusTone} size="sm">{statusLabel}</Badge>
       </div>
     </div>
   );

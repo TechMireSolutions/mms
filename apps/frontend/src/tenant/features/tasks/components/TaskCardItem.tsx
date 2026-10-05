@@ -1,16 +1,15 @@
 /**
  * @file TaskCardItem.tsx
- * @description Work directory card for a single task (EntityCard chrome).
+ * @description Work directory card for a single task — DirectoryCard SSOT (do not hand-compose EntityCard).
  */
 
 import React from 'react';
 import { Pencil, Trash2, RotateCcw } from 'lucide-react';
 import type { TaskRecord, TaskStatus } from '@mms/shared';
 import { DataTableRowActions } from '@/components/common/data-table';
-import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
 import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
-import { EntityCard } from "@/components/ui/EntityCard";
-import { useWorkCardAction } from '@/hooks/useWorkCardAction';
+import { EntityCard } from '@/components/ui/EntityCard';
+import { DirectoryCard } from '@/components/ui/DirectoryCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TaskPriorityBadge, TaskStatusBadge } from './TaskBadges';
 import { TASK_NEXT_STATUS } from './tasksWorkBatchColumns';
@@ -31,6 +30,7 @@ export interface TaskCardItemProps {
   reducedMotion?: boolean;
 }
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function TaskCardItem({
   task,
   selectedIds,
@@ -47,13 +47,6 @@ export function TaskCardItem({
   reducedMotion = false,
 }: TaskCardItemProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { isSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
-    entity: task,
-    selectedIds,
-    onToggleSelected,
-    onView,
-    canSelect: canDelete,
-  });
 
   const assigneeLabel = task.assignees?.length
     ? task.assignees
@@ -90,51 +83,47 @@ export function TaskCardItem({
   }
 
   return (
-    <EntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <EntityCard.Header
-        id={task.id}
-        displayName={task.title}
-        isSelected={isSelected}
-        showSelect={canDelete}
-        onSelect={onSelect}
-        selectAriaLabel={t('tasks.selectTask', { name: task.title })}
-        onView={handleView}
-        viewAriaLabel={t('tasks.viewTask', { name: task.title })}
-        reducedMotion={reducedMotion}
-        subtitle={
-          isColumnVisible('priority') ? <TaskPriorityBadge priority={task.priority} /> : undefined
-        }
-      />
-
-      <EntityCard.MetaGrid>
-        {isColumnVisible('status') ? (
-          <EntityCardMetaTile label={t('tasks.status')}>
-            <TaskStatusBadge
-              status={task.status}
-              onClick={
-                canWrite && !viewingDeleted
-                  ? () => onUpdateStatus(task.id, TASK_NEXT_STATUS[task.status] || 'todo')
-                  : undefined
-              }
-            />
-          </EntityCardMetaTile>
-        ) : null}
-        {isColumnVisible('assignees') ? (
-          <EntityCardMetaTile label={t('tasks.assignees')}>{assigneeLabel}</EntityCardMetaTile>
-        ) : null}
-        {isColumnVisible('dueAt') ? (
-          <EntityCardMetaTile label={t('tasks.dueAt')}>
-            {task.dueAt ? new Date(task.dueAt).toLocaleDateString() : t('tasks.noDueDate')}
-          </EntityCardMetaTile>
-        ) : null}
-      </EntityCard.MetaGrid>
-
-      <EntityCardFooterActions
-        onView={handleView}
-        viewLabel={t('tasks.actionViewShort')}
-        viewAriaLabel={t('tasks.viewTask', { name: task.title })}
-        overflowActions={actions.length > 0 ? <DataTableRowActions actions={actions} /> : null}
-      />
-    </EntityCard>
+    <DirectoryCard
+      entity={task}
+      selectedIds={selectedIds}
+      canSelect={canDelete}
+      onToggleSelected={onToggleSelected}
+      onView={onView}
+      onEdit={onEdit}
+      reducedMotion={reducedMotion}
+      header={{
+        displayName: task.title,
+        subtitle: isColumnVisible('priority') ? (
+          <TaskPriorityBadge priority={task.priority} />
+        ) : undefined,
+      }}
+      viewLabel={t('tasks.actionViewShort')}
+      viewAriaLabel={t('tasks.viewTask', { name: task.title })}
+      metadataSlot={
+        <EntityCard.MetaGrid>
+          {isColumnVisible('status') ? (
+            <EntityCardMetaTile label={t('tasks.status')}>
+              <TaskStatusBadge
+                status={task.status}
+                onClick={
+                  canWrite && !viewingDeleted
+                    ? () => onUpdateStatus(task.id, TASK_NEXT_STATUS[task.status] || 'todo')
+                    : undefined
+                }
+              />
+            </EntityCardMetaTile>
+          ) : null}
+          {isColumnVisible('assignees') ? (
+            <EntityCardMetaTile label={t('tasks.assignees')}>{assigneeLabel}</EntityCardMetaTile>
+          ) : null}
+          {isColumnVisible('dueAt') ? (
+            <EntityCardMetaTile label={t('tasks.dueAt')}>
+              {task.dueAt ? new Date(task.dueAt).toLocaleDateString() : t('tasks.noDueDate')}
+            </EntityCardMetaTile>
+          ) : null}
+        </EntityCard.MetaGrid>
+      }
+      overflowActions={actions.length > 0 ? <DataTableRowActions actions={actions} /> : null}
+    />
   );
 }

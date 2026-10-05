@@ -4,7 +4,7 @@ import { formatDate, facultyFieldLabelKey, type Faculty } from "@mms/shared";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface FacultyIdCardItem {
@@ -92,9 +92,9 @@ export function FacultyIdCardModal({
                     </p>
                   </div>
                   {faculty.employeeId ? (
-                    <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                       {t("faculty.employeeIdPrefix")}: {faculty.employeeId}
-                    </FormFooterBadge>
+                    </Badge>
                   ) : null}
                 </div>
 

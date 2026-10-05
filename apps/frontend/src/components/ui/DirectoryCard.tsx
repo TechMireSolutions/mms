@@ -68,6 +68,8 @@ export interface DirectoryCardProps<
   actions?: ReactNode;
   /** Overflow action menu or secondary buttons. */
   overflowActions?: ReactNode;
+  /** Optional card-body click (e.g. examinations/question-bank row open). */
+  onCardClick?: () => void;
 }
 
 /**
@@ -109,6 +111,7 @@ export function DirectoryCard<
   footerLeading,
   actions,
   overflowActions,
+  onCardClick,
 }: DirectoryCardProps<TEntity, TColumn>): React.JSX.Element {
   const { t } = useTranslation();
   const systemReducedMotion = useReducedMotion();
@@ -136,6 +139,7 @@ export function DirectoryCard<
       accentClassName={accentClassName}
       className={className}
       {...action.cardProps}
+      onClick={onCardClick}
     >
       {headerSlot ?? (header ? (
         <EntityCard.Header

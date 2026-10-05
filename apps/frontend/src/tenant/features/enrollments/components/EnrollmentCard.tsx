@@ -1,12 +1,9 @@
 import React from "react";
 import type { ModuleColumnRegistryEntry, Student } from "@mms/shared";
-import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
-import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
-import { EntityCard } from "@/components/ui/EntityCard";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
 import { renderEnrollmentWorkColumnValue } from "@/tenant/features/enrollments/components/enrollmentWorkColumnCell";
@@ -35,6 +32,7 @@ export interface EnrollmentCardProps {
   openComposer: EnrollmentListContentProps["openComposer"];
 }
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function EnrollmentCard({
   enrollment,
   student,
@@ -58,73 +56,55 @@ export function EnrollmentCard({
   openComposer,
 }: EnrollmentCardProps): React.JSX.Element {
   const { t } = useTranslation();
-
-  const { isSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
-    entity: enrollment,
-    selectedIds,
-    onToggleSelected: onToggleSelectedEnrollment,
-    onView,
-    canSelect: canSelectEnrollments,
-  });
+  const name = studentDisplayName || enrollment.studentName;
 
   return (
-    <EntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <EntityCard.Header
-        id={enrollment.id}
-        displayName={studentDisplayName || enrollment.studentName}
-        isSelected={isSelected}
-        showSelect={canSelectEnrollments}
-        onSelect={onSelect}
-        selectAriaLabel={t("enrollments.table.selectEnrollment", { name: studentDisplayName })}
-        onView={handleView}
-        viewAriaLabel={`${t("enrollments.table.viewProfile")} - ${studentDisplayName}`}
-        reducedMotion={reducedMotion}
-        subtitle={
-          student?.grNumber ? (
-            <p className="text-xs font-bold text-primary">
-              {t("enrollments.detail.grNumber")}: {student.grNumber}
-            </p>
-          ) : undefined
-        }
-      />
-
-      <EntityCardMetadata
-        columns={visibleColumns}
-        keyFor={(col) => col.key}
-        labelFor={(col) => col.label}
-        renderValue={(col) =>
-          renderEnrollmentWorkColumnValue(enrollment, col.key, {
-            t,
-            students,
-            statusConfig,
-            paymentConfig,
-            formatCurrency,
-            emptyFallback: null,
-          })
-        }
-      />
-
-      <EntityCardFooterActions
-        onView={handleView}
-        viewLabel={t("enrollments.actions.viewShort")}
-        viewAriaLabel={`${t("enrollments.table.viewProfile")} - ${studentDisplayName}`}
-        overflowActions={
-          <EnrollmentRowActions
-            enrollment={enrollment}
-            student={student}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            showDeleted={showDeleted}
-            hideViewItem
-            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
-            onView={onView}
-            onCancel={onCancel}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            openComposer={openComposer}
-          />
-        }
-      />
-    </EntityCard>
+    <DirectoryCard
+      entity={enrollment}
+      selectedIds={selectedIds}
+      canSelect={canSelectEnrollments}
+      onToggleSelected={onToggleSelectedEnrollment}
+      onView={onView}
+      reducedMotion={reducedMotion}
+      header={{
+        displayName: name,
+        subtitle: student?.grNumber ? (
+          <p className="text-xs font-bold text-primary">
+            {t("enrollments.detail.grNumber")}: {student.grNumber}
+          </p>
+        ) : undefined,
+      }}
+      viewLabel={t("enrollments.actions.viewShort")}
+      viewAriaLabel={`${t("enrollments.table.viewProfile")} - ${name}`}
+      columns={visibleColumns}
+      keyFor={(col) => col.key}
+      labelFor={(col) => col.label}
+      renderValue={(col) =>
+        renderEnrollmentWorkColumnValue(enrollment, col.key, {
+          t,
+          students,
+          statusConfig,
+          paymentConfig,
+          formatCurrency,
+          emptyFallback: null,
+        })
+      }
+      overflowActions={
+        <EnrollmentRowActions
+          enrollment={enrollment}
+          student={student}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          hideViewItem
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
+          onView={onView}
+          onCancel={onCancel}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          openComposer={openComposer}
+        />
+      }
+    />
   );
 }

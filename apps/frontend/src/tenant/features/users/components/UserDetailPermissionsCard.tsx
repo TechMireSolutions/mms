@@ -2,9 +2,10 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 import type { filterRbacModulesForSettings, PermissionAction } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
+import { Badge } from '@/components/ui/badge';
 
 export interface UserDetailPermissionsCardProps {
   effectivePerms: Record<string, PermissionAction[]>;
@@ -32,9 +33,14 @@ export function UserDetailPermissionsCard({
                 <div key={mod.id} className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="font-semibold text-foreground">{t(mod.labelKey)}</span>
                   {perms.map((action) => (
-                    <SettingsMetaBadge key={`${mod.id}-${action}`} variant="muted">
+                    <Badge
+                      key={`${mod.id}-${action}`}
+                      as="span"
+                      tone="muted"
+                      size="sm"
+                    >
                       {t(`users.permission.${action}`)}
-                    </SettingsMetaBadge>
+                    </Badge>
                   ))}
                 </div>
               );

@@ -1,10 +1,10 @@
 import { type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  FormFooterBadge,
   FormFooterEntityChip,
   FormFooterErrorChip,
 } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 
 import type { QuestionFormDraft } from "./questionFormTypes";
 
@@ -29,12 +29,12 @@ export function QuestionFormFooterSummary({ questionDraft }: QuestionFormFooterS
         {questionDraft.text}
       </FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
-        <FormFooterBadge className="capitalize">
+        <Badge as="span" tone="primary" size="sm" className="capitalize">
           {t(`questionBank.type.${questionDraft.type}` as AppTranslationKey)}
-        </FormFooterBadge>
-        <FormFooterBadge tone="info" className="capitalize">
+        </Badge>
+        <Badge as="span" size="sm" tone="info" className="capitalize">
           {t(`questionBank.difficulty.${questionDraft.difficulty}` as AppTranslationKey)}
-        </FormFooterBadge>
+        </Badge>
       </div>
     </div>
   );

@@ -4,12 +4,11 @@ import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
-import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
 import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
 import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { EntityCard } from "@/components/ui/EntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { Payment } from '@/lib/data/financeData';
 
@@ -28,6 +27,7 @@ export interface PaymentsListCardsProps {
   allSelected?: boolean;
 }
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 function PaymentCard({
   payment,
   isColumnVisible,
@@ -54,12 +54,7 @@ function PaymentCard({
   reducedMotion: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const { isSelected, onSelect, cardProps } = useWorkCardAction({
-    entity: payment,
-    selectedIds,
-    onToggleSelected: onTogglePayment,
-    canSelect: canDelete,
-  });
+  const displayName = payment.studentName || t("finance.payments");
 
   const trailingActions = canDelete ? (
     <Button
@@ -77,59 +72,51 @@ function PaymentCard({
   ) : null;
 
   return (
-    <EntityCard
-      key={payment.id}
-      isSelected={isSelected}
+    <DirectoryCard
+      entity={payment}
+      selectedIds={selectedIds}
+      canSelect={canDelete}
+      onToggleSelected={onTogglePayment}
       reducedMotion={reducedMotion}
       accentClassName="bg-success/60 group-hover:bg-success"
-      {...cardProps}
-    >
-      <EntityCard.Header
-        id={payment.id}
-        displayName={payment.studentName || t("finance.payments")}
-        isSelected={isSelected}
-        showSelect={canDelete}
-        onSelect={onSelect}
-        selectAriaLabel={t("finance.trash.selectPayment", { id: payment.id })}
-        reducedMotion={reducedMotion}
-        subtitle={
+      header={{
+        displayName,
+        subtitle:
           isColumnVisible("invoice") && payment.invoiceId
             ? <p className="font-mono text-xs text-muted-foreground truncate">{payment.invoiceId}</p>
-            : undefined
-        }
-      />
-
-      <EntityCard.MetaGrid>
-        {isColumnVisible("amount") && (
-          <EntityCardMetaTile label={t('finance.columns.amount')}>
-            <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("date") && (
-          <EntityCardMetaTile label={t('finance.columns.paymentDate')}>
-            {formatDate(payment.date)}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("method") && (
-          <EntityCardMetaTile label={t('finance.columns.method')}>
-            <StatusBadge status={payment.method} config={methodConfig} size="sm" />
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("receivedBy") && (
-          <EntityCardMetaTile label={t('finance.columns.receivedBy')}>
-            {payment.receivedBy || '—'}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("note") && (
-          <EntityCardMetaTile label={t('finance.columns.note')}>
-            {payment.note || '—'}
-          </EntityCardMetaTile>
-        )}
-      </EntityCard.MetaGrid>
-
-      {/* Footer rendered unconditionally — preserves border-divider chrome when canDelete=false. */}
-      <EntityCardFooterActions actions={trailingActions} />
-    </EntityCard>
+            : undefined,
+      }}
+      metadataSlot={
+        <EntityCard.MetaGrid>
+          {isColumnVisible("amount") && (
+            <EntityCardMetaTile label={t('finance.columns.amount')}>
+              <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("date") && (
+            <EntityCardMetaTile label={t('finance.columns.paymentDate')}>
+              {formatDate(payment.date)}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("method") && (
+            <EntityCardMetaTile label={t('finance.columns.method')}>
+              <StatusBadge status={payment.method} config={methodConfig} size="sm" />
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("receivedBy") && (
+            <EntityCardMetaTile label={t('finance.columns.receivedBy')}>
+              {payment.receivedBy || '—'}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("note") && (
+            <EntityCardMetaTile label={t('finance.columns.note')}>
+              {payment.note || '—'}
+            </EntityCardMetaTile>
+          )}
+        </EntityCard.MetaGrid>
+      }
+      actions={trailingActions}
+    />
   );
 }
 

@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Badge, type BadgeTone } from "@/components/ui/badge";
-
-export type FormFooterBadgeTone = BadgeTone;
+import { Badge } from "@/components/ui/badge";
 
 export interface FormFooterEntityChipProps {
   children: ReactNode;
@@ -29,27 +27,6 @@ export function FormFooterEntityChip({
     >
       {children}
     </span>
-  );
-}
-
-export interface FormFooterBadgeProps {
-  children: ReactNode;
-  tone?: FormFooterBadgeTone;
-  className?: string;
-  title?: string;
-}
-
-/** Soft tone pill — thin adapter over shared Badge. */
-export function FormFooterBadge({
-  children,
-  tone = "primary",
-  className,
-  title,
-}: FormFooterBadgeProps): React.JSX.Element {
-  return (
-    <Badge as="span" tone={tone} size="sm" title={title} className={className}>
-      {children}
-    </Badge>
   );
 }
 

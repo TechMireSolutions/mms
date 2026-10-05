@@ -3,9 +3,7 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   FormFooterEntityChip,
-  FormFooterBadge,
   FormFooterErrorChip,
-  type FormFooterBadgeTone,
 } from "./FormFooterChip";
 
 describe("FormFooterChip Components", () => {
@@ -23,28 +21,6 @@ describe("FormFooterChip Components", () => {
     });
   });
 
-  describe("FormFooterBadge", () => {
-    const tones: FormFooterBadgeTone[] = [
-      "primary",
-      "warning",
-      "destructive",
-      "info",
-      "success",
-      "muted",
-    ];
-
-    it.each(tones)("renders with tone %s", (tone) => {
-      const html = renderToStaticMarkup(
-        <FormFooterBadge tone={tone} title={`Badge: ${tone}`}>
-          {tone}
-        </FormFooterBadge>,
-      );
-
-      expect(html).toContain(tone);
-      expect(html).toContain(`title="Badge: ${tone}"`);
-    });
-  });
-
   describe("FormFooterErrorChip", () => {
     it("renders destructive error chip with role status and title", () => {
       const html = renderToStaticMarkup(
@@ -58,7 +34,6 @@ describe("FormFooterChip Components", () => {
       expect(html).toContain('title="First name is required"');
       expect(html).toContain("bg-destructive/10");
       expect(html).toContain("text-destructive");
-      expect(html).toContain("border-destructive/20");
     });
   });
 });

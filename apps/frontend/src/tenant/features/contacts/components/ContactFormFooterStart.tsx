@@ -2,10 +2,10 @@ import type React from "react";
 import { getDisplayName, type AppTranslationKey, type Contact } from "@mms/shared";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
-  FormFooterBadge,
   FormFooterEntityChip,
   FormFooterErrorChip,
 } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 
 type FormDraft = ReturnType<typeof useContactFormDraft>;
 
@@ -33,49 +33,49 @@ export function ContactFormFooterStart({
       <FormFooterEntityChip>{getDisplayName(contactDraft)}</FormFooterEntityChip>
       <div className="flex flex-wrap items-center gap-1.5">
         {collectionCounts.filledPhones > 0 && (
-          <FormFooterBadge tone="primary">
+          <Badge as="span" size="sm" tone="primary">
             {collectionCounts.filledPhones} {t("contacts.form.tabPhones")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledEmails > 0 && (
-          <FormFooterBadge tone="warning">
+          <Badge as="span" size="sm" tone="warning">
             {collectionCounts.filledEmails} {t("contacts.form.tabEmails")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledAddresses > 0 && (
-          <FormFooterBadge tone="success">
+          <Badge as="span" size="sm" tone="success">
             {collectionCounts.filledAddresses} {t("contacts.form.tabAddresses")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledSocials > 0 && (
-          <FormFooterBadge tone="info">
+          <Badge as="span" size="sm" tone="info">
             {collectionCounts.filledSocials} {t("contacts.form.tabSocials")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledEducation > 0 && (
-          <FormFooterBadge tone="info">
+          <Badge as="span" size="sm" tone="info">
             {collectionCounts.filledEducation} {t("contacts.form.tabEducation")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledExperience > 0 && (
-          <FormFooterBadge tone="muted">
+          <Badge as="span" size="sm" tone="muted">
             {collectionCounts.filledExperience} {t("contacts.form.tabExperience")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledSkills > 0 && (
-          <FormFooterBadge tone="success">
+          <Badge as="span" size="sm" tone="success">
             {collectionCounts.filledSkills} {t("contacts.form.tabSkills")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledRelationships > 0 && (
-          <FormFooterBadge tone="destructive">
+          <Badge as="span" size="sm" tone="destructive">
             {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}
-          </FormFooterBadge>
+          </Badge>
         )}
         {collectionCounts.filledBankDetails > 0 && (
-          <FormFooterBadge tone="primary">
+          <Badge as="span" size="sm" tone="primary">
             {collectionCounts.filledBankDetails} {t("contacts.form.tabBankDetails")}
-          </FormFooterBadge>
+          </Badge>
         )}
       </div>
     </div>

@@ -9,6 +9,8 @@
  * 4. Zero selectedCount: 0 shortcut stubs in converged tenant page controllers.
  * 5. Zero hand-rolled <Table>/<table> data tables in tenant/platform features outside the
  *    reviewed allowlist — directories and catalogs use DataTable / WorkBatchTable.
+ * 6. Zero outer `<EntityCard` shells in Work-directory card composites — use DirectoryCard
+ *    (EntityCard remains the primitive under DirectoryCard / *CardHeader slots).
  *
  * Spec: docs/superpowers/specs/2026-09-24-work-directory-convergence-design.md §5
  * Norms: mms-module-architecture.mdc §3/§7, mms-dry.mdc §1.
@@ -47,6 +49,7 @@ const retiredShellImports = [];
 const cssDualRenderSites = [];
 const stubShortcutSites = [];
 const rawTableSites = [];
+const entityCardOuterSites = [];
 
 /**
  * Structured report, ledger, editor, matrix, and print tables: rows are not a filterable
@@ -72,6 +75,28 @@ const RAW_TABLE_ALLOWLIST = new Set([
   'apps/frontend/src/tenant/features/reports/components/QuestionBankSummaryDataGrid.tsx',
   'apps/frontend/src/tenant/features/users/components/PermissionMatrixDesktopTable.tsx',
 ]);
+
+/**
+ * Non-directory / workshop / report card shells still on raw EntityCard.
+ * Work-directory *Card* composites must use DirectoryCard instead.
+ */
+const ENTITY_CARD_OUTER_ALLOWLIST = new Set([
+  'apps/frontend/src/tenant/features/attendance/components/MarkAttendanceStudentCard.tsx',
+  'apps/frontend/src/tenant/features/obligations/components/ObligationsRepDuesCardsView.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/GeneralLedgerCardsView.tsx',
+]);
+
+const WORK_CARD_COMPOSITE =
+  /(CardItem\.tsx|Card\.tsx|ListCards\.tsx|CardsView\.tsx|Cards\.tsx)$/;
+const WORK_CARD_SLOT =
+  /(CardHeader|CardActions|CardMetadata|CardSections|CardAnswer|CardInfo|CardItem\.test)/;
+
+function isWorkCardCompositeFile(rel) {
+  const base = path.basename(rel);
+  if (!rel.endsWith('.tsx') || TEST_FILE.test(rel)) return false;
+  if (WORK_CARD_SLOT.test(base)) return false;
+  return WORK_CARD_COMPOSITE.test(base);
+}
 
 const CONVERGED_MODULES = new Set([
   'contacts',
@@ -115,6 +140,16 @@ for (const rel of files) {
     rawTableSites.push(rel);
   }
 
+  // Work-directory card composites must use DirectoryCard, not outer <EntityCard>
+  if (
+    isFeatureSource &&
+    isWorkCardCompositeFile(rel) &&
+    !ENTITY_CARD_OUTER_ALLOWLIST.has(rel) &&
+    /<EntityCard[\s>/]/.test(content)
+  ) {
+    entityCardOuterSites.push(rel);
+  }
+
   // Check tenant feature directory *List.tsx for CSS dual-rendering (table/cards rendered simultaneously via CSS)
   if (rel.startsWith('apps/frontend/src/tenant/features/') && rel.endsWith('List.tsx') && !TEST_FILE.test(rel)) {
     if (/\bmd:hidden\b/.test(content) && (/\bmd:block\b/.test(content) || /\bmd:flex\b/.test(content) || /\bhidden\s+md:/.test(content))) {
@@ -153,6 +188,12 @@ const checks = [
     count: rawTableSites.length,
     violators: rawTableSites,
     norm: 'mms-dry.mdc §1 (Data tables)',
+  },
+  {
+    name: 'Outer EntityCard in Work card composites (use DirectoryCard)',
+    count: entityCardOuterSites.length,
+    violators: entityCardOuterSites,
+    norm: 'mms-module-architecture.mdc §7 (DirectoryCard SSOT)',
   },
 ];
 

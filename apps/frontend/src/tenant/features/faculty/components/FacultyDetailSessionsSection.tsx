@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FacultyAssignedClassItem } from "@/lib/faculty/facultyAssignment";
@@ -92,9 +92,9 @@ export function FacultyDetailSessionsSection({
                   </h5>
                 </div>
                 {typeLabel ? (
-                  <FormFooterBadge tone="primary" className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider shrink-0">
+                  <Badge as="span" size="sm" tone="primary" className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider shrink-0">
                     {typeLabel}
-                  </FormFooterBadge>
+                  </Badge>
                 ) : null}
               </div>
 

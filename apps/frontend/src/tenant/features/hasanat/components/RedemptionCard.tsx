@@ -1,10 +1,10 @@
 import React from "react";
 import { Star } from "lucide-react";
-import type { HTMLMotionProps } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { formatDate } from "@mms/shared";
 import type { Redemption } from "@/lib/data/hasanatData";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useWorkCardAction } from "@/hooks/useWorkCardAction";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { EntityCard } from "@/components/ui/EntityCard";
 import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 
@@ -14,17 +14,13 @@ export interface RedemptionCardProps {
   motionProps?: HTMLMotionProps<"div">;
 }
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function RedemptionCard({
   redemption,
   columnVisible,
   motionProps,
 }: RedemptionCardProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { cardProps } = useWorkCardAction({
-    entity: redemption,
-    selectedIds: [],
-    canSelect: false,
-  });
 
   const subtitle = columnVisible("pointsUsed") ? (
     <div className="flex shrink-0 items-center gap-1 mt-0.5">
@@ -35,38 +31,39 @@ export function RedemptionCard({
     </div>
   ) : undefined;
 
-  return (
-    <EntityCard
+  const card = (
+    <DirectoryCard
+      entity={redemption}
+      canSelect={false}
       className="space-y-3 p-4"
-      {...cardProps}
-      {...motionProps}
-    >
-      <EntityCard.Header
-        id={redemption.id}
-        displayName={redemption.studentName || "—"}
-        subtitle={subtitle}
-        isSelected={false}
-        onSelect={() => {}}
-        selectAriaLabel=""
-        showSelect={false}
-      />
-      <EntityCard.MetaGrid className="pt-2 border-t border-border/40 ms-0">
-        {columnVisible("reward") && (
-          <EntityCardMetaTile label={t("hasanat.columns.redemption.reward")}>
-            <span className="break-words">{redemption.reward}</span>
-          </EntityCardMetaTile>
-        )}
-        {columnVisible("date") && (
-          <EntityCardMetaTile label={t("hasanat.columns.redemption.date")}>
-            <span className="font-mono">{formatDate(redemption.date)}</span>
-          </EntityCardMetaTile>
-        )}
-        {columnVisible("approvedBy") && (
-          <EntityCardMetaTile label={t("hasanat.columns.redemption.approvedBy")}>
-            <span className="break-words">{redemption.approvedBy || "—"}</span>
-          </EntityCardMetaTile>
-        )}
-      </EntityCard.MetaGrid>
-    </EntityCard>
+      header={{
+        displayName: redemption.studentName || "—",
+        subtitle,
+        showSelect: false,
+      }}
+      metadataSlot={
+        <EntityCard.MetaGrid className="pt-2 border-t border-border/40 ms-0">
+          {columnVisible("reward") && (
+            <EntityCardMetaTile label={t("hasanat.columns.redemption.reward")}>
+              <span className="break-words">{redemption.reward}</span>
+            </EntityCardMetaTile>
+          )}
+          {columnVisible("date") && (
+            <EntityCardMetaTile label={t("hasanat.columns.redemption.date")}>
+              <span className="font-mono">{formatDate(redemption.date)}</span>
+            </EntityCardMetaTile>
+          )}
+          {columnVisible("approvedBy") && (
+            <EntityCardMetaTile label={t("hasanat.columns.redemption.approvedBy")}>
+              <span className="break-words">{redemption.approvedBy || "—"}</span>
+            </EntityCardMetaTile>
+          )}
+        </EntityCard.MetaGrid>
+      }
+      footer={false}
+    />
   );
+
+  if (!motionProps) return card;
+  return <motion.div {...motionProps}>{card}</motion.div>;
 }

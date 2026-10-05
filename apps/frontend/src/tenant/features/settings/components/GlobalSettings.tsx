@@ -24,10 +24,10 @@ import TimezoneSelect from '@/tenant/features/settings/components/TimezoneSelect
 import { GlobalSettingsSecuritySection } from '@/tenant/features/settings/components/GlobalSettingsSecuritySection';
 import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
+import { Badge } from '@/components/ui/badge';
 import {
   SettingsCallout,
   SettingsFieldGroup,
-  SettingsMetaBadge,
   SettingsPanel,
   SettingsToggleRow,
 } from '@/components/ui/SettingsShell';
@@ -135,13 +135,13 @@ export default function GlobalSettings(): React.JSX.Element {
               <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
                 <span className="text-muted-foreground">{t('global.notificationsActiveChannel')}:</span>
                 {notificationChannel === 'email' && (
-                  <SettingsMetaBadge variant="primary">{t('global.notificationsChannelEmail')}</SettingsMetaBadge>
+                  <Badge as="span" tone="primary" size="sm">{t('global.notificationsChannelEmail')}</Badge>
                 )}
                 {notificationChannel === 'sms' && (
-                  <SettingsMetaBadge variant="primary">{t('global.notificationsChannelSms')}</SettingsMetaBadge>
+                  <Badge as="span" tone="primary" size="sm">{t('global.notificationsChannelSms')}</Badge>
                 )}
                 {notificationChannel === 'none' && (
-                  <SettingsMetaBadge variant="warning">{t('global.notificationsChannelNone')}</SettingsMetaBadge>
+                  <Badge as="span" tone="warning" size="sm">{t('global.notificationsChannelNone')}</Badge>
                 )}
               </div>
               <SettingsToggleRow

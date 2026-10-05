@@ -5,7 +5,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
@@ -37,9 +37,9 @@ export default function BackupHistorySection({
           <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
           <span className="text-xs font-semibold text-foreground">{t('backup.historyTitle')}</span>
         </div>
-        <SettingsMetaBadge variant={backups.length > 0 ? 'primary' : 'muted'}>
+        <Badge as="span" tone={backups.length > 0 ? 'primary' : 'muted'} size="sm">
           {t('backup.historyCount', { count: backups.length, max: BACKUP_HISTORY_MAX })}
-        </SettingsMetaBadge>
+        </Badge>
       </div>
 
       <div className="divide-y divide-border/40">

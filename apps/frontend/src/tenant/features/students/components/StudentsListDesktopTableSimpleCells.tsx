@@ -1,5 +1,5 @@
 import { calcAge, formatDate, type Student } from "@mms/shared";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { StudentsListContentTableProps } from "@/tenant/features/students/components/studentsListTypes";
@@ -41,13 +41,13 @@ export function renderStudentSessionsCell({
         </span>
       ) : (
         sessionNames.map((sessionName, idx) => (
-          <FormFooterBadge
+          <Badge as="span" size="sm"
             key={`${sessionName}-${idx}`}
             tone="primary"
             className="px-1.5 py-0.5 rounded-full font-medium"
           >
             {sessionName}
-          </FormFooterBadge>
+          </Badge>
         ))
       )}
     </div>

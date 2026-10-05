@@ -64,7 +64,7 @@ export function assignmentHierarchySql(
         n.position_id, n.is_primary, n.start_date, n.end_date, n.workspace_subdomain,
         tree.depth + 1, array_append(tree.path, n.id), array_append(tree.faculty_path, n.faculty_id),
         n.id = ANY(tree.path) OR n.faculty_id = ANY(tree.faculty_path)
-      FROM eligible n JOIN tree ON TRUE
+      FROM tree
       ${edge}
       WHERE NOT tree.is_cycle AND tree.depth < ${maxDepth}
         AND n.position_id IS NOT NULL

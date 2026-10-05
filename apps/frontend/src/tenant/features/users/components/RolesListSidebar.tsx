@@ -8,8 +8,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { UserRoleBadge } from '@/tenant/features/users/components/UserBadges';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
+import { Badge } from '@/components/ui/badge';
 
 export interface RolesListSidebarProps {
   roles: WorkspaceRole[];
@@ -72,12 +73,12 @@ export function RolesListSidebar({
                 {workspaceRole.isSystem ? (
                   <UserRoleBadge roleId={workspaceRole.id} />
                 ) : (
-                  <SettingsMetaBadge variant={workspaceRole.badgeVariant}>
+                  <Badge as="span" tone={workspaceRole.badgeVariant} size="sm">
                     {workspaceRoleLabel(workspaceRole, t)}
-                  </SettingsMetaBadge>
+                  </Badge>
                 )}
                 {workspaceRole.isSystem ? (
-                  <SettingsMetaBadge variant="muted">{t('users.permissions.systemBadge')}</SettingsMetaBadge>
+                  <Badge as="span" tone="muted" size="sm">{t('users.permissions.systemBadge')}</Badge>
                 ) : null}
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">

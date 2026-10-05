@@ -1,10 +1,9 @@
 import type React from 'react';
 import { formatDate } from '@mms/shared';
-import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import { TimePicker } from '@/components/ui/TimePicker';
-import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
 import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
 import { EntityCard } from "@/components/ui/EntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
@@ -32,6 +31,7 @@ const getAttendanceAccentClass = (status?: string): string => {
   return 'bg-primary/50 group-hover:bg-primary';
 };
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function AttendanceCard({
   attendanceRecord,
   isColumnVisible,
@@ -46,91 +46,78 @@ export function AttendanceCard({
   reducedMotion,
   t,
 }: AttendanceCardProps): React.JSX.Element {
-  const { isSelected, onSelect, cardProps } = useWorkCardAction({
-    entity: attendanceRecord,
-    selectedIds,
-    onToggleSelected: onToggleSelectedRecord,
-    canSelect: canDelete,
-  });
-
   return (
-    <EntityCard
-      key={attendanceRecord.id}
-      isSelected={isSelected}
+    <DirectoryCard
+      entity={attendanceRecord}
+      selectedIds={selectedIds}
+      canSelect={canDelete}
+      onToggleSelected={onToggleSelectedRecord}
       reducedMotion={reducedMotion}
       accentClassName={getAttendanceAccentClass(attendanceRecord.status)}
-      {...cardProps}
-    >
-      <EntityCard.Header
-        id={attendanceRecord.id}
-        displayName={attendanceRecord.studentName}
-        isSelected={isSelected}
-        showSelect={canDelete}
-        onSelect={onSelect}
-        selectAriaLabel={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
-        reducedMotion={reducedMotion}
-        subtitle={
-          isColumnVisible("class") ? (
-            <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>
-          ) : undefined
-        }
-      />
-      <EntityCard.MetaGrid>
-        {isColumnVisible("date") && (
-          <EntityCardMetaTile label={t('attendance.columns.date')}>
-            <span className="font-mono">{formatDate(attendanceRecord.date, true)}</span>
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("session") && (
-          <EntityCardMetaTile label={t('attendance.columns.session')}>
-            {attendanceRecord.sessionName || '—'}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("status") && (
-          <EntityCardMetaTile label={t('attendance.columns.status')}>
-            <AttendanceRecordStatusCell
-              attendanceRecord={attendanceRecord}
-              editingRecord={editingRecord}
-              statuses={statuses}
-              updateDraft={updateDraft}
-            />
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("timeIn") && (
-          <EntityCardMetaTile label={t('attendance.columns.timeIn')}>
-            {editingRecord?.id === attendanceRecord.id
-              ? <TimePicker
-                  id={`attendance-mobile-time-in-${attendanceRecord.id}`}
-                  name="timeIn"
-                  value={editingRecord.timeIn}
-                  onChange={(nextValue) => updateDraft('timeIn', nextValue)}
-                  aria-label={t('attendance.columns.timeIn')}
-                  className="w-full min-w-0 text-xs"
-                />
-              : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("timeOut") && (
-          <EntityCardMetaTile label={t('attendance.columns.timeOut')}>
-            {editingRecord?.id === attendanceRecord.id
-              ? <TimePicker
-                  id={`attendance-mobile-time-out-${attendanceRecord.id}`}
-                  name="timeOut"
-                  value={editingRecord.timeOut}
-                  onChange={(nextValue) => updateDraft('timeOut', nextValue)}
-                  aria-label={t('attendance.columns.timeOut')}
-                  className="w-full min-w-0 text-xs"
-                />
-              : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible("notes") && (
-          <EntityCardMetaTile label={t('attendance.columns.notes')}>
-            <span className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</span>
-          </EntityCardMetaTile>
-        )}
-      </EntityCard.MetaGrid>
-      <EntityCardFooterActions actions={renderRowActions(attendanceRecord)} />
-    </EntityCard>
+      header={{
+        displayName: attendanceRecord.studentName,
+        subtitle: isColumnVisible("class") ? (
+          <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>
+        ) : undefined,
+      }}
+      metadataSlot={
+        <EntityCard.MetaGrid>
+          {isColumnVisible("date") && (
+            <EntityCardMetaTile label={t('attendance.columns.date')}>
+              <span className="font-mono">{formatDate(attendanceRecord.date, true)}</span>
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("session") && (
+            <EntityCardMetaTile label={t('attendance.columns.session')}>
+              {attendanceRecord.sessionName || '—'}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("status") && (
+            <EntityCardMetaTile label={t('attendance.columns.status')}>
+              <AttendanceRecordStatusCell
+                attendanceRecord={attendanceRecord}
+                editingRecord={editingRecord}
+                statuses={statuses}
+                updateDraft={updateDraft}
+              />
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("timeIn") && (
+            <EntityCardMetaTile label={t('attendance.columns.timeIn')}>
+              {editingRecord?.id === attendanceRecord.id
+                ? <TimePicker
+                    id={`attendance-mobile-time-in-${attendanceRecord.id}`}
+                    name="timeIn"
+                    value={editingRecord.timeIn}
+                    onChange={(nextValue) => updateDraft('timeIn', nextValue)}
+                    aria-label={t('attendance.columns.timeIn')}
+                    className="w-full min-w-0 text-xs"
+                  />
+                : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("timeOut") && (
+            <EntityCardMetaTile label={t('attendance.columns.timeOut')}>
+              {editingRecord?.id === attendanceRecord.id
+                ? <TimePicker
+                    id={`attendance-mobile-time-out-${attendanceRecord.id}`}
+                    name="timeOut"
+                    value={editingRecord.timeOut}
+                    onChange={(nextValue) => updateDraft('timeOut', nextValue)}
+                    aria-label={t('attendance.columns.timeOut')}
+                    className="w-full min-w-0 text-xs"
+                  />
+                : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("notes") && (
+            <EntityCardMetaTile label={t('attendance.columns.notes')}>
+              <span className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</span>
+            </EntityCardMetaTile>
+          )}
+        </EntityCard.MetaGrid>
+      }
+      actions={renderRowActions(attendanceRecord)}
+    />
   );
 }

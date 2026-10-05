@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -75,9 +75,9 @@ export function StudentDetailSessionsSection({
             className="p-3.5 space-y-2"
           >
             <div className="flex items-center justify-between ms-1">
-              <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded-full font-bold uppercase">
+              <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded-full font-bold uppercase">
                 {typeLabel}
-              </FormFooterBadge>
+              </Badge>
               <span className="text-xs font-bold text-muted-foreground">
                 {t("students.detail.sessionFee", { amount: formatMoney(session.baseFee ?? 0, session.currency) })}
               </span>

@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -77,9 +77,9 @@ export function StudentDetailSiblingsSection({
                         {sibling.name}
                       </span>
                       {sibling.grNumber ? (
-                        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        <Badge as="span" size="sm" tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                           {t("students.grPrefix")}: {sibling.grNumber}
-                        </FormFooterBadge>
+                        </Badge>
                       ) : null}
                       {sibling.status && (
                         <StatusBadge

@@ -1,13 +1,12 @@
 import type { JSX } from 'react';
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
-import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
 import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
 import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { EntityCard } from "@/components/ui/EntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { DistributionsRowActions } from '@/tenant/features/hasanat/components/DistributionsRowActions';
 import {
@@ -21,6 +20,7 @@ type DistributionsListCardsProps = Omit<
   'getColumnWidth' | 'onColumnResize'
 >;
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 function DistributionCard({
   distribution,
   props,
@@ -51,32 +51,18 @@ function DistributionCard({
 
   const statuses = getDistributionStatuses(statusConfig);
   const denomination = getDistributionDenomination(denomsById, distribution.denominationId);
-
-  const { isSelected, onSelect, cardProps } = useWorkCardAction({
-    entity: distribution,
-    selectedIds,
-    onToggleSelected: onToggleSelectedDistribution,
-    canSelect: canDelete,
-  });
+  const displayName = distribution.recipientName || distribution.id;
 
   return (
-    <EntityCard
-      key={distribution.id}
-      isSelected={isSelected}
+    <DirectoryCard
+      entity={distribution}
+      selectedIds={selectedIds}
+      canSelect={canDelete}
+      onToggleSelected={onToggleSelectedDistribution}
       reducedMotion={reducedMotion}
-      {...cardProps}
-    >
-      <EntityCard.Header
-        id={distribution.id}
-        displayName={distribution.recipientName || distribution.id}
-        isSelected={isSelected}
-        showSelect={canDelete}
-        onSelect={onSelect}
-        selectAriaLabel={t('hasanat.trash.selectDistribution', {
-          name: distribution.recipientName || distribution.id,
-        })}
-        reducedMotion={reducedMotion}
-        subtitle={
+      header={{
+        displayName,
+        subtitle:
           isColumnVisible('card') && denomination ? (
             <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
               <span aria-hidden="true">{denomination.icon || '⭐'}</span>
@@ -86,66 +72,63 @@ function DistributionCard({
                 {t('hasanat.form.pointsShort', { points: denomination.points })}
               </span>
             </p>
-          ) : undefined
-        }
-      />
-
-      <EntityCard.MetaGrid>
-        {isColumnVisible('recipientClass') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.recipientClass')}>
-            {distribution.recipientClass || '—'}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible('quantity') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.quantity')}>
-            <span className="font-bold">{distribution.quantity}</span>
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible('reason') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.reason')}>
-            <span className="break-words">{distribution.reason || '—'}</span>
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible('issuedDate') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedDate')}>
-            {distribution.issuedDate}
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible('issuedBy') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedBy')}>
-            <span className="break-words">{distribution.issuedBy || '—'}</span>
-          </EntityCardMetaTile>
-        )}
-        {isColumnVisible('status') && (
-          <EntityCardMetaTile label={t('hasanat.columns.distribution.status')}>
-            <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
-          </EntityCardMetaTile>
-        )}
-      </EntityCard.MetaGrid>
-
-      <EntityCardFooterActions
-        overflowActions={
-          <DistributionsRowActions
-            distribution={distribution}
-            statuses={statuses}
-            statusLabels={statusLabels}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            showDeleted={showDeleted}
-            canRestoreRows={canRestoreRows}
-            canDeleteRows={canDeleteRows}
-            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
-            onMessage={
-              onMessage
-                ? (channel, dist) => onMessage(channel, [dist])
-                : undefined
-            }
-            onChangeStatus={onChangeStatus}
-            onTrashAction={onTrashAction}
-          />
-        }
-      />
-    </EntityCard>
+          ) : undefined,
+      }}
+      metadataSlot={
+        <EntityCard.MetaGrid>
+          {isColumnVisible('recipientClass') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.recipientClass')}>
+              {distribution.recipientClass || '—'}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible('quantity') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.quantity')}>
+              <span className="font-bold">{distribution.quantity}</span>
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible('reason') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.reason')}>
+              <span className="break-words">{distribution.reason || '—'}</span>
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible('issuedDate') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedDate')}>
+              {distribution.issuedDate}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible('issuedBy') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedBy')}>
+              <span className="break-words">{distribution.issuedBy || '—'}</span>
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible('status') && (
+            <EntityCardMetaTile label={t('hasanat.columns.distribution.status')}>
+              <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
+            </EntityCardMetaTile>
+          )}
+        </EntityCard.MetaGrid>
+      }
+      overflowActions={
+        <DistributionsRowActions
+          distribution={distribution}
+          statuses={statuses}
+          statusLabels={statusLabels}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          canRestoreRows={canRestoreRows}
+          canDeleteRows={canDeleteRows}
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
+          onMessage={
+            onMessage
+              ? (channel, dist) => onMessage(channel, [dist])
+              : undefined
+          }
+          onChangeStatus={onChangeStatus}
+          onTrashAction={onTrashAction}
+        />
+      }
+    />
   );
 }
 

@@ -11,7 +11,7 @@ export async function seedFacultyHierarchy(): Promise<void> {
   await withGlobalTenant(async (tx) => {
     await tx.execute(sql`CREATE ROLE ${sql.identifier(facultyTestRole)} NOLOGIN NOSUPERUSER NOBYPASSRLS`);
     await tx.execute(sql`GRANT USAGE ON SCHEMA public TO ${sql.identifier(facultyTestRole)}`);
-    await tx.execute(sql`GRANT SELECT, INSERT, UPDATE ON faculty, faculty_assignments,
+    await tx.execute(sql`GRANT SELECT, INSERT, UPDATE ON contacts, faculty, faculty_assignments,
       faculty_departments, faculty_designations, organization_positions TO ${sql.identifier(facultyTestRole)}`);
     for (const tenant of [facultyTestTenant, facultyOtherTenant]) {
       await tx.insert(workspaces).values({ id: tenant, subdomain: tenant, madrasaName: tenant });

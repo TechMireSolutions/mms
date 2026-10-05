@@ -1,11 +1,8 @@
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
-import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
-import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
-import { EntityCard } from "@/components/ui/EntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Session } from "@/lib/data/sessionsData";
 import { SessionListRowActions } from "@/tenant/features/sessions/components/SessionListRowActions";
@@ -33,7 +30,7 @@ export interface SessionCardProps {
   reducedMotion?: boolean;
 }
 
-/** Sessions Work directory card — shared EntityCard chrome + capacity bar. */
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function SessionCard({
   session,
   isSelected,
@@ -52,16 +49,8 @@ export function SessionCard({
   reducedMotion = false,
 }: SessionCardProps): React.JSX.Element {
   const { t } = useTranslation();
-
-  const { isSelected: derivedSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
-    entity: session,
-    selectedIds: selectedIds.length > 0 ? selectedIds : (isSelected ? [session.id] : []),
-    onToggleSelected: onToggleSelectedSession,
-    onView,
-    canSelect: canSelectSessions,
-  });
-
-  const effectiveSelected = isSelected ?? derivedSelected;
+  const effectiveSelectedIds =
+    selectedIds.length > 0 ? selectedIds : isSelected ? [session.id] : [];
   const { totalCapacity, capacityPercent, classCount } = getSessionCapacityMeta(session);
   const visibleColumns = getSessionVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
@@ -69,38 +58,53 @@ export function SessionCard({
   const columnOptions = { t, statusConfig, typeConfig };
 
   return (
-    <EntityCard isSelected={effectiveSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <EntityCard.Header
-        id={session.id}
-        displayName={session.name}
-        isSelected={effectiveSelected}
-        showSelect={canSelectSessions}
-        onSelect={onSelect}
-        selectAriaLabel={t("sessions.table.selectSession", { name: session.name })}
-        onView={handleView}
-        viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
-        reducedMotion={reducedMotion}
-        subtitle={
-          session.description ? (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{session.description}</p>
-          ) : undefined
-        }
-      />
-
-      <EntityCardMetadata
-        columns={visibleColumns}
-        keyFor={(col) => col.key}
-        labelFor={(col) => col.label}
-        renderValue={(col) =>
-          renderSessionWorkColumnValue(session, col.key, { ...columnOptions, emptyFallback: null })
-        }
-      />
-
-      {totalCapacity > 0 && (
+    <DirectoryCard
+      entity={session}
+      selectedIds={effectiveSelectedIds}
+      canSelect={canSelectSessions}
+      onToggleSelected={onToggleSelectedSession}
+      onView={onView}
+      reducedMotion={reducedMotion}
+      header={{
+        displayName: session.name,
+        subtitle: session.description ? (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{session.description}</p>
+        ) : undefined,
+      }}
+      viewLabel={t("sessions.actionViewShort")}
+      viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
+      columns={visibleColumns}
+      keyFor={(col) => col.key}
+      labelFor={(col) => col.label}
+      renderValue={(col) =>
+        renderSessionWorkColumnValue(session, col.key, { ...columnOptions, emptyFallback: null })
+      }
+      overflowActions={
+        canDelete ? (
+          <SessionListRowActions
+            session={session}
+            showDeleted={showDeleted}
+            canDelete={canDelete}
+            hideViewItem
+            onView={onView}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
+            onRequestDelete={onRequestDelete}
+            onRestore={onRestore}
+          />
+        ) : null
+      }
+    >
+      {totalCapacity > 0 ? (
         <div>
           <ProgressBar
             value={Math.min(capacityPercent, 100)}
-            fillClassName={capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}
+            fillClassName={
+              capacityPercent >= 100
+                ? "bg-destructive"
+                : capacityPercent >= 80
+                  ? "bg-warning"
+                  : "bg-success"
+            }
             trackClassName="h-1 bg-border"
             aria-hidden="true"
           />
@@ -108,31 +112,14 @@ export function SessionCard({
             {t("sessions.card.capacityUsed", {
               percent: capacityPercent,
               count: classCount,
-              classesLabel: classCount === 1 ? t("sessions.card.classSingular") : t("sessions.card.classPlural"),
+              classesLabel:
+                classCount === 1
+                  ? t("sessions.card.classSingular")
+                  : t("sessions.card.classPlural"),
             })}
           </p>
         </div>
-      )}
-
-      <EntityCardFooterActions
-        onView={() => onView(session)}
-        viewLabel={t("sessions.actionViewShort")}
-        viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
-        overflowActions={
-          canDelete ? (
-            <SessionListRowActions
-              session={session}
-              showDeleted={showDeleted}
-              canDelete={canDelete}
-              hideViewItem
-              onView={onView}
-              triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
-              onRequestDelete={onRequestDelete}
-              onRestore={onRestore}
-            />
-          ) : null
-        }
-      />
-    </EntityCard>
+      ) : null}
+    </DirectoryCard>
   );
 }

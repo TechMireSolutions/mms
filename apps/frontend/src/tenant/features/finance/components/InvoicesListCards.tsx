@@ -1,10 +1,7 @@
 import type React from "react";
-import { useWorkCardAction } from "@/hooks/useWorkCardAction";
-import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
-import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
-import { EntityCard } from "@/components/ui/EntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -25,6 +22,7 @@ const getInvoiceAccentClass = (status: string): string => {
   return "bg-primary/50 group-hover:bg-primary";
 };
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 function InvoiceCard({
   invoice,
   props,
@@ -54,77 +52,55 @@ function InvoiceCard({
     openComposer,
   } = props;
 
-  const { isSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
-    entity: invoice,
-    selectedIds,
-    onToggleSelected: onToggleSelectedInvoice,
-    onView,
-    canSelect: canSelectInvoices,
-  });
-
   const visibleColumns = getInvoiceVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
   });
 
   return (
-    <EntityCard
-      key={invoice.id}
-      isSelected={isSelected}
+    <DirectoryCard
+      entity={invoice}
+      selectedIds={selectedIds}
+      canSelect={canSelectInvoices}
+      onToggleSelected={onToggleSelectedInvoice}
+      onView={onView}
       reducedMotion={reducedMotion}
       accentClassName={getInvoiceAccentClass(invoice.status)}
-      {...cardProps}
-    >
-      <EntityCard.Header
-        id={invoice.id}
-        displayName={invoice.studentName}
-        isSelected={isSelected}
-        showSelect={canSelectInvoices}
-        onSelect={onSelect}
-        selectAriaLabel={t("finance.table.selectInvoice", { id: invoice.id })}
-        onView={handleView}
-        viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
-        reducedMotion={reducedMotion}
-        subtitle={
+      header={{
+        displayName: invoice.studentName,
+        subtitle: (
           <p className="font-mono text-xs text-muted-foreground truncate">{invoice.id}</p>
-        }
-      />
-
-      <EntityCardMetadata
-        columns={visibleColumns}
-        keyFor={(col) => col.key}
-        labelFor={(col) => col.label}
-        renderValue={(col) =>
-          renderInvoiceWorkColumnValue(invoice, col.key, {
-            t,
-            statusConfig,
-            formatCurrency,
-            emptyFallback: null,
-          })
-        }
-      />
-
-      <EntityCardFooterActions
-        onView={handleView}
-        viewLabel={t("finance.table.viewProfile")}
-        viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
-        overflowActions={
-          <InvoicesRowActions
-            invoice={invoice}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            canWriteMessaging={canWriteMessaging}
-            showDeleted={showDeleted}
-            hideViewItem
-            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
-            onView={onView}
-            onRecord={onRecord}
-            onRequestDelete={onRequestDelete}
-            onRestore={onRestore}
-            openComposer={openComposer}
-          />
-        }
-      />
-    </EntityCard>
+        ),
+      }}
+      viewLabel={t("finance.table.viewProfile")}
+      viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
+      columns={visibleColumns}
+      keyFor={(col) => col.key}
+      labelFor={(col) => col.label}
+      renderValue={(col) =>
+        renderInvoiceWorkColumnValue(invoice, col.key, {
+          t,
+          statusConfig,
+          formatCurrency,
+          emptyFallback: null,
+        })
+      }
+      overflowActions={
+        <InvoicesRowActions
+          invoice={invoice}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          canWriteMessaging={canWriteMessaging}
+          showDeleted={showDeleted}
+          hideViewItem
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
+          onView={onView}
+          onRecord={onRecord}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          openComposer={openComposer}
+        />
+      }
+    />
   );
 }
 
@@ -148,7 +124,6 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
       selectAllLabel={t("finance.table.selectAll")}
       deselectAllLabel={t("common.deselect")}
       selectedCountLabel={t("finance.trash.selected", { count: selectedIds.length })}
-      pageCountLabel={pageCountLabel}
       checkboxIdPrefix="finance-invoices"
       renderItem={(invoice) => (
         <InvoiceCard key={invoice.id} invoice={invoice} props={props} reducedMotion={reducedMotion} />

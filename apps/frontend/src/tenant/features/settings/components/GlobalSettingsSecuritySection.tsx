@@ -16,10 +16,10 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import {
   SettingsCallout,
   SettingsFieldGroup,
-  SettingsMetaBadge,
   SettingsToggleRow,
 } from '@/components/ui/SettingsShell';
 import type { GlobalSettings } from '@mms/shared';
+import { Badge } from '@/components/ui/badge';
 
 interface GlobalSettingsSecuritySectionProps {
   data: GlobalSettings;
@@ -46,13 +46,13 @@ export function GlobalSettingsSecuritySection({
         <SettingsCallout>{t('global.securityNote')}</SettingsCallout>
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
           <span className="text-muted-foreground">{t('global.securityActiveConfig')}:</span>
-          <SettingsMetaBadge variant={data.twoFactor ? 'primary' : 'muted'}>
+          <Badge as="span" tone={data.twoFactor ? 'primary' : 'muted'} size="sm">
             {data.twoFactor ? t('global.security2faOn') : t('global.security2faOff')}
-          </SettingsMetaBadge>
-          <SettingsMetaBadge variant="muted">
+          </Badge>
+          <Badge as="span" tone="muted" size="sm">
             {t('global.securitySessionBadge', { minutes: sessionMinutes })}
-          </SettingsMetaBadge>
-          <SettingsMetaBadge variant="muted">{t(policyLabelKey[passwordPolicy])}</SettingsMetaBadge>
+          </Badge>
+          <Badge as="span" tone="muted" size="sm">{t(policyLabelKey[passwordPolicy])}</Badge>
         </div>
         <SettingsToggleRow
           id="twoFactor"

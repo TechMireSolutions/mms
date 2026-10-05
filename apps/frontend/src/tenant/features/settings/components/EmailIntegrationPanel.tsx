@@ -7,12 +7,13 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FieldErrorMessage } from '@/components/ui/FormField';
-import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { SettingsCallout } from '@/components/ui/SettingsShell';
 import { useEmailIntegrationPanel } from '@/tenant/features/settings/components/useEmailIntegrationPanel';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { cn } from '@/lib/utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 /**
  * Multi-provider SMTP setup (Gmail, Microsoft 365, Outlook, Yahoo, iCloud, Zoho, custom).
@@ -67,9 +68,9 @@ export default function EmailIntegrationPanel(): React.JSX.Element {
           <p className="text-xs text-muted-foreground">{t('email.integrationDesc')}</p>
         </div>
         {form.connected && form.lastTestOk ? (
-          <SettingsMetaBadge variant="success">{t('email.statusConnected')}</SettingsMetaBadge>
+          <Badge as="span" tone="success" size="sm">{t('email.statusConnected')}</Badge>
         ) : (
-          <SettingsMetaBadge variant="muted">{t('email.statusNotConnected')}</SettingsMetaBadge>
+          <Badge as="span" tone="muted" size="sm">{t('email.statusNotConnected')}</Badge>
         )}
       </div>
 

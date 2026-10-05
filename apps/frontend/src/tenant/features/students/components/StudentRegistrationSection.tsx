@@ -1,7 +1,7 @@
 import type React from "react";
 import { Clock, GraduationCap, Hash } from "lucide-react";
 import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
@@ -111,12 +111,12 @@ export function StudentRegistrationSection({
                   )}
                 />
                 {isGrAutoAssigned ? (
-                  <FormFooterBadge
+                  <Badge as="span" size="sm"
                     tone="primary"
                     className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider"
                   >
                     {t("students.form.grAutoAssigned")}
-                  </FormFooterBadge>
+                  </Badge>
                 ) : null}
               </div>
             </Field>

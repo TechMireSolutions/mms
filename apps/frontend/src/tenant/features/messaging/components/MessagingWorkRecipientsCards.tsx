@@ -8,8 +8,8 @@ import {
 import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
 import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { EntityCard } from "@/components/ui/EntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { useTranslation } from '@/hooks/useTranslation';
-import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 import { MissingFieldBadge } from './messagingRecipientsShared';
 
@@ -27,6 +27,7 @@ export interface MessagingWorkRecipientsCardsProps {
   onToggleAllVisible: (checked: boolean) => void;
 }
 
+/** Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 function MessagingRecipientCard({
   contact,
   selectedIds,
@@ -44,52 +45,46 @@ function MessagingRecipientCard({
 }): JSX.Element {
   const { t } = useTranslation();
   const displayName = getDisplayName(contact);
-
-  const { isSelected, onSelect, cardProps } = useWorkCardAction({
-    entity: contact,
-    selectedIds,
-    onToggleSelected: () => onToggleRecipient(contact),
-    canSelect: true,
-  });
-
   const phone = getPrimaryPhone(contact);
   const email = getPrimaryEmail(contact);
 
   return (
-    <EntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <EntityCard.Header
-        id={contact.id}
-        displayName={displayName}
-        avatar={contact.avatar}
-        isSelected={isSelected}
-        onSelect={onSelect}
-        selectAriaLabel={t('messaging.selectRecipient', { name: displayName })}
-        reducedMotion={reducedMotion}
-        showSelect={true}
-      />
-      {(showPhoneCol || showEmailCol) && (
-        <EntityCard.MetaGrid>
-          {showPhoneCol && (
-            <EntityCardMetaTile label={t('contacts.form.primaryPhone')}>
-              {phone ? (
-                <span className="font-mono text-xs">{phone}</span>
-              ) : (
-                <MissingFieldBadge label={t('messaging.missingPhone')} />
-              )}
-            </EntityCardMetaTile>
-          )}
-          {showEmailCol && (
-            <EntityCardMetaTile label={t('contacts.form.primaryEmail')}>
-              {email ? (
-                <span className="text-xs">{email}</span>
-              ) : (
-                <MissingFieldBadge label={t('messaging.missingEmail')} />
-              )}
-            </EntityCardMetaTile>
-          )}
-        </EntityCard.MetaGrid>
-      )}
-    </EntityCard>
+    <DirectoryCard
+      entity={contact}
+      selectedIds={selectedIds}
+      canSelect
+      onToggleSelected={() => onToggleRecipient(contact)}
+      reducedMotion={reducedMotion}
+      header={{
+        displayName,
+        avatar: contact.avatar,
+      }}
+      metadataSlot={
+        (showPhoneCol || showEmailCol) ? (
+          <EntityCard.MetaGrid>
+            {showPhoneCol && (
+              <EntityCardMetaTile label={t('contacts.form.primaryPhone')}>
+                {phone ? (
+                  <span className="font-mono text-xs">{phone}</span>
+                ) : (
+                  <MissingFieldBadge label={t('messaging.missingPhone')} />
+                )}
+              </EntityCardMetaTile>
+            )}
+            {showEmailCol && (
+              <EntityCardMetaTile label={t('contacts.form.primaryEmail')}>
+                {email ? (
+                  <span className="text-xs">{email}</span>
+                ) : (
+                  <MissingFieldBadge label={t('messaging.missingEmail')} />
+                )}
+              </EntityCardMetaTile>
+            )}
+          </EntityCard.MetaGrid>
+        ) : undefined
+      }
+      footer={false}
+    />
   );
 }
 

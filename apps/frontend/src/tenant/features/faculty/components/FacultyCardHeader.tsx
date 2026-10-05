@@ -1,5 +1,5 @@
 import type { Faculty } from '@mms/shared';
-import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import {
   DirectoryCardSubtitleStack,
   PersonIdentityMeta,
@@ -41,13 +41,13 @@ export function FacultyCardHeader({
     <DirectoryCardSubtitleStack>
       <div className="flex items-center gap-1.5 flex-wrap">
         {showEmployeeId && faculty.employeeId ? (
-          <FormFooterBadge
+          <Badge as="span" size="sm"
             tone="muted"
             className="mt-1 max-w-full px-1.5 py-0.5 rounded font-bold tracking-tight truncate self-start"
             title={faculty.employeeId}
           >
             {faculty.employeeId}
-          </FormFooterBadge>
+          </Badge>
         ) : null}
         {faculty.designation ? (
           <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-semibold bg-primary/10 text-primary border border-primary/20 truncate">

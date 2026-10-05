@@ -3,7 +3,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { formatBackupSize, type WorkspaceBackupSummary } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Badge } from '@/components/ui/badge';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
 
 interface BackupSummaryPreviewProps {
   summary: WorkspaceBackupSummary;
@@ -22,15 +22,15 @@ export function BackupSummaryPreview({
     <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 space-y-3">
       <p className="text-sm font-semibold text-foreground">{t('backup.previewTitle')}</p>
       <div className="flex flex-wrap gap-2">
-        <SettingsMetaBadge variant="primary">
+        <Badge as="span" tone="primary" size="sm">
           {t('backup.previewKeys', { count: summary.keyCount })}
-        </SettingsMetaBadge>
-        <SettingsMetaBadge variant="muted">
+        </Badge>
+        <Badge as="span" tone="muted" size="sm">
           {t('backup.previewCollections', { count: summary.collectionCount })}
-        </SettingsMetaBadge>
-        <SettingsMetaBadge variant="muted">
+        </Badge>
+        <Badge as="span" tone="muted" size="sm">
           {t('backup.previewObjects', { count: summary.objectCount })}
-        </SettingsMetaBadge>
+        </Badge>
       </div>
       {summary.checksum ? (
         <p className="flex items-center gap-1.5 text-xs text-success font-medium">

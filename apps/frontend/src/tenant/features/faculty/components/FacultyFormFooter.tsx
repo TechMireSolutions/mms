@@ -4,9 +4,9 @@ import { resolveFacultyStatus } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import {
-  FormFooterBadge,
   FormFooterEntityChip,
 } from "@/components/ui/FormFooterChip";
+import { Badge } from "@/components/ui/badge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 
@@ -32,9 +32,9 @@ export function FacultyFormFooter({
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
         <FormFooterEntityChip>{linkedContact.name}</FormFooterEntityChip>
         <div className="flex items-center gap-1.5">
-          <FormFooterBadge>
+          <Badge as="span" tone="primary" size="sm">
             {t("faculty.form.employeeIdBadge", { id: employeeId || t("common.notSpecified") })}
-          </FormFooterBadge>
+          </Badge>
           <StatusBadge status={status} config={statusConfig} size="sm" />
         </div>
       </div>
