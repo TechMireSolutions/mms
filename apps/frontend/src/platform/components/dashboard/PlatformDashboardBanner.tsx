@@ -17,17 +17,14 @@ export interface PlatformDashboardBannerProps {
   isSuperUser: boolean;
   canWorkspaces: boolean;
   canOnboard: boolean;
-  totalWorkspaces?: number;
-  activeWorkspaces?: number;
 }
 
+/** Greeting + primary CTAs only — fleet counts live in the metrics grid. */
 export function PlatformDashboardBanner({
   platformUser,
   isSuperUser,
   canWorkspaces,
   canOnboard,
-  totalWorkspaces = 0,
-  activeWorkspaces = 0,
 }: PlatformDashboardBannerProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -57,23 +54,11 @@ export function PlatformDashboardBanner({
                 name: platformUser?.name ?? t("platform.operatorRole"),
               })}
             </h1>
-            <p className="text-sm font-medium text-muted-foreground max-w-xl leading-relaxed mt-1">
+            <p className="text-sm font-medium text-muted-foreground max-w-xl leading-relaxed mt-1 text-pretty">
               {isSuperUser
                 ? t("platform.superConsoleDesc")
                 : t("platform.operatorConsoleDesc")}
             </p>
-            {totalWorkspaces > 0 ? (
-              <p className="text-xs font-semibold text-primary mt-2">
-                {t("platform.banner.managingActive", {
-                  count: String(activeWorkspaces),
-                  plural: t("platform.manageMadrasas").toLowerCase(),
-                })}
-              </p>
-            ) : (
-              <p className="text-xs font-semibold text-muted-foreground mt-2">
-                {t("platform.banner.noWorkspacesYet")}
-              </p>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">

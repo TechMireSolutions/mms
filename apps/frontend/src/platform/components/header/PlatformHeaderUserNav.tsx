@@ -36,7 +36,7 @@ export function PlatformHeaderUserNav({
   const { t } = useTranslation();
   const { platformUser, platformLogout } = usePlatformAuth();
   const { isSuperUser, canAdmins } = usePlatformPermissions();
-  const { data: workspaces } = usePlatformWorkspaces();
+  const { data: workspaces } = usePlatformWorkspaces({ limit: 100 });
 
   const roleSubtitle = isSuperUser ? (
     <>

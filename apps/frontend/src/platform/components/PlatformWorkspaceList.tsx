@@ -1,20 +1,22 @@
-import React, { useDeferredValue, useMemo } from 'react';
+import React from 'react';
 import { Globe } from 'lucide-react';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
-import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
+import {
+  usePlatformWorkspaces,
+} from '@/platform/hooks/usePlatformWorkspaces';
+import { usePlatformWorkspaceMetrics } from '@/platform/hooks/usePlatformWorkspaceMetrics';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
 import { useDescriptorColumnLayout } from '@/hooks/useDescriptorColumnLayout';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
-import { ListPagination } from '@/components/ui/ListPagination';
 import { PlatformWorkspaceDialogs } from '@/platform/components/workspace/PlatformWorkspaceDialogs';
 import { PlatformWorkspaceToolbar } from '@/platform/components/workspace/PlatformWorkspaceToolbar';
 import { usePlatformWorkspaceUrlState } from '@/platform/components/workspace/usePlatformWorkspaceUrlState';
-import { downloadWorkspacesCsv, filterWorkspaces, sortWorkspaces } from '@/platform/components/platformWorkspaceListData';
+import { downloadWorkspacesCsv } from '@/platform/components/platformWorkspaceListData';
 import { PlatformWorkspaceDirectoryView } from '@/platform/components/workspace/PlatformWorkspaceDirectoryView';
 import { useWorkspaceDeleteState } from '@/platform/components/workspace/useWorkspaceDeleteState';
 import { usePlatformWorkspaceModalState } from '@/platform/components/workspace/usePlatformWorkspaceModalState';
@@ -30,12 +32,31 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
   const { isSuperUser } = usePlatformPermissions();
   const appDomain = getAppDomain();
-  const { data: workspaces, isLoading, isError, refetch, isFetching } = usePlatformWorkspaces();
 
   const {
     search, statusFilter, sortField, sortDirection, page, pageSize,
     setSearch, setStatusFilter, toggleSort, setPage, isFiltered, handleClearFilters,
   } = usePlatformWorkspaceUrlState();
+
+  const sortFieldApi = sortField === 'name' ? 'name' as const : sortField;
+
+  const {
+    data: workspaces,
+    total: filteredTotal,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = usePlatformWorkspaces({
+    page,
+    limit: pageSize,
+    search: search || undefined,
+    status: statusFilter,
+    sortField: sortFieldApi,
+    sortDir: sortDirection,
+  });
+
+  const { data: metrics } = usePlatformWorkspaceMetrics();
 
   const descriptor = usePlatformWorkspaceDescriptor();
   const columnLayout = useDescriptorColumnLayout('platform.workspaces', descriptor);
@@ -46,34 +67,16 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const listActions = usePlatformWorkspaceListActions();
 
   const items = workspaces ?? [];
-  const deferredSearch = useDeferredValue(search);
+  const selection = usePlatformWorkspaceSelection(items);
 
-  const sortedItems = useMemo(
-    () => sortWorkspaces(filterWorkspaces(items, deferredSearch, statusFilter), sortField, sortDirection),
-    [items, deferredSearch, statusFilter, sortField, sortDirection],
-  );
-
-  const paginatedItems = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return sortedItems.slice(start, start + pageSize);
-  }, [sortedItems, page, pageSize]);
-
-  const selection = usePlatformWorkspaceSelection(sortedItems);
-
-  const { totalCount, activeCount, inactiveCount } = useMemo(() => {
-    let active = 0;
-    let inactive = 0;
-    for (const w of items) {
-      if (w.enabled) active += 1;
-      else inactive += 1;
-    }
-    return { totalCount: items.length, activeCount: active, inactiveCount: inactive };
-  }, [items]);
+  const totalCount = metrics?.total ?? filteredTotal;
+  const activeCount = metrics?.active ?? 0;
+  const inactiveCount = metrics?.inactive ?? 0;
 
   return (
     <div className="space-y-6 w-full text-start pb-24 scroll-pb-24">
       <PlatformWorkspaceToolbar
-        shownCount={sortedItems.length}
+        shownCount={filteredTotal}
         totalCount={totalCount}
         activeCount={activeCount}
         inactiveCount={inactiveCount}
@@ -92,7 +95,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         sortDirection={sortDirection}
         onToggleSort={toggleSort}
         onRefetch={() => void refetch()}
-        onExportCsv={() => downloadWorkspacesCsv(sortedItems)}
+        onExportCsv={() => downloadWorkspacesCsv(items)}
         columnLayout={columnLayout}
       />
 
@@ -105,14 +108,19 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         errorHint={t('platform.loadFailedHint')}
         viewMode={viewMode}
         skeletonColumnCount={5}
-        useServerWork={false}
-        pageData={null}
-        onPageChange={() => {}}
+        useServerWork
+        pageData={{
+          page,
+          total: filteredTotal,
+          limit: pageSize,
+          hasMore: page * pageSize < filteredTotal,
+        }}
+        onPageChange={setPage}
         i18nNamespace="platform"
-        showPagination={false}
+        showPagination={filteredTotal > pageSize}
         loadingLabel={t('common.loading')}
       >
-        {sortedItems.length === 0 ? (
+        {filteredTotal === 0 ? (
           <div className="bg-card border border-border/40 rounded-xl p-6">
             <EmptyState
               icon={Globe}
@@ -130,42 +138,30 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             />
           </div>
         ) : (
-          <div className="space-y-4">
-            <PlatformWorkspaceDirectoryView
-              viewMode={viewMode}
-              workspaces={paginatedItems}
-              descriptor={descriptor}
-              columnLayout={columnLayout}
-              appDomain={appDomain}
-              density={density}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onToggleSort={toggleSort}
-              togglePending={listActions.togglePending}
-              deletePending={deleteState.deletePending}
-              targetWorkspaceSubdomain={deleteState.targetWorkspace?.subdomain}
-              onToggleEnabled={listActions.handleToggleEnabled}
-              onToggleEmailVerification={listActions.handleToggleEmailVerification}
-              onOpenModules={modalState.handleOpenModules}
-              onOpenDelete={isSuperUser ? deleteState.handleOpenDelete : undefined}
-              onOpenResetPassword={modalState.handleOpenResetPassword}
-              onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
-              onInspect={modalState.handleOpenInspect}
-              selectedSubdomains={selection.selectedSubdomains}
-              onToggleSelect={selection.toggleSelect}
-              onToggleSelectAll={() => selection.toggleSelectAll(sortedItems)}
-            />
-            {sortedItems.length > pageSize && (
-              <ListPagination
-                page={page}
-                total={sortedItems.length}
-                limit={pageSize}
-                onPageChange={setPage}
-                i18nNamespace="platform"
-                variant="range"
-              />
-            )}
-          </div>
+          <PlatformWorkspaceDirectoryView
+            viewMode={viewMode}
+            workspaces={items}
+            descriptor={descriptor}
+            columnLayout={columnLayout}
+            appDomain={appDomain}
+            density={density}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onToggleSort={toggleSort}
+            togglePending={listActions.togglePending}
+            deletePending={deleteState.deletePending}
+            targetWorkspaceSubdomain={deleteState.targetWorkspace?.subdomain}
+            onToggleEnabled={listActions.handleToggleEnabled}
+            onToggleEmailVerification={listActions.handleToggleEmailVerification}
+            onOpenModules={modalState.handleOpenModules}
+            onOpenDelete={isSuperUser ? deleteState.handleOpenDelete : undefined}
+            onOpenResetPassword={modalState.handleOpenResetPassword}
+            onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
+            onInspect={modalState.handleOpenInspect}
+            selectedSubdomains={selection.selectedSubdomains}
+            onToggleSelect={selection.toggleSelect}
+            onToggleSelectAll={() => selection.toggleSelectAll(items)}
+          />
         )}
       </ModuleWorkListStateShell>
 

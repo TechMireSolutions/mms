@@ -61,14 +61,14 @@ describe("SessionCard Component", () => {
     const html = renderToStaticMarkup(<SessionCard {...baseProps} />);
     expect(html).toContain('role="article"');
     expect(html).toContain('tabindex="0"');
-    expect(html).toContain('aria-selected="false"');
+    expect(html).toContain('data-selected="false"');
   });
 
   it("renders selected state when session is in selectedIds", () => {
     const html = renderToStaticMarkup(
       <SessionCard {...baseProps} selectedIds={["ses-1"]} />,
     );
-    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('data-selected="true"');
     expect(html).toContain("border-primary/50");
   });
 

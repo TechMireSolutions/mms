@@ -5,6 +5,7 @@ import {
   deleteWorkspace,
   getWorkspaceGrantedModules,
   listPlatformWorkspaces,
+  getPlatformWorkspaceMetrics,
   getPlatformWorkspaceSummary,
   setWorkspaceEmailVerification,
   setWorkspaceEnabled,
@@ -14,11 +15,20 @@ import { verifyPlatformUserPassword } from '../../services/platform/platformUser
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { blockTenant, unblockTenant } from '../../services/session.service.js';
 
-export async function handleListWorkspaces(): Promise<
+export async function handleListWorkspaces({
+  query,
+}: ContractRouteArgs<typeof platformWorkspacesContract['listWorkspaces']>): Promise<
   ContractRouteResponse<typeof platformWorkspacesContract['listWorkspaces']>
 > {
-  const workspaces = await listPlatformWorkspaces();
-  return { status: 200 as const, body: { workspaces } };
+  const result = await listPlatformWorkspaces(query ?? {});
+  return { status: 200 as const, body: result };
+}
+
+export async function handleGetWorkspaceMetrics(): Promise<
+  ContractRouteResponse<typeof platformWorkspacesContract['getWorkspaceMetrics']>
+> {
+  const metrics = await getPlatformWorkspaceMetrics();
+  return { status: 200 as const, body: metrics };
 }
 
 export async function handlePatchWorkspace({

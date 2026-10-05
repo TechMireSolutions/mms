@@ -203,7 +203,12 @@ describe('auth routes', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     mockUpdatePlatformUserPassword.mockReset();
-    mockListPlatformWorkspaces.mockReset().mockResolvedValue([]);
+    mockListPlatformWorkspaces.mockReset().mockResolvedValue({
+      workspaces: [],
+      total: 0,
+      page: 1,
+      pageSize: 25,
+    });
     mockSetPlatformAdminPermissions.mockReset();
     mockSetPlatformAdminDisabled.mockReset();
     mockDeletePlatformAdmin.mockReset();

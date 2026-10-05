@@ -31,7 +31,7 @@ export function PlatformReports(): React.JSX.Element {
   const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSettings, canAdmins, canSystem } =
     usePlatformPermissions();
   const { data: workspaces, isLoading: workspacesLoading, isError: workspacesError } =
-    usePlatformWorkspaces();
+    usePlatformWorkspaces({ limit: 100 });
 
   const totalWorkspaces = workspaces?.length ?? 0;
   const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;

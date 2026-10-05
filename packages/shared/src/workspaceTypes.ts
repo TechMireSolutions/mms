@@ -40,7 +40,17 @@ export interface WorkspaceRegistryResponse {
   workspaces: PublicWorkspaceSummary[];
 }
 
-/** Response body for `GET /api/platform/workspaces`. */
+/** Response body for `GET /api/platform/workspaces` (paginated). */
 export interface PlatformWorkspaceListResponse {
   workspaces: PlatformWorkspaceRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Response body for `GET /api/platform/workspaces/metrics`. */
+export interface PlatformWorkspaceMetrics {
+  total: number;
+  active: number;
+  inactive: number;
 }

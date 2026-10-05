@@ -23,6 +23,9 @@ import {
   platformSetupStatusDtoSchema as platformSetupStatusSchema,
   platformSettingsDtoSchema as platformSettingsSchema,
   platformWorkspaceRowDtoSchema as platformWorkspaceRowSchema,
+  platformWorkspacesListQuerySchema,
+  platformWorkspacesListResponseSchema,
+  platformWorkspaceMetricsDtoSchema,
   platformActivityLogDtoSchema as platformActivityLogSchema,
   platformErrorDtoSchema as platformErrorSchema,
 } from '../schemas/platform.dto.js';
@@ -51,12 +54,23 @@ export const platformWorkspacesRoutes = {
   listWorkspaces: {
     method: 'GET',
     path: '/api/platform/workspaces',
+    query: platformWorkspacesListQuerySchema,
     responses: {
-      200: z.object({ workspaces: z.array(platformWorkspaceRowSchema) }),
+      200: platformWorkspacesListResponseSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
     },
-    summary: 'List all workspaces',
+    summary: 'List workspaces (paginated)',
+  },
+  getWorkspaceMetrics: {
+    method: 'GET',
+    path: '/api/platform/workspaces/metrics',
+    responses: {
+      200: platformWorkspaceMetricsDtoSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'Workspace fleet KPI counts',
   },
   patchWorkspace: {
     method: 'PATCH',

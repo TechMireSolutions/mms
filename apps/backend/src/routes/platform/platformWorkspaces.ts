@@ -16,6 +16,7 @@ import {
 } from './platformWorkspaceAdminHandlers.js';
 import {
   handleListWorkspaces,
+  handleGetWorkspaceMetrics,
   handlePatchWorkspace,
   handleGetWorkspaceModules,
   handleUpdateWorkspaceModules,
@@ -36,6 +37,7 @@ export default async function platformWorkspaceRoutes(
 
   const router = s.router(platformWorkspacesContract, {
     listWorkspaces: handleListWorkspaces,
+    getWorkspaceMetrics: handleGetWorkspaceMetrics,
     patchWorkspace: handlePatchWorkspace,
     getWorkspaceModules: handleGetWorkspaceModules,
     updateWorkspaceModules: handleUpdateWorkspaceModules,

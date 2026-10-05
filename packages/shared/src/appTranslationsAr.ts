@@ -5363,6 +5363,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "platform.settingsTabGlobal": "عام وTLS",
   "platform.settingsTabTheme": "المظهر والسمة",
   "platform.settingsTabSecurity": "الأمان والجلسة",
+  "platform.dashboard.systemHealth": "صحة النظام",
   "platform.authTrustRls": "عزل صفوف PostgreSQL (RLS)",
   "platform.authTrustTls": "تشفير TLS بـ 256 بت",
   "platform.maintenance.bullmqActive": "BullMQ نشط",

@@ -13,6 +13,27 @@ import {
 describe('platformQueryKeys SSOT', () => {
   it('defines stable query key tuples for all platform entities', () => {
     expect(PLATFORM_QUERY_KEYS.workspaces).toEqual(['platform', 'workspaces']);
+    expect(PLATFORM_QUERY_KEYS.workspaceMetrics).toEqual(['platform', 'workspaces', 'metrics']);
+    expect(PLATFORM_QUERY_KEYS.workspaceList({
+      page: 2,
+      limit: 25,
+      search: 'dar',
+      status: 'active',
+      sortField: 'name',
+      sortDir: 'asc',
+    })).toEqual([
+      'platform',
+      'workspaces',
+      'list',
+      {
+        page: 2,
+        limit: 25,
+        search: 'dar',
+        status: 'active',
+        sortField: 'name',
+        sortDir: 'asc',
+      },
+    ]);
     expect(PLATFORM_QUERY_KEYS.admins).toEqual(['platform', 'admins']);
     expect(PLATFORM_QUERY_KEYS.activityLogs).toEqual(['platform', 'activity-logs']);
     expect(PLATFORM_QUERY_KEYS.settings).toEqual(['platform', 'settings']);

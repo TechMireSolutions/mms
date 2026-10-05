@@ -1,7 +1,11 @@
 import {
   type PublicWorkspaceSummary,
   type PlatformWorkspaceRow,
+  type PlatformWorkspaceListResponse,
+  type PlatformWorkspaceMetrics,
+  type PlatformWorkspacesListQuery,
   type BrandingSettings,
+  type UserModulePreferences,
   BRANDING_IDENTITY_FIELD_KEYS,
   DEFAULT_USERS_SETTINGS,
   mergeBrandingSettings,
@@ -10,10 +14,10 @@ import {
   isWorkspaceEnabled,
   toPublicBranding,
 } from '@mms/shared';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql, count } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import { getDb } from '../db/database.js';
-import { tenantUsers } from '../db/schema.js';
+import { tenantUsers, workspaces as workspacesTable } from '../db/schema.js';
 import { hashPassword } from './auth/passwordService.js';
 import {
   getWorkspaceBranding,
@@ -38,6 +42,130 @@ function generateTemporaryAdminPassword(): string {
 
 function generateTenantUserId(): string {
   return `usr_${randomBytes(8).toString('hex')}`;
+}
+
+function mapWorkspaceSummaryRow(
+  workspace: { subdomain: string; madrasaName: string; tagline?: string | null; enabled?: boolean; createdAt: string | Date },
+  branding: BrandingSettings | null | undefined,
+  prefsRaw: Partial<UserModulePreferences> | Record<string, unknown> | null | undefined,
+  adminEmailFromMap?: string,
+): PlatformWorkspaceRow {
+  const publicBranding = toPublicBranding(branding ? branding : mergeBrandingSettings(null));
+  const prefs = normalizeUserModulePreferences(prefsRaw);
+  const logoUrl = publicBranding.logoUrl?.trim();
+  const adminEmail = adminEmailFromMap || (branding?.email ? branding.email : undefined);
+  const createdAt =
+    typeof workspace.createdAt === 'string'
+      ? workspace.createdAt
+      : workspace.createdAt.toISOString();
+  return {
+    subdomain: workspace.subdomain,
+    madrasaName: publicBranding.madrasaName || workspace.madrasaName,
+    tagline: publicBranding.tagline || workspace.tagline || undefined,
+    logoUrl: logoUrl || undefined,
+    enabled: isWorkspaceEnabled(workspace),
+    createdAt,
+    requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
+    adminEmail,
+  };
+}
+
+function filterAndSortSummaries(
+  summaries: PlatformWorkspaceRow[],
+  query: PlatformWorkspacesListQuery,
+): PlatformWorkspaceRow[] {
+  const search = (query.search ?? '').trim().toLowerCase();
+  const status = query.status ?? 'all';
+  const sortField = query.sortField === 'madrasaName' ? 'name' : (query.sortField ?? 'name');
+  const sortDir = query.sortDir ?? 'asc';
+
+  let filtered = summaries;
+  if (search) {
+    filtered = filtered.filter(
+      (w) =>
+        (w.madrasaName ?? '').toLowerCase().includes(search) ||
+        w.subdomain.toLowerCase().includes(search),
+    );
+  }
+  if (status === 'active') filtered = filtered.filter((w) => w.enabled);
+  if (status === 'inactive') filtered = filtered.filter((w) => !w.enabled);
+
+  return [...filtered].sort((a, b) => {
+    let comparison = 0;
+    if (sortField === 'name') {
+      comparison = (a.madrasaName ?? '').localeCompare(b.madrasaName ?? '');
+    } else if (sortField === 'subdomain') {
+      comparison = a.subdomain.localeCompare(b.subdomain);
+    } else if (sortField === 'createdAt') {
+      comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else if (sortField === 'status') {
+      comparison = Number(b.enabled) - Number(a.enabled);
+    }
+    return sortDir === 'asc' ? comparison : -comparison;
+  });
+}
+
+/** Cheap fleet KPI counts for platform dashboard / toolbar. */
+export async function getPlatformWorkspaceMetrics(): Promise<PlatformWorkspaceMetrics> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      total: count(),
+      active: sql<number>`count(*) filter (where ${workspacesTable.enabled} is distinct from false)`,
+      inactive: sql<number>`count(*) filter (where ${workspacesTable.enabled} = false)`,
+    })
+    .from(workspacesTable);
+  return {
+    total: Number(row?.total ?? 0),
+    active: Number(row?.active ?? 0),
+    inactive: Number(row?.inactive ?? 0),
+  };
+}
+
+/** Paginated workspaces for platform console (includes disabled). */
+export async function listPlatformWorkspaces(
+  query: PlatformWorkspacesListQuery = {},
+): Promise<PlatformWorkspaceListResponse> {
+  const page = query.page ?? 1;
+  const pageSize = query.limit ?? 25;
+
+  const rows = await listWorkspaceRowsWithBranding();
+  // Build lightweight rows first (no prefs/admin email) for filter/sort/page,
+  // then hydrate only the current page — avoids N prefs lookups for filtered-out rows.
+  const lightSummaries: PlatformWorkspaceRow[] = rows.map(({ workspace, branding }) =>
+    mapWorkspaceSummaryRow(workspace, branding, null, undefined),
+  );
+  const sorted = filterAndSortSummaries(lightSummaries, query);
+  const total = sorted.length;
+  const start = (page - 1) * pageSize;
+  const pageSlice = sorted.slice(start, start + pageSize);
+  const pageSubdomains = pageSlice.map((w) => w.subdomain);
+
+  const prefsBySubdomain = await getUserModulePreferencesByWorkspaces(pageSubdomains);
+  const adminEmailsBySubdomain = await getWorkspaceAdminEmailsMap(pageSubdomains);
+  const brandingBySubdomain = new Map(
+    rows.map(({ workspace, branding }) => [workspace.subdomain.toLowerCase(), branding] as const),
+  );
+
+  const workspaces = pageSlice.map((light) => {
+    const branding = brandingBySubdomain.get(light.subdomain.toLowerCase());
+    const rawPrefs = prefsBySubdomain.get(light.subdomain.toLowerCase()) ?? null;
+    const adminEmail = adminEmailsBySubdomain.get(light.subdomain.toLowerCase());
+    return mapWorkspaceSummaryRow(
+      {
+        subdomain: light.subdomain,
+        madrasaName: light.madrasaName ?? light.subdomain,
+        tagline: light.tagline,
+        enabled: light.enabled,
+        createdAt: light.createdAt,
+      },
+      branding,
+      rawPrefs,
+      adminEmail,
+    );
+  });
+
+  return { workspaces, total, page, pageSize };
 }
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
@@ -122,33 +250,6 @@ export async function getWorkspaceAdminEmailsMap(subdomains: string[]): Promise<
     }
   }
   return map;
-}
-
-/** All workspaces for platform super-user console (includes disabled). */
-export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
-  const rows = await listWorkspaceRowsWithBranding();
-  const subdomains = rows.map(({ workspace }) => workspace.subdomain);
-  const prefsBySubdomain = await getUserModulePreferencesByWorkspaces(subdomains);
-  const adminEmailsBySubdomain = await getWorkspaceAdminEmailsMap(subdomains);
-
-  const summaries = rows.map(({ workspace, branding }) => {
-    const publicBranding = toPublicBranding(branding);
-    const rawPrefs = prefsBySubdomain.get(workspace.subdomain.toLowerCase()) ?? null;
-    const prefs = normalizeUserModulePreferences(rawPrefs);
-    const logoUrl = publicBranding.logoUrl?.trim();
-    const adminEmail = adminEmailsBySubdomain.get(workspace.subdomain.toLowerCase()) || (branding?.email ? branding.email : undefined);
-    return {
-      subdomain: workspace.subdomain,
-      madrasaName: publicBranding.madrasaName || workspace.madrasaName,
-      tagline: publicBranding.tagline || workspace.tagline,
-      logoUrl: logoUrl || undefined,
-      enabled: isWorkspaceEnabled(workspace),
-      createdAt: workspace.createdAt,
-      requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
-      adminEmail,
-    };
-  });
-  return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
 }
 
 /** Reset admin password for a tenant workspace. */
@@ -292,13 +393,14 @@ export async function getPlatformWorkspaceSummary(
   const logoUrl = publicBranding.logoUrl?.trim();
   const adminEmailsMap = await getWorkspaceAdminEmailsMap([normalized]);
   const adminEmail = adminEmailsMap.get(normalized.toLowerCase()) || (data.branding?.email ? data.branding.email : undefined);
+  const createdAt = String(data.workspace.createdAt);
   return {
     subdomain: data.workspace.subdomain,
     madrasaName: publicBranding.madrasaName || data.workspace.madrasaName,
     tagline: publicBranding.tagline || data.workspace.tagline,
     logoUrl: logoUrl || undefined,
     enabled: isWorkspaceEnabled(data.workspace),
-    createdAt: data.workspace.createdAt,
+    createdAt,
     requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
     adminEmail,
   };

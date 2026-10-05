@@ -3,6 +3,9 @@
  */
 export const PLATFORM_QUERY_KEYS = {
   workspaces: ['platform', 'workspaces'] as const,
+  workspaceList: (params: Record<string, string | number | undefined>) =>
+    ['platform', 'workspaces', 'list', params] as const,
+  workspaceMetrics: ['platform', 'workspaces', 'metrics'] as const,
   workspaceModules: (subdomain: string) => ['platform', 'workspace-modules', subdomain] as const,
   workspaceRegistry: ['workspace', 'registry'] as const,
   admins: ['platform', 'admins'] as const,
@@ -15,6 +18,7 @@ export const PLATFORM_QUERY_KEYS = {
 } as const;
 
 export const PLATFORM_WORKSPACES_QUERY_KEY = PLATFORM_QUERY_KEYS.workspaces;
+export const PLATFORM_WORKSPACE_METRICS_QUERY_KEY = PLATFORM_QUERY_KEYS.workspaceMetrics;
 export const PLATFORM_ADMINS_QUERY_KEY = PLATFORM_QUERY_KEYS.admins;
 export const PLATFORM_ACTIVITY_LOGS_QUERY_KEY = PLATFORM_QUERY_KEYS.activityLogs;
 export const PLATFORM_SETTINGS_QUERY_KEY = PLATFORM_QUERY_KEYS.settings;

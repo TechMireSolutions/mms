@@ -88,6 +88,11 @@ export interface A11yAuditOptions {
    * third-party embeds you cannot fix, not for your own components.
    */
   exclude?: string[];
+  /**
+   * Limit the audit to a subtree (e.g. `#main-content`). Prefer this over
+   * excluding chrome when the ready selector already names the surface under test.
+   */
+  include?: string[];
 }
 
 /** Result shape derived from the builder, so `axe-core` need not be a direct dep. */
@@ -192,6 +197,9 @@ export async function assertNoSeriousA11yViolations(
 
   for (const selector of options.exclude ?? []) {
     builder = builder.exclude(selector);
+  }
+  for (const selector of options.include ?? []) {
+    builder = builder.include(selector);
   }
   if (options.disabledRules && options.disabledRules.length > 0) {
     builder = builder.disableRules(options.disabledRules);

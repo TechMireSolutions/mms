@@ -46,7 +46,21 @@ vi.mock('../db/repositories/platformUserRepository.js', () => ({
 }));
 
 vi.mock('../services/workspaceService.js', () => ({
-  listPlatformWorkspaces: vi.fn().mockImplementation(async () => mockWorkspaces),
+  listPlatformWorkspaces: vi.fn().mockImplementation(async (query: { page?: number; limit?: number } = {}) => {
+    const page = query.page ?? 1;
+    const pageSize = query.limit ?? 25;
+    return {
+      workspaces: mockWorkspaces,
+      total: mockWorkspaces.length,
+      page,
+      pageSize,
+    };
+  }),
+  getPlatformWorkspaceMetrics: vi.fn().mockResolvedValue({
+    total: mockWorkspaces.length,
+    active: mockWorkspaces.filter((w) => w.enabled).length,
+    inactive: mockWorkspaces.filter((w) => !w.enabled).length,
+  }),
   setWorkspaceEmailVerification: vi.fn().mockImplementation(async (subdomain: string, requireEmailVerification: boolean) => {
     const ws = mockWorkspaces.find((w) => w.subdomain === subdomain);
     if (ws) ws.requireEmailVerification = requireEmailVerification;
@@ -108,7 +122,7 @@ describe('platformWorkspaces REST API integration routes', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('returns workspace array for authenticated super-user session', async () => {
+  it('returns paginated workspaces for authenticated super-user session', async () => {
     const token = signPlatformToken();
     const res = await app.inject({
       method: 'GET',
@@ -118,6 +132,39 @@ describe('platformWorkspaces REST API integration routes', () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(Array.isArray(body.workspaces)).toBe(true);
+    expect(body.total).toBe(1);
+    expect(body.page).toBe(1);
+    expect(body.pageSize).toBe(25);
+  });
+
+  it('returns workspace metrics for authenticated super-user session', async () => {
+    const token = signPlatformToken();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces/metrics',
+      cookies: { mms_platform_access: token },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.total).toBe(1);
+    expect(body.active).toBe(1);
+    expect(body.inactive).toBe(0);
+  });
+
+  it('filters and pages workspaces via list query params', async () => {
+    const token = signPlatformToken();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces?page=1&limit=1&search=demo&status=active&sortField=name&sortDir=asc',
+      cookies: { mms_platform_access: token },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.page).toBe(1);
+    expect(body.pageSize).toBe(1);
+    expect(body.total).toBeGreaterThanOrEqual(1);
+    expect(body.workspaces).toHaveLength(1);
+    expect(body.workspaces[0].subdomain).toBe('demo');
   });
 
   it('updates email verification for authenticated super-user session', async () => {

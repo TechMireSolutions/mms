@@ -335,6 +335,35 @@ export const PLATFORM_WORKSPACE_ROW_SECRET_KEYS = [
 
 export type PlatformWorkspaceRowDto = z.infer<typeof platformWorkspaceRowDtoSchema>;
 
+/** List query for platform workspace directory (paginated). */
+export const platformWorkspacesListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  search: z.string().max(500).optional(),
+  status: z.enum(['all', 'active', 'inactive']).optional(),
+  sortField: z.enum(['name', 'subdomain', 'createdAt', 'status', 'madrasaName']).optional(),
+  sortDir: z.enum(['asc', 'desc']).optional(),
+}).strict();
+
+export type PlatformWorkspacesListQuery = z.infer<typeof platformWorkspacesListQuerySchema>;
+
+export const platformWorkspacesListResponseSchema = z.object({
+  workspaces: z.array(platformWorkspaceRowDtoSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1).max(100),
+}).strict();
+
+export type PlatformWorkspacesListResponseDto = z.infer<typeof platformWorkspacesListResponseSchema>;
+
+export const platformWorkspaceMetricsDtoSchema = z.object({
+  total: z.number().int().nonnegative(),
+  active: z.number().int().nonnegative(),
+  inactive: z.number().int().nonnegative(),
+}).strict();
+
+export type PlatformWorkspaceMetricsDto = z.infer<typeof platformWorkspaceMetricsDtoSchema>;
+
 export const platformActivityLogDtoSchema = z.object({
   id: z.string(),
   userId: z.string().nullable(),

@@ -298,7 +298,7 @@ describe("useWorkCardAction", () => {
     const { result, unmount } = renderHook(makeOptions({ selectedIds: ["ent-1"] }));
     expect(result.cardProps.tabIndex).toBe(0);
     expect(result.cardProps.role).toBe("article");
-    expect(result.cardProps["aria-selected"]).toBe(true);
+    expect(result.cardProps["data-selected"]).toBe(true);
     expect(result.cardProps.onKeyDown).toBe(result.onKeyDown);
     unmount();
   });

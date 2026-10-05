@@ -68,7 +68,7 @@ export function useOmniCommandRegistry(): UseOmniCommandRegistryResult {
   const { t } = useTranslation();
   const currentPath = useCurrentPath();
   const perms = usePlatformPermissions();
-  const { data: workspaces } = usePlatformWorkspaces();
+  const { data: workspaces } = usePlatformWorkspaces({ limit: 100 });
   const [recents, setRecents] = useState<RecentWorkspaceRecord[]>(() => loadRecentWorkspaces());
 
   useEffect(() => {

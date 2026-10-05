@@ -1,11 +1,11 @@
 import React from "react";
-import { Building2, Globe, Ban, PlusCircle } from "lucide-react";
+import { Building2, Globe, Ban, PlusCircle, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
-import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
+import { usePlatformWorkspaceMetrics } from "@/platform/hooks/usePlatformWorkspaceMetrics";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { StatsSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -21,18 +21,19 @@ import { ROUTES } from "@/lib/config/routes";
 export function PlatformDashboard(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSystem, canAdmins } = usePlatformPermissions();
+  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSystem, canAdmins } =
+    usePlatformPermissions();
   const {
-    data: workspaces,
-    isLoading: workspacesLoading,
-    isError: workspacesError,
+    data: metrics,
+    isLoading: metricsLoading,
+    isError: metricsError,
     refetch,
-  } = usePlatformWorkspaces();
+  } = usePlatformWorkspaceMetrics();
 
-  const totalWorkspaces = workspaces?.length ?? 0;
-  const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;
-  const disabledWorkspaces = workspaces?.filter((w) => w.enabled === false).length ?? 0;
-  const metricsReady = !workspacesLoading && !workspacesError && workspaces !== undefined;
+  const totalWorkspaces = metrics?.total ?? 0;
+  const activeWorkspaces = metrics?.active ?? 0;
+  const disabledWorkspaces = metrics?.inactive ?? 0;
+  const metricsReady = !metricsLoading && !metricsError && metrics !== undefined;
 
   return (
     <motion.div
@@ -41,17 +42,16 @@ export function PlatformDashboard(): React.JSX.Element {
       animate="show"
       className="space-y-8 text-start"
     >
+      {/* First viewport: greeting + fleet KPIs */}
       <PlatformDashboardBanner
         platformUser={platformUser}
         isSuperUser={isSuperUser}
         canWorkspaces={canWorkspaces}
         canOnboard={canOnboard}
-        totalWorkspaces={totalWorkspaces}
-        activeWorkspaces={activeWorkspaces}
       />
 
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
-        {workspacesError ? (
+        {metricsError ? (
           <ErrorState
             title={t("platform.loadFailed")}
             description={t("platform.loadFailedHint")}
@@ -99,26 +99,41 @@ export function PlatformDashboard(): React.JSX.Element {
         )}
       </motion.div>
 
-      <PlatformDashboardTelemetry />
-
-      <motion.div
-        variants={reducedMotion ? undefined : itemVariants}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
-      >
-        <div className="lg:col-span-2 space-y-6">
-          <PlatformDashboardCharts
-            activeWorkspaces={activeWorkspaces}
-            disabledWorkspaces={disabledWorkspaces}
+      {/* Second section: fleet snapshot + ops shortcuts */}
+      {metricsReady && totalWorkspaces > 0 ? (
+        <motion.div
+          variants={reducedMotion ? undefined : itemVariants}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+        >
+          <div className="lg:col-span-2 space-y-6">
+            <PlatformDashboardCharts
+              activeWorkspaces={activeWorkspaces}
+              disabledWorkspaces={disabledWorkspaces}
+            />
+          </div>
+          <PlatformDashboardQuickActions
+            canWorkspaces={canWorkspaces}
+            canSystem={canSystem}
+            canAdmins={canAdmins}
           />
-        </div>
+        </motion.div>
+      ) : null}
 
-        <PlatformDashboardQuickActions
-          canWorkspaces={canWorkspaces}
-          canSystem={canSystem}
-          canAdmins={canAdmins}
-        />
+      {/* Third section: system health (collapsed unless system permission) */}
+      <motion.div variants={reducedMotion ? undefined : itemVariants}>
+        <details
+          className="group rounded-xl border border-border/60 bg-card/40 open:bg-card/60"
+          open={canSystem}
+        >
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+            <Activity className="h-4 w-4 text-primary shrink-0" aria-hidden />
+            {t("platform.dashboard.systemHealth")}
+          </summary>
+          <div className="border-t border-border/40 px-4 pb-4 pt-3">
+            <PlatformDashboardTelemetry />
+          </div>
+        </details>
       </motion.div>
     </motion.div>
   );
 }
-

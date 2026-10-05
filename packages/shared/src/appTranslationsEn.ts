@@ -5376,6 +5376,7 @@ export const APP_TRANSLATIONS_EN = {
   "platform.settingsTabGlobal": "Global & TLS",
   "platform.settingsTabTheme": "Appearance & Theme",
   "platform.settingsTabSecurity": "Security & Session",
+  "platform.dashboard.systemHealth": "System health",
   "platform.authTrustRls": "PostgreSQL RLS",
   "platform.authTrustTls": "256-Bit TLS",
   "platform.maintenance.bullmqActive": "BullMQ Active",

@@ -36,6 +36,7 @@ export {
   getWorkspaceInstitutionSetupStatus,
   listPublicWorkspaces,
   listPlatformWorkspaces,
+  getPlatformWorkspaceMetrics,
   getPlatformWorkspaceSummary,
   resetWorkspaceAdminPassword,
   createWorkspaceAdminUser,

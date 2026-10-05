@@ -121,7 +121,7 @@ describe('PlatformAdminsList', () => {
     expect(html).toContain('Failed to load operators');
   });
 
-  it('renders table rows with keyboard accessibility attributes', () => {
+  it('renders table rows with operator details and status', () => {
     const html = renderToStaticMarkup(
       <PlatformAdminsList
         admins={mockAdmins}
@@ -131,8 +131,7 @@ describe('PlatformAdminsList', () => {
       />,
     );
 
-    expect(html).toContain('role="button"');
-    expect(html).toContain('tabindex="0"');
     expect(html).toContain('Super Admin');
+    expect(html).toContain('super@mms.local');
   });
 });

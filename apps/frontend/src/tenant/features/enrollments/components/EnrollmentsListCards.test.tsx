@@ -76,7 +76,7 @@ describe("EnrollmentsListCards Component", () => {
     expect(html).toContain("enrollments.actions.viewShort");
     expect(html).toContain('role="article"');
     expect(html).toContain('tabindex="0"');
-    expect(html).toContain('aria-selected="false"');
+    expect(html).toContain('data-selected="false"');
   });
 
   it("renders selected card when id is in selectedIds", () => {
@@ -105,6 +105,6 @@ describe("EnrollmentsListCards Component", () => {
       />,
     );
 
-    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('data-selected="true"');
   });
 });

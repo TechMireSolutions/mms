@@ -5373,6 +5373,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "platform.settingsTabGlobal": "سراسری و TLS",
   "platform.settingsTabTheme": "ظاهر و پوسته",
   "platform.settingsTabSecurity": "امنیت و نشست",
+  "platform.dashboard.systemHealth": "سلامت سیستم",
   "platform.authTrustRls": "جداسازی سطح ردیف PostgreSQL (RLS)",
   "platform.authTrustTls": "رمزنگاری TLS با ۲۵۶ بیت",
   "platform.maintenance.bullmqActive": "BullMQ فعال",

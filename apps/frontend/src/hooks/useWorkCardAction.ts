@@ -53,7 +53,8 @@ export interface UseWorkCardActionReturn<TEntity extends WorkCardEntity> {
     tabIndex?: number;
     role: "article";
     onKeyDown: (e: KeyboardEvent) => void;
-    "aria-selected"?: boolean;
+    /** Selection is announced via the card checkbox; article does not support aria-selected. */
+    "data-selected"?: boolean;
   };
 }
 
@@ -156,9 +157,11 @@ export function useWorkCardAction<TEntity extends WorkCardEntity>({
       tabIndex: isFocusable ? 0 : undefined,
       role: "article" as const,
       onKeyDown: handleKeyDown,
-      "aria-selected": isSelected,
+      // `aria-selected` is invalid on role="article" (axe aria-allowed-attr).
+      // Selection state is exposed on the card checkbox; sync visual via data attr.
+      "data-selected": canSelect ? isSelected : undefined,
     }),
-    [isFocusable, handleKeyDown, isSelected],
+    [isFocusable, handleKeyDown, canSelect, isSelected],
   );
 
   return {

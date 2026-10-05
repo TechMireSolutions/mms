@@ -51,18 +51,22 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
     ? selectRowAriaLabel(row)
     : `Select row ${idStr}`;
 
+  const hasNestedInteractive = hasSelection || Boolean(renderRowActions);
+  // Clickable <tr role="button"> wrapping checkboxes/switches fails axe nested-interactive.
+  // Keep mouse click activation; keyboard users use the selection control / row actions.
   const trProps = {
     onClick: () => onRowClick?.(row),
-    onKeyDown: onRowClick
-      ? (e: React.KeyboardEvent) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onRowClick(row);
+    onKeyDown:
+      onRowClick && !hasNestedInteractive
+        ? (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onRowClick(row);
+            }
           }
-        }
-      : undefined,
-    tabIndex: onRowClick ? 0 : undefined,
-    role: onRowClick ? "button" : undefined,
+        : undefined,
+    tabIndex: onRowClick && !hasNestedInteractive ? 0 : undefined,
+    role: onRowClick && !hasNestedInteractive ? ("button" as const) : undefined,
     onMouseEnter: onRowHover ? () => onRowHover(row) : undefined,
     className: cn(
       "group border-b border-border/40 transition-colors hover:bg-muted/40",
