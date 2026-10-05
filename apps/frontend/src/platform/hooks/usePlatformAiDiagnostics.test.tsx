@@ -83,7 +83,7 @@ describe('usePlatformAiDiagnostics', () => {
     cleanup();
   });
 
-  it('falls back gracefully when API call fails', async () => {
+  it('surfaces error without inventing assistant health on API failure', async () => {
     vi.mocked(apiClient.apiJson).mockRejectedValueOnce(new Error('Network error'));
 
     const { getResult, cleanup } = renderHook('/platform/dashboard');
@@ -93,9 +93,8 @@ describe('usePlatformAiDiagnostics', () => {
     });
 
     const messages = getResult().messages;
-    expect(messages.length).toBe(2);
-    expect(messages[1].role).toBe('assistant');
-    expect(messages[1].content).toContain('Status report');
+    expect(messages.length).toBe(1);
+    expect(messages[0].role).toBe('user');
     expect(getResult().error).toBe('Network error');
 
     act(() => {

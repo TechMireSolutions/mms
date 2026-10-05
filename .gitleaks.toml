@@ -47,6 +47,7 @@ paths = [
   '''apps/frontend/src/lib/twoFactor\.ts''',
   '''apps/frontend/src/tenant/features/(hasanat|examinations)/components/.*TemplateEditor\.tsx''',
   '''apps/backend/src/__tests__/.*\.ts''',
+  '''packages/shared/src/__tests__/.*\.ts''',
   '''apps/backend/\.env\.example''',
   '''scratch/naming_report\.txt''',
 ]

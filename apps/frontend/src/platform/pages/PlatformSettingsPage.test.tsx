@@ -16,6 +16,7 @@ vi.mock('@/hooks/useReducedMotion', () => ({
 
 vi.mock('@/platform/hooks/usePlatformPermissions', () => ({
   usePlatformPermissions: () => ({
+    canSettings: true,
     canSystem: true,
     isSuperUser: true,
     platformUser: { id: 'admin-1', name: 'Zaid' },
@@ -50,9 +51,9 @@ describe('PlatformSettingsPage', () => {
       </MemoryRouter>,
     );
 
-    expect(html).toContain('Platform Settings');
-    expect(html).toContain('Global &amp; TLS');
-    expect(html).toContain('Appearance &amp; Theme');
-    expect(html).toContain('Security &amp; Session');
+    expect(html).toContain('platform.settingsPageTitle');
+    expect(html).toContain('platform.settingsTabGlobal');
+    expect(html).toContain('platform.settingsTabTheme');
+    expect(html).toContain('platform.settingsTabSecurity');
   });
 });

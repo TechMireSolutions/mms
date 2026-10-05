@@ -261,6 +261,10 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       // Step 5 Review + create
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.locator('#wizard-step-title')).toContainText(/Review|create/i);
+      const platformPasswordInput = page.locator('#onboarding-platform-password');
+      if (await platformPasswordInput.isVisible().catch(() => false)) {
+        await platformPasswordInput.fill(e2ePlatformPassword);
+      }
       await page.getByRole('button', { name: 'Create workspace' }).click();
       await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
       await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });

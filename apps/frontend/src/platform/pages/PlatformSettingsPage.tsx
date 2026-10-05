@@ -21,12 +21,12 @@ export default function PlatformSettingsPage(): React.JSX.Element {
   const tabs: AccordionTabItem[] = [
     {
       id: 'global',
-      label: 'Global & TLS',
+      label: t('platform.settingsTabGlobal'),
       icon: Globe,
     },
     {
       id: 'theme',
-      label: 'Appearance & Theme',
+      label: t('platform.settingsTabTheme'),
       icon: Palette,
     },
     {
@@ -36,18 +36,18 @@ export default function PlatformSettingsPage(): React.JSX.Element {
     },
     {
       id: 'security',
-      label: 'Security & Session',
+      label: t('platform.settingsTabSecurity'),
       icon: ShieldCheck,
     },
   ];
 
   return (
     <ModulePageShell
-      seoTitle={`Platform Settings | ${t('platform.consoleTitle')}`}
-      seoDescription="Configure platform apex certificates, appearance, system services, and security standards."
+      seoTitle={`${t('platform.settingsPageTitle')} | ${t('platform.consoleTitle')}`}
+      seoDescription={t('platform.settingsPageSubtitle')}
       headerIcon={Settings}
-      headerTitle="Platform Settings"
-      headerSubtitle="Configure platform apex certificates, appearance, system services, and security standards."
+      headerTitle={t('platform.settingsPageTitle')}
+      headerSubtitle={t('platform.settingsPageSubtitle')}
     >
       <ResponsiveAccordionTabs
         tabs={tabs}

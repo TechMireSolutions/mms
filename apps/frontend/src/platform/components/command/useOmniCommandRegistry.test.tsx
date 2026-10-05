@@ -66,6 +66,7 @@ describe('useOmniCommandRegistry', () => {
     mockUsePlatformPermissions.mockReturnValue({
       canWorkspaces: true,
       canOnboard: true,
+      canSettings: true,
       canSystem: true,
       canAdmins: true,
     });

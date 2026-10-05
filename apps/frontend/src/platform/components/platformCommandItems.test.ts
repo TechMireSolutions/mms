@@ -36,15 +36,34 @@ describe('platformCommandItems', () => {
   it('filters command items based on operator permissions', () => {
     const adminCommand = PLATFORM_STATIC_COMMANDS.find((c) => c.id === 'create-admin')!;
     const systemCommand = PLATFORM_STATIC_COMMANDS.find((c) => c.id === 'system-diagnostics')!;
+    const settingsCommand = PLATFORM_STATIC_COMMANDS.find((c) => c.id === 'settings')!;
+    const aiCommand = PLATFORM_STATIC_COMMANDS.find((c) => c.id === 'ai-copilot')!;
+    const reportsCommand = PLATFORM_STATIC_COMMANDS.find((c) => c.id === 'reports')!;
 
     const permsWithoutAdmin = {
       canWorkspaces: true,
       canOnboard: true,
+      canSettings: true,
       canSystem: true,
       canAdmins: false,
     };
 
     expect(commandItemIsPermitted(adminCommand, permsWithoutAdmin)).toBe(false);
     expect(commandItemIsPermitted(systemCommand, permsWithoutAdmin)).toBe(true);
+    expect(commandItemIsPermitted(settingsCommand, permsWithoutAdmin)).toBe(true);
+    expect(commandItemIsPermitted(aiCommand, permsWithoutAdmin)).toBe(true);
+    expect(commandItemIsPermitted(reportsCommand, permsWithoutAdmin)).toBe(true);
+
+    const settingsOnly = {
+      canWorkspaces: false,
+      canOnboard: false,
+      canSettings: true,
+      canSystem: false,
+      canAdmins: false,
+    };
+    expect(commandItemIsPermitted(settingsCommand, settingsOnly)).toBe(true);
+    expect(commandItemIsPermitted(systemCommand, settingsOnly)).toBe(false);
+    expect(commandItemIsPermitted(aiCommand, settingsOnly)).toBe(false);
+    expect(commandItemIsPermitted(reportsCommand, settingsOnly)).toBe(false);
   });
 });

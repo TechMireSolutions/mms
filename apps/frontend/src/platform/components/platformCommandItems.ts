@@ -48,6 +48,7 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.platformReports,
     icon: BarChart3,
     keywords: ['analytics', 'reports', 'charts', 'distribution', 'graphs'],
+    requiredPermission: 'workspaces',
   },
   {
     id: 'activity-logs',
@@ -92,7 +93,7 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.platformSettings,
     icon: Settings,
     keywords: ['settings', 'preferences', 'tls', 'appearance', 'theme', 'config', 'certbot'],
-    requiredPermission: 'system',
+    requiredPermission: 'settings',
   },
   {
     id: 'account',
@@ -158,6 +159,7 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     badge: 'AI',
     shortcut: '⌘J',
     actionType: 'action',
+    requiredPermission: 'system',
   },
   {
     id: 'export-workspaces',
@@ -189,12 +191,19 @@ export function buildWorkspaceCommandItems(workspaces: PlatformWorkspaceRowData[
 /** Palette item visibility gate: `undefined` means everyone. */
 export function commandItemIsPermitted(
   item: PlatformCommandItem,
-  perms: { canWorkspaces: boolean; canOnboard: boolean; canSystem: boolean; canAdmins: boolean },
+  perms: {
+    canWorkspaces: boolean;
+    canOnboard: boolean;
+    canSettings: boolean;
+    canSystem: boolean;
+    canAdmins: boolean;
+  },
 ): boolean {
   if (!item.requiredPermission) return true;
   if (item.requiredPermission === 'workspaces') return perms.canWorkspaces;
   if (item.requiredPermission === 'onboard') return perms.canOnboard;
-  if (item.requiredPermission === 'system' || item.requiredPermission === 'settings') return perms.canSystem;
+  if (item.requiredPermission === 'settings') return perms.canSettings;
+  if (item.requiredPermission === 'system') return perms.canSystem;
   if (item.requiredPermission === 'admins') return perms.canAdmins;
   return true;
 }

@@ -109,6 +109,10 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     // Step 5 Complete + create
     await page.click('button:has-text("Continue")');
     await expect(page.locator('#wizard-step-title')).toContainText('Review and create');
+    const platformPasswordInput = page.locator('#onboarding-platform-password');
+    if (await platformPasswordInput.isVisible().catch(() => false)) {
+      await platformPasswordInput.fill(platformPassword);
+    }
     await page.click('button:has-text("Create workspace")');
     await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
     await expect(platformConsoleLanding.first()).toBeVisible({ timeout: 25_000 });

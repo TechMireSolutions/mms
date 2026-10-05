@@ -214,6 +214,11 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
       const passwordInput = page.locator('#admin-password');
       await passwordInput.fill(e2eCreatedAdminPassword);
 
+      const operatorPasswordInput = page.locator('#admin-operator-password');
+      if (await operatorPasswordInput.isVisible().catch(() => false)) {
+        await operatorPasswordInput.fill(e2eSuperPassword);
+      }
+
       // Select capability permissions via preset button
       const selectAllBtn = page.getByRole('button', { name: /Select all/i });
       if (await selectAllBtn.isVisible().catch(() => false)) {
@@ -249,6 +254,11 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
 
       const editModal = page.locator('[role="dialog"]');
       await expect(editModal).toBeVisible({ timeout: 15_000 });
+
+      const stepUpInput = editModal.locator('#edit-admin-step-up');
+      if (await stepUpInput.isVisible().catch(() => false)) {
+        await stepUpInput.fill(e2eSuperPassword);
+      }
 
       // Save permission changes
       const savePermsBtn = editModal.getByRole('button', { name: /Save Permissions|Save/i });

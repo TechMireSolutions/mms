@@ -66,7 +66,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     labelKey: "settings.title",
     icon: Settings,
     section: "ops",
-    isVisible: (perms) => perms.canSystem || perms.isSuperUser,
+    isVisible: (perms) => perms.canSettings,
   },
   {
     id: "system",

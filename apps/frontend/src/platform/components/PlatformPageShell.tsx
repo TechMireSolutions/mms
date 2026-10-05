@@ -1,6 +1,7 @@
 import React, { Suspense, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { AppPageShellSkeleton } from '@/components/common';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -48,8 +49,11 @@ function PlatformAuthenticatedShell({
   footer: React.ReactNode;
 }): React.JSX.Element {
   const { dir, language } = useTranslation();
+  const { canSystem } = usePlatformPermissions();
   const { commandPaletteOpen, setCommandPaletteOpen, collapsed } = usePlatformSidebar();
   const [aiOpen, setAiOpen] = useState(false);
+  const openAi = canSystem ? () => setAiOpen(true) : undefined;
+  const toggleAi = canSystem ? () => setAiOpen((prev) => !prev) : undefined;
 
   return (
     <AppShell
@@ -61,7 +65,7 @@ function PlatformAuthenticatedShell({
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}
           searchOpen={commandPaletteOpen}
-          onOpenAi={() => setAiOpen(true)}
+          onOpenAi={openAi}
           aiOpen={aiOpen}
         />
       }
@@ -69,7 +73,7 @@ function PlatformAuthenticatedShell({
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}
           searchOpen={commandPaletteOpen}
-          onOpenAi={() => setAiOpen(true)}
+          onOpenAi={openAi}
           aiOpen={aiOpen}
         />
       }
@@ -77,16 +81,16 @@ function PlatformAuthenticatedShell({
         <PlatformCommandPalette
           open={commandPaletteOpen}
           onClose={() => setCommandPaletteOpen(false)}
-          onOpenAi={() => setAiOpen(true)}
+          onOpenAi={openAi}
         />
       }
       sidebarCollapsed={collapsed}
       maxWidthClass={maxClass}
       footer={footer}
     >
-      <PlatformGlobalShortcuts onToggleAi={() => setAiOpen((prev) => !prev)} />
+      <PlatformGlobalShortcuts onToggleAi={toggleAi} />
       {children}
-      <PlatformAiDrawer isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+      {canSystem ? <PlatformAiDrawer isOpen={aiOpen} onClose={() => setAiOpen(false)} /> : null}
     </AppShell>
   );
 }

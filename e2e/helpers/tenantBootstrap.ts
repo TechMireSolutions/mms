@@ -150,6 +150,11 @@ export async function bootstrapAuthenticatedTenant(
   await page.getByRole('button', { name: /Continue/i }).click();
   await expect(page.locator('#wizard-step-title')).toContainText(/Review|create/i);
 
+  const platformPasswordInput = page.locator('#onboarding-platform-password');
+  if (await platformPasswordInput.isVisible().catch(() => false)) {
+    await platformPasswordInput.fill(platformPassword);
+  }
+
   const createWorkspaceResponse = page
     .waitForResponse(
       (res) =>

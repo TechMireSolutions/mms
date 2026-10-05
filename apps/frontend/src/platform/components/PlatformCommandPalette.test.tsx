@@ -50,6 +50,7 @@ describe('PlatformCommandPalette Component', () => {
     mockUsePlatformPermissions.mockReturnValue({
       canWorkspaces: true,
       canOnboard: true,
+      canSettings: true,
       canSystem: true,
       canAdmins: true,
     });
@@ -89,6 +90,7 @@ describe('PlatformCommandPalette Component', () => {
     mockUsePlatformPermissions.mockReturnValue({
       canWorkspaces: false,
       canOnboard: false,
+      canSettings: false,
       canSystem: false,
       canAdmins: false,
     });

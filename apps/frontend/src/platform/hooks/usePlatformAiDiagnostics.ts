@@ -115,33 +115,6 @@ export function usePlatformAiDiagnostics(): {
 
         setMessages((prev) => [...prev, assistantMsg]);
       } catch (err: unknown) {
-        // Graceful local fallback for offline/development or server errors
-        const fallbackAnalysis = `Diagnostics for "${trimmed}": Current route context is ${location.pathname}. Active madrasa services and database telemetry are operational under standard constraints.`;
-        const fallbackSuggestions: PlatformAiSuggestion[] = [
-          {
-            id: 'fallback-system',
-            label: 'Inspect System Health',
-            actionType: 'navigate',
-            target: ROUTES.platformSystem,
-          },
-          {
-            id: 'fallback-workspaces',
-            label: 'View Workspaces',
-            actionType: 'navigate',
-            target: ROUTES.platformWorkspaces,
-          },
-        ];
-
-        const fallbackMsg: PlatformChatMessage = {
-          id: assistantMsgId,
-          role: 'assistant',
-          content: fallbackAnalysis,
-          suggestions: fallbackSuggestions,
-          latencyMs: 12,
-          timestamp: Date.now(),
-        };
-
-        setMessages((prev) => [...prev, fallbackMsg]);
         setError(err instanceof Error ? err.message : 'Telemetry request failed');
       } finally {
         setIsAnalyzing(false);
