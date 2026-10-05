@@ -4,12 +4,15 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { AppPageShellSkeleton } from '@/components/common';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
+import { PlatformBreadcrumbProvider } from '@/platform/lib/PlatformBreadcrumbContext';
+import { PlatformInspectorProvider } from '@/platform/lib/PlatformInspectorContext';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar, PlatformMobileSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
 import { PlatformAiDrawer } from '@/platform/components/intelligence/PlatformAiDrawer';
+import { PlatformInspectorDrawer } from '@/platform/components/inspector/PlatformInspectorDrawer';
 import { AppShell } from '@/components/common/AppShell';
 import { PlatformLiveRegionProvider } from '@/platform/components/common/PlatformLiveRegion';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -88,6 +91,7 @@ function PlatformAuthenticatedShell({
     >
       <PlatformGlobalShortcuts onToggleAi={toggleAi} />
       {children}
+      <PlatformInspectorDrawer />
       {canSystem ? <PlatformAiDrawer isOpen={aiOpen} onClose={() => setAiOpen(false)} /> : null}
     </AppShell>
   );
@@ -106,23 +110,27 @@ export function PlatformPageShell({
     <PlatformLiveRegionProvider>
       <TooltipProvider delayDuration={150}>
         <PlatformSidebarProvider>
-          {isPlatformAuthenticated ? (
-            <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
-              {children || (
-                <Suspense fallback={<AppPageShellSkeleton />}>
-                  <Outlet />
-                </Suspense>
+          <PlatformBreadcrumbProvider>
+            <PlatformInspectorProvider>
+              {isPlatformAuthenticated ? (
+                <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
+                  {children || (
+                    <Suspense fallback={<AppPageShellSkeleton />}>
+                      <Outlet />
+                    </Suspense>
+                  )}
+                </PlatformAuthenticatedShell>
+              ) : (
+                <UnauthenticatedShell maxClass={maxClass} footer={footer}>
+                  {children || (
+                    <Suspense fallback={<AppPageShellSkeleton />}>
+                      <Outlet />
+                    </Suspense>
+                  )}
+                </UnauthenticatedShell>
               )}
-            </PlatformAuthenticatedShell>
-          ) : (
-            <UnauthenticatedShell maxClass={maxClass} footer={footer}>
-              {children || (
-                <Suspense fallback={<AppPageShellSkeleton />}>
-                  <Outlet />
-                </Suspense>
-              )}
-            </UnauthenticatedShell>
-          )}
+            </PlatformInspectorProvider>
+          </PlatformBreadcrumbProvider>
         </PlatformSidebarProvider>
       </TooltipProvider>
     </PlatformLiveRegionProvider>

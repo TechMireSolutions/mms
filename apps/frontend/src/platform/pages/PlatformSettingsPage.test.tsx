@@ -56,4 +56,14 @@ describe('PlatformSettingsPage', () => {
     expect(html).toContain('platform.settingsTabTheme');
     expect(html).toContain('platform.settingsTabSecurity');
   });
+
+  it('given section=security query, should activate security panel', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/settings?section=security']}>
+        <PlatformSettingsPage />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('platform.settingsTabSecurity');
+  });
 });

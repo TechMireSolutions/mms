@@ -36,7 +36,7 @@ describe('PlatformWorkspaceDensityToggle', () => {
       );
     });
 
-    const group = container.querySelector('[role="group"]');
+    const group = container.querySelector('[role="radiogroup"]');
     expect(group).not.toBeNull();
     expect(group?.getAttribute('aria-label')).toBe('Data display density');
 
@@ -44,9 +44,9 @@ describe('PlatformWorkspaceDensityToggle', () => {
     expect(buttons.length).toBe(3);
 
     const [compactBtn, standardBtn, comfortableBtn] = Array.from(buttons);
-    expect(compactBtn.getAttribute('aria-pressed')).toBe('false');
-    expect(standardBtn.getAttribute('aria-pressed')).toBe('true');
-    expect(comfortableBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(compactBtn.getAttribute('aria-checked')).toBe('false');
+    expect(standardBtn.getAttribute('aria-checked')).toBe('true');
+    expect(comfortableBtn.getAttribute('aria-checked')).toBe('false');
 
     act(() => {
       root.unmount();

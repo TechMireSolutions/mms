@@ -11,40 +11,14 @@ import {
   commandItemIsPermitted,
   type PlatformCommandItem,
 } from '@/platform/components/platformCommandItems';
+import {
+  loadRecentWorkspaces,
+  saveRecentWorkspace,
+  type RecentWorkspaceRecord,
+} from '@/platform/lib/recentWorkspaces';
 
-const RECENT_STORAGE_KEY = 'mms_platform_recent_workspaces';
-const MAX_RECENTS = 5;
-
-export interface RecentWorkspaceRecord {
-  subdomain: string;
-  madrasaName: string;
-}
-
-export function loadRecentWorkspaces(): RecentWorkspaceRecord[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(RECENT_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) {
-      return parsed.slice(0, MAX_RECENTS) as RecentWorkspaceRecord[];
-    }
-  } catch {
-    // Ignore storage parse errors
-  }
-  return [];
-}
-
-export function saveRecentWorkspace(rec: RecentWorkspaceRecord): RecentWorkspaceRecord[] {
-  const current = loadRecentWorkspaces().filter((w) => w.subdomain !== rec.subdomain);
-  const updated = [rec, ...current].slice(0, MAX_RECENTS);
-  try {
-    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // Ignore storage write errors
-  }
-  return updated;
-}
+export type { RecentWorkspaceRecord };
+export { loadRecentWorkspaces, saveRecentWorkspace };
 
 export interface UseOmniCommandRegistryResult {
   items: PlatformCommandItem[];

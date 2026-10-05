@@ -1,9 +1,14 @@
-import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus, Settings, Sparkles } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
+import { PLATFORM_STATIC_COMMANDS } from '@/platform/components/platformStaticCommands';
 
-export type PlatformCommandCategory = 'platform.commandCategory.recent' | 'platform.commandCategory.navigation' | 'platform.commandCategory.actions' | 'platform.manageMadrasas';
+export type PlatformCommandCategory =
+  | 'platform.commandCategory.recent'
+  | 'platform.commandCategory.navigation'
+  | 'platform.commandCategory.actions'
+  | 'platform.manageMadrasas';
 
 /** A console palette entry: static route command, direct action, or dynamic workspace link. */
 export interface PlatformCommandItem {
@@ -22,158 +27,7 @@ export interface PlatformCommandItem {
   requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins' | 'settings';
 }
 
-export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
-  {
-    id: 'dashboard',
-    labelKey: 'dashboard.title',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformDashboard,
-    icon: LayoutDashboard,
-    keywords: ['home', 'overview', 'metrics', 'stats', 'kpi', 'dashboard'],
-    badge: 'Nav',
-  },
-  {
-    id: 'workspaces',
-    labelKey: 'platform.manageMadrasas',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformWorkspaces,
-    icon: Building2,
-    keywords: ['madrasas', 'workspaces', 'tenants', 'subdomains', 'instances'],
-    requiredPermission: 'workspaces',
-  },
-  {
-    id: 'reports',
-    labelKey: 'module.reports',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformReports,
-    icon: BarChart3,
-    keywords: ['analytics', 'reports', 'charts', 'distribution', 'graphs'],
-    requiredPermission: 'workspaces',
-  },
-  {
-    id: 'activity-logs',
-    labelKey: 'platform.activityLogsTitle',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformActivityLogs,
-    icon: Activity,
-    keywords: ['logs', 'audit', 'events', 'history', 'activity'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'system',
-    labelKey: 'platform.systemMaintenance',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformSystem,
-    icon: Server,
-    keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'erd',
-    labelKey: 'platform.erdTitle',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformErd,
-    icon: Waypoints,
-    keywords: ['erd', 'schema', 'diagram', 'tables', 'relations', 'accounting', 'attendance'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'admins',
-    labelKey: 'platform.adminsTitle',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformUsers,
-    icon: ShieldCheck,
-    keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
-    requiredPermission: 'admins',
-  },
-  {
-    id: 'settings',
-    labelKey: 'settings.title',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformSettings,
-    icon: Settings,
-    keywords: ['settings', 'preferences', 'tls', 'appearance', 'theme', 'config', 'certbot'],
-    requiredPermission: 'settings',
-  },
-  {
-    id: 'account',
-    labelKey: 'platform.myAccount',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformAccount,
-    icon: User,
-    keywords: ['account', 'profile', 'session', 'email', 'me', 'password', 'security'],
-  },
-  {
-    id: 'migrations',
-    labelKey: 'platform.profileMigrateRestart',
-    category: 'platform.commandCategory.actions',
-    path: ROUTES.platformSystem,
-    icon: Server,
-    keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
-    badge: 'Ops',
-    requiredPermission: 'system',
-  },
-  {
-    id: 'onboard-madrasa',
-    labelKey: 'auth.createMadrasa',
-    category: 'platform.commandCategory.actions',
-    path: ROUTES.onboarding,
-    icon: PlusCircle,
-    keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
-    badge: 'Create',
-    shortcut: 'Alt+N',
-    actionType: 'action',
-    requiredPermission: 'onboard',
-  },
-  {
-    id: 'create-admin',
-    labelKey: 'platform.createAdminAction',
-    category: 'platform.commandCategory.actions',
-    path: `${ROUTES.platformAdmins}?create=true`,
-    icon: UserPlus,
-    keywords: ['admin', 'operator', 'invite', 'user', 'super_user', 'new'],
-    badge: 'Admin',
-    shortcut: 'Alt+A',
-    actionType: 'action',
-    requiredPermission: 'admins',
-  },
-  {
-    id: 'system-diagnostics',
-    labelKey: 'platform.runDiagnosticsAction',
-    category: 'platform.commandCategory.actions',
-    path: `${ROUTES.platformSystem}?probe=true`,
-    icon: Activity,
-    keywords: ['diagnostics', 'health', 'ping', 'check', 'probe', 'status'],
-    badge: 'Probe',
-    shortcut: 'Alt+D',
-    actionType: 'action',
-    requiredPermission: 'system',
-  },
-  {
-    id: 'ai-copilot',
-    labelKey: 'platform.aiCopilotTitle',
-    category: 'platform.commandCategory.actions',
-    path: '#copilot',
-    icon: Sparkles,
-    keywords: ['ai', 'copilot', 'assistant', 'diagnostics', 'telemetry'],
-    badge: 'AI',
-    shortcut: '⌘J',
-    actionType: 'action',
-    requiredPermission: 'system',
-  },
-  {
-    id: 'export-workspaces',
-    labelKey: 'platform.exportCsvAction',
-    category: 'platform.commandCategory.actions',
-    path: `${ROUTES.platformWorkspaces}?export=true`,
-    icon: Download,
-    keywords: ['export', 'csv', 'download', 'madrasas', 'list', 'tenants'],
-    badge: 'Export',
-    shortcut: 'Alt+E',
-    actionType: 'action',
-    requiredPermission: 'workspaces',
-  },
-];
+export { PLATFORM_STATIC_COMMANDS };
 
 /** Dynamic per-workspace palette entries (pre-filtered to the SearchBar `q` param on navigate). */
 export function buildWorkspaceCommandItems(workspaces: PlatformWorkspaceRowData[]): PlatformCommandItem[] {

@@ -1,16 +1,19 @@
 import React from 'react';
+import { Menu } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, ChevronRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { usePlatformHealth } from '@/platform/hooks/usePlatformHealth';
+import { usePlatformBreadcrumb } from '@/platform/lib/PlatformBreadcrumbContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { ROUTES, isNavPathActive } from '@/lib/config/routes';
 import { PLATFORM_NAV_ITEMS } from '@/platform/lib/platformNav';
 import { PlatformHeaderBrand } from '@/platform/components/header/PlatformHeaderBrand';
 import { PlatformHeaderUserNav } from '@/platform/components/header/PlatformHeaderUserNav';
+import { PlatformWorkspaceSwitcher } from '@/platform/components/header/PlatformWorkspaceSwitcher';
 
 export interface PlatformPageShellHeaderProps {
   onOpenSearch?: () => void;
@@ -33,11 +36,14 @@ export function PlatformPageShellHeader({
   const { isPlatformAuthenticated } = perms;
   const { openMobileSidebar } = usePlatformSidebar();
   const { status: rawStatus } = usePlatformHealth();
+  const { extraSegments } = usePlatformBreadcrumb();
   const status = (rawStatus as HealthStatus | undefined) ?? 'unknown';
 
   if (!isPlatformAuthenticated) return null;
 
-  const activeNavItem = PLATFORM_NAV_ITEMS.find((item) => isNavPathActive(location.pathname, item.path));
+  const activeNavItem = PLATFORM_NAV_ITEMS.find((item) =>
+    isNavPathActive(location.pathname, item.path),
+  );
 
   const healthLabel =
     status === 'operational'
@@ -46,12 +52,26 @@ export function PlatformPageShellHeader({
         ? t('platform.statusDegraded')
         : t('platform.statusUnknown');
 
+  const navSegment =
+    activeNavItem && activeNavItem.path !== ROUTES.platformDashboard
+      ? [
+          {
+            label: t(activeNavItem.labelKey),
+            href: extraSegments.length > 0 ? activeNavItem.path : undefined,
+          },
+        ]
+      : [];
+
+  const breadcrumbItems = [
+    { label: t('platform.consoleTitle'), href: ROUTES.platformDashboard },
+    ...navSegment,
+    ...extraSegments,
+  ];
+
   return (
     <div className="sticky top-0 z-header w-full border-b border-border bg-card/80 backdrop-blur-xl transition-all duration-300">
       <div className="w-full px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-        {/* Left Side Controls */}
-        <div className="flex items-center gap-3">
-          {/* Mobile Hamburger Button */}
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             type="button"
             variant="ghost"
@@ -66,31 +86,21 @@ export function PlatformPageShellHeader({
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Mobile Brand Logo */}
           <div className="lg:hidden">
             <PlatformHeaderBrand />
           </div>
 
-          {/* Desktop Breadcrumb Trail */}
-          <nav aria-label={t('common.breadcrumb')} className="hidden lg:flex items-center gap-2 text-xs">
-            <Link
-              to={ROUTES.platformDashboard}
-              className="font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {t('platform.consoleTitle')}
-            </Link>
-            {activeNavItem && activeNavItem.path !== ROUTES.platformDashboard ? (
-              <>
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 rtl:rotate-180" aria-hidden />
-                <span className="font-bold text-foreground">{t(activeNavItem.labelKey)}</span>
-              </>
-            ) : null}
-          </nav>
+          <Breadcrumb
+            ariaLabel={t('common.breadcrumb')}
+            className="hidden lg:flex min-w-0"
+            items={breadcrumbItems}
+          />
 
-          {/* Health Status Badge */}
+          <PlatformWorkspaceSwitcher />
+
           <Link
             to={ROUTES.platformSystem}
-            className="hidden sm:inline-flex cursor-pointer"
+            className="hidden sm:inline-flex cursor-pointer shrink-0"
             title={t('platform.systemMaintenance')}
             aria-label={`${t('platform.systemMaintenance')}: ${healthLabel}`}
           >
@@ -108,13 +118,12 @@ export function PlatformPageShellHeader({
           </Link>
         </div>
 
-        {/* Right Side Header User Actions */}
         <PlatformHeaderUserNav
           onOpenSearch={onOpenSearch}
           searchOpen={searchOpen}
           onOpenAi={onOpenAi}
           aiOpen={aiOpen}
-          className="ms-auto"
+          className="ms-auto shrink-0"
         />
       </div>
     </div>

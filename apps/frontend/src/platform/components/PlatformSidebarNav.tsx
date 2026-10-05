@@ -12,8 +12,9 @@ import { cn } from '@/lib/utils';
 import { isNavPathActive } from '@/lib/config/routes';
 
 const SECTION_LABEL_KEYS: Record<PlatformNavSection, AppTranslationKey | null> = {
-  core: 'platform.nav.sectionOverview',
-  admin: 'platform.nav.sectionAdmin',
+  overview: 'platform.nav.sectionOverview',
+  workspaces: 'platform.nav.sectionWorkspaces',
+  access: 'platform.nav.sectionAccess',
   ops: 'platform.nav.sectionOps',
   account: null,
 };

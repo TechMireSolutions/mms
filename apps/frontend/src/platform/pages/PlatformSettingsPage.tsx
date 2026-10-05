@@ -1,6 +1,7 @@
-import React, { useState, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Settings, Globe, Palette, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
@@ -12,10 +13,27 @@ import { PlatformSecuritySettingsPanel } from '@/platform/components/settings/Pl
 
 export type PlatformSettingsSection = 'global' | 'theme' | 'security';
 
+function parseSettingsSection(raw: string | null): PlatformSettingsSection {
+  if (raw === 'theme' || raw === 'security' || raw === 'global') return raw;
+  return 'global';
+}
+
 export default function PlatformSettingsPage(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const [activeSection, setActiveSection] = useState<PlatformSettingsSection>('global');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeSection = parseSettingsSection(searchParams.get('section'));
+
+  const handleSectionChange = (id: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('section', id);
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const tabs: AccordionTabItem[] = [
     {
@@ -46,7 +64,7 @@ export default function PlatformSettingsPage(): React.JSX.Element {
       <ResponsiveAccordionTabs
         tabs={tabs}
         activeTab={activeSection}
-        onTabChange={(id) => setActiveSection(id as PlatformSettingsSection)}
+        onTabChange={handleSectionChange}
         desktopLayout="sidebar"
         collapsible={false}
         panelIdPrefix="platform-settings-panel"

@@ -1,8 +1,7 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CommandPaletteModal } from '@/components/ui/CommandPaletteModal';
-import { useCommandPaletteSearch } from '@/components/ui/useCommandPaletteSearch';
+import { CommandPaletteShell } from '@/components/ui/CommandPaletteShell';
 import type { PlatformCommandItem } from '@/platform/components/platformCommandItems';
 import { PlatformCommandResultsList } from '@/platform/components/command/PlatformCommandResultsList';
 import { useOmniCommandRegistry } from '@/platform/components/command/useOmniCommandRegistry';
@@ -13,6 +12,9 @@ export interface PlatformCommandPaletteProps {
   onOpenAi?: () => void;
 }
 
+/**
+ * Platform command palette — thin adapter over shared CommandPaletteShell.
+ */
 export function PlatformCommandPalette({ open, onClose, onOpenAi }: PlatformCommandPaletteProps): React.JSX.Element | null {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -40,56 +42,41 @@ export function PlatformCommandPalette({ open, onClose, onOpenAi }: PlatformComm
     [navigate, onClose, onOpenAi, recordRecent],
   );
 
-  const {
-    query,
-    setQuery,
-    filteredItems,
-    selectedIndex,
-    setSelectedIndex,
-    handleKeyDown,
-  } = useCommandPaletteSearch<PlatformCommandItem>({
-    filterItems,
-    onSelect: handleSelect,
-    onClose,
-  });
-
-  const screenReaderAnnouncement =
-    filteredItems.length === 0
-      ? t('platform.noMatchingConsolePages', { query })
-      : t('platform.searchResultsCount', { count: String(filteredItems.length) });
-
   return (
-    <CommandPaletteModal
+    <CommandPaletteShell
       open={open}
       onClose={onClose}
+      filterItems={filterItems}
+      onSelect={handleSelect}
       ariaLabel={t('platform.openSearchAria')}
       searchPlaceholder={t('platform.searchConsolePlaceholder')}
-      query={query}
-      onQueryChange={setQuery}
-      onKeyDown={handleKeyDown}
-      screenReaderAnnouncement={screenReaderAnnouncement}
       listboxId="platform-command-listbox"
-      activeDescendantId={
-        filteredItems[selectedIndex] ? `platform-cmd-item-${filteredItems[selectedIndex].id}` : undefined
+      getActiveDescendantId={(item) => `platform-cmd-item-${item.id}`}
+      getScreenReaderAnnouncement={(query, items) =>
+        items.length === 0
+          ? t('platform.noMatchingConsolePages', { query })
+          : t('platform.searchResultsCount', { count: String(items.length) })
       }
       footerTitle={t('platform.consoleTitle')}
       dialogClassName="rounded-2xl text-start"
     >
-      <PlatformCommandResultsList
-        filteredItems={filteredItems}
-        selectedIndex={selectedIndex}
-        query={query}
-        onSelect={(_path, item) => {
-          if (item) {
-            handleSelect(item);
-          } else {
-            onClose();
-            setQuery('');
-            navigate(_path);
-          }
-        }}
-        onHoverIndex={setSelectedIndex}
-      />
-    </CommandPaletteModal>
+      {({ query, setQuery, filteredItems, selectedIndex, setSelectedIndex }) => (
+        <PlatformCommandResultsList
+          filteredItems={filteredItems}
+          selectedIndex={selectedIndex}
+          query={query}
+          onSelect={(_path, item) => {
+            if (item) {
+              handleSelect(item);
+            } else {
+              onClose();
+              setQuery('');
+              navigate(_path);
+            }
+          }}
+          onHoverIndex={setSelectedIndex}
+        />
+      )}
+    </CommandPaletteShell>
   );
 }

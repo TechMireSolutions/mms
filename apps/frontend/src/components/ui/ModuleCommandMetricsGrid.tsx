@@ -9,6 +9,9 @@ export interface MetricItem {
   value: string | number;
   sub?: StatCardProps['sub'];
   accent?: StatCardProps['accent'];
+  trend?: StatCardProps['trend'];
+  trendLabel?: StatCardProps['trendLabel'];
+  sparklineData?: StatCardProps['sparklineData'];
   onClick?: StatCardProps['onClick'];
   isActive?: StatCardProps['isActive'];
 }
@@ -46,6 +49,9 @@ export const ModuleCommandMetricsGrid = (function ModuleCommandMetricsGrid({
           value={item.value}
           sub={item.sub}
           accent={item.accent}
+          trend={item.trend}
+          trendLabel={item.trendLabel}
+          sparklineData={item.sparklineData}
           delayIndex={index}
           onClick={item.onClick}
           isActive={item.isActive}

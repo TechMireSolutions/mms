@@ -17,6 +17,8 @@ vi.mock('@/hooks/useReducedMotion', () => ({
 vi.mock('@/platform/hooks/usePlatformPermissions', () => ({
   usePlatformPermissions: () => ({
     canAdmins: true,
+    canSystem: true,
+    canSettings: true,
     isSuperUser: true,
     platformUser: { id: 'admin-1', name: 'Zaid', email: 'zaid@example.com' },
   }),

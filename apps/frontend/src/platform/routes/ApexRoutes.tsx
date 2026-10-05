@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { ROUTES, TENANT_APP_PATHS } from '@/lib/config/routes';
 import PlatformBootGate, { PlatformFallbackRoute } from '@/platform/components/PlatformBootGate';
 import { PlatformFirstRunGate } from '@/platform/components/PlatformFirstRunGate';
@@ -23,6 +23,7 @@ const PlatformSystemPage = React.lazy(() => import('@/platform/pages/PlatformSys
 const PlatformUsersPage = React.lazy(() => import('@/platform/pages/PlatformUsersPage'));
 const PlatformSettingsPage = React.lazy(() => import('@/platform/pages/PlatformSettingsPage'));
 const PlatformErdPage = React.lazy(() => import('@/platform/pages/PlatformErdPage'));
+const PlatformDesignSystemPage = React.lazy(() => import('@/platform/pages/PlatformDesignSystemPage'));
 
 const apexTenantGate = (
   <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />
@@ -75,7 +76,7 @@ export default function ApexRoutes(): React.JSX.Element {
       <Route element={<PlatformBootGate requireAuth requirePermission="admins" />}>
         <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
           <Route path={ROUTES.platformUsers} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformUsersPage /></React.Suspense>} />
-          <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformUsersPage /></React.Suspense>} />
+          <Route path={ROUTES.platformAdmins} element={<Navigate to={ROUTES.platformUsers} replace />} />
         </Route>
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="settings" />}>
@@ -88,6 +89,7 @@ export default function ApexRoutes(): React.JSX.Element {
           <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformActivityLogsPage /></React.Suspense>} />
           <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformSystemPage /></React.Suspense>} />
           <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
+          <Route path={ROUTES.platformDesignSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformDesignSystemPage /></React.Suspense>} />
         </Route>
       </Route>
 

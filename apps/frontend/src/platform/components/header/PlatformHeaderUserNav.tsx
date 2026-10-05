@@ -128,7 +128,7 @@ export function PlatformHeaderUserNav({
         </DropdownMenuItem>
         {canAdmins && (
           <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
-            <Link to={ROUTES.platformAdmins}>
+            <Link to={ROUTES.platformUsers}>
               <Users className="h-4 w-4 text-success" aria-hidden />
               {t('platform.adminsTitle')}
             </Link>

@@ -56,6 +56,7 @@ const entityCardOuterSites = [];
  * directory, so search / card view / column toggles do not apply. Review before adding.
  */
 const RAW_TABLE_ALLOWLIST = new Set([
+  'apps/frontend/src/platform/components/design-system/DesignSystemGallery.tsx',
   'apps/frontend/src/tenant/features/accounting/components/AccountingDashboardCharts.tsx',
   'apps/frontend/src/tenant/features/accounting/components/CashFlowStatementPanel.tsx',
   'apps/frontend/src/tenant/features/accounting/components/FinancialReportSection.tsx',

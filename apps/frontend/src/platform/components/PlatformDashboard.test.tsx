@@ -33,6 +33,15 @@ vi.mock('@/platform/hooks/usePlatformWorkspaceMetrics', () => ({
   }),
 }));
 
+vi.mock('@/platform/hooks/usePlatformTelemetry', () => ({
+  usePlatformActivityTrend: () => ({
+    data: [
+      { month: 'Jan', tenants: 1, ops: 2 },
+      { month: 'Feb', tenants: 2, ops: 4 },
+    ],
+  }),
+}));
+
 vi.mock('@/platform/components/dashboard/PlatformDashboardBanner', () => ({
   PlatformDashboardBanner: () => <div data-testid="dashboard-banner">banner</div>,
 }));
@@ -46,7 +55,11 @@ vi.mock('@/platform/components/dashboard/PlatformDashboardQuickActions', () => (
 }));
 
 vi.mock('@/platform/components/dashboard/PlatformDashboardTelemetry', () => ({
-  PlatformDashboardTelemetry: () => <div data-testid="dashboard-telemetry">telemetry</div>,
+  PlatformDashboardTelemetry: () => <div data-testid="dashboard-health-summary">health</div>,
+}));
+
+vi.mock('@/platform/components/dashboard/PlatformDashboardFleet', () => ({
+  PlatformDashboardFleet: () => <div data-testid="dashboard-fleet">fleet</div>,
 }));
 
 vi.mock('@/components/ui/ModuleCommandMetricsGrid', () => ({
@@ -54,20 +67,19 @@ vi.mock('@/components/ui/ModuleCommandMetricsGrid', () => ({
 }));
 
 describe('PlatformDashboard section order', () => {
-  it('places banner and metrics before charts and telemetry accordion', () => {
+  it('places banner and metrics before fleet, charts, and health summary CTA', () => {
     const html = renderToStaticMarkup(<PlatformDashboard />);
 
     const banner = html.indexOf('data-testid="dashboard-banner"');
     const metrics = html.indexOf('data-testid="dashboard-metrics"');
+    const fleet = html.indexOf('data-testid="dashboard-fleet"');
     const charts = html.indexOf('data-testid="dashboard-charts"');
-    const telemetry = html.indexOf('data-testid="dashboard-telemetry"');
-    const systemHealth = html.indexOf('platform.dashboard.systemHealth');
+    const health = html.indexOf('data-testid="dashboard-health-summary"');
 
     expect(banner).toBeGreaterThan(-1);
     expect(metrics).toBeGreaterThan(banner);
-    expect(charts).toBeGreaterThan(metrics);
-    expect(systemHealth).toBeGreaterThan(charts);
-    expect(telemetry).toBeGreaterThan(systemHealth);
-    expect(html).toContain('open');
+    expect(fleet).toBeGreaterThan(metrics);
+    expect(charts).toBeGreaterThan(fleet);
+    expect(health).toBeGreaterThan(charts);
   });
 });

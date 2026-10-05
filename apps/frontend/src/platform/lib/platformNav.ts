@@ -1,10 +1,11 @@
 import type React from "react";
-import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity, Waypoints, Settings } from "lucide-react";
+import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity, Waypoints, Settings, Palette } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import type { AppTranslationKey } from "@mms/shared";
 import type { PlatformPermissionsState } from "@/platform/hooks/usePlatformPermissions";
 
-export type PlatformNavSection = 'core' | 'admin' | 'ops' | 'account';
+/** SaaS console nav sections — Overview → Workspaces → Access → Operations → Account. */
+export type PlatformNavSection = 'overview' | 'workspaces' | 'access' | 'ops' | 'account';
 
 export interface PlatformNavItem {
   id: string;
@@ -25,7 +26,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformDashboard,
     labelKey: "dashboard.title",
     icon: LayoutDashboard,
-    section: "core",
+    section: "overview",
     isVisible: () => true,
   },
   {
@@ -33,7 +34,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformWorkspaces,
     labelKey: "platform.manageMadrasas",
     icon: Building2,
-    section: "core",
+    section: "workspaces",
     isVisible: (perms) => perms.canWorkspaces,
   },
   {
@@ -41,7 +42,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformReports,
     labelKey: "module.reports",
     icon: BarChart3,
-    section: "core",
+    section: "workspaces",
     isVisible: (perms) => perms.canWorkspaces,
   },
   {
@@ -49,7 +50,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformUsers,
     labelKey: "nav.users",
     icon: Users,
-    section: "admin",
+    section: "access",
     isVisible: (perms) => perms.canAdmins,
   },
   {
@@ -57,7 +58,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformActivityLogs,
     labelKey: "platform.activityLogsTitle",
     icon: Activity,
-    section: "admin",
+    section: "ops",
     isVisible: (perms) => perms.canSystem,
   },
   {
@@ -85,6 +86,14 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     isVisible: (perms) => perms.canSystem,
   },
   {
+    id: "designSystem",
+    path: ROUTES.platformDesignSystem,
+    labelKey: "platform.designSystemTitle",
+    icon: Palette,
+    section: "ops",
+    isVisible: (perms) => perms.canSystem,
+  },
+  {
     id: "account",
     path: ROUTES.platformAccount,
     labelKey: "platform.myAccount",
@@ -106,8 +115,11 @@ export function getVisiblePlatformNavItems(
 
 export function getVisiblePlatformNavSections(perms: PlatformPermissionsState) {
   const grouped = Object.groupBy(getVisiblePlatformNavItems(perms), (item) => item.section);
-  return Object.entries(grouped).map(([section, items]) => ({
-    section: section as PlatformNavSection,
-    items: items ?? [],
-  }));
+  const order: PlatformNavSection[] = ['overview', 'workspaces', 'access', 'ops', 'account'];
+  return order
+    .filter((section) => (grouped[section]?.length ?? 0) > 0)
+    .map((section) => ({
+      section,
+      items: grouped[section] ?? [],
+    }));
 }

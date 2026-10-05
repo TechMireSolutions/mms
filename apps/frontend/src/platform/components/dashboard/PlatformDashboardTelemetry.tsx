@@ -1,131 +1,55 @@
-import React, { useState } from "react";
-import { Database, Zap, ShieldCheck, HardDrive, RefreshCw, Pause, Play } from "lucide-react";
-import { motion } from "framer-motion";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { itemVariants } from "@/platform/lib/animations";
-import { useTranslation } from "@/hooks/useTranslation";
-import { usePlatformTelemetry } from "@/platform/hooks/usePlatformTelemetry";
-import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import { ActionButton } from "@/components/ui/ActionButton";
+import React from 'react';
+import { Activity, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { itemVariants } from '@/platform/lib/animations';
+import { useTranslation } from '@/hooks/useTranslation';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
+import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/lib/config/routes';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { cn } from '@/lib/utils';
 
-export function PlatformDashboardTelemetry(): React.JSX.Element {
+/**
+ * Compact system-health summary with CTA to System.
+ * Full live telemetry lives exclusively on `/platform/system`.
+ */
+export function PlatformDashboardTelemetry(): React.JSX.Element | null {
   const reducedMotion = useReducedMotion();
   const { t } = useTranslation();
-  const [isPaused, setIsPaused] = useState(false);
+  const { canSystem } = usePlatformPermissions();
 
-  const {
-    data: telemetry,
-    isLoading,
-    isFetching,
-    dataUpdatedAt,
-    refetch,
-  } = usePlatformTelemetry({ refetchInterval: isPaused ? false : 30_000 });
-
-  const dbPoolPct = telemetry ? `${telemetry.dbPool.utilizationRate}%` : "—";
-  const activeConns = telemetry?.dbPool.activeCount ?? 0;
-  const totalConns = telemetry?.dbPool.totalCount ?? 0;
-  const latencyStr = telemetry ? `${telemetry.latencyMs}ms` : "—";
-  const memoryStr = telemetry ? `${telemetry.memory.rssMb}MB` : "—";
-
-  const formattedTime = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-    : null;
+  if (!canSystem) return null;
 
   return (
     <motion.div
       variants={reducedMotion ? undefined : itemVariants}
-      initial={reducedMotion ? false : "hidden"}
+      initial={reducedMotion ? false : 'hidden'}
       animate="show"
-      className="space-y-3"
+      className={cn(WORK_SURFACE, 'flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4')}
+      data-testid="dashboard-health-summary"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-1">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                isPaused
-                  ? "bg-warning"
-                  : isFetching
-                    ? "bg-primary animate-ping"
-                    : "bg-success animate-pulse"
-              }`}
-              aria-hidden
-            />
-            <span className="font-bold text-foreground">
-              {isPaused ? t("platform.telemetry.pollingPaused") : t("platform.telemetry.livePolling")}
-            </span>
-          </span>
-
-          {formattedTime && (
-            <span className="text-3xs font-mono text-muted-foreground/80 bg-muted/40 border border-border/40 px-2 py-0.5 rounded-md">
-              {t("platform.telemetry.lastUpdated", { time: formattedTime })}
-            </span>
-          )}
+      <div className="flex items-start gap-3 min-w-0">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Activity className="h-5 w-5" aria-hidden />
         </div>
-
-        <div className="flex items-center gap-2">
-          <ActionButton
-            type="button"
-            variant="secondary"
-            size="sm"
-            icon={isPaused ? Play : Pause}
-            onClick={() => setIsPaused((prev) => !prev)}
-            title={isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
-            aria-label={isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
-          >
-            {isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
-          </ActionButton>
-
-          <ActionButton
-            type="button"
-            variant="secondary"
-            size="sm"
-            icon={RefreshCw}
-            loading={isFetching}
-            onClick={() => void refetch()}
-            className="min-w-11"
-            title={t("platform.telemetry.refreshNow")}
-            aria-label={t("platform.telemetry.refreshNow")}
-          />
+        <div className="min-w-0 space-y-1">
+          <p className="text-sm font-semibold text-foreground text-balance">
+            {t('platform.dashboard.systemHealth')}
+          </p>
+          <p className="text-xs text-muted-foreground text-pretty">
+            {t('platform.dashboard.systemHealthHint')}
+          </p>
         </div>
       </div>
 
-      <ModuleCommandMetricsGrid
-        items={[
-          {
-            icon: Database,
-            label: t("platform.telemetry.dbPoolLoad"),
-            value: isLoading ? "…" : dbPoolPct,
-            sub: t("platform.telemetry.activeConns", { active: activeConns, total: totalConns }),
-            accent: "primary",
-          },
-          {
-            icon: Zap,
-            label: t("platform.telemetry.apiLatency"),
-            value: isLoading ? "…" : latencyStr,
-            sub: t("platform.telemetry.fastResponse"),
-            accent: "warning",
-          },
-          {
-            icon: ShieldCheck,
-            label: t("platform.telemetry.securityBoundary"),
-            value: telemetry?.tenantDb
-              ? `${telemetry.tenantDb.activeTenantsCount} Tenants`
-              : t("platform.telemetry.rls100"),
-            sub: telemetry?.tenantDb
-              ? `${telemetry.tenantDb.totalTenantTransactions} active tx · RLS 100%`
-              : t("platform.telemetry.tenantIsolated"),
-            accent: "success",
-          },
-          {
-            icon: HardDrive,
-            label: t("platform.telemetry.clusterMemory"),
-            value: isLoading ? "…" : memoryStr,
-            sub: t("platform.telemetry.nodejsRss"),
-            accent: "secondary",
-          },
-        ]}
-      />
+      <Button asChild className="min-h-11 shrink-0 cursor-pointer">
+        <Link to={ROUTES.platformSystem}>
+          {t('platform.dashboard.openSystem')}
+          <ArrowRight className="ms-1.5 h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
     </motion.div>
   );
 }

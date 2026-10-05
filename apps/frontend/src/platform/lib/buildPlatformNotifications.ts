@@ -60,7 +60,7 @@ export function buildPlatformNotifications(
       desc: t('platform.notificationSuperUserDesc'),
       time: t('platform.notificationTimeActive'),
       urgent: false,
-      href: ROUTES.platformAdmins,
+      href: ROUTES.platformUsers,
     });
   }
 

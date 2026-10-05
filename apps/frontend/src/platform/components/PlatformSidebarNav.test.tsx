@@ -23,16 +23,16 @@ vi.mock('react-router-dom', () => ({
   ),
 }));
 
-const mockSections: { section: 'core'; items: PlatformNavItem[] }[] = [
+const mockSections: { section: 'overview'; items: PlatformNavItem[] }[] = [
   {
-    section: 'core',
+    section: 'overview',
     items: [
       {
         id: 'dashboard',
         path: '/platform/dashboard',
         labelKey: 'dashboard.title',
         icon: LayoutDashboard,
-        section: 'core',
+        section: 'overview',
         isVisible: () => true,
       },
     ],

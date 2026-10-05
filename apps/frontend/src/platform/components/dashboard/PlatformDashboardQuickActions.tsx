@@ -87,7 +87,7 @@ export function PlatformDashboardQuickActions({
             variant="outline"
             className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-success/10 hover:text-success hover:border-success/40 transition-all shadow-2xs cursor-pointer"
           >
-            <Link to={ROUTES.platformAdmins}>
+            <Link to={ROUTES.platformUsers}>
               <UserPlus className="w-4 h-4 text-success shrink-0" aria-hidden />
               {t("platform.adminsTitle")}
             </Link>

@@ -20,11 +20,17 @@ describe('platform apex live IA', () => {
     expect(routesSource).toContain('PlatformSystemPage');
     expect(routesSource).toContain('PlatformActivityLogsPage');
     expect(routesSource).toContain('PlatformErdPage');
+    expect(routesSource).toContain('PlatformDesignSystemPage');
     expect(routesSource).toContain('PlatformAccount');
+    expect(routesSource).toContain('Navigate to={ROUTES.platformUsers}');
 
     // Assert — orphaned 3-tier console must stay unmounted
     expect(routesSource).not.toContain('PlatformConsole');
     expect(navSource).toContain('ROUTES.platformDashboard');
     expect(navSource).toContain('ROUTES.platformWorkspaces');
+    expect(navSource).toContain('ROUTES.platformDesignSystem');
+    expect(navSource).toContain('section: "overview"');
+    expect(navSource).toContain('section: "access"');
+    expect(navSource).toContain('section: "ops"');
   });
 });
