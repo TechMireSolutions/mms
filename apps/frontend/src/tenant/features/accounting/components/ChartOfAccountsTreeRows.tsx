@@ -3,8 +3,8 @@ import { Eye, EyeOff, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { EntityCard } from "@/components/ui/EntityCard";
-import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 import { cn } from "@/lib/utils";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -71,6 +71,7 @@ export interface AccountRecordProps {
   onReactivate: (id: string) => void;
 }
 
+/** Work/setup entity card — DirectoryCard SSOT (do not hand-compose EntityCard). */
 export function AccountMobileCard({
   account,
   balanceConfig,
@@ -83,37 +84,63 @@ export function AccountMobileCard({
   const { t } = useTranslation();
 
   return (
-    <EntityCard className={cn("space-y-3 p-4", account.isActive === false && "opacity-50")}>
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          {isColumnVisible("code") && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
-          {isColumnVisible("name") && (
-            <h4 className="m-0 mt-0.5 text-sm font-semibold text-foreground">
-              {account.name}
-              {account.isActive === false && <Badge as="span" pill tone="muted" className="ms-2 px-1.5">{t("accounting.coa.inactive")}</Badge>}
-            </h4>
+    <DirectoryCard
+      entity={account}
+      canSelect={false}
+      className={cn("space-y-3 p-4", account.isActive === false && "opacity-50")}
+      headerSlot={
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            {isColumnVisible("code") && (
+              <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>
+            )}
+            {isColumnVisible("name") && (
+              <h4 className="m-0 mt-0.5 text-sm font-semibold text-foreground">
+                {account.name}
+                {account.isActive === false && (
+                  <Badge as="span" pill tone="muted" className="ms-2 px-1.5">
+                    {t("accounting.coa.inactive")}
+                  </Badge>
+                )}
+              </h4>
+            )}
+          </div>
+          {isColumnVisible("normalBalance") && (
+            <StatusBadge
+              status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
+              config={balanceConfig}
+              size="sm"
+            />
           )}
         </div>
-        {isColumnVisible("normalBalance") && (
-          <StatusBadge
-            status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
-            config={balanceConfig}
-            size="sm"
+      }
+      metadataSlot={
+        <EntityCard.MetaGrid>
+          {isColumnVisible("subtype") && (
+            <EntityCardMetaTile label={t("accounting.columns.account.subtype")}>
+              {account.subtype || "—"}
+            </EntityCardMetaTile>
+          )}
+          {isColumnVisible("description") && (
+            <EntityCardMetaTile
+              label={t("accounting.columns.account.description")}
+              className="break-words"
+            >
+              {account.description || "—"}
+            </EntityCardMetaTile>
+          )}
+        </EntityCard.MetaGrid>
+      }
+      actions={
+        canWrite ? (
+          <AccountRowActions
+            account={account}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onReactivate={onReactivate}
           />
-        )}
-      </div>
-      <EntityCard.MetaGrid>
-        {isColumnVisible("subtype") && (
-          <EntityCardMetaTile label={t("accounting.columns.account.subtype")}>{account.subtype || "—"}</EntityCardMetaTile>
-        )}
-        {isColumnVisible("description") && (
-          <EntityCardMetaTile label={t("accounting.columns.account.description")} className="break-words">{account.description || "—"}</EntityCardMetaTile>
-        )}
-      </EntityCard.MetaGrid>
-      <EntityCardFooterActions
-        actions={canWrite ? <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} /> : undefined}
-      />
-    </EntityCard>
+        ) : undefined
+      }
+    />
   );
 }
-

@@ -18,6 +18,7 @@ import {
   type DataTableColumnLayout,
 } from '@/components/common/data-table';
 
+/** EntityCard tile (report) — not DirectoryCard. */
 export interface ActivityLogsListProps {
   paginated: ActivityLog[];
   filteredCount: number;

@@ -4,6 +4,7 @@ import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 import type { DataTableCardContext, DataTableCardSlots, DataTableColumn } from "./dataTableTypes";
 
+/** EntityCard tile (DataTable default) — not DirectoryCard. */
 export interface DataTableCardsProps<TData extends { id: string | number }> {
   rows: readonly TData[];
   columns: readonly DataTableColumn<TData>[];

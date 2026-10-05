@@ -7,6 +7,7 @@ import { EntityCard } from "@/components/ui/EntityCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { GeneralLedgerLineWithRunning } from "./useGeneralLedger";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 export interface GeneralLedgerCardsViewProps {
   linesWithRunning: GeneralLedgerLineWithRunning[];
   totalDebit: number;

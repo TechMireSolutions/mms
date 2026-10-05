@@ -7,6 +7,7 @@ import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { RepSummaryEntry } from "./ObligationsRepDuesSection";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 export interface ObligationsRepDuesCardsViewProps {
   repSummary: RepSummaryEntry[];
   totalAmount: number;

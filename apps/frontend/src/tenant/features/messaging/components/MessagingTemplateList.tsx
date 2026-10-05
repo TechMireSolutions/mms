@@ -5,8 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { EntityCard } from "@/components/ui/EntityCard";
-import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
@@ -102,24 +101,31 @@ export const MessagingTemplateList = (function MessagingTemplateList({
         filters={filters}
         renderRowActions={renderActions}
         renderCard={(template) => (
-          <EntityCard className="space-y-3 p-4">
-            <div className="flex min-w-0 items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h4 className="truncate text-sm font-semibold text-foreground">{templateLabel(template)}</h4>
-                {template.channel && template.channel !== "all" && (
-                  <div className="mt-1">
-                    <ChannelBadge channel={template.channel} className="text-xs" />
-                  </div>
-                )}
+          /* Setup/catalog entity card — DirectoryCard SSOT (do not hand-compose EntityCard). */
+          <DirectoryCard
+            entity={template}
+            canSelect={false}
+            className="space-y-3 p-4"
+            headerSlot={
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm font-semibold text-foreground">{templateLabel(template)}</h4>
+                  {template.channel && template.channel !== "all" && (
+                    <div className="mt-1">
+                      <ChannelBadge channel={template.channel} className="text-xs" />
+                    </div>
+                  )}
+                </div>
+                <StatusBadge status={categoryOf(template)} config={categoryBadgeConfig} size="sm" />
               </div>
-              <StatusBadge status={categoryOf(template)} config={categoryBadgeConfig} size="sm" />
-            </div>
+            }
+            actions={renderActions(template)}
+          >
             <div className="rounded-lg bg-muted/40 p-2.5">
               <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
               <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap">{template.body}</p>
             </div>
-            <EntityCardFooterActions actions={renderActions(template)} />
-          </EntityCard>
+          </DirectoryCard>
         )}
         emptyState={<EmptyState title={t("messaging.noTemplates")} compact variant="dashed" />}
       />

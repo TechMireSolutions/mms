@@ -12,6 +12,7 @@ import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/us
 import { buildCashbookFooterCells, type CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
 import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 interface CashbookViewTableProps {
   rows: CashbookRow[];
   totalIn: number;

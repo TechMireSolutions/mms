@@ -22,6 +22,7 @@ import { AlertCircle, Layers } from "lucide-react";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 export interface WakalaSummaryEntry {
   key: string;
   label: string;

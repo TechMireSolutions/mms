@@ -15,6 +15,7 @@ import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 export interface ReportRow {
   id: string;
   name: string;

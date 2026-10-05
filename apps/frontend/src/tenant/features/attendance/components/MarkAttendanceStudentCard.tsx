@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { ModuleFieldDef } from "@mms/shared";
 import type { AttendanceRow } from "./markAttendanceTypes";
 
+/** EntityCard tile (workshop) — not DirectoryCard. */
 export interface MarkAttendanceStudentCardProps {
   row: AttendanceRow;
   statusInfo: ReturnType<typeof getAttendanceStatusInfo>;

@@ -77,8 +77,16 @@ const RAW_TABLE_ALLOWLIST = new Set([
 ]);
 
 /**
- * Non-directory / workshop / report card shells still on raw EntityCard.
- * Work-directory *Card* composites must use DirectoryCard instead.
+ * Outer `<EntityCard` allowed only for intentional non-Work tiles whose filenames
+ * match the Work-card composite ratchet (`*Card*.tsx` / `*CardsView.tsx`):
+ * - MarkAttendanceStudentCard — workshop form card (not a directory row)
+ * - ObligationsRepDuesCardsView — report summary tiles
+ * - GeneralLedgerCardsView — report ledger line cards
+ *
+ * Other report/workshop EntityCard tiles (Cashbook, TB, CashFlow, Wakala,
+ * ActivityLogs, FinancialReport, DataTableCards) use non-matching filenames and
+ * never hit this check — they remain EntityCard by job (not DirectoryCard).
+ * New Work/setup *Card* composites must use DirectoryCard.
  */
 const ENTITY_CARD_OUTER_ALLOWLIST = new Set([
   'apps/frontend/src/tenant/features/attendance/components/MarkAttendanceStudentCard.tsx',

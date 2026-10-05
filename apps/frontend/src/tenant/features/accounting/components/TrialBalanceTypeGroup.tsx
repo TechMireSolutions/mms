@@ -19,6 +19,7 @@ import { EntityCard } from "@/components/ui/EntityCard";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AppTranslationKey } from "@mms/shared";
 
+/** EntityCard tile (report) — not DirectoryCard. */
 interface TrialBalanceRow {
   id: string;
   code: string;
