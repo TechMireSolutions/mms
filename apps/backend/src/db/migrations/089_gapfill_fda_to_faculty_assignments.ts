@@ -11,12 +11,20 @@ import { lockFacultyHierarchy } from '../repositories/facultyAssignmentValidatio
  * backfill path (creates require positionId via app validation only).
  */
 export async function runMigration089(): Promise<void> {
-  const tenants = await withGlobalTenant(async (tx) =>
-    (await tx.execute<{ workspace_subdomain: string }>(sql`
+  const tenants = await withGlobalTenant(async (tx) => {
+    const tableExists = (await tx.execute<{ exists: boolean }>(sql`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'faculty_designation_assignments'
+      ) AS exists
+    `)).rows[0]?.exists;
+    if (!tableExists) return [];
+
+    return (await tx.execute<{ workspace_subdomain: string }>(sql`
       SELECT DISTINCT workspace_subdomain FROM faculty_designation_assignments
       ORDER BY workspace_subdomain
-    `)).rows,
-  );
+    `)).rows;
+  });
   for (const { workspace_subdomain: tenant } of tenants) {
     await gapfillFdaToFacultyAssignments(tenant);
   }
@@ -24,6 +32,14 @@ export async function runMigration089(): Promise<void> {
 
 export async function gapfillFdaToFacultyAssignments(tenant: string): Promise<void> {
   await withTenant(tenant, async (tx) => {
+    const tableExists = (await tx.execute<{ exists: boolean }>(sql`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'faculty_designation_assignments'
+      ) AS exists
+    `)).rows[0]?.exists;
+    if (!tableExists) return;
+
     await lockFacultyHierarchy(tx, tenant);
     // Open FDA rows (no end, or end >= today) with no overlapping active primary FA.
     await tx.execute(sql`
