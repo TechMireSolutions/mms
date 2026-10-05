@@ -25,7 +25,15 @@ export async function handleCreateAdmin({
   request,
 }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<ContractRouteResponse<typeof platformAdminsContract['createAdmin']>> {
   const { platformUser } = request as PlatformAuthenticatedRequest;
-  const { name, email, password, permissions } = body;
+  const { name, email, password, permissions, currentPassword } = body;
+
+  const passwordOk = await verifyPlatformUserPassword(platformUser.id, currentPassword);
+  if (!passwordOk) {
+    return {
+      status: 401 as const,
+      body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
+    };
+  }
 
   const passwordHash = await hashPassword(password);
   const stored = await createVerifiedPlatformUser({
@@ -59,6 +67,14 @@ export async function handleUpdateAdminPermissions({
     return {
       status: 403 as const,
       body: { type: 'forbidden', message: 'Cannot change your own permissions' },
+    };
+  }
+
+  const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.password);
+  if (!passwordOk) {
+    return {
+      status: 401 as const,
+      body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
     };
   }
 

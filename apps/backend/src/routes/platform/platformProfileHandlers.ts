@@ -21,6 +21,8 @@ import {
   platformProfilePatchBodySchema,
 } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
+import { clearPlatformAccessCookie } from '../../services/platform/platformCookieService.js';
 
 export async function handlePlatformMe(
   request: FastifyRequest,
@@ -28,10 +30,12 @@ export async function handlePlatformMe(
 ): Promise<FastifyReply> {
   const { platformUser } = request as PlatformOptionalAuthRequest;
   if (!platformUser) {
+    clearPlatformAccessCookie(reply);
     return reply.send({ user: null, isAuthenticated: false });
   }
   const profile = await getPlatformUserProfile(platformUser.id);
   if (!profile) {
+    clearPlatformAccessCookie(reply);
     return reply.send({ user: null, isAuthenticated: false });
   }
   return reply.send({ user: profile, isAuthenticated: true });
@@ -91,5 +95,13 @@ export async function handlePlatformChangePassword(
     reply,
     stored.sessionVersion,
   );
+  await insertPlatformActivityLog({
+    userId: platformUser.id,
+    userEmail: platformUser.email,
+    action: 'change_password',
+    targetResource: 'platform_user',
+    targetId: platformUser.id,
+    ipAddress: request.ip,
+  });
   return reply.send({ success: true });
 }

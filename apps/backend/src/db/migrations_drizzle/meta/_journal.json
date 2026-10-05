@@ -1058,6 +1058,13 @@
       "when": 1791101600000,
       "tag": "0150_platform_permission_key_check",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1791101700000,
+      "tag": "0151_platform_settings_global_check",
+      "breakpoints": true
     }
   ]
 }

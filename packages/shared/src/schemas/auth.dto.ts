@@ -10,6 +10,8 @@ const onboardBodyBaseSchema = z.object({
   adminName: z.string().min(1),
   email: z.string().min(3),
   password: z.string().min(6),
+  /** Platform operator password step-up (caller must hold platform session). */
+  currentPassword: z.string().min(1),
   subdomain: z.string().min(2),
   tagline: z.string().optional(),
   country: z.string().optional(),

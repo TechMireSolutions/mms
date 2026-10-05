@@ -3,7 +3,7 @@ import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
 import { verifyPassword, DUMMY_PASSWORD_HASH } from '../auth/passwordService.js';
-import { clearAuthCookies } from '../auth/authCookieService.js';
+import { clearAuthCookies, setCsrfCookie } from '../auth/authCookieService.js';
 import {
   findPlatformUserByEmail,
   toPlatformUserProfile,
@@ -43,6 +43,9 @@ export async function issuePlatformSession(
   sessionVersion = 0,
 ): Promise<PlatformUser> {
   clearAuthCookies(reply);
+  // Re-issue CSRF after clearing tenant cookies so platform mutations keep
+  // double-submit protection (Origin alone is not sufficient parity).
+  setCsrfCookie(reply);
 
   // Minimal claims only — role/permissions reload from DB on each authenticatePlatform.
   const accessToken = jwtSigner.sign(

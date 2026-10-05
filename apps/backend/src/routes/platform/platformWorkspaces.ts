@@ -29,7 +29,7 @@ export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  const deleteRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
+  const breakGlassRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
 
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('workspaces'));
@@ -41,12 +41,26 @@ export default async function platformWorkspaceRoutes(
     updateWorkspaceModules: handleUpdateWorkspaceModules,
     patchWorkspaceEmailVerification: handlePatchWorkspaceEmailVerification,
     verifyTenantUserEmail: handleVerifyTenantUserEmail,
-    resetWorkspaceAdminPassword: handleResetWorkspaceAdminPassword,
-    createWorkspaceAdminUser: handleCreateWorkspaceAdminUser,
+    resetWorkspaceAdminPassword: {
+      hooks: {
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await breakGlassRateLimit(request, reply);
+        },
+      },
+      handler: handleResetWorkspaceAdminPassword,
+    },
+    createWorkspaceAdminUser: {
+      hooks: {
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await breakGlassRateLimit(request, reply);
+        },
+      },
+      handler: handleCreateWorkspaceAdminUser,
+    },
     deleteWorkspace: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await deleteRateLimit(request, reply);
+          await breakGlassRateLimit(request, reply);
           if (reply.sent) return;
           const req = request as PlatformAuthenticatedRequest;
           if (req.platformUser?.role !== 'super_user') {

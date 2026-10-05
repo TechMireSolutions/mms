@@ -1,7 +1,17 @@
 import { useDeferredValue, useMemo, useState } from 'react';
-import { normalizePlatformAdminPermissions, type PlatformAdminPermissionKey, type PlatformAdminPermissions, type PlatformUserProfile } from '@mms/shared';
+import {
+  normalizePlatformAdminPermissions,
+  type PlatformAdminPermissionKey,
+  type PlatformAdminPermissions,
+  type PlatformUserProfile,
+} from '@mms/shared';
 import { usePlatformPermissions } from './usePlatformPermissions';
 import { usePlatformAdmins, useUpdatePlatformAdminPermissions } from './usePlatformAdmins';
+
+export type PendingPermissionToggle = {
+  admin: PlatformUserProfile;
+  permissions: PlatformAdminPermissions;
+};
 
 export function usePlatformPermissionMatrix() {
   const { isSuperUser, platformUser: currentUser } = usePlatformPermissions();
@@ -10,6 +20,9 @@ export function usePlatformPermissionMatrix() {
   const updatePermissions = useUpdatePlatformAdminPermissions();
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
+  const [pendingToggle, setPendingToggle] = useState<PendingPermissionToggle | null>(null);
+  const [stepUpPassword, setStepUpPassword] = useState('');
+  const [stepUpError, setStepUpError] = useState<string | null>(null);
 
   const filteredAdmins = useMemo(() => {
     if (!admins) return [];
@@ -21,15 +34,59 @@ export function usePlatformPermissionMatrix() {
   }, [admins, deferredSearch]);
 
   const handleToggle = (admin: PlatformUserProfile, capKey: PlatformAdminPermissionKey) => {
-    if (updatePermissions.isPending || !isSuperUser || admin.role === 'super_user' || admin.id === currentUser?.id) return;
+    if (updatePermissions.isPending || !isSuperUser || admin.role === 'super_user' || admin.id === currentUser?.id) {
+      return;
+    }
     const currentPerms = normalizePlatformAdminPermissions(admin.permissions);
     const nextPerms: PlatformAdminPermissions = {
       ...currentPerms,
       [capKey]: !currentPerms[capKey],
     };
-    updatePermissions.mutate({ adminId: admin.id, permissions: nextPerms });
+    setStepUpPassword('');
+    setStepUpError(null);
+    setPendingToggle({ admin, permissions: nextPerms });
   };
 
-  return { filteredAdmins, isLoading, isError: query.isError, retry: query.refetch,
-    isSuperUser, currentUser, search, setSearch, handleToggle, busy: updatePermissions.isPending };
+  const cancelStepUp = () => {
+    setPendingToggle(null);
+    setStepUpPassword('');
+    setStepUpError(null);
+  };
+
+  const confirmStepUp = async (): Promise<void> => {
+    if (!pendingToggle) return;
+    if (!stepUpPassword.trim()) {
+      setStepUpError('platform.validationConfirmPlatformPassword');
+      return;
+    }
+    try {
+      await updatePermissions.mutateAsync({
+        adminId: pendingToggle.admin.id,
+        permissions: pendingToggle.permissions,
+        password: stepUpPassword,
+      });
+      cancelStepUp();
+    } catch (err) {
+      setStepUpError(err instanceof Error ? err.message : 'platform.loadFailed');
+    }
+  };
+
+  return {
+    filteredAdmins,
+    isLoading,
+    isError: query.isError,
+    retry: query.refetch,
+    isSuperUser,
+    currentUser,
+    search,
+    setSearch,
+    handleToggle,
+    busy: updatePermissions.isPending,
+    pendingToggle,
+    stepUpPassword,
+    setStepUpPassword,
+    stepUpError,
+    cancelStepUp,
+    confirmStepUp,
+  };
 }

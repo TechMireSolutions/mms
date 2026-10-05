@@ -14,12 +14,12 @@ export function useResetWorkspaceAdminPassword() {
   return useMutation<
     { success: true; subdomain: string; adminEmail: string; newPassword: string },
     Error,
-    { subdomain: string; newPassword?: string }
+    { subdomain: string; password: string; newPassword?: string }
   >({
-    mutationFn: async ({ subdomain, newPassword }) => {
+    mutationFn: async ({ subdomain, password, newPassword }) => {
       const res = await apiContract.platform.resetWorkspaceAdminPassword({
         params: { subdomain },
-        body: { newPassword },
+        body: { password, newPassword },
       });
       if (res.status >= 400) {
         const errorBody = res.body as { message?: string; type?: string } | undefined;
@@ -48,12 +48,12 @@ export function useCreateWorkspaceAdmin() {
   return useMutation<
     { success: true; subdomain: string; adminEmail: string; name: string; initialPassword: string },
     Error,
-    { subdomain: string; name: string; email: string; password?: string }
+    { subdomain: string; name: string; email: string; password?: string; currentPassword: string }
   >({
-    mutationFn: async ({ subdomain, name, email, password }) => {
+    mutationFn: async ({ subdomain, name, email, password, currentPassword }) => {
       const res = await apiContract.platform.createWorkspaceAdminUser({
         params: { subdomain },
-        body: { name, email, password },
+        body: { name, email, password, currentPassword },
       });
       if (res.status >= 400) {
         const errorBody = res.body as { message?: string; type?: string } | undefined;

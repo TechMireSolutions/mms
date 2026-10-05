@@ -92,7 +92,8 @@ export const platformUserPermissions = pgTable('platform_user_permissions', {
 
 /** Apex platform settings — single-row TLS/Certbot config (`id = 'global'`).
  * Not related to the legacy document-store object key `platform_settings`
- * (module grants now live on `workspaces.granted_modules`). */
+ * (module grants now live on `workspaces.granted_modules`).
+ * CHECK enforced in SQL migrations (platform_settings_global_id_check): id = 'global'. */
 export const platformSettings = pgTable('platform_settings', {
   id: text('id').primaryKey().default('global'),
   syncTlsOnCreate: boolean('sync_tls_on_create').notNull().default(true),

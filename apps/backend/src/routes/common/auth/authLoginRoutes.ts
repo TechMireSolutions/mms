@@ -11,6 +11,7 @@ import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
+  type PlatformAuthenticatedRequest,
 } from '../../../middleware/authenticatePlatform.js';
 import {
   onboardBodySchema,
@@ -22,6 +23,8 @@ import {
 } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendNotFound } from '../../../lib/httpErrors.js';
+import { insertPlatformActivityLog } from '../../../db/repositories/platformActivityLogsRepository.js';
+import { verifyPlatformUserPassword } from '../../../services/platform/platformUserService.js';
 
 /** Rate-limited login, onboarding, and two-factor challenge routes. */
 export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
@@ -92,6 +95,15 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
         const parsed = parseRequest(onboardBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const body = parsed.data;
+        const { platformUser } = request as PlatformAuthenticatedRequest;
+
+        const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.currentPassword);
+        if (!passwordOk) {
+          return reply.status(401).send({
+            type: 'invalid_current_password',
+            message: 'Current password is incorrect',
+          });
+        }
 
         try {
           const result = await onboardUser({
@@ -120,6 +132,15 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
             modules: body.modules,
             industryType: body.industryType,
             blueprintId: body.blueprintId,
+          });
+          await insertPlatformActivityLog({
+            userId: platformUser.id,
+            userEmail: platformUser.email,
+            action: 'onboard_workspace',
+            targetResource: 'workspace',
+            targetId: body.subdomain,
+            metadataMessage: `Onboarded workspace ${body.madrasaName}`,
+            ipAddress: request.ip,
           });
           return reply.send(result);
         } catch (error: unknown) {

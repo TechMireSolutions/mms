@@ -179,6 +179,35 @@ export const workspaceDeleteBodySchema = z.preprocess((raw) => {
 
 export type WorkspaceDeleteInput = z.infer<typeof workspaceDeleteBodyBaseSchema>;
 
+const workspaceResetAdminPasswordBodyBaseSchema = z.object({
+  /** Platform operator password step-up. */
+  password: z.string().min(1),
+  newPassword: z.string().min(8).optional(),
+}).strict();
+
+export const workspaceResetAdminPasswordBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, workspaceResetAdminPasswordBodyBaseSchema);
+
+export type WorkspaceResetAdminPasswordInput = z.infer<typeof workspaceResetAdminPasswordBodyBaseSchema>;
+
+const workspaceCreateAdminUserBodyBaseSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  /** Optional initial password for the new tenant admin. */
+  password: z.string().min(8).optional(),
+  /** Platform operator password step-up. */
+  currentPassword: z.string().min(1),
+}).strict();
+
+export const workspaceCreateAdminUserBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, workspaceCreateAdminUserBodyBaseSchema);
+
+export type WorkspaceCreateAdminUserInput = z.infer<typeof workspaceCreateAdminUserBodyBaseSchema>;
+
 const platformCreateAdminBodyBaseSchema = z.object({
   name: z.string().refine((val: string) => !validatePlatformSetupName(val), {
     message: 'Invalid display name',
@@ -192,6 +221,8 @@ const platformCreateAdminBodyBaseSchema = z.object({
       message: 'Password must be at least 10 characters long and contain both letters and numbers',
     },
   ),
+  /** Platform operator password step-up. */
+  currentPassword: z.string().min(1),
   permissions: platformAdminPermissionsSchema.default(DEFAULT_PLATFORM_ADMIN_PERMISSIONS),
 }).strict();
 
@@ -204,6 +235,8 @@ export type PlatformCreateAdminInput = z.infer<typeof platformCreateAdminBodyBas
 
 const platformUpdateAdminPermissionsBodyBaseSchema = z.object({
   permissions: platformAdminPermissionsSchema,
+  /** Platform operator password step-up. */
+  password: z.string().min(1),
 }).strict();
 
 export const platformUpdateAdminPermissionsBodySchema = z.preprocess((raw) => {

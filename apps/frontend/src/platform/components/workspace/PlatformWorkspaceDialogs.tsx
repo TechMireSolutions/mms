@@ -88,8 +88,8 @@ export function PlatformWorkspaceDialogs({
           onOpenChange={setResetPasswordOpen}
           workspace={targetResetWorkspace}
           resetPending={resetAdminPasswordMutation.isPending}
-          onConfirm={async (subdomain, newPassword) => {
-            const res = await resetAdminPasswordMutation.mutateAsync({ subdomain, newPassword });
+          onConfirm={async (subdomain, data) => {
+            const res = await resetAdminPasswordMutation.mutateAsync({ subdomain, ...data });
             return { newPassword: res.newPassword, adminEmail: res.adminEmail };
           }}
         />

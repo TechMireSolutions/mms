@@ -37,7 +37,7 @@ Token persistence: `authArtifactService`. Cookie names below are authoritative.
 - **Cookie Hygiene**:
   - `mms_access`: Tenant JWT, HttpOnly, 15m lifetime, `SameSite=Lax`, `Secure`, `Path=/`.
   - `mms_refresh`: Opaque refresh token hash, HttpOnly, `Path=/api/auth/refresh`.
-  - `mms_platform_access`: Platform session JWT, HttpOnly, `Path=/api/platform`.
+  - `mms_platform_access`: Platform session JWT, HttpOnly, `Path=/` (must be `/` so the cookie is sent to `/api/auth/onboard` and apex `/api/uploads`, not only `/api/platform`).
 - **CSRF Protection**: Double-Submit Token. Mutating requests (`POST`/`PUT`/`DELETE`) must match CSRF cookie via `X-CSRF-Token` header.
 - **CORS**: `credentials: true`; production requires explicit domain allowlist (`ALLOWED_ORIGIN`).
 

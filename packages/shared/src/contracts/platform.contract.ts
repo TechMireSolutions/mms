@@ -11,6 +11,8 @@ import {
   platformWorkspaceModulesPatchBodySchema,
   workspaceEmailVerificationPatchBodySchema,
   workspaceDeleteBodySchema,
+  workspaceResetAdminPasswordBodySchema,
+  workspaceCreateAdminUserBodySchema,
   platformCreateAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,
   platformAdminDisabledBodySchema,
@@ -141,9 +143,7 @@ export const platformWorkspacesRoutes = {
     method: 'POST',
     path: '/api/platform/workspaces/:subdomain/reset-admin-password',
     pathParams: z.object({ subdomain: z.string() }),
-    body: z.object({
-      newPassword: z.string().min(8).optional(),
-    }),
+    body: workspaceResetAdminPasswordBodySchema,
     responses: {
       200: z.object({
         success: z.literal(true),
@@ -162,11 +162,7 @@ export const platformWorkspacesRoutes = {
     method: 'POST',
     path: '/api/platform/workspaces/:subdomain/admin-users',
     pathParams: z.object({ subdomain: z.string() }),
-    body: z.object({
-      name: z.string().min(1),
-      email: z.string().email(),
-      password: z.string().min(8).optional(),
-    }),
+    body: workspaceCreateAdminUserBodySchema,
     responses: {
       200: z.object({
         success: z.literal(true),

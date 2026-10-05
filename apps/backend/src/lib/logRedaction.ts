@@ -28,6 +28,7 @@ const SENSITIVE_KEYS = [
   'passwordHash',
   'newPassword',
   'currentPassword',
+  'initialPassword',
   'temporaryPassword',
   'confirmPassword',
   'passwordConfirmation',

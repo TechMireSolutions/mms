@@ -24,6 +24,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [permissions, setPermissions] = useState<PlatformAdminPermissions>(
     DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
   );
@@ -33,6 +34,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
     setName('');
     setEmail('');
     setPassword('');
+    setCurrentPassword('');
     setPermissions(DEFAULT_PLATFORM_ADMIN_PERMISSIONS);
     setSubmitError(null);
   };
@@ -57,12 +59,17 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
       setSubmitError(validationError);
       return;
     }
+    if (!currentPassword.trim()) {
+      setSubmitError(t('platform.validationConfirmPlatformPassword'));
+      return;
+    }
 
     try {
       await addAdmin.mutateAsync({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
+        currentPassword,
         permissions,
       });
       handleOpenChange(false);
@@ -162,6 +169,21 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
 
             <PasswordStrengthMeter password={password} />
           </div>
+
+          <PasswordInput
+            id="admin-operator-password"
+            name="platformPassword"
+            label={t('platform.confirmPlatformPassword')}
+            autoComplete="current-password"
+            required
+            value={currentPassword}
+            onChange={(event) => {
+              setCurrentPassword(event.target.value);
+              if (submitError) setSubmitError(null);
+            }}
+            disabled={addAdmin.isPending}
+            placeholder={t('platform.confirmPlatformPasswordHint')}
+          />
 
           {/* Capability Flags */}
           <PlatformAdminPermissionsFields

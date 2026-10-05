@@ -76,16 +76,17 @@ export function useUpdatePlatformAdminPermissions() {
   return useMutation<
     { user: PlatformUserProfile },
     Error,
-    { adminId: string; permissions: PlatformAdminPermissions },
+    { adminId: string; permissions: PlatformAdminPermissions; password: string },
     { previousUsers: unknown }
   >({
     mutationFn: async ({
       adminId,
       permissions,
+      password,
     }) => {
       const res = await apiContract.platform.updateAdminPermissions({
         params: { adminId },
-        body: { permissions },
+        body: { permissions, password },
       });
       return res.body as { user: PlatformUserProfile };
     },

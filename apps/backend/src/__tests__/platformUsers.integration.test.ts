@@ -172,6 +172,7 @@ describe('platformUsers REST API integration routes', () => {
         name: 'Perm Test Admin',
         email,
         password: 'Password123!',
+        currentPassword: 'OperatorPass123!',
         permissions: {
           workspaces: true,
           onboard: false,
@@ -222,6 +223,7 @@ describe('platformUsers REST API integration routes', () => {
           admins: false,
           system: false,
         },
+        password: 'OperatorPass123!',
       },
     });
     expect(updateRes.statusCode).toBe(200);
@@ -245,6 +247,7 @@ describe('platformUsers REST API integration routes', () => {
         name: 'Escalation Attempt',
         email: 'escalate@platform.com',
         password: 'Password123!',
+        currentPassword: 'OperatorPass123!',
         permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
       },
     });
@@ -261,6 +264,7 @@ describe('platformUsers REST API integration routes', () => {
       cookies: { mms_platform_access: token },
       payload: {
         permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+        password: 'OperatorPass123!',
       },
     });
     expect(res.statusCode).toBe(403);
@@ -276,6 +280,7 @@ describe('platformUsers REST API integration routes', () => {
       cookies: { mms_platform_access: token },
       payload: {
         permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+        password: 'OperatorPass123!',
       },
     });
     expect(res.statusCode).toBe(403);

@@ -4,6 +4,7 @@ import { UserPlus, User, Mail } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { Field, FieldErrorMessage } from '@/components/ui/FormField';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
+import { Input } from '@/components/ui/input';
 import { WorkspaceSummary } from '@/platform/components/workspace/WorkspaceSummary';
 import { WorkspacePasswordField } from '@/platform/components/workspace/WorkspacePasswordField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,7 +17,7 @@ interface PlatformWorkspaceCreateAdminDialogProps {
   createPending: boolean;
   onConfirm: (
     subdomain: string,
-    data: { name: string; email: string; password?: string },
+    data: { name: string; email: string; password?: string; currentPassword: string },
   ) => Promise<{ initialPassword: string; adminEmail: string; name: string }>;
 }
 
@@ -33,6 +34,7 @@ export function PlatformWorkspaceCreateAdminDialog({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [result, setResult] = useState<{ initialPassword: string; adminEmail: string; name: string } | null>(null);
   const [error, setError] = useState('');
 
@@ -51,12 +53,17 @@ export function PlatformWorkspaceCreateAdminDialog({
       setError(t('platform.validationPasswordLength'));
       return;
     }
+    if (!currentPassword.trim()) {
+      setError(t('platform.validationConfirmPlatformPassword'));
+      return;
+    }
     setError('');
     try {
       const res = await onConfirm(workspace.subdomain, {
         name: name.trim(),
         email: email.trim(),
         password: password || undefined,
+        currentPassword,
       });
       setResult(res);
     } catch (err: unknown) {
@@ -69,6 +76,7 @@ export function PlatformWorkspaceCreateAdminDialog({
     setName('');
     setEmail('');
     setPassword('');
+    setCurrentPassword('');
     setResult(null);
     setError('');
     onOpenChange(false);
@@ -77,7 +85,8 @@ export function PlatformWorkspaceCreateAdminDialog({
   const fieldError =
     error === t('platform.validationEnterName') ||
     error === t('platform.validationEnterValidEmail') ||
-    error === t('platform.validationPasswordLength')
+    error === t('platform.validationPasswordLength') ||
+    error === t('platform.validationConfirmPlatformPassword')
       ? undefined
       : error || undefined;
 
@@ -167,6 +176,28 @@ export function PlatformWorkspaceCreateAdminDialog({
             pending={createPending}
             error={error === t('platform.validationPasswordLength') ? error : undefined}
           />
+
+          <Field
+            id={`create-step-up-${workspace.subdomain}`}
+            label={t('platform.confirmPlatformPassword')}
+            required
+            error={error === t('platform.validationConfirmPlatformPassword') ? error : undefined}
+          >
+            <Input
+              id={`create-step-up-${workspace.subdomain}`}
+              name="platformPassword"
+              type="password"
+              autoComplete="current-password"
+              placeholder={t('platform.confirmPlatformPasswordHint')}
+              value={currentPassword}
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                if (error) setError('');
+              }}
+              className="h-11 text-sm"
+              disabled={createPending}
+            />
+          </Field>
 
           {fieldError ? <FieldErrorMessage message={fieldError} /> : null}
         </form>

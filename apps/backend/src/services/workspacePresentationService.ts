@@ -11,6 +11,7 @@ import {
   toPublicBranding,
 } from '@mms/shared';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { randomBytes } from 'node:crypto';
 import { getDb } from '../db/database.js';
 import { tenantUsers } from '../db/schema.js';
 import { hashPassword } from './auth/passwordService.js';
@@ -29,6 +30,15 @@ import {
   normalizeSubdomainInput,
   invalidateWorkspaceCache,
 } from './workspaceService.js';
+
+/** Cryptographically random temporary password for platform break-glass flows. */
+function generateTemporaryAdminPassword(): string {
+  return `Mms#${randomBytes(6).toString('base64url')}`;
+}
+
+function generateTenantUserId(): string {
+  return `usr_${randomBytes(8).toString('hex')}`;
+}
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
 export async function fetchPublicBrandingForSubdomain(subdomain: string) {
@@ -176,11 +186,11 @@ export async function resetWorkspaceAdminPassword(
   const targetUser = users[0];
   const fallbackEmail = data.branding?.email?.trim() || `admin@${normalized}.local`;
 
-  const newPassword = newPasswordInput?.trim() || `Mms#${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36).substring(4)}`;
+  const newPassword = newPasswordInput?.trim() || generateTemporaryAdminPassword();
   const passwordHash = await hashPassword(newPassword);
 
   if (!targetUser) {
-    const userId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+    const userId = generateTenantUserId();
     await db.insert(tenantUsers).values({
       id: userId,
       workspaceSubdomain: normalized,
@@ -244,10 +254,10 @@ export async function createWorkspaceAdminUser(
     return { success: false, error: 'USER_ALREADY_EXISTS' };
   }
 
-  const initialPassword = input.password?.trim() || `Mms#${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36).substring(4)}`;
+  const initialPassword = input.password?.trim() || generateTemporaryAdminPassword();
   const passwordHash = await hashPassword(initialPassword);
 
-  const userId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+  const userId = generateTenantUserId();
   await db.insert(tenantUsers).values({
     id: userId,
     workspaceSubdomain: normalized,

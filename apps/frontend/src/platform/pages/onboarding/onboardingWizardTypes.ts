@@ -15,6 +15,8 @@ export interface OnboardingData {
   email: string;
   password: string;
   confirmPassword: string;
+  /** Platform operator password for step-up on create. */
+  currentPassword: string;
   agreedTerms: boolean;
   modules: string[];
   industryType: IndustryType;
@@ -102,6 +104,7 @@ export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   email: "",
   password: "",
   confirmPassword: "",
+  currentPassword: "",
   agreedTerms: false,
   modules: SYSTEM_MODULES.map((m) => m.id),
   industryType: "madrasa",

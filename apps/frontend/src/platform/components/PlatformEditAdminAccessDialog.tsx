@@ -3,6 +3,8 @@ import { Shield } from 'lucide-react';
 import type { PlatformAdminPermissions, PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
+import { Field } from '@/components/ui/FormField';
+import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { useUpdatePlatformAdminPermissions } from '@/platform/hooks/usePlatformAdmins';
@@ -24,21 +26,28 @@ export function PlatformEditAdminAccessDialog({
   const [permissions, setPermissions] = useState<PlatformAdminPermissions>(() =>
     normalizePlatformAdminPermissions(admin.permissions),
   );
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setPermissions(normalizePlatformAdminPermissions(admin.permissions));
+      setPassword('');
       setError(null);
     }
   }, [open, admin]);
 
   const handleSave = async (): Promise<void> => {
     setError(null);
+    if (!password.trim()) {
+      setError(t('platform.validationConfirmPlatformPassword'));
+      return;
+    }
     try {
       await updatePermissions.mutateAsync({
         adminId: admin.id,
         permissions,
+        password,
       });
       onOpenChange(false);
     } catch (err) {
@@ -72,12 +81,33 @@ export function PlatformEditAdminAccessDialog({
             void handleSave();
           }
         }}
+        className="space-y-3"
       >
         <PlatformAdminPermissionsFields
           value={permissions}
           onChange={setPermissions}
           disabled={updatePermissions.isPending}
         />
+        <Field
+          id="edit-admin-step-up"
+          label={t('platform.confirmPlatformPassword')}
+          required
+        >
+          <Input
+            id="edit-admin-step-up"
+            name="platformPassword"
+            type="password"
+            autoComplete="current-password"
+            placeholder={t('platform.confirmPlatformPasswordHint')}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError(null);
+            }}
+            className="h-11 text-sm"
+            disabled={updatePermissions.isPending}
+          />
+        </Field>
       </form>
     </FormModal>
   );

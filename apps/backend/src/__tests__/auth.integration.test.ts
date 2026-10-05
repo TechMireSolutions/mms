@@ -55,6 +55,8 @@ const mockSetPlatformAdminDisabled = vi.fn();
 const mockDeletePlatformAdmin = vi.fn();
 const mockVerifyPlatformUserPassword = vi.fn();
 const mockDeleteWorkspace = vi.fn();
+const mockResetWorkspaceAdminPassword = vi.fn();
+const mockCreateWorkspaceAdminUser = vi.fn();
 const mockGetWorkspaceInstitutionSetupStatus = vi.fn();
 const mockIsPlatformSmtpConfigured = vi.fn().mockReturnValue(false);
 const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string) => {
@@ -153,6 +155,8 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
     ),
     listPlatformWorkspaces: (...args: unknown[]) => mockListPlatformWorkspaces(...args),
     deleteWorkspace: (...args: unknown[]) => mockDeleteWorkspace(...args),
+    resetWorkspaceAdminPassword: (...args: unknown[]) => mockResetWorkspaceAdminPassword(...args),
+    createWorkspaceAdminUser: (...args: unknown[]) => mockCreateWorkspaceAdminUser(...args),
     getWorkspaceInstitutionSetupStatus: (...args: unknown[]) =>
       mockGetWorkspaceInstitutionSetupStatus(...args),
   };
@@ -871,7 +875,7 @@ describe('platform auth routes', () => {
       url: '/api/platform/users/p-target/permissions',
       headers: { host: 'localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
-      payload: { permissions: { workspaces: true, onboard: false } },
+      payload: { permissions: { workspaces: true, onboard: false }, password: 'TestPassword123!' },
     });
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ type: 'forbidden' });
@@ -888,6 +892,7 @@ describe('platform auth routes', () => {
       permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
       createdAt: '2026-01-01T00:00:00.000Z',
     });
+    mockVerifyPlatformUserPassword.mockResolvedValue(true);
     const app = await buildApp();
     const token = app.jwt.sign({
       id: 'p1',
@@ -901,7 +906,10 @@ describe('platform auth routes', () => {
       url: '/api/platform/users/p-target/permissions',
       headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
-      payload: { permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false } },
+      payload: {
+        permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
+        password: 'TestPassword123!',
+      },
     });
     expect(res.statusCode).toBe(200);
     expect(mockSetPlatformAdminPermissions).toHaveBeenCalledWith('p-target', {
@@ -1001,6 +1009,9 @@ describe('platform auth routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ user: null, isAuthenticated: false });
+    const setCookie = res.headers['set-cookie'];
+    const cookieHeader = Array.isArray(setCookie) ? setCookie.join(';') : String(setCookie ?? '');
+    expect(cookieHeader).toMatch(/mms_platform_access=/);
     await app.close();
   });
 
@@ -1242,6 +1253,71 @@ describe('platform auth routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockDeletePlatformAdmin).toHaveBeenCalledWith('p-target');
+    await app.close();
+  });
+
+  it('POST workspace reset/create admin reject wrong operator password', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: {
+        workspaces: true,
+        onboard: true,
+        settings: true,
+        admins: true,
+        system: true,
+      },
+      sessionVersion: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    mockVerifyPlatformUserPassword.mockResolvedValue(false);
+    mockResetWorkspaceAdminPassword.mockResolvedValue({
+      success: true,
+      subdomain: 'demo',
+      adminEmail: 'admin@demo.local',
+      newPassword: 'generated',
+    });
+    mockCreateWorkspaceAdminUser.mockResolvedValue({
+      success: true,
+      subdomain: 'demo',
+      adminEmail: 'new@demo.local',
+      name: 'New Admin',
+      initialPassword: 'generated',
+    });
+
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+
+    const resetRes = await app.inject({
+      method: 'POST',
+      url: '/api/platform/workspaces/demo/reset-admin-password',
+      headers: { host: 'localhost', origin: 'http://localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { password: 'wrong' },
+    });
+    expect(resetRes.statusCode).toBe(401);
+    expect(mockResetWorkspaceAdminPassword).not.toHaveBeenCalled();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/platform/workspaces/demo/admin-users',
+      headers: { host: 'localhost', origin: 'http://localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: {
+        name: 'New Admin',
+        email: 'new@demo.local',
+        currentPassword: 'wrong',
+      },
+    });
+    expect(createRes.statusCode).toBe(401);
+    expect(mockCreateWorkspaceAdminUser).not.toHaveBeenCalled();
     await app.close();
   });
 });

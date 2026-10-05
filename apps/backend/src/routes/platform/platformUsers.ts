@@ -34,14 +34,22 @@ export default async function platformUsersRoutes(
 
     createAdmin: {
       hooks: {
-        preHandler: requirePlatformSuperUser(),
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await authRateLimit(request, reply);
+          if (reply.sent) return;
+          await requirePlatformSuperUser()(request, reply);
+        },
       },
       handler: handleCreateAdmin,
     },
 
     updateAdminPermissions: {
       hooks: {
-        preHandler: requirePlatformSuperUser(),
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await authRateLimit(request, reply);
+          if (reply.sent) return;
+          await requirePlatformSuperUser()(request, reply);
+        },
       },
       handler: handleUpdateAdminPermissions,
     },

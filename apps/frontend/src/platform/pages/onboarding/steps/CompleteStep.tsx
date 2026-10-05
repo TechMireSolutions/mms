@@ -8,6 +8,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { ClipboardCheck } from "lucide-react";
 import { SYSTEM_MODULES, findBlueprintById } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { Field } from "@/components/ui/FormField";
+import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { OnboardingData } from "@/platform/pages/onboarding/onboardingWizardTypes";
 
@@ -16,7 +18,7 @@ interface CompleteStepProps {
   onChange: Dispatch<SetStateAction<OnboardingData>>;
 }
 
-export default function CompleteStep({ data }: CompleteStepProps): React.JSX.Element {
+export default function CompleteStep({ data, onChange }: CompleteStepProps): React.JSX.Element {
   const { t } = useTranslation();
   const blueprint = data.blueprintId ? findBlueprintById(data.blueprintId) : undefined;
   const moduleCount = data.modules.filter((id) =>
@@ -53,6 +55,25 @@ export default function CompleteStep({ data }: CompleteStepProps): React.JSX.Ele
           value={`${data.firstName} ${data.lastName}`.trim() || "—"}
         />
       </dl>
+
+      <Field
+        id="onboarding-platform-password"
+        label={t("platform.confirmPlatformPassword")}
+        required
+      >
+        <Input
+          id="onboarding-platform-password"
+          name="platformPassword"
+          type="password"
+          autoComplete="current-password"
+          placeholder={t("platform.confirmPlatformPasswordHint")}
+          value={data.currentPassword}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, currentPassword: e.target.value }))
+          }
+          className="h-11 text-sm"
+        />
+      </Field>
     </SectionCard>
   );
 }

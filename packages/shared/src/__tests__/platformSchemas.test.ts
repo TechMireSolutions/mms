@@ -45,6 +45,7 @@ describe('platformSchemas', () => {
       name: 'Admin User',
       email: 'admin2@madrasa.org',
       password: 'Password123456',
+      currentPassword: 'OperatorPass123',
     });
     expect(valid.success).toBe(true);
     if (valid.success) {

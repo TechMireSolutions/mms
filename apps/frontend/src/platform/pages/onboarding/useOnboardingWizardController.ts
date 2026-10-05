@@ -79,6 +79,11 @@ export function useOnboardingWizardController() {
       return;
     }
 
+    if (!data.currentPassword.trim()) {
+      setSubmitError(t("platform.validationConfirmPlatformPassword"));
+      return;
+    }
+
     const policyCheck = validatePasswordPolicy(data.password, DEFAULT_GLOBAL_SETTINGS.passwordPolicy);
     if (!policyCheck.valid) {
       setSubmitError(policyCheck.errorKey ? t(policyCheck.errorKey) : t("onboarding.submitFailed"));
@@ -94,6 +99,7 @@ export function useOnboardingWizardController() {
         adminName: `${data.firstName} ${data.lastName}`.trim(),
         email: data.email,
         password: data.password,
+        currentPassword: data.currentPassword,
         subdomain: data.subdomain,
         modules: data.modules,
         industryType: data.industryType,

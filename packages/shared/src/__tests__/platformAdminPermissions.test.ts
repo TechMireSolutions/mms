@@ -73,6 +73,7 @@ describe('platform admin permission schemas', () => {
       name: 'Admin User',
       email: 'admin2@madrasa.org',
       password: 'Password123456',
+      currentPassword: 'OperatorPass123',
     });
     expect(valid.success).toBe(true);
     if (valid.success) {
@@ -86,14 +87,31 @@ describe('platform admin permission schemas', () => {
       name: 'Admin User',
       email: 'admin2@madrasa.org',
       password: 'Password123456',
+      currentPassword: 'OperatorPass123',
       permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
     });
     expect(create.success).toBe(true);
 
     const update = platformUpdateAdminPermissionsBodySchema.safeParse({
       permissions: { workspaces: false, onboard: true, settings: false, admins: false, system: false },
+      password: 'OperatorPass123',
     });
     expect(update.success).toBe(true);
+  });
+
+  it('rejects create/update without operator password step-up', () => {
+    expect(
+      platformCreateAdminBodySchema.safeParse({
+        name: 'Admin User',
+        email: 'admin2@madrasa.org',
+        password: 'Password123456',
+      }).success,
+    ).toBe(false);
+    expect(
+      platformUpdateAdminPermissionsBodySchema.safeParse({
+        permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
+      }).success,
+    ).toBe(false);
   });
 });
 

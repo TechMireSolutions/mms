@@ -29,11 +29,18 @@ function captureLog(payload: Record<string, unknown>): Record<string, unknown> {
 
 describe('log redaction', () => {
   it('redacts top-level credential fields', () => {
-    const out = captureLog({ password: 'hunter2', token: 'abc', apiKey: 'k', secret: 's' });
+    const out = captureLog({
+      password: 'hunter2',
+      token: 'abc',
+      apiKey: 'k',
+      secret: 's',
+      initialPassword: 'Mms#secret',
+    });
     expect(out.password).toBe(LOG_REDACT_CENSOR);
     expect(out.token).toBe(LOG_REDACT_CENSOR);
     expect(out.apiKey).toBe(LOG_REDACT_CENSOR);
     expect(out.secret).toBe(LOG_REDACT_CENSOR);
+    expect(out.initialPassword).toBe(LOG_REDACT_CENSOR);
   });
 
   it('redacts credential fields nested one level deep', () => {

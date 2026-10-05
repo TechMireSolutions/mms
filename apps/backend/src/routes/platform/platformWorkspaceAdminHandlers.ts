@@ -5,6 +5,7 @@ import {
   createWorkspaceAdminUser,
   resetWorkspaceAdminPassword,
 } from '../../services/workspaceService.js';
+import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 
 export async function handleVerifyTenantUserEmail({
@@ -52,6 +53,14 @@ export async function handleResetWorkspaceAdminPassword({
   ContractRouteResponse<typeof platformWorkspacesContract['resetWorkspaceAdminPassword']>
 > {
   const { platformUser } = request as PlatformAuthenticatedRequest;
+  const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.password);
+  if (!passwordOk) {
+    return {
+      status: 401 as const,
+      body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
+    };
+  }
+
   const result = await resetWorkspaceAdminPassword(params.subdomain, body.newPassword);
   if (!result) {
     return { status: 404 as const, body: { type: 'not_found', message: 'Workspace not found' } };
@@ -86,7 +95,19 @@ export async function handleCreateWorkspaceAdminUser({
   ContractRouteResponse<typeof platformWorkspacesContract['createWorkspaceAdminUser']>
 > {
   const { platformUser } = request as PlatformAuthenticatedRequest;
-  const result = await createWorkspaceAdminUser(params.subdomain, body);
+  const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.currentPassword);
+  if (!passwordOk) {
+    return {
+      status: 401 as const,
+      body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
+    };
+  }
+
+  const result = await createWorkspaceAdminUser(params.subdomain, {
+    name: body.name,
+    email: body.email,
+    password: body.password,
+  });
   if (!result.success) {
     if (result.error === 'WORKSPACE_NOT_FOUND') {
       return { status: 404 as const, body: { type: 'not_found', message: 'Workspace not found' } };

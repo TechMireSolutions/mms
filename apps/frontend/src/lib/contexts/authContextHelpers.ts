@@ -31,6 +31,8 @@ export interface OnboardPayload {
   adminName: string;
   email: string;
   password: string;
+  /** Platform operator password step-up. */
+  currentPassword: string;
   subdomain: string;
   country?: string;
   primaryColor?: string;

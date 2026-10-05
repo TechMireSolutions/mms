@@ -11,18 +11,27 @@ describe('platformWorkspacesRoutes.createWorkspaceAdminUser contract', () => {
       name: 'Administrator',
       email: 'admin@subdomain.org',
       password: 'StrongPassword123',
+      currentPassword: 'PlatformOperatorPass1',
     });
     expect(validBody.success).toBe(true);
 
     const validBodyNoPassword = route.body.safeParse({
       name: 'Administrator',
       email: 'admin@subdomain.org',
+      currentPassword: 'PlatformOperatorPass1',
     });
     expect(validBodyNoPassword.success).toBe(true);
+
+    const missingStepUp = route.body.safeParse({
+      name: 'Administrator',
+      email: 'admin@subdomain.org',
+    });
+    expect(missingStepUp.success).toBe(false);
 
     const invalidEmail = route.body.safeParse({
       name: 'Administrator',
       email: 'invalid-email',
+      currentPassword: 'PlatformOperatorPass1',
     });
     expect(invalidEmail.success).toBe(false);
 
@@ -30,6 +39,7 @@ describe('platformWorkspacesRoutes.createWorkspaceAdminUser contract', () => {
       name: 'Administrator',
       email: 'admin@subdomain.org',
       password: 'short',
+      currentPassword: 'PlatformOperatorPass1',
     });
     expect(shortPassword.success).toBe(false);
   });
@@ -44,5 +54,17 @@ describe('platformWorkspacesRoutes.createWorkspaceAdminUser contract', () => {
       initialPassword: 'Mms#RandomPass123',
     });
     expect(validResponse.success).toBe(true);
+  });
+});
+
+describe('platformWorkspacesRoutes.resetWorkspaceAdminPassword contract', () => {
+  it('requires platform password step-up', () => {
+    const route = platformWorkspacesRoutes.resetWorkspaceAdminPassword;
+    expect(route.body.safeParse({ password: 'OperatorPass1' }).success).toBe(true);
+    expect(
+      route.body.safeParse({ password: 'OperatorPass1', newPassword: 'NewAdminPass1' }).success,
+    ).toBe(true);
+    expect(route.body.safeParse({ newPassword: 'NewAdminPass1' }).success).toBe(false);
+    expect(route.body.safeParse({}).success).toBe(false);
   });
 });

@@ -15,8 +15,10 @@ import { insertPlatformActivityLog } from '../../db/repositories/platformActivit
  *
  * Default remains enabled (`PLATFORM_SYNC_SUPERUSER_TO_TENANTS` unset or not
  * `false`) so existing break-glass keeps working. Production deployments that do
- * not need mirrored tenant super-admins SHOULD set
+ * not need mirrored tenant super-admins MUST set
  * `PLATFORM_SYNC_SUPERUSER_TO_TENANTS=false` and keep tenant DBs strongly isolated.
+ * A compromised tenant DB exposes the platform super-user hash and the mirrored
+ * account can authenticate into every workspace.
  */
 function isSuperUserTenantSyncEnabled(): boolean {
   return process.env.PLATFORM_SYNC_SUPERUSER_TO_TENANTS !== 'false';
