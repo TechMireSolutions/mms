@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MutedTableHeaderRow } from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -86,7 +87,7 @@ export function ObligationCollectionDistributionsSection({
                   {t("obligations.detail.distributionCaption", { receipt: collection.receipt_no })}
                 </caption>
                 <TableHeader>
-                  <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  <MutedTableHeaderRow>
                     <ModuleTableHeaderCell columnKey="name" className="px-5 py-2">
                       {t("obligations.detail.colName")}
                     </ModuleTableHeaderCell>
@@ -99,7 +100,7 @@ export function ObligationCollectionDistributionsSection({
                     <ModuleTableHeaderCell columnKey="amount" className="px-5 py-2 text-end">
                       {t("obligations.columns.amount")}
                     </ModuleTableHeaderCell>
-                  </TableRow>
+                  </MutedTableHeaderRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-border">
                   {dists.map((distribution) => (

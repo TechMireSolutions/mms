@@ -9,10 +9,13 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHeader,
-  TableRow,
 } from '@/components/ui/table';
+import {
+  FinancialDebitCreditFooter,
+  FinancialDebitCreditFooterRow,
+  FinancialDebitCreditHeaderRow,
+} from '@/components/ui/reports/FinancialDebitCreditTableChrome';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { balanceToneClass } from '@/lib/semanticTone';
@@ -87,13 +90,13 @@ export function JournalEntryLinesEditor({
             <Table>
               <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                <FinancialDebitCreditHeaderRow>
                   <ModuleTableHeaderCell columnKey="account" className="px-3 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="lineNote" className="px-3 py-2 hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2 text-end w-28">{t("accounting.ledger.columns.debit")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2 text-end w-28">{t("accounting.ledger.columns.credit")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="actions" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></ModuleTableHeaderCell>
-                </TableRow>
+                </FinancialDebitCreditHeaderRow>
               </TableHeader>
               <TableBody className="divide-y divide-border">
                 {lines.map((line, lineIndex) => (
@@ -114,15 +117,15 @@ export function JournalEntryLinesEditor({
                   />
                 ))}
               </TableBody>
-              <TableFooter className="border-t-2 border-border bg-muted/30">
-                <TableRow className="hover:bg-transparent">
+              <FinancialDebitCreditFooter>
+                <FinancialDebitCreditFooterRow>
                   <TableCell className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</TableCell>
                   <TableCell className="hidden md:table-cell" />
                   <TableCell className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
                   <TableCell className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
                   <TableCell />
-                </TableRow>
-              </TableFooter>
+                </FinancialDebitCreditFooterRow>
+              </FinancialDebitCreditFooter>
             </Table>
           )}
         </div>

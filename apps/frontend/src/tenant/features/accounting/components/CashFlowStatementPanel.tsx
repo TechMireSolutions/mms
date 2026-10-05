@@ -6,17 +6,18 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
 import { balanceToneClass } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 interface CashFlowStatementPanelProps {
   netSurplus: number;
   depreciationAdjustment: number;
@@ -71,39 +72,40 @@ export function CashFlowStatementPanel({
           <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{t('accounting.reports.cashflow.title')}</SectionLabel>
         </header>
         {viewMode === "cards" ? (
-          <EntityCardsGrid className="p-3">
-            <EntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</span>
-                <span className="font-mono font-semibold">{formatCurrency(netSurplus)}</span>
-              </div>
-            </EntityCard>
+          <ReportMoneyCardsGrid>
+            <ReportMoneySummaryTile
+              tone="muted"
+              label={t('accounting.reports.cashflow.netSurplusOrDeficit')}
+              value={formatCurrency(netSurplus)}
+            />
             {adjustments.map((item) => (
-              <EntityCard key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">{item.label}</span>
-                  <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
-                </div>
-              </EntityCard>
+              <ReportMoneyCard
+                key={item.label}
+                header={
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
+                  </div>
+                }
+              />
             ))}
-            <EntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</span>
-                <span className="font-mono font-semibold text-foreground">{formatCurrency(netCashFlowIndirect)}</span>
-              </div>
-            </EntityCard>
-            <EntityCard className="rounded-xl border border-border bg-muted/30 p-3 col-span-full">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</span>
-                <span className="font-mono font-bold text-foreground text-base">
+            <ReportMoneySummaryTile
+              tone="muted"
+              label={t('accounting.reports.cashflow.netCashOperations')}
+              value={formatCurrency(netCashFlowIndirect)}
+            />
+            <ReportMoneySummaryTile
+              label={t('accounting.reports.cashflow.netCashFlow')}
+              value={
+                <>
                   {formatCurrency(Math.abs(netCashFlow))}
                   <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
                   </span>
-                </span>
-              </div>
-            </EntityCard>
-          </EntityCardsGrid>
+                </>
+              }
+            />
+          </ReportMoneyCardsGrid>
         ) : (
           <Table>
             <caption className="sr-only">{t('accounting.reports.cashflow.breakdownCaption')}</caption>

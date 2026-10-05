@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MutedTableHeaderRow } from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ObligationsRepDuesCardsView } from "./ObligationsRepDuesCardsView";
@@ -97,14 +98,14 @@ export function ObligationsRepDuesSection({
             <Table>
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                <MutedTableHeaderRow>
                   <ModuleTableHeaderCell columnKey="representative" className="px-3 py-2.5">{t("obligations.summary.rep.colRepresentative")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="mujtahid" className="px-3 py-2.5">{t("obligations.summary.rep.colMujtahid")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="byType" className="px-3 py-2.5">{t("obligations.summary.rep.colByType")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="collections" className="px-3 py-2.5 text-end">{t("obligations.summary.rep.colCollections")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="totalCollected" className="px-3 py-2.5 text-end">{t("obligations.summary.rep.colTotalCollectedShort")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="dueToRep" className="px-3 py-2.5 text-end text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</ModuleTableHeaderCell>
-                </TableRow>
+                </MutedTableHeaderRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/50">
                 {repSummary.map((representativeSummary) => (

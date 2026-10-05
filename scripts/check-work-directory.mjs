@@ -80,18 +80,14 @@ const RAW_TABLE_ALLOWLIST = new Set([
  * Outer `<EntityCard` allowed only for intentional non-Work tiles whose filenames
  * match the Work-card composite ratchet (`*Card*.tsx` / `*CardsView.tsx`):
  * - MarkAttendanceStudentCard — workshop form card (not a directory row)
- * - ObligationsRepDuesCardsView — report summary tiles
- * - GeneralLedgerCardsView — report ledger line cards
  *
- * Other report/workshop EntityCard tiles (Cashbook, TB, CashFlow, Wakala,
- * ActivityLogs, FinancialReport, DataTableCards) use non-matching filenames and
- * never hit this check — they remain EntityCard by job (not DirectoryCard).
+ * Report statement cards (TB, cashbook, GL, wakala, rep dues)
+ * use ReportMoneyCard / ReportMoneyCardsGrid — they no longer need this allowlist.
+ * Other report/workshop tiles with non-matching filenames never hit this check.
  * New Work/setup *Card* composites must use DirectoryCard.
  */
 const ENTITY_CARD_OUTER_ALLOWLIST = new Set([
   'apps/frontend/src/tenant/features/attendance/components/MarkAttendanceStudentCard.tsx',
-  'apps/frontend/src/tenant/features/obligations/components/ObligationsRepDuesCardsView.tsx',
-  'apps/frontend/src/tenant/features/accounting/components/GeneralLedgerCardsView.tsx',
 ]);
 
 const WORK_CARD_COMPOSITE =

@@ -1,13 +1,13 @@
 import React from "react";
 import { getInitials } from "@mms/shared";
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { RepSummaryEntry } from "./ObligationsRepDuesSection";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 export interface ObligationsRepDuesCardsViewProps {
   repSummary: RepSummaryEntry[];
   totalAmount: number;
@@ -26,30 +26,31 @@ export function ObligationsRepDuesCardsView({
   const { t } = useTranslation();
 
   return (
-    <EntityCardsGrid className="p-3">
+    <ReportMoneyCardsGrid>
       {repSummary.map((representativeSummary) => (
-        <EntityCard
+        <ReportMoneyCard
           key={representativeSummary.key}
-          className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+          header={
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0"
+                aria-hidden="true"
+              >
+                <span className="text-xs font-bold text-primary">
+                  {getInitials(representativeSummary.repName)}
+                </span>
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground text-sm m-0">
+                  {representativeSummary.repName}
+                </h4>
+                <p className="text-xs text-muted-foreground m-0">
+                  {representativeSummary.mujtahidName}
+                </p>
+              </div>
+            </div>
+          }
         >
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"
-              aria-hidden="true"
-            >
-              <span className="text-xs font-bold text-primary">
-                {getInitials(representativeSummary.repName)}
-              </span>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground text-sm m-0">
-                {representativeSummary.repName}
-              </h4>
-              <p className="text-xs text-muted-foreground m-0">
-                {representativeSummary.mujtahidName}
-              </p>
-            </div>
-          </div>
           <div>
             <p className="text-xs font-semibold text-muted-foreground mb-1">
               {t("obligations.summary.rep.colByType")}
@@ -83,12 +84,9 @@ export function ObligationsRepDuesCardsView({
               ddClassName="font-mono font-bold text-destructive text-sm"
             />
           </StatGrid>
-        </EntityCard>
+        </ReportMoneyCard>
       ))}
-      <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
-        <p className="text-xs font-bold text-muted-foreground uppercase m-0">
-          {t("obligations.summary.rep.repCount", { count: repSummary.length })}
-        </p>
+      <ReportMoneySummaryTile label={t("obligations.summary.rep.repCount", { count: repSummary.length })}>
         <StatGrid>
           <StatRow
             label={t("obligations.summary.rep.colTotalCollectedShort")}
@@ -102,7 +100,7 @@ export function ObligationsRepDuesCardsView({
             ddClassName="font-mono font-bold text-destructive text-xs"
           />
         </StatGrid>
-      </article>
-    </EntityCardsGrid>
+      </ReportMoneySummaryTile>
+    </ReportMoneyCardsGrid>
   );
 }

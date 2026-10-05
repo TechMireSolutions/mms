@@ -1,4 +1,4 @@
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -8,10 +8,16 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  FinancialDebitCreditFooter,
+  FinancialDebitCreditFooterRow,
+  FinancialDebitCreditHeaderRow,
+} from "@/components/ui/reports/FinancialDebitCreditTableChrome";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -46,16 +52,20 @@ export function JournalEntryDetailLines({
         {entry.lines.map((line) => {
           const account = getAccount(line.account_id);
           return (
-            <article key={line.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
-              <div>
-                <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
-                <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                  <span className="font-mono text-xs text-muted-foreground">{account?.code}</span>
-                  {account && (
-                    <StatusBadge status={account.type} config={accountTypeConfig} size="sm" />
-                  )}
+            <ReportMoneyCard
+              key={line.id}
+              header={
+                <div>
+                  <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <span className="font-mono text-xs text-muted-foreground">{account?.code}</span>
+                    {account && (
+                      <StatusBadge status={account.type} config={accountTypeConfig} size="sm" />
+                    )}
+                  </div>
                 </div>
-              </div>
+              }
+            >
               {line.description ? (
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground m-0">{t("accounting.journal.detail.note")}</p>
@@ -74,11 +84,10 @@ export function JournalEntryDetailLines({
                   ddClassName="font-mono text-xs font-semibold text-success"
                 />
               </StatGrid>
-            </article>
+            </ReportMoneyCard>
           );
         })}
-        <article className="rounded-xl border border-border bg-muted/30 p-3">
-          <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.detail.totals")}</p>
+        <ReportMoneySummaryTile label={t("accounting.journal.detail.totals")}>
           <StatGrid>
             <StatRow
               label={t("accounting.journal.detail.debit")}
@@ -91,19 +100,19 @@ export function JournalEntryDetailLines({
               ddClassName="font-mono font-bold text-success"
             />
           </StatGrid>
-        </article>
+        </ReportMoneySummaryTile>
       </div>
       ) : (
         <div>
           <Table>
           <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
           <TableHeader>
-            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+            <FinancialDebitCreditHeaderRow>
               <ModuleTableHeaderCell columnKey="account" className="px-5 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="note" className="px-4 py-2 hidden sm:table-cell">{t("accounting.journal.detail.note")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="debit" className="px-4 py-2 text-end">{t("accounting.journal.detail.debit")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="credit" className="px-5 py-2 text-end">{t("accounting.journal.detail.credit")}</ModuleTableHeaderCell>
-            </TableRow>
+            </FinancialDebitCreditHeaderRow>
           </TableHeader>
           <TableBody className="divide-y divide-border">
             {entry.lines.map((line) => {
@@ -132,13 +141,13 @@ export function JournalEntryDetailLines({
               );
             })}
           </TableBody>
-          <TableFooter className="border-t-2 border-border bg-muted/30">
-            <TableRow className="hover:bg-transparent">
+          <FinancialDebitCreditFooter>
+            <FinancialDebitCreditFooterRow>
               <TableCell colSpan={2} className="table-footer-label">{t("accounting.journal.detail.totals")}</TableCell>
               <MoneyTableCell value={formatCurrency(totalDebit)} variant="debit" isFooter />
               <MoneyTableCell value={formatCurrency(totalCredit)} variant="credit" isFooter />
-            </TableRow>
-          </TableFooter>
+            </FinancialDebitCreditFooterRow>
+          </FinancialDebitCreditFooter>
         </Table>
       </div>
       )}

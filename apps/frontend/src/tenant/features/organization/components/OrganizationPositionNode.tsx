@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, User, MapPin, Building, Plus } from 'lucide-react';
 import type { OrganizationPositionTreeNode } from '@mms/shared';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface OrganizationPositionNodeProps {
@@ -33,7 +35,7 @@ export function OrganizationPositionNode({
       >
         <div className="flex items-start justify-between gap-2">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            <span className="text-2xs font-mono uppercase tracking-wider text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
               {node.code}
             </span>
             <h4 className="font-semibold text-sm text-foreground leading-snug mt-1">
@@ -41,35 +43,37 @@ export function OrganizationPositionNode({
             </h4>
           </div>
 
-          <span
-            className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-              isVacant
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900'
-                : isFull
-                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900'
-                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
-            }`}
-          >
-            {occupiedCount} / {node.capacity}{' '}
-            {isVacant
-              ? t('organization.vacant')
-              : isFull
-                ? t('organization.full')
-                : t('organization.filled')}
-          </span>
+          <StatusBadge
+            status={isVacant ? 'vacant' : isFull ? 'full' : 'filled'}
+            size="sm"
+            config={{
+              vacant: {
+                label: `${occupiedCount} / ${node.capacity} ${t('organization.vacant')}`,
+                cls: SEMANTIC_BADGE.warning,
+              },
+              full: {
+                label: `${occupiedCount} / ${node.capacity} ${t('organization.full')}`,
+                cls: SEMANTIC_BADGE.info,
+              },
+              filled: {
+                label: `${occupiedCount} / ${node.capacity} ${t('organization.filled')}`,
+                cls: SEMANTIC_BADGE.success,
+              },
+            }}
+          />
         </div>
 
         {/* Metadata Pills */}
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           {node.departmentName ? (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60 text-[11px]">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60 text-3xs">
               <Building className="h-3 w-3" />
               {node.departmentName}
             </span>
           ) : null}
 
           {node.locationName ? (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60 text-[11px]">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60 text-3xs">
               <MapPin className="h-3 w-3" />
               {node.locationName}
             </span>
@@ -82,18 +86,18 @@ export function OrganizationPositionNode({
             <div className="space-y-1">
               {node.occupants.map((occ) => (
                 <div key={occ.assignmentId} className="flex items-center gap-2 text-foreground font-medium">
-                  <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xs font-bold shrink-0">
                     {occ.facultyName.charAt(0)}
                   </div>
                   <span className="truncate">{occ.facultyName}</span>
                   {occ.employeeId ? (
-                    <span className="text-[10px] text-muted-foreground font-mono">({occ.employeeId})</span>
+                    <span className="text-2xs text-muted-foreground font-mono">({occ.employeeId})</span>
                   ) : null}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-muted-foreground italic text-[11px]">
+            <div className="flex items-center gap-1.5 text-muted-foreground italic text-3xs">
               <User className="h-3.5 w-3.5" />
               <span>{t('organization.positionOpen')}</span>
             </div>
@@ -109,7 +113,7 @@ export function OrganizationPositionNode({
                 e.stopPropagation();
                 setCollapsed(!collapsed);
               }}
-              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground text-[11px] font-medium"
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground text-3xs font-medium"
             >
               {collapsed ? (
                 <>
@@ -124,7 +128,7 @@ export function OrganizationPositionNode({
               )}
             </button>
           ) : (
-            <span className="text-[11px] text-muted-foreground">{t('organization.leafPosition')}</span>
+            <span className="text-3xs text-muted-foreground">{t('organization.leafPosition')}</span>
           )}
 
           {canWrite && onAddChild ? (

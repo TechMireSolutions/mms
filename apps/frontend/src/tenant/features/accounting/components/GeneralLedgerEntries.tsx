@@ -1,7 +1,11 @@
 import React, { useMemo } from "react";
 import { formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
+import {
+  FinancialDebitCreditFooter,
+  FinancialDebitCreditFooterRow,
+} from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { GeneralLedgerCardsView } from "./GeneralLedgerCardsView";
@@ -129,8 +133,8 @@ export function GeneralLedgerEntries({
   }
 
   const tableFooter = (
-    <TableFooter className="border-t-2 border-border bg-muted/30">
-      <TableRow className="hover:bg-transparent">
+    <FinancialDebitCreditFooter>
+      <FinancialDebitCreditFooterRow>
         <TableCell colSpan={3} className="table-footer-label">
           {t("accounting.ledger.closingBalance")}
         </TableCell>
@@ -144,8 +148,8 @@ export function GeneralLedgerEntries({
         <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground">
           {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
         </TableCell>
-      </TableRow>
-    </TableFooter>
+      </FinancialDebitCreditFooterRow>
+    </FinancialDebitCreditFooter>
   );
 
   return (

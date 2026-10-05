@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTaskMetrics } from '@/tenant/features/tasks/hooks/useTasksApi';
 import { StatsSkeleton } from '@/components/ui/LoadingState';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TasksReportsCharts } from './TasksReportsCharts';
 
@@ -41,69 +42,24 @@ export function TasksReportsTab(): React.JSX.Element {
   const onTimeRate =
     m.total > 0 ? Math.max(0, Math.round(((m.total - m.overdue) / m.total) * 100)) : 100;
 
-  const kpis: Array<{
-    title: string;
-    value: string | number;
-    icon: typeof ListTodo;
-    accentClass: string;
-  }> = [
-    {
-      title: t('tasks.metrics.total'),
-      value: m.total,
-      icon: ListTodo,
-      accentClass: 'text-primary',
-    },
-    {
-      title: t('tasks.metrics.inProgress'),
-      value: m.inProgress,
-      icon: Clock,
-      accentClass: 'text-warning',
-    },
-    {
-      title: t('tasks.metrics.completed'),
-      value: m.completed,
-      icon: CheckCircle2,
-      accentClass: 'text-success',
-    },
-    {
-      title: t('tasks.metrics.blocked'),
-      value: m.blocked,
-      icon: AlertTriangle,
-      accentClass: 'text-destructive',
-    },
-    {
-      title: t('tasks.metrics.overdue'),
-      value: m.overdue,
-      icon: RotateCcw,
-      accentClass: 'text-destructive',
-    },
-    {
-      title: t('tasks.metrics.completionRate'),
-      value: `${completionRate}%`,
-      icon: TrendingUp,
-      accentClass: 'text-primary',
-    },
-  ];
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {kpis.map((kpi) => {
-          const Icon = kpi.icon;
-          return (
-            <div
-              key={kpi.title}
-              className="rounded-lg border border-border bg-card p-4 shadow-xs flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between gap-1 text-muted-foreground mb-2">
-                <span className="text-xs font-medium truncate">{kpi.title}</span>
-                <Icon className={`h-4 w-4 shrink-0 ${kpi.accentClass}`} aria-hidden />
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-foreground">{kpi.value}</div>
-            </div>
-          );
-        })}
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          { key: 'total', label: t('tasks.metrics.total'), value: m.total, icon: ListTodo, accent: 'primary' },
+          { key: 'inProgress', label: t('tasks.metrics.inProgress'), value: m.inProgress, icon: Clock, accent: 'warning' },
+          { key: 'completed', label: t('tasks.metrics.completed'), value: m.completed, icon: CheckCircle2, accent: 'success' },
+          { key: 'blocked', label: t('tasks.metrics.blocked'), value: m.blocked, icon: AlertTriangle, accent: 'destructive' },
+          { key: 'overdue', label: t('tasks.metrics.overdue'), value: m.overdue, icon: RotateCcw, accent: 'destructive' },
+          {
+            key: 'completionRate',
+            label: t('tasks.metrics.completionRate'),
+            value: `${completionRate}%`,
+            icon: TrendingUp,
+            accent: 'primary',
+          },
+        ]}
+      />
 
       <TasksReportsCharts metrics={m} />
 

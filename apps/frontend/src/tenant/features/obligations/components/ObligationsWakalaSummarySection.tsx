@@ -1,5 +1,3 @@
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -12,17 +10,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
-import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { MutedTableHeaderRow } from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ObligationDistribution } from "@/lib/data/obligationsData";
 import { AlertCircle, Layers } from "lucide-react";
-
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ObligationsWakalaSummaryCardsView } from "./ObligationsWakalaSummaryCardsView";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 export interface WakalaSummaryEntry {
   key: string;
   label: string;
@@ -88,69 +86,23 @@ export function ObligationsWakalaSummarySection({
       ) : (
         <div className={WORK_SURFACE}>
           {viewMode === "cards" ? (
-            <EntityCardsGrid className="p-3">
-              {wakalaSummary.map((wakalaSummaryItem) => (
-                <EntityCard key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground m-0">{wakalaSummaryItem.repName}</h4>
-                    {!wakalaSummaryItem.hasWakala && (
-                      <span className="inline-flex items-center gap-1 text-xs text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
-                        <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
-                      </span>
-                    )}
-                  </div>
-                  <StatGrid>
-                    <StatRow
-                      label={t("obligations.summary.wakala.colMujtahid")}
-                      value={wakalaSummaryItem.mujtahidName}
-                      ddClassName="text-xs text-muted-foreground"
-                    />
-                    <StatRow
-                      label={t("obligations.summary.wakala.colObligation")}
-                      value={<Badge pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>}
-                    />
-                    <StatRow
-                      label={t("obligations.summary.wakala.colCollections")}
-                      value={wakalaSummaryItem.count}
-                      ddClassName="text-sm font-semibold"
-                    />
-                    <StatRow
-                      label={t("obligations.summary.wakala.colTotalAmountShort")}
-                      value={formatCurrency(wakalaSummaryItem.total)}
-                      ddClassName="font-mono font-bold text-success text-sm"
-                    />
-                  </StatGrid>
-                  {wakalaSummaryItem.distributions.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.wakala.colDistributions")}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {wakalaSummaryItem.distributions.map((distribution) => (
-                          <span key={distribution.id} className={`text-xs font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${distribution.type === "Liability" ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-success/10 border-success/30 text-success"}`}>
-                            {distribution.name} {distribution.percentage}%
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </EntityCard>
-              ))}
-              <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
-                <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</p>
-                <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
-              </article>
-            </EntityCardsGrid>
+            <ObligationsWakalaSummaryCardsView
+              wakalaSummary={wakalaSummary}
+              totalAmount={totalAmount}
+              formatCurrency={formatCurrency}
+            />
           ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                <MutedTableHeaderRow>
                   <ModuleTableHeaderCell columnKey="repWakala" className="px-3 py-2.5">{t("obligations.summary.wakala.colRepWakala")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="mujtahid" className="px-3 py-2.5">{t("obligations.summary.wakala.colMujtahid")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="obligation" className="px-3 py-2.5">{t("obligations.summary.wakala.colObligation")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="collections" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colCollections")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="totalAmount" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colTotalAmountShort")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="distributions" className="px-3 py-2.5">{t("obligations.summary.wakala.colDistributions")}</ModuleTableHeaderCell>
-                </TableRow>
+                </MutedTableHeaderRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/50">
                 {wakalaSummary.map((wakalaSummaryItem) => (

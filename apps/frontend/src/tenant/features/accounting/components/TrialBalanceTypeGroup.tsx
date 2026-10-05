@@ -12,14 +12,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
+import {
+  MutedTableHeaderRow,
+} from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AppTranslationKey } from "@mms/shared";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 interface TrialBalanceRow {
   id: string;
   code: string;
@@ -64,22 +68,23 @@ export function TrialBalanceTypeGroup({
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
       </header>
       {viewMode === "cards" ? (
-        <EntityCardsGrid className="p-3">
+        <ReportMoneyCardsGrid>
           {sortedRows.map((trialBalanceRow) => (
-            <EntityCard
+            <ReportMoneyCard
               key={trialBalanceRow.id}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
+              title={
+                <>
                   <p className="font-mono text-xs font-bold text-muted-foreground m-0">{trialBalanceRow.code}</p>
                   <h4 className="truncate text-sm font-medium text-foreground m-0 mt-0.5">{trialBalanceRow.name}</h4>
-                </div>
-                <div className="shrink-0 text-end">
+                </>
+              }
+              end={
+                <div className="text-end">
                   <p className="font-mono text-xs font-semibold text-info m-0">{formatPositiveNumber(trialBalanceRow.totalDebit)}</p>
                   <p className="font-mono text-xs font-semibold text-success m-0">{formatPositiveNumber(trialBalanceRow.totalCredit)}</p>
                 </div>
-              </div>
+              }
+            >
               {trialBalanceRow.subtype ? (
                 <p className="text-xs text-muted-foreground m-0">{trialBalanceRow.subtype}</p>
               ) : null}
@@ -95,10 +100,9 @@ export function TrialBalanceTypeGroup({
                   ddClassName="font-mono text-xs font-semibold text-success"
                 />
               </StatGrid>
-            </EntityCard>
+            </ReportMoneyCard>
           ))}
-          <article className="rounded-xl border border-border bg-muted/20 p-3 col-span-full">
-            <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
+          <ReportMoneySummaryTile tone="soft" label={t("accounting.tb.subTotal")}>
             <StatGrid>
               <StatRow
                 label={t("accounting.columns.journal.debit")}
@@ -111,19 +115,19 @@ export function TrialBalanceTypeGroup({
                 ddClassName="font-mono font-bold text-success"
               />
             </StatGrid>
-          </article>
-        </EntityCardsGrid>
+          </ReportMoneySummaryTile>
+        </ReportMoneyCardsGrid>
       ) : (
         <Table>
           <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
           <TableHeader>
-            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+            <MutedTableHeaderRow>
               <ModuleTableHeaderCell columnKey="code" className="px-3 py-2.5 w-20">{t("accounting.columns.account.code")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("accounting.columns.account.name")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="subtype" className="px-3 py-2.5 hidden md:table-cell">{t("accounting.columns.account.subtype")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.debit")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.credit")}</ModuleTableHeaderCell>
-            </TableRow>
+            </MutedTableHeaderRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
             {sortedRows.map((trialBalanceRow) => (

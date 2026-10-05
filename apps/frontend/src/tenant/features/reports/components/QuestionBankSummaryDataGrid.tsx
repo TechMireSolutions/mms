@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { ReportDataGridContainer } from '@/components/ui/reports/ReportDataGridContainer';
+import { MutedTableHeaderRow } from '@/components/ui/reports/FinancialDebitCreditTableChrome';
 import {
   Table,
   TableBody,
@@ -34,7 +35,7 @@ export function QuestionBankSummaryDataGrid({
       <div className="hidden md:block">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+            <MutedTableHeaderRow>
               <TableHead className="px-4 py-2.5 font-bold">{t('common.type')}</TableHead>
               <TableHead className="px-4 py-2.5 font-bold">{t('common.label')}</TableHead>
               <TableHead className="px-4 py-2.5 font-bold text-center">
@@ -43,7 +44,7 @@ export function QuestionBankSummaryDataGrid({
               <TableHead className="px-4 py-2.5 font-bold text-center">
                 {t('questionBank.report.generatedTests')}
               </TableHead>
-            </TableRow>
+            </MutedTableHeaderRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
             {summaryRows.map((row) => (

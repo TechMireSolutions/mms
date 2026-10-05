@@ -1,10 +1,10 @@
 import { formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
 import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import { resolveVisibleColumns, toColumnResize, type DataTableColumnLayout } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,7 +12,7 @@ import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/us
 import { buildCashbookFooterCells, type CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
 import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 interface CashbookViewTableProps {
   rows: CashbookRow[];
   totalIn: number;
@@ -44,56 +44,57 @@ export function CashbookViewTable({
 
   if (viewMode === "cards") {
     return (
-      <div className={WORK_SURFACE}>
-        <EntityCardsGrid className="p-3">
-          {rows.map((row) => (
-            <EntityCard key={row.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground m-0">{formatDate(row.date)}</p>
-                  <h4 className="font-medium text-sm text-foreground m-0 mt-0.5">{row.description}</h4>
-                  <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
-                </div>
-                <div className="inline-flex shrink-0 items-center gap-1.5">
-                  {flowIcon(row.flowType)}
-                  {flowBadge(row)}
-                </div>
+      <ReportMoneyCardsGrid surface>
+        {rows.map((row) => (
+          <ReportMoneyCard
+            key={row.id}
+            title={
+              <>
+                <p className="text-xs text-muted-foreground m-0">{formatDate(row.date)}</p>
+                <h4 className="font-medium text-sm text-foreground m-0 mt-0.5">{row.description}</h4>
+                <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
+              </>
+            }
+            end={
+              <div className="inline-flex items-center gap-1.5">
+                {flowIcon(row.flowType)}
+                {flowBadge(row)}
               </div>
-              <StatGrid>
-                <StatRow
-                  label={t("accounting.cashbook.moneyIn")}
-                  value={row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
-                  dtClassName="text-success"
-                  ddClassName="font-mono font-bold text-success"
-                />
-                <StatRow
-                  label={t("accounting.cashbook.moneyOut")}
-                  value={row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
-                  dtClassName="text-destructive"
-                  ddClassName="font-mono font-bold text-destructive"
-                />
-              </StatGrid>
-            </EntityCard>
-          ))}
-          <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
-            <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("accounting.cashbook.transactionCount", { count: rows.length })}</p>
+            }
+          >
             <StatGrid>
               <StatRow
                 label={t("accounting.cashbook.moneyIn")}
-                value={formatCurrency(totalIn)}
+                value={row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
                 dtClassName="text-success"
-                ddClassName="font-mono font-bold text-success text-xs"
+                ddClassName="font-mono font-bold text-success"
               />
               <StatRow
                 label={t("accounting.cashbook.moneyOut")}
-                value={formatCurrency(totalOut)}
+                value={row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
                 dtClassName="text-destructive"
-                ddClassName="font-mono font-bold text-destructive text-xs"
+                ddClassName="font-mono font-bold text-destructive"
               />
             </StatGrid>
-          </article>
-        </EntityCardsGrid>
-      </div>
+          </ReportMoneyCard>
+        ))}
+        <ReportMoneySummaryTile label={t("accounting.cashbook.transactionCount", { count: rows.length })}>
+          <StatGrid>
+            <StatRow
+              label={t("accounting.cashbook.moneyIn")}
+              value={formatCurrency(totalIn)}
+              dtClassName="text-success"
+              ddClassName="font-mono font-bold text-success text-xs"
+            />
+            <StatRow
+              label={t("accounting.cashbook.moneyOut")}
+              value={formatCurrency(totalOut)}
+              dtClassName="text-destructive"
+              ddClassName="font-mono font-bold text-destructive text-xs"
+            />
+          </StatGrid>
+        </ReportMoneySummaryTile>
+      </ReportMoneyCardsGrid>
     );
   }
 

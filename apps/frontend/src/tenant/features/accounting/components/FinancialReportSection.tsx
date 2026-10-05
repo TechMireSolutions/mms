@@ -6,16 +6,17 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
-import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { EntityCard } from "@/components/ui/EntityCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
+import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
+import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
-/** EntityCard tile (report) — not DirectoryCard. */
+/** ReportMoneyCard tile (report) — not DirectoryCard. */
 export interface ReportRow {
   id: string;
   name: string;
@@ -63,38 +64,36 @@ export function ReportSection({
         <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{title}</SectionLabel>
       </header>
       {viewMode === "cards" ? (
-        <EntityCardsGrid className="p-3">
-          {rows.map((reportRow, index) => {
+        <ReportMoneyCardsGrid>
+          {rows.map((reportRow) => {
             const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
             const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
             return (
-              <EntityCard
+              <ReportMoneyCard
                 key={reportRow.id}
-                className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+                title={<h4 className="truncate text-sm font-medium text-foreground">{reportRow.name}</h4>}
+                meta={
+                  <p className="text-xs text-muted-foreground font-mono m-0">
+                    {reportRow.code} · {reportRow.subtype || reportRow.type}
+                  </p>
+                }
+                end={
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatCurrency(Math.abs(rowAmount))}
+                  </span>
+                }
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h4 className="truncate text-sm font-medium text-foreground">{reportRow.name}</h4>
-                    <p className="text-xs text-muted-foreground font-mono m-0">
-                      {reportRow.code} · {reportRow.subtype || reportRow.type}
-                    </p>
-                  </div>
-                  <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(Math.abs(rowAmount))}</span>
-                </div>
                 <ProgressBar
                   value={percentage}
                   size="sm"
                   fillClassName="bg-primary/40"
                   aria-hidden="true"
                 />
-              </EntityCard>
+              </ReportMoneyCard>
             );
           })}
-          <article className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-3 col-span-full">
-            <span className="font-bold text-foreground">{totalLabel}</span>
-            <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
-          </article>
-        </EntityCardsGrid>
+          <ReportMoneySummaryTile label={totalLabel} value={formatCurrency(total)} />
+        </ReportMoneyCardsGrid>
       ) : (
         <Table>
           <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>

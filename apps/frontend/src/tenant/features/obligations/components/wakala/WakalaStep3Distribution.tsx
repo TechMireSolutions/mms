@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import type { Mujtahid, MujtahidRep, ObligationType } from "@/lib/data/obligationsData";
@@ -53,18 +55,24 @@ export function WakalaStep3Distribution({
             <h3 className="m-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {t("obligations.wakala.initialSplit")}
             </h3>
-            <span
-              className={cn(
-                "text-xs font-bold px-2 py-0.5 rounded-full border",
-                totalPercentage === 100
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-                  : totalPercentage > 100
-                    ? "border-destructive/30 bg-destructive/10 text-destructive"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-600",
-              )}
-            >
-              {t("obligations.wakala.total", { total: String(totalPercentage) })}
-            </span>
+            <StatusBadge
+              status={totalPercentage === 100 ? "complete" : totalPercentage > 100 ? "over" : "under"}
+              size="sm"
+              config={{
+                complete: {
+                  label: t("obligations.wakala.total", { total: String(totalPercentage) }),
+                  cls: SEMANTIC_BADGE.success,
+                },
+                over: {
+                  label: t("obligations.wakala.total", { total: String(totalPercentage) }),
+                  cls: SEMANTIC_BADGE.destructive,
+                },
+                under: {
+                  label: t("obligations.wakala.total", { total: String(totalPercentage) }),
+                  cls: SEMANTIC_BADGE.warning,
+                },
+              }}
+            />
           </div>
         )}
         addLabel={t("obligations.wakala.addDistribution")}

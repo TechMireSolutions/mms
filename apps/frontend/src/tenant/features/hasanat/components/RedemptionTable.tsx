@@ -10,8 +10,8 @@ import {
   TableBody,
   TableCell,
   TableHeader,
-  TableRow,
 } from "@/components/ui/table";
+import { MutedTableHeaderRow } from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 export interface RedemptionTableProps {
@@ -36,7 +36,7 @@ export function RedemptionTable({
       <Table className="table-fixed">
         <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
         <TableHeader>
-          <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+          <MutedTableHeaderRow>
             {columnVisible("student") && (
               <ModuleTableHeaderCell
                 columnKey="student"
@@ -87,7 +87,7 @@ export function RedemptionTable({
                 {t("hasanat.columns.redemption.approvedBy")}
               </ModuleTableHeaderCell>
             )}
-          </TableRow>
+          </MutedTableHeaderRow>
         </TableHeader>
         <TableBody className="divide-y divide-border/50">
           {redemptions.map((redemption, index) => (
