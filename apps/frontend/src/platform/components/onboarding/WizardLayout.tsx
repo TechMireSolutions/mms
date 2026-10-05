@@ -33,7 +33,7 @@ export default function WizardLayout({
   title,
   subtitle,
 }: WizardLayoutProps): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
+  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const stepLabel = t("onboarding.stepOf", {
     current: String(currentStep),
@@ -42,8 +42,8 @@ export default function WizardLayout({
 
   return (
     <div
-      dir={dir}
-      lang={language}
+      dir="ltr"
+      lang="en"
       className="relative flex min-h-dvh flex-col overflow-hidden bg-background selection:bg-primary/10 selection:text-primary"
     >
       <AuthPageBackdrop />

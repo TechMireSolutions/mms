@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { Settings, Globe, Palette, Server, ShieldCheck } from 'lucide-react';
+import { Settings, Globe, Palette, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -8,10 +8,9 @@ import { ResponsiveAccordionTabs, type AccordionTabItem } from '@/components/ui/
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformGlobalSettingsPanel } from '@/platform/components/settings/PlatformGlobalSettingsPanel';
 import { PlatformThemeSettingsPanel } from '@/platform/components/settings/PlatformThemeSettingsPanel';
-import { PlatformSystemSettingsPanel } from '@/platform/components/settings/PlatformSystemSettingsPanel';
 import { PlatformSecuritySettingsPanel } from '@/platform/components/settings/PlatformSecuritySettingsPanel';
 
-export type PlatformSettingsSection = 'global' | 'theme' | 'system' | 'security';
+export type PlatformSettingsSection = 'global' | 'theme' | 'security';
 
 export default function PlatformSettingsPage(): React.JSX.Element {
   const { t } = useTranslation();
@@ -28,11 +27,6 @@ export default function PlatformSettingsPage(): React.JSX.Element {
       id: 'theme',
       label: t('platform.settingsTabTheme'),
       icon: Palette,
-    },
-    {
-      id: 'system',
-      label: t('platform.systemMaintenance'),
-      icon: Server,
     },
     {
       id: 'security',
@@ -68,7 +62,6 @@ export default function PlatformSettingsPage(): React.JSX.Element {
             <Suspense fallback={<CardSkeleton count={2} />}>
               {activeSection === 'global' && <PlatformGlobalSettingsPanel />}
               {activeSection === 'theme' && <PlatformThemeSettingsPanel />}
-              {activeSection === 'system' && <PlatformSystemSettingsPanel />}
               {activeSection === 'security' && <PlatformSecuritySettingsPanel />}
             </Suspense>
           </motion.div>

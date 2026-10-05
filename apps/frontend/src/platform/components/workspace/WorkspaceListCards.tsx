@@ -51,6 +51,7 @@ export function WorkspaceListCards({
             reducedMotion={reducedMotion}
             accentClassName={!workspace.enabled ? 'bg-muted-foreground/50' : 'bg-primary/80'}
             onView={onInspect ? () => onInspect(workspace) : undefined}
+            onCardClick={onInspect ? () => onInspect(workspace) : undefined}
             className={cn(
               'flex flex-col justify-between transition-all',
               onInspect && 'cursor-pointer',
@@ -61,12 +62,17 @@ export function WorkspaceListCards({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5 min-w-0">
                   {onToggleSelect && selectedSubdomains && (
-                    <Checkbox
-                      checked={selectedSubdomains.has(workspace.subdomain)}
-                      onCheckedChange={() => onToggleSelect(workspace.subdomain)}
-                      aria-label={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
+                    <div
                       className="mt-1 shrink-0"
-                    />
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={selectedSubdomains.has(workspace.subdomain)}
+                        onCheckedChange={() => onToggleSelect(workspace.subdomain)}
+                        aria-label={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
+                      />
+                    </div>
                   )}
                   <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
                 </div>
@@ -90,7 +96,11 @@ export function WorkspaceListCards({
               ) : null
             }
             footer={
-              <div className="mt-4 w-full">
+              <div
+                className="mt-4 w-full"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 <WorkspaceRowActions
                   subdomain={workspace.subdomain}
                   enabled={workspace.enabled}
@@ -101,7 +111,7 @@ export function WorkspaceListCards({
                   onToggle={(enabled) => onToggleEnabled(workspace.subdomain, enabled)}
                   onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                   onOpenModules={() => onOpenModules(workspace)}
-                  onOpenDelete={() => onOpenDelete(workspace)}
+                  onOpenDelete={onOpenDelete ? () => onOpenDelete(workspace) : undefined}
                   onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
                   onOpenCreateAdmin={onOpenCreateAdmin ? () => onOpenCreateAdmin(workspace) : undefined}
                 />

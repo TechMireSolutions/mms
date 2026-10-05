@@ -15,7 +15,7 @@ import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAd
 import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
 
 export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
+  const { t } = useTranslation();
   const addAdmin = useAddPlatformAdmin();
   const [open, setOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -100,8 +100,8 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
         saveLabel={t('platform.addAdmin')}
         onSave={handleSave}
         saving={addAdmin.isPending}
-        dir={dir}
-        lang={language}
+        dir="ltr"
+        lang="en"
         formId="platform-add-admin-form"
       >
         <form

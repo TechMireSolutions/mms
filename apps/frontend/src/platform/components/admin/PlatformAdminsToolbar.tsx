@@ -47,7 +47,7 @@ export function PlatformAdminsToolbar({
   return (
     <WorkTaskToolbar
       regionLabel={t('platform.manageAdmins')}
-      shownCountLabel={`${shownCount} of ${totalCount}`}
+      shownCountLabel={t('platform.shownCountOfTotal', { shown: shownCount, total: totalCount })}
       search={search}
       onSearchChange={onSearchChange}
       searchPlaceholder={t('platform.searchAdminsPlaceholder')}

@@ -6,11 +6,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { CardSkeleton } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 export function PlatformGlobalSettingsPanel(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data: settings, isLoading } = usePlatformSettingsQuery();
+  const { data: settings, isLoading, isError, refetch } = usePlatformSettingsQuery();
   const updateSettings = useUpdatePlatformSettings();
 
   const [syncTls, setSyncTls] = useState(true);
@@ -27,6 +29,16 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
 
   if (isLoading) return <CardSkeleton count={2} />;
 
+  if (isError) {
+    return (
+      <ErrorState
+        title={t('platform.loadFailed')}
+        description={t('platform.loadFailedHint')}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings.mutate({
@@ -42,28 +54,32 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
         <CardHeader>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Globe className="w-4 h-4 text-primary" />
-            TLS & Domain Certificates
+            {t('platform.settings.tlsTitle')}
           </CardTitle>
           <CardDescription className="text-xs">
-            Configure automated Let's Encrypt certificate issuance and SAN bindings for new workspaces.
+            {t('platform.settings.tlsDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
             <div>
-              <label htmlFor="sync-tls" className="text-xs font-medium cursor-pointer">Automatic TLS Sync on Provision</label>
-              <div className="text-3xs text-muted-foreground">Trigger Certbot certificate expansion upon workspace creation</div>
+              <Label htmlFor="sync-tls" className="text-xs font-medium cursor-pointer">
+                {t('platform.settings.syncTlsLabel')}
+              </Label>
+              <div className="text-3xs text-muted-foreground">{t('platform.settings.syncTlsDesc')}</div>
             </div>
             <Switch
               id="sync-tls"
               checked={syncTls}
               onCheckedChange={setSyncTls}
-              aria-label="Automatic TLS Sync"
+              aria-label={t('platform.settings.syncTlsAria')}
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="certbot-email" className="text-xs font-medium text-foreground">Certbot Contact Email</label>
+            <Label htmlFor="certbot-email" className="text-xs font-medium text-foreground">
+              {t('platform.settings.certbotEmailLabel')}
+            </Label>
             <Input
               id="certbot-email"
               type="email"
@@ -72,11 +88,13 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
               placeholder="admin@example.com"
               className="h-10 rounded-xl"
             />
-            <p className="text-3xs text-muted-foreground">Used for certificate expiry alerts from Let's Encrypt.</p>
+            <p className="text-3xs text-muted-foreground">{t('platform.settings.certbotEmailHint')}</p>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="tls-extra-sans" className="text-xs font-medium text-foreground">Extra SAN Domains</label>
+            <Label htmlFor="tls-extra-sans" className="text-xs font-medium text-foreground">
+              {t('platform.settings.tlsExtraSansLabel')}
+            </Label>
             <Input
               id="tls-extra-sans"
               value={tlsExtraSans}
@@ -84,7 +102,7 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
               placeholder="apex.example.com, admin.example.com"
               className="h-10 rounded-xl font-mono text-xs"
             />
-            <p className="text-3xs text-muted-foreground">Comma-separated extra Subject Alternative Names to include in certificates.</p>
+            <p className="text-3xs text-muted-foreground">{t('platform.settings.tlsExtraSansHint')}</p>
           </div>
 
           <div className="pt-2">

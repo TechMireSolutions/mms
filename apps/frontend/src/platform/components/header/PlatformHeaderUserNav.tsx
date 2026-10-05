@@ -7,7 +7,6 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { Button } from '@/components/ui/button';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
-import { PlatformLanguagePicker } from '@/platform/components/header/PlatformLanguagePicker';
 import { PlatformNotificationsPopover } from '@/platform/components/header/PlatformNotificationsPopover';
 import { UserNavDropdown } from '@/components/ui/UserNavDropdown';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -108,8 +107,6 @@ export function PlatformHeaderUserNav({
       />
 
       <BackgroundJobsTray compact={compact} />
-
-      <PlatformLanguagePicker compact={compact} />
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 

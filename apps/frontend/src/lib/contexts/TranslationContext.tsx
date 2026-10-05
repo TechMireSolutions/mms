@@ -2,7 +2,6 @@ import React, { createContext, useState, useEffect } from 'react';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import { readStoredPlatformLanguage } from '@/platform/hooks/usePlatformLanguage';
 import {
   translateAppParams,
   getLanguageDirection,
@@ -40,18 +39,6 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const { pathname } = useLocation();
   const { isApex, workspace, workspaceLoading, workspaceLookupFailed } = useTenant();
 
-  const [platformLanguage, setPlatformLanguage] = useState<string>(readStoredPlatformLanguage);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'mms_platform_language') {
-        setPlatformLanguage(e.newValue ?? 'en');
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
   const language = resolveUiLanguage({
     isApex,
     workspaceLoading,
@@ -59,7 +46,6 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     workspaceLookupFailed,
     pathname,
     settingsLanguage: settings.language,
-    platformLanguage,
   });
   const [loadedLanguages, setLoadedLanguages] = useState<Record<string, boolean>>({ en: true });
   const [activeLanguage, setActiveLanguage] = useState<AppLanguageCode>('en');

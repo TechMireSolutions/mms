@@ -4,6 +4,7 @@ import { MIGRATE_AND_RESTART_CONFIRM } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
 import {
   useMigrateAndRestartPlatform,
   waitForBackendReadyAfterMigrate,
@@ -12,8 +13,9 @@ import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { notify } from "@/lib/notify";
 import { TypedConfirmDialog } from "@/components/ui/TypedConfirmDialog";
 
-export function PlatformMigrateRestartCard(): React.JSX.Element {
+export function PlatformMigrateRestartCard(): React.JSX.Element | null {
   const { t } = useTranslation();
+  const { isSuperUser } = usePlatformPermissions();
   const migrateMutation = useMigrateAndRestartPlatform();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -22,6 +24,8 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
   const [waitingForReady, setWaitingForReady] = useState(false);
 
   const isBusy = migrateMutation.isPending || waitingForReady;
+
+  if (!isSuperUser) return null;
 
   const handleMigrateAndRestart = async (): Promise<void> => {
     if (confirmText.trim() !== MIGRATE_AND_RESTART_CONFIRM || !password.trim()) return;

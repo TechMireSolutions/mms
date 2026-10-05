@@ -21,7 +21,7 @@ export function PlatformWorkspaceModulesDialog({
   open,
   onOpenChange,
 }: PlatformWorkspaceModulesDialogProps): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
+  const { t } = useTranslation();
   const { data: currentModules, isLoading } = useWorkspaceModules(workspace.subdomain, open);
   const { mutateAsync: updateModules, isPending } = useUpdateWorkspaceModules();
 
@@ -90,8 +90,8 @@ export function PlatformWorkspaceModulesDialog({
       onSave={handleSave}
       saving={isPending}
       saveDisabled={isPending || isLoading}
-      dir={dir}
-      lang={language}
+      dir="ltr"
+      lang="en"
       formId="platform-workspace-modules-form"
     >
       <form

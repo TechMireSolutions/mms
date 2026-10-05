@@ -2,6 +2,7 @@ import React, { useDeferredValue, useMemo } from 'react';
 import { Globe } from 'lucide-react';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
@@ -23,10 +24,11 @@ import { usePlatformWorkspaceListActions } from '@/platform/components/workspace
 import { usePlatformDensity } from '@/platform/hooks/usePlatformDensity';
 
 /**
- * Super-user workspace list with enable/disable, delete controls, bulk selection, and pagination.
+ * Workspace list with enable/disable, modules, break-glass admin tools, and super-user delete.
  */
 export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
+  const { isSuperUser } = usePlatformPermissions();
   const appDomain = getAppDomain();
   const { data: workspaces, isLoading, isError, refetch, isFetching } = usePlatformWorkspaces();
 
@@ -145,7 +147,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
               onToggleEnabled={listActions.handleToggleEnabled}
               onToggleEmailVerification={listActions.handleToggleEmailVerification}
               onOpenModules={modalState.handleOpenModules}
-              onOpenDelete={deleteState.handleOpenDelete}
+              onOpenDelete={isSuperUser ? deleteState.handleOpenDelete : undefined}
               onOpenResetPassword={modalState.handleOpenResetPassword}
               onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
               onInspect={modalState.handleOpenInspect}

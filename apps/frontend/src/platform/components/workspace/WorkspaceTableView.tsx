@@ -7,14 +7,14 @@ import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/w
 import { toColumnResize, type DataTableColumnLayout } from '@/components/common/data-table';
 import { resolveVisibleDescriptorColumns } from '@/hooks/useDescriptorColumnLayout';
 import { deriveSelectionState, WORK_TABLE_CONTAINER_CLASS } from '@/components/common/work/workBatchTableTypes';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
-import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
 import { WorkspaceRowActions } from '@/platform/components/workspace/WorkspaceRowActions';
+import {
+  WorkspaceEnabledCell,
+  WorkspaceEmailVerificationCell,
+} from '@/platform/components/workspace/WorkspaceTableSwitchCells';
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
 import { cn } from '@/lib/utils';
-
 import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
 
 export interface WorkspaceTableViewProps {
@@ -32,7 +32,7 @@ export interface WorkspaceTableViewProps {
   onToggleEnabled: (subdomain: string, enabled: boolean) => void;
   onToggleEmailVerification: (subdomain: string, required: boolean) => void;
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
+  onOpenDelete?: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
   onInspect?: (workspace: PlatformWorkspaceRowData) => void;
@@ -67,7 +67,7 @@ export function WorkspaceTableView({
   onToggleSelectAll,
 }: WorkspaceTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
-
+  const busy = togglePending || deletePending;
   const pad = density === 'compact' ? 'px-3 py-1.5' : density === 'comfortable' ? 'px-4 py-3.5' : 'px-4 py-2.5';
   const textSz = density === 'compact' ? 'text-2xs' : density === 'comfortable' ? 'text-sm' : 'text-xs';
 
@@ -100,37 +100,20 @@ export function WorkspaceTableView({
         }
         if (col.id === 'enabled') {
           return (
-            <div className="flex items-center gap-2.5">
-              <Switch
-                id={`table-toggle-${workspace.subdomain}`}
-                checked={workspace.enabled}
-                disabled={togglePending || deletePending}
-                onCheckedChange={(checked) => onToggleEnabled(workspace.subdomain, checked)}
-                aria-label={t('platform.workspaceActive')}
-              />
-              <WorkspaceStatusBadge enabled={workspace.enabled} />
-            </div>
+            <WorkspaceEnabledCell
+              workspace={workspace}
+              busy={busy}
+              onToggleEnabled={onToggleEnabled}
+            />
           );
         }
         if (col.id === 'requireEmailVerification') {
           return (
-            <div className="flex items-center gap-2.5">
-              <Switch
-                id={`table-verify-${workspace.subdomain}`}
-                checked={Boolean(workspace.requireEmailVerification)}
-                disabled={togglePending || deletePending}
-                onCheckedChange={(checked) => onToggleEmailVerification(workspace.subdomain, checked)}
-                aria-label={t('platform.emailVerification')}
-              />
-              <Label
-                htmlFor={`table-verify-${workspace.subdomain}`}
-                className="text-xs font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none"
-              >
-                {workspace.requireEmailVerification
-                  ? t('platform.emailVerificationRequired')
-                  : t('platform.emailVerificationOptional')}
-              </Label>
-            </div>
+            <WorkspaceEmailVerificationCell
+              workspace={workspace}
+              busy={busy}
+              onToggleEmailVerification={onToggleEmailVerification}
+            />
           );
         }
         if (col.id === 'createdAt') return formatDate(workspace.createdAt);
@@ -139,7 +122,7 @@ export function WorkspaceTableView({
 
       return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, render };
     });
-  }, [descriptor, columnLayout, t, appDomain, togglePending, deletePending, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
+  }, [descriptor, columnLayout, t, appDomain, busy, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
 
   return (
     <WorkBatchTable
@@ -171,14 +154,14 @@ export function WorkspaceTableView({
           subdomain={workspace.subdomain}
           enabled={workspace.enabled}
           requireEmailVerification={workspace.requireEmailVerification}
-          busy={togglePending || deletePending}
+          busy={busy}
           deletePending={deletePending && targetWorkspaceSubdomain === workspace.subdomain}
           tenantLink={tenantUrl(workspace.subdomain, '/')}
           variant="table"
           onToggle={(enabled) => onToggleEnabled(workspace.subdomain, enabled)}
           onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
           onOpenModules={() => onOpenModules(workspace)}
-          onOpenDelete={() => onOpenDelete(workspace)}
+          onOpenDelete={onOpenDelete ? () => onOpenDelete(workspace) : undefined}
           onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
           onOpenCreateAdmin={onOpenCreateAdmin ? () => onOpenCreateAdmin(workspace) : undefined}
         />

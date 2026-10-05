@@ -16,14 +16,13 @@ export interface PlatformWorkspaceDensityToggleProps {
 interface DensityOption {
   key: PlatformDensity;
   labelKey: AppTranslationKey;
-  defaultLabel: string;
   icon: React.ElementType;
 }
 
 const DENSITY_OPTIONS: readonly DensityOption[] = [
-  { key: 'compact', labelKey: 'dashboard.densityCompact', defaultLabel: 'Compact (38px)', icon: Rows4 },
-  { key: 'standard', labelKey: 'dashboard.densityStandard', defaultLabel: 'Standard (48px)', icon: Rows3 },
-  { key: 'comfortable', labelKey: 'dashboard.densityComfortable', defaultLabel: 'Comfortable (64px)', icon: Rows2 },
+  { key: 'compact', labelKey: 'dashboard.densityCompact', icon: Rows4 },
+  { key: 'standard', labelKey: 'dashboard.densityStandard', icon: Rows3 },
+  { key: 'comfortable', labelKey: 'dashboard.densityComfortable', icon: Rows2 },
 ] as const;
 
 export function PlatformWorkspaceDensityToggle({
@@ -37,7 +36,7 @@ export function PlatformWorkspaceDensityToggle({
     <TooltipProvider delayDuration={150}>
       <div
         role="group"
-        aria-label={t('dashboard.layoutDensity') || 'Data display density'}
+        aria-label={t('dashboard.layoutDensity')}
         className={cn(
           'inline-flex items-center rounded-xl border border-border/60 bg-muted/30 p-0.5 shadow-2xs',
           className,
@@ -46,7 +45,7 @@ export function PlatformWorkspaceDensityToggle({
         {DENSITY_OPTIONS.map((opt) => {
           const Icon = opt.icon;
           const isSelected = density === opt.key;
-          const label = t(opt.labelKey) || opt.defaultLabel;
+          const label = t(opt.labelKey);
 
           return (
             <Tooltip key={opt.key}>

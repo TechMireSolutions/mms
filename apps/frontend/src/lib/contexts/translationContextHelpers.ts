@@ -33,7 +33,6 @@ export interface ResolveUiLanguageOptions {
   workspaceLookupFailed: boolean;
   pathname: string;
   settingsLanguage: string;
-  platformLanguage: string;
 }
 
 export function resolveUiLanguage(options: ResolveUiLanguageOptions): string {
@@ -45,8 +44,8 @@ export function resolveUiLanguage(options: ResolveUiLanguageOptions): string {
       workspaceLookupFailed: options.workspaceLookupFailed,
     })
   ) {
-    // Platform apex: respect the operator's chosen platform language
-    return options.platformLanguage;
+    // Platform apex + platform status screens: English/LTR only (mms-settings-i18n §5).
+    return 'en';
   }
   // Tenant auth entry (login / 2FA / forgot) stays English before workspace language applies.
   if (isEntryPath(options.pathname, { isApex: false })) {

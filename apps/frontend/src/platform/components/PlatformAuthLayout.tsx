@@ -1,7 +1,6 @@
 import React from "react";
 import { ShieldCheck, Lock, ShieldAlert } from "lucide-react";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
-import { PlatformLanguagePicker } from "@/platform/components/header/PlatformLanguagePicker";
 import { AuthCardShell, AuthFormHeading, AuthPageFrame } from "@/components/entry";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +19,7 @@ export default function PlatformAuthLayout({
   subtitle,
   footer,
 }: PlatformAuthLayoutProps): React.JSX.Element {
-  const { t, dir } = useTranslation();
+  const { t } = useTranslation();
 
   const combinedFooter = (
     <div className="space-y-4">
@@ -29,12 +28,12 @@ export default function PlatformAuthLayout({
         <div className="flex items-center justify-center gap-3 text-3xs font-semibold text-muted-foreground">
           <span className="flex items-center gap-1 text-primary">
             <Lock className="w-3 h-3 shrink-0" aria-hidden />
-            256-Bit TLS
+            {t("platform.authTrustTls")}
           </span>
           <span className="text-border">•</span>
           <span className="flex items-center gap-1 text-success">
             <ShieldCheck className="w-3 h-3 shrink-0" aria-hidden />
-            PostgreSQL RLS
+            {t("platform.authTrustRls")}
           </span>
         </div>
         <p className="text-2xs text-muted-foreground font-medium uppercase tracking-wider">
@@ -45,10 +44,7 @@ export default function PlatformAuthLayout({
   );
 
   return (
-    <AuthPageFrame dir={dir}>
-      <div className="absolute top-4 end-4 z-sticky">
-        <PlatformLanguagePicker compact />
-      </div>
+    <AuthPageFrame dir="ltr">
       <div className="relative z-elevated w-full max-w-md text-start">
         <AuthCardShell
           footer={combinedFooter}

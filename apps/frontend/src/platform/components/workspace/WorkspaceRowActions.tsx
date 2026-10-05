@@ -17,7 +17,7 @@ interface WorkspaceRowActionsProps {
   onToggle: (enabled: boolean) => void;
   onToggleEmailVerification?: (requireEmailVerification: boolean) => void;
   onOpenModules: () => void;
-  onOpenDelete: () => void;
+  onOpenDelete?: () => void;
   onOpenResetPassword?: () => void;
   onOpenCreateAdmin?: () => void;
 }
@@ -95,16 +95,18 @@ export function WorkspaceRowActions({
         />
       ) : null}
 
-      <ActionButton
-        variant="ghost"
-        size="sm"
-        disabled={busy || deletePending}
-        onClick={onOpenDelete}
-        icon={Trash2}
-        className="min-w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        title={`${t('platform.deleteWorkspace')} (${subdomain})`}
-        aria-label={`${t('platform.deleteWorkspace')} (${subdomain})`}
-      />
+      {onOpenDelete ? (
+        <ActionButton
+          variant="ghost"
+          size="sm"
+          disabled={busy || deletePending}
+          onClick={onOpenDelete}
+          icon={Trash2}
+          className="min-w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          title={`${t('platform.deleteWorkspace')} (${subdomain})`}
+          aria-label={`${t('platform.deleteWorkspace')} (${subdomain})`}
+        />
+      ) : null}
     </div>
   );
 

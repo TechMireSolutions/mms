@@ -92,7 +92,13 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
         <StatCard
           variant="compact"
           label={t("platform.maintenance.queueEngine")}
-          value={redisStatus === 'connected' ? "BullMQ Active" : redisStatus === 'optional' ? "BullMQ Standalone" : "BullMQ Offline"}
+          value={
+            redisStatus === 'connected'
+              ? t("platform.maintenance.bullmqActive")
+              : redisStatus === 'optional'
+                ? t("platform.maintenance.bullmqStandalone")
+                : t("platform.maintenance.bullmqOffline")
+          }
           sub={t("platform.maintenance.queueEngineSub")}
           icon={Layers}
           accent={redisStatus === 'connected' ? "success" : "warning"}
@@ -100,7 +106,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
         <StatCard
           variant="compact"
           label={t("platform.maintenance.ping")}
-          value={latencyMs !== null ? `${latencyMs} ms` : "Probing..."}
+          value={latencyMs !== null ? `${latencyMs} ms` : t("platform.maintenance.probing")}
           sub={
             avgLatency !== null
               ? `${t("platform.maintenance.avgLatency")}: ${avgLatency} ms`
@@ -134,7 +140,9 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             </span>
             <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-success" />
-              {redisStatus === 'connected' ? 'BullMQ: Redis' : 'BullMQ: In-Memory'}
+              {redisStatus === 'connected'
+                ? t("platform.maintenance.bullmqRedis")
+                : t("platform.maintenance.bullmqInMemory")}
             </span>
             <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-success" />

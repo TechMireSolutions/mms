@@ -4,7 +4,6 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { AppPageShellSkeleton } from '@/components/common';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
@@ -48,7 +47,6 @@ function PlatformAuthenticatedShell({
   maxClass: string;
   footer: React.ReactNode;
 }): React.JSX.Element {
-  const { dir, language } = useTranslation();
   const { canSystem } = usePlatformPermissions();
   const { commandPaletteOpen, setCommandPaletteOpen, collapsed } = usePlatformSidebar();
   const [aiOpen, setAiOpen] = useState(false);
@@ -57,8 +55,8 @@ function PlatformAuthenticatedShell({
 
   return (
     <AppShell
-      dir={dir as "ltr" | "rtl"}
-      lang={language}
+      dir="ltr"
+      lang="en"
       sidebar={<PlatformSidebar />}
       mobileSidebar={<PlatformMobileSidebar />}
       topBar={
@@ -100,7 +98,6 @@ export function PlatformPageShell({
   children,
   width = 'lg',
 }: PlatformPageShellProps): React.JSX.Element {
-  const { dir, language } = useTranslation();
   const { isPlatformAuthenticated } = usePlatformAuth();
   const maxClass = MAX_W[width] ?? 'w-full max-w-full';
   const footer = <AppFooter className="mt-auto" />;
@@ -118,7 +115,7 @@ export function PlatformPageShell({
               )}
             </PlatformAuthenticatedShell>
           ) : (
-            <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
+            <UnauthenticatedShell maxClass={maxClass} footer={footer}>
               {children || (
                 <Suspense fallback={<AppPageShellSkeleton />}>
                   <Outlet />
@@ -133,14 +130,10 @@ export function PlatformPageShell({
 }
 
 function UnauthenticatedShell({
-  dir,
-  lang,
   maxClass,
   children,
   footer,
 }: {
-  dir: string;
-  lang: string;
   maxClass: string;
   children: React.ReactNode;
   footer: React.ReactNode;
@@ -149,8 +142,8 @@ function UnauthenticatedShell({
 
   return (
     <AppShell
-      dir={dir as "ltr" | "rtl"}
-      lang={lang}
+      dir="ltr"
+      lang="en"
       topBar={
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}

@@ -63,7 +63,7 @@ export function PlatformWorkspaceToolbar({
   return (
     <WorkTaskToolbar
       regionLabel={t('platform.manageMadrasas')}
-      shownCountLabel={`${shownCount} of ${totalCount}`}
+      shownCountLabel={t('platform.shownCountOfTotal', { shown: shownCount, total: totalCount })}
       search={search}
       onSearchChange={onSearchChange}
       searchPlaceholder={t('common.search')}

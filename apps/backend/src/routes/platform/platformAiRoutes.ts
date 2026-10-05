@@ -43,9 +43,8 @@ export default async function platformAiRoutes(
       } catch (error: unknown) {
         void error;
         return reply.status(500).send({
-          success: false,
-          analysis: 'Diagnostic error: failed to generate diagnostics',
-          suggestions: [],
+          type: 'internal_error',
+          message: 'Failed to generate platform diagnostics',
         });
       }
     },
