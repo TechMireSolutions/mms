@@ -1,4 +1,4 @@
-import { desc, gte, sql } from 'drizzle-orm';
+import { asc, desc, gte, inArray, lt, sql } from 'drizzle-orm';
 import { activeDb } from '../dbConnection.js';
 import { platformActivityLogs, workspaces } from '../schema.js';
 import { logger } from '../../lib/logger.js';
@@ -39,6 +39,40 @@ export async function insertPlatformActivityLog(log: InsertPlatformActivityLog):
       logger.warn({ err: innerError }, 'Failed to insert activity log');
     }
   }
+}
+
+/** Count apex activity-log rows older than `cutoff` (for dry-run purge). */
+export async function countPlatformActivityLogsOlderThan(cutoff: Date): Promise<number> {
+  const rows = await activeDb()
+    .select({ count: sql<number>`count(*)::int` })
+    .from(platformActivityLogs)
+    .where(lt(platformActivityLogs.createdAt, cutoff));
+  return Number(rows[0]?.count) || 0;
+}
+
+/**
+ * Hard-deletes up to `limit` oldest platform activity logs with `created_at` before
+ * `cutoff`. Apex table — no RLS / soft-delete. Returns the number of rows deleted.
+ */
+export async function deletePlatformActivityLogsOlderThan(
+  cutoff: Date,
+  limit = 500,
+): Promise<number> {
+  const safeLimit = Math.min(Math.max(1, limit), 500);
+  const candidates = await activeDb()
+    .select({ id: platformActivityLogs.id })
+    .from(platformActivityLogs)
+    .where(lt(platformActivityLogs.createdAt, cutoff))
+    .orderBy(asc(platformActivityLogs.createdAt))
+    .limit(safeLimit);
+
+  if (candidates.length === 0) return 0;
+
+  const ids = candidates.map((row) => row.id);
+  await activeDb()
+    .delete(platformActivityLogs)
+    .where(inArray(platformActivityLogs.id, ids));
+  return ids.length;
 }
 
 export async function listPlatformActivityLogs(limit = 50, offset = 0) {

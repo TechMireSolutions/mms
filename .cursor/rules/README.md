@@ -117,7 +117,7 @@ Update this table in the same change that adds or removes a check.
 | Workflow security (SHA pinning, no credential persistence, no template injection, gated triggers) | `workflow-lint` job: actionlint + zizmor `min-severity: medium` (CI) | CI |
 | Deployed bytes match CI's build of the commit | `actions/attest-build-provenance` in CI + `gh attestation verify` in `deploy.yml` | CI |
 | Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
-| Local CI before push (gates + path-aware unit tests) | `pnpm ci:local` / `.githooks/pre-push` (`scripts/ci/local-ci.sh`) | hook + script |
+| Local CI before commit/push (gates + path-aware unit tests) | `pnpm ci:local` / `.githooks/pre-commit` & `.githooks/pre-push` (`scripts/ci/local-ci.sh`) | hook + script |
 | `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
 | Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
 | Faculty hierarchy, temporal primary integrity, and tenant isolation | `facultyAssignmentValidation.test.ts`, `facultyHierarchyDb.integration.test.ts`, `facultyAppointmentsDb.integration.test.ts` | test |

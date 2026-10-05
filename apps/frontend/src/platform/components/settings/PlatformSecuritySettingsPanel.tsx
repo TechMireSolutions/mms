@@ -81,12 +81,14 @@ export function PlatformSecuritySettingsPanel(): React.JSX.Element {
             Audit Logging & Compliance
           </CardTitle>
           <CardDescription className="text-xs">
-            Append-only platform activity logs with IP tracking and operator attribution.
+            Append-only platform activity logs with IP tracking and operator attribution (retained 180 days).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            All administrative actions, authentication attempts, tenant lifecycle events, and system migrations are written to the immutable <code className="text-3xs bg-muted px-1.5 py-0.5 rounded font-mono">platform_activity_logs</code> registry.
+            Administrative actions, authentication attempts, tenant lifecycle events, and system migrations are written to the{' '}
+            <code className="text-3xs bg-muted px-1.5 py-0.5 rounded font-mono">platform_activity_logs</code> registry.
+            Rows older than 180 days are purged automatically by the background retention worker.
           </p>
           <div className="pt-2">
             <Button asChild variant="secondary" className="min-h-11 rounded-xl text-xs cursor-pointer">

@@ -5472,6 +5472,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "platform.erdDomainCharity": "خیرات",
   "platform.erdDomainInventory": "موجودی",
   "platform.erdDomainLabel": "دامنه طرح‌واره",
+  "platform.erdDomainOutbox": "صندوق خروجی",
   "platform.erdDomainPlatform": "پلتفرم",
   "platform.erdDomainSystem": "سیستم",
   "platform.erdDomainWorkshops": "کارگاه‌ها",

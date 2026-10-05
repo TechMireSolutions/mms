@@ -1,28 +1,12 @@
-import { loadBackendEnv } from '../config/loadEnv.js';
-import pg from 'pg';
-import { initDb } from '../db/database.js';
+/**
+ * @deprecated Misnamed — this wiped the ENTIRE app database, not platform tables.
+ * Use `reset-app-db.ts` or `pnpm --filter mms-backend db:reset` instead.
+ *
+ * This shim loads reset-app-db so old invocations still work after a deprecation warning.
+ */
+console.warn(
+  '[deprecated] clear-platform-db.ts wipes the ENTIRE database (not platform-only). ' +
+    'Use reset-app-db.ts or `pnpm --filter mms-backend db:reset` instead.',
+);
 
-loadBackendEnv();
-
-async function main() {
-  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-
-  console.log('Dropping public and drizzle schemas from PostgreSQL...');
-  await client.query('DROP SCHEMA IF EXISTS public CASCADE;');
-  await client.query('DROP SCHEMA IF EXISTS drizzle CASCADE;');
-  await client.query('CREATE SCHEMA public;');
-  await client.query('GRANT ALL ON SCHEMA public TO public;');
-  await client.end();
-
-  console.log('Running clean database initialization & migrations...');
-  await initDb();
-
-  console.log('✅ Database completely wiped and reset to 100% initial state!');
-  process.exit(0);
-}
-
-main().catch((err) => {
-  console.error('Failed to reset database:', err);
-  process.exit(1);
-});
+void import('./reset-app-db.js');

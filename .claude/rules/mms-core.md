@@ -14,4 +14,4 @@ description: MMS core invariants, security, boundaries, and limits
 - **Limits:** Strict TypeScript (zero `any`, no unsafe casts). 200 LOC hard cap per source file.
 
 ## 3. Workflow Discipline
-- **Execution:** Surgical diffs only. Zero filler prose. Never commit/push unless asked. Run `pnpm typecheck`.
+- **Execution:** Surgical diffs only. Zero filler prose. Never commit/push unless asked. Always run full local CI (`pnpm ci:local`) and confirm 100% clean pass before committing.

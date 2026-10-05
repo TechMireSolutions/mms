@@ -7,12 +7,16 @@ export const PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES = 30;
 export type PlatformRole = 'super_user' | 'admin';
 
 /** Grantable platform admin capabilities (super_user ignores and has all). */
-export type PlatformAdminPermissionKey =
-  | 'workspaces'
-  | 'onboard'
-  | 'settings'
-  | 'admins'
-  | 'system';
+export const PLATFORM_ADMIN_PERMISSION_KEYS = [
+  'workspaces',
+  'onboard',
+  'settings',
+  'admins',
+  'system',
+] as const;
+
+/** Grantable platform admin capabilities (super_user ignores and has all). */
+export type PlatformAdminPermissionKey = (typeof PLATFORM_ADMIN_PERMISSION_KEYS)[number];
 
 /**
  * Per-admin capability flags assigned by a platform super-user.

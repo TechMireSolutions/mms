@@ -86,4 +86,42 @@ describe('GET /api/platform/schema/erd', () => {
     expect(contactsDomain).toBeDefined();
     expect(contactsDomain.tables.length).toBeGreaterThanOrEqual(14);
   });
+
+  it('rejects authenticated admins lacking the system permission with 403', async () => {
+    const limitedAdmin = {
+      ...mockPlatformAdmin,
+      id: 'p-admin-erd-limited',
+      email: 'limited-erd@platform.com',
+      permissions: {
+        workspaces: true,
+        onboard: false,
+        settings: false,
+        admins: false,
+        system: false,
+      },
+    };
+    const { findPlatformUserRowById } = await import('../db/repositories/platformUserRepository.js');
+    vi.mocked(findPlatformUserRowById).mockImplementation(async (id: string) => {
+      if (id === limitedAdmin.id) return limitedAdmin;
+      if (id === mockPlatformAdmin.id) return mockPlatformAdmin;
+      return null;
+    });
+
+    const token = app.jwt.sign({
+      id: limitedAdmin.id,
+      email: limitedAdmin.email,
+      name: limitedAdmin.name,
+      role: limitedAdmin.role,
+      sessionVersion: 0,
+      permissions: limitedAdmin.permissions,
+      tokenType: 'platform_access',
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/schema/erd',
+      headers: { cookie: `mms_platform_access=${token}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
 });

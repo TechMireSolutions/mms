@@ -86,9 +86,13 @@ export const platformUserPermissions = pgTable('platform_user_permissions', {
 }, (table) => [
   uniqueIndex('platform_user_perms_user_key_uidx').on(table.platformUserId, table.permissionKey),
   index('platform_user_perms_user_idx').on(table.platformUserId),
+  // CHECK enforced in SQL migrations (platform_user_perms_key_check):
+  // permission_key IN ('workspaces','onboard','settings','admins','system').
 ]);
 
-/** Apex platform settings — single row (id = 'global') for TLS & Certbot settings. */
+/** Apex platform settings — single-row TLS/Certbot config (`id = 'global'`).
+ * Not related to the legacy document-store object key `platform_settings`
+ * (module grants now live on `workspaces.granted_modules`). */
 export const platformSettings = pgTable('platform_settings', {
   id: text('id').primaryKey().default('global'),
   syncTlsOnCreate: boolean('sync_tls_on_create').notNull().default(true),

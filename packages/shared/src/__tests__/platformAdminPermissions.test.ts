@@ -2,14 +2,32 @@ import { describe, expect, it } from 'vitest';
 import {
   platformCreateAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,
+  platformWorkspaceRowDtoSchema,
+  PLATFORM_WORKSPACE_ROW_SECRET_KEYS,
 } from '../platformSchemas.js';
 import {
   DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
   FULL_PLATFORM_ADMIN_PERMISSIONS,
+  PLATFORM_ADMIN_PERMISSION_KEYS,
   normalizePlatformAdminPermissions,
   platformUserCan,
   PLATFORM_MIN_PASSWORD_LENGTH,
 } from '../platformTypes.js';
+
+describe('PLATFORM_ADMIN_PERMISSION_KEYS', () => {
+  it('matches the DB CHECK allowlist and permission flag keys', () => {
+    expect([...PLATFORM_ADMIN_PERMISSION_KEYS]).toEqual([
+      'workspaces',
+      'onboard',
+      'settings',
+      'admins',
+      'system',
+    ]);
+    expect(Object.keys(DEFAULT_PLATFORM_ADMIN_PERMISSIONS).sort()).toEqual(
+      [...PLATFORM_ADMIN_PERMISSION_KEYS].sort(),
+    );
+  });
+});
 
 describe('platformUserCan', () => {
   it('grants all capabilities to super_user', () => {
@@ -76,5 +94,21 @@ describe('platform admin permission schemas', () => {
       permissions: { workspaces: false, onboard: true, settings: false, admins: false, system: false },
     });
     expect(update.success).toBe(true);
+  });
+});
+
+describe('platformWorkspaceRowDtoSchema', () => {
+  it('omits LLM and credential secret keys from the list DTO shape', () => {
+    const shapeKeys = Object.keys(platformWorkspaceRowDtoSchema.shape);
+    for (const key of PLATFORM_WORKSPACE_ROW_SECRET_KEYS) {
+      expect(shapeKeys).not.toContain(key);
+    }
+    const parsed = platformWorkspaceRowDtoSchema.safeParse({
+      subdomain: 'demo',
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      llmApiKey: 'sk-leak',
+    });
+    expect(parsed.success).toBe(false);
   });
 });

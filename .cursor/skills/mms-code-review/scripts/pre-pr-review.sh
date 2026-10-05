@@ -10,6 +10,9 @@ echo "=================================================="
 echo "🚀 Starting MMS Pre-PR Automated Verification"
 echo "=================================================="
 
+echo "Step 0: Staged Secrets Check..."
+pnpm run check:secrets
+
 echo "Step 1: Rules & Skills Integrity Check..."
 node scripts/verify-rules-integrity.mjs
 

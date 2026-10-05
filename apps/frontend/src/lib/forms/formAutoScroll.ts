@@ -23,6 +23,9 @@ export function scrollAndFocusFirstError(
   }
 
   const tryFocus = (): boolean => {
+    if (typeof document === "undefined") {
+      return false;
+    }
     for (const id of candidateIds) {
       if (!id) continue;
       const el =

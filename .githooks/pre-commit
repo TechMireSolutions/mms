@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Git hook: Fast pre-commit verification
+# Git hook: Local CI verification before commit
 set -euo pipefail
 
-echo "🔍 Running pre-commit verification..."
+if [[ "${SKIP_LOCAL_CI:-}" == "1" ]]; then
+  echo "⚠ SKIP_LOCAL_CI=1 — skipping local CI before commit (agents must not set this unless the user asks)."
+  exit 0
+fi
+
+echo "🔍 Running pre-commit verification & local CI (pnpm ci:local)..."
 
 # 1. Check for staged secrets/credentials
 pnpm run check:secrets
 
-# 2. Check code norms ratchet (any, hex, file size)
-pnpm run check:code-norms
+# 2. Run path-aware local CI (quality gates + affected unit tests)
+pnpm ci:local
 
-# 3. Check rules & skills integrity
-node scripts/verify-rules-integrity.mjs
-
-echo "✅ Pre-commit checks passed."
+echo "✅ Pre-commit verification passed — proceeding with commit."

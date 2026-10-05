@@ -5475,6 +5475,7 @@ export const APP_TRANSLATIONS_EN = {
   "platform.erdDomainCharity": "Charity",
   "platform.erdDomainInventory": "Inventory",
   "platform.erdDomainLabel": "Schema domain",
+  "platform.erdDomainOutbox": "Outbox",
   "platform.erdDomainPlatform": "Platform",
   "platform.erdDomainSystem": "System",
   "platform.erdDomainWorkshops": "Workshops",

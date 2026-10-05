@@ -8,6 +8,12 @@ import {
 } from '@mms/shared';
 import { activeDb } from '../dbConnection.js';
 import { workspaces as workspacesTable } from '../schema.js';
+import {
+  decryptLlmApiKey,
+  decryptLlmConfigs,
+  encryptLlmApiKey,
+  encryptLlmConfigs,
+} from './workspaceLlmSecrets.js';
 
 // ---------------------------------------------------------------------------
 // In-process TTL cache for workspace rows.
@@ -129,8 +135,10 @@ function rowToGlobalSettings(ws: typeof workspacesTable.$inferSelect): GlobalSet
   if (ws.theme) overrides.theme = ws.theme as GlobalSettings['theme'];
   if (ws.enabledModules) overrides.enabledModules = ws.enabledModules as Record<string, boolean>;
   if (ws.llmProvider) overrides.llmProvider = ws.llmProvider as GlobalSettings['llmProvider'];
-  if (ws.llmApiKey) overrides.llmApiKey = ws.llmApiKey;
-  if (ws.llmConfigs) overrides.llmConfigs = ws.llmConfigs as GlobalSettings['llmConfigs'];
+  const llmApiKey = decryptLlmApiKey(ws.llmApiKey);
+  if (llmApiKey) overrides.llmApiKey = llmApiKey;
+  const llmConfigs = decryptLlmConfigs(ws.llmConfigs as GlobalSettings['llmConfigs'] | null);
+  if (llmConfigs) overrides.llmConfigs = llmConfigs;
   return mergeGlobalSettings(overrides);
 }
 
@@ -209,6 +217,9 @@ const ALL_WORKSPACE_COLUMNS = {
  * Lists all workspaces with their branding in a single query. Avoids the
  * N+1 pattern of fetching branding per workspace (used by the apex registry
  * and platform console listings).
+ *
+ * Intentionally omits LLM secrets (`llm_api_key`, `llm_configs`) — platform
+ * list/summary responses must never project those columns.
  */
 export async function listWorkspaceRowsWithBranding(): Promise<
   Array<{ workspace: Workspace; branding: BrandingSettings }>
@@ -416,8 +427,8 @@ export async function upsertWorkspaceGlobalSettings(
       theme:              g.theme              || null,
       enabledModules:     g.enabledModules,
       llmProvider:        g.llmProvider        || null,
-      llmApiKey:          g.llmApiKey          || null,
-      llmConfigs:         g.llmConfigs?.length ? g.llmConfigs : null,
+      llmApiKey:          encryptLlmApiKey(g.llmApiKey),
+      llmConfigs:         encryptLlmConfigs(g.llmConfigs),
     })
     .where(eq(workspacesTable.subdomain, subdomain));
   invalidateWorkspaceCache(subdomain);

@@ -290,7 +290,15 @@ export const platformWorkspaceRowDtoSchema = z.object({
   createdAt: z.string(),
   requireEmailVerification: z.boolean().optional(),
   adminEmail: z.string().optional(),
-});
+}).strict();
+
+/** Keys intentionally omitted from platform workspace listings (secrets / settings). */
+export const PLATFORM_WORKSPACE_ROW_SECRET_KEYS = [
+  'llmApiKey',
+  'llmConfigs',
+  'llmProvider',
+  'passwordHash',
+] as const;
 
 export type PlatformWorkspaceRowDto = z.infer<typeof platformWorkspaceRowDtoSchema>;
 

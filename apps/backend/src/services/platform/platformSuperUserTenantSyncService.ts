@@ -4,15 +4,19 @@ import { withTenant } from '../../db/tenant-context.js';
 import { tenantUsers } from '../../db/schema.js';
 import { findPlatformUserRowByRole } from '../../db/repositories/platformUserRepository.js';
 import { listWorkspaceRows } from '../../db/repositories/workspaceRepository.js';
+import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 
 /**
  * SECURITY NOTE: syncing the platform super-user into every tenant replicates the
  * super-user's scrypt password hash into each tenant's `tenant_users` table and
  * grants `super_admin` access in every workspace. This is intentional (single
- * sign-on across tenants), but it means a single tenant DB compromise exposes the
- * platform super-user's hash and the account can sign into every tenant. Operators
- * can disable the sync entirely with PLATFORM_SYNC_SUPERUSER_TO_TENANTS=false
- * (default true). Keep tenant DBs strongly isolated.
+ * sign-on / break-glass across tenants), but a single tenant DB compromise exposes
+ * the platform super-user's hash and the account can sign into every tenant.
+ *
+ * Default remains enabled (`PLATFORM_SYNC_SUPERUSER_TO_TENANTS` unset or not
+ * `false`) so existing break-glass keeps working. Production deployments that do
+ * not need mirrored tenant super-admins SHOULD set
+ * `PLATFORM_SYNC_SUPERUSER_TO_TENANTS=false` and keep tenant DBs strongly isolated.
  */
 function isSuperUserTenantSyncEnabled(): boolean {
   return process.env.PLATFORM_SYNC_SUPERUSER_TO_TENANTS !== 'false';
@@ -52,7 +56,7 @@ export async function syncPlatformSuperUserToTenant(
   const normalizedEmail = superUser.email.trim().toLowerCase();
   const superUserId = `pu_${subdomain}_${superUser.id}`;
 
-  return withTenant(subdomain, async (tx) => {
+  const synced = await withTenant(subdomain, async (tx) => {
     const existingRows = await tx
       .select({
         id: tenantUsers.id,
@@ -118,6 +122,19 @@ export async function syncPlatformSuperUserToTenant(
 
     return true;
   });
+
+  if (synced) {
+    await insertPlatformActivityLog({
+      userId: superUser.id,
+      userEmail: superUser.email,
+      action: 'sync_super_user_to_tenant',
+      targetResource: 'workspace',
+      targetId: subdomain,
+      metadataMessage: 'Mirrored platform super_user into tenant_users as super_admin',
+    });
+  }
+
+  return synced;
 }
 
 /**

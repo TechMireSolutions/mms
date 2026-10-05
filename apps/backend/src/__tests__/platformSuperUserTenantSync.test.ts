@@ -127,6 +127,10 @@ vi.mock('../db/repositories/platformUserRepository.js', () => ({
   }),
 }));
 
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../db/repositories/workspaceRepository.js', () => ({
   listWorkspaceRows: vi.fn().mockImplementation(async () => [...mockWorkspaces]),
   findWorkspaceRowBySubdomain: vi.fn().mockImplementation(async (subdomain: string) => {

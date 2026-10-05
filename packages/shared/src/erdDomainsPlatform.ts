@@ -27,14 +27,17 @@ export const ERD_DOMAIN_PLATFORM: ErdDomain = {
       columns: [
         { name: 'id', type: 'bigint', kind: 'pk' },
         { name: 'platform_user_id', type: 'text', kind: 'fk' },
-        { name: 'permission_key', type: 'varchar(40)', kind: 'unique' },
+        { name: 'permission_key', type: 'varchar(40)', kind: 'column' },
+        { name: 'is_granted', type: 'boolean', kind: 'column' },
       ],
     },
     {
       name: 'platform_activity_logs',
       columns: [
-        { name: 'id', type: 'text', kind: 'pk' },
+        { name: 'id', type: 'bigint', kind: 'pk' },
         { name: 'user_id', type: 'text', kind: 'fk' },
+        { name: 'user_email', type: 'text', kind: 'column' },
+        { name: 'action', type: 'varchar(80)', kind: 'column' },
       ],
     },
     {
@@ -60,11 +63,12 @@ export const ERD_DOMAIN_PLATFORM: ErdDomain = {
       toTable: 'platform_users',
       toColumn: 'id',
       cardinality: 'N:1',
+      onDelete: 'set null',
     },
   ],
 };
 
-/** Jobs, reports, and audit trail (Drizzle `system.ts`). */
+/** Jobs, reports, and audit trail (Drizzle `system.ts` + `auditTrail.ts`). */
 export const ERD_DOMAIN_SYSTEM: ErdDomain = {
   id: 'system',
   labelKey: 'platform.erdDomainSystem',

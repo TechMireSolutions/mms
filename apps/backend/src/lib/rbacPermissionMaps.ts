@@ -124,6 +124,8 @@ export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
 // rather than falling through to `canWriteObject`'s unrelated `WRITE_ROLES` default.
 export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   global_settings: 'configuration.view',
+  // Legacy objects key for module grants (now workspaces.granted_modules). Apex SQL
+  // table platform_settings is TLS-only and is not served via /api/db objects.
   platform_settings: 'configuration.view',
   branding: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',

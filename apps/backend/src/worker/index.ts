@@ -1,6 +1,5 @@
 import { Worker } from 'bullmq';
 import { initDb, closeDatabase } from '../db/database.js';
-import { workspaces } from '../db/schema.js';
 import { activeDb, initializeDatabaseConnection } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
 import { loadBackendEnv } from '../config/loadEnv.js';
@@ -27,9 +26,12 @@ import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRu
 import { logger } from '../lib/logger.js';
 import { defaultSearchAdapter } from './adapters/searchIndexAdapter.js';
 import { purgeExpiredArchivedRecords } from './purgeArchivedRecordsJob.js';
+import { purgeExpiredPlatformActivityLogs } from './purgePlatformActivityLogsJob.js';
+import { clearRetentionPurgeScheduler, scheduleNextDailyPurge } from './retentionPurgeScheduler.js';
 import { startOutboxCdcListener, type OutboxCdcHandle } from './outboxCdcListener.js';
-import { LEADER_LOCK_RETENTION_PURGE, tryAcquireLeaderLease } from '../lib/leaderElection.js';
 import { cleanupOrphanedJobs } from './workerOrphanCleanup.js';
+
+export { getMsUntilNextUtcHour, runRetentionPurgeCycle } from './retentionPurgeScheduler.js';
 
 export { cleanupOrphanedJobs };
 
@@ -37,77 +39,6 @@ let isRunning = true;
 const activeWorkers: Worker<EnqueuedJobData>[] = [];
 /** Handle for the event-driven outbox CDC listener — closed on shutdown. */
 let cdcListenerHandle: OutboxCdcHandle | null = null;
-/** NodeJS timer handle for the daily retention purge scheduler — cleared on shutdown. */
-let purgeSchedulerTimer: ReturnType<typeof setTimeout> | null = null;
-
-/**
- * Computes millisecond delay until the next specified UTC hour (default: 02:00 UTC).
- */
-export function getMsUntilNextUtcHour(targetUtcHour = 2): number {
-  const now = new Date();
-  const next = new Date(now);
-  next.setUTCHours(targetUtcHour, 0, 0, 0);
-  if (next.getTime() <= now.getTime()) {
-    next.setUTCDate(next.getUTCDate() + 1);
-  }
-  return next.getTime() - now.getTime();
-}
-
-/**
- * Runs a full retention purge cycle across all active tenant workspaces.
- */
-export async function runRetentionPurgeCycle(dbClient = activeDb()): Promise<Record<string, Record<string, number>>> {
-  const results: Record<string, Record<string, number>> = {};
-  try {
-    const tenants = await dbClient
-      .select({ subdomain: workspaces.subdomain })
-      .from(workspaces);
-
-    for (const { subdomain } of tenants) {
-      try {
-        const res = await purgeExpiredArchivedRecords(dbClient, subdomain);
-        results[subdomain] = res.purgedTables;
-      } catch (tenantErr) {
-        logger.error({ tenant: subdomain, err: tenantErr }, '[RetentionPurge] Failed for tenant');
-      }
-    }
-    logger.info({ results }, '[RetentionPurge] Completed scheduled daily purge cycle');
-  } catch (err) {
-    logger.error({ err }, '[RetentionPurge] Error running scheduled retention purge cycle');
-  }
-  return results;
-}
-
-/**
- * Schedules the retention purge worker to run daily at 02:00 UTC.
- */
-export function scheduleNextDailyPurge(dbClient = activeDb(), targetUtcHour = 2): void {
-  if (!isRunning) return;
-  const delayMs = getMsUntilNextUtcHour(targetUtcHour);
-  logger.info({ delayMs, targetUtcHour }, '[RetentionPurge] Scheduled next daily purge run');
-
-  purgeSchedulerTimer = setTimeout(() => {
-    void (async () => {
-      // Single-leader election: with more than one worker replica, only one
-      // should run the retention purge for a given day.
-      const lease = await tryAcquireLeaderLease(LEADER_LOCK_RETENTION_PURGE);
-      if (!lease) {
-        logger.info('[RetentionPurge] Another replica holds the purge lease; skipping this run');
-        return;
-      }
-      try {
-        await runRetentionPurgeCycle(dbClient);
-      } catch (err) {
-        logger.error({ err }, '[RetentionPurge] Error during scheduled purge run');
-      } finally {
-        await lease.release();
-      }
-    })().finally(() => {
-      scheduleNextDailyPurge(dbClient, targetUtcHour);
-    });
-  }, delayMs);
-  purgeSchedulerTimer.unref?.();
-}
 
 export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData> {
   const connection = getBullMQConnectionOptions();
@@ -221,7 +152,7 @@ export async function startWorkerDaemon(): Promise<void> {
   });
 
   // Register the daily retention purge schedule to run at 02:00 UTC
-  scheduleNextDailyPurge(activeDb(), 2);
+  scheduleNextDailyPurge(() => isRunning, activeDb(), 2);
 
   const shutdown = async (signal: string) => {
     if (!isRunning) return;
@@ -242,10 +173,7 @@ export async function startWorkerDaemon(): Promise<void> {
         await cdcListenerHandle.stop();
         cdcListenerHandle = null;
       }
-      if (purgeSchedulerTimer !== null) {
-        clearTimeout(purgeSchedulerTimer);
-        purgeSchedulerTimer = null;
-      }
+      clearRetentionPurgeScheduler();
       for (const worker of activeWorkers) {
         try {
           await worker.close();
@@ -279,6 +207,7 @@ export async function startWorkerDaemon(): Promise<void> {
 export {
   activeWorkers,
   purgeExpiredArchivedRecords,
+  purgeExpiredPlatformActivityLogs,
 };
 
 const isWorkerMain =

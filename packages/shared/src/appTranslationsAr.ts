@@ -5462,6 +5462,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "platform.erdDomainCharity": "الصدقات",
   "platform.erdDomainInventory": "المخزون",
   "platform.erdDomainLabel": "مجال المخطط",
+  "platform.erdDomainOutbox": "صندوق الصادر",
   "platform.erdDomainPlatform": "المنصة",
   "platform.erdDomainSystem": "النظام",
   "platform.erdDomainWorkshops": "الورش",

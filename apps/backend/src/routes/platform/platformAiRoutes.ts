@@ -1,6 +1,9 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { platformAiQueryRequestSchema } from '@mms/shared';
-import { authenticatePlatform } from '../../middleware/authenticatePlatform.js';
+import {
+  authenticatePlatform,
+  requirePlatformPermission,
+} from '../../middleware/authenticatePlatform.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { synthesizePlatformAiDiagnostics } from '../../services/platform/platformAiService.js';
 
@@ -11,7 +14,7 @@ export default async function platformAiRoutes(
   fastify.post(
     '/query',
     {
-      preHandler: [authenticatePlatform],
+      preHandler: [authenticatePlatform, requirePlatformPermission('system')],
     },
     async (request, reply) => {
       const parsed = parseRequest(platformAiQueryRequestSchema, request.body);

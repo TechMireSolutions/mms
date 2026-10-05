@@ -4,19 +4,14 @@ import {
   type PlatformRole,
   type PlatformAdminPermissions,
   type PlatformAdminPermissionKey,
+  PLATFORM_ADMIN_PERMISSION_KEYS,
   normalizePlatformAdminPermissions,
   FULL_PLATFORM_ADMIN_PERMISSIONS,
 } from '@mms/shared';
 import { activeDb } from '../dbConnection.js';
 import { platformUsers, platformUserPermissions } from '../schema.js';
 
-export const PERMISSION_KEYS: PlatformAdminPermissionKey[] = [
-  'workspaces',
-  'onboard',
-  'settings',
-  'admins',
-  'system',
-];
+export const PERMISSION_KEYS: PlatformAdminPermissionKey[] = [...PLATFORM_ADMIN_PERMISSION_KEYS];
 
 export async function loadPermissions(userId: string): Promise<PlatformAdminPermissions> {
   const rows = await activeDb()

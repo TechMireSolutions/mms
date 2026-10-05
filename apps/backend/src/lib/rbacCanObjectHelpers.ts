@@ -57,9 +57,8 @@ function computeCanWriteObject(user: User, key: string): boolean {
   if (key === PLATFORM_SUPER_USERS_OBJECT_KEY) {
     return false;
   }
-  // Platform-authoritative module grants: tenants may read (SystemModulesSettings)
-  // but never write. Without this the unmapped key fell through to WRITE_ROLES,
-  // letting any write-capable role self-grant modules.
+  // Legacy document-store key for module grants (now on workspaces.granted_modules).
+  // Tenants must never write this key even if a leftover objects row exists.
   if (key === 'platform_settings') {
     return false;
   }

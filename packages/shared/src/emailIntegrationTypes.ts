@@ -49,12 +49,14 @@ export function isServerOnlyObjectKey(key: string): boolean {
  * Object keys that stay browser-accessible but are excluded from backup
  * export/restore and preserved across a full restore (never pruned, never written).
  *
- * `platform_settings` is platform-authoritative — the platform writes the module
- * grants for a tenant and the tenant only reads them. A tenant backup must not
- * round-trip this key: an exported snapshot could be stale or crafted to resurrect
- * revoked modules. It is also caught by the `platform_*` restricted-key guard, so
- * it is stripped (not rejected) before that guard runs. Unlike `SERVER_ONLY_OBJECT_KEYS`
- * it is NOT withheld from the browser (`useLiveObject('platform_settings')` reads it).
+ * Historical document-store key `platform_settings` once held per-tenant module
+ * grants. Grants now live on `workspaces.granted_modules` (SQL). The apex SQL
+ * table `platform_settings` is unrelated — it stores TLS/Certbot config only.
+ *
+ * The key remains excluded from tenant backup round-trips (caught by the
+ * `platform_*` restricted-key guard) so a crafted snapshot cannot resurrect
+ * revoked modules. Unlike `SERVER_ONLY_OBJECT_KEYS` it is NOT withheld from the
+ * browser if a legacy objects row still exists.
  */
 export const BACKUP_EXCLUDED_OBJECT_KEYS: readonly string[] = [
   'platform_settings',

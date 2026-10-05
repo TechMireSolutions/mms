@@ -79,8 +79,7 @@ echo "MMS local CI (path-aware)"
 echo "=================================================="
 
 BASE="$(resolve_base)"
-CHANGED_TEXT="$(git diff --name-only "$BASE"...HEAD || true)"
-[[ -z "$CHANGED_TEXT" ]] && CHANGED_TEXT="$(git diff --name-only "$BASE" || true)"
+CHANGED_TEXT="$( (git diff --name-only "$BASE"...HEAD 2>/dev/null || true; git diff --cached --name-only 2>/dev/null || true; git diff --name-only "$BASE" 2>/dev/null || true; git diff --name-only 2>/dev/null || true) | sed '/^$/d' | sort -u )"
 CHANGED_COUNT=0
 [[ -n "$CHANGED_TEXT" ]] && CHANGED_COUNT="$(printf '%s\n' "$CHANGED_TEXT" | grep -c . || true)"
 echo "Diff base: $BASE ($CHANGED_COUNT paths)"
