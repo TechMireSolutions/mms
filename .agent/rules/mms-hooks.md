@@ -27,7 +27,7 @@ description: Frontend React hooks standards, TanStack Query factories, page cont
 
 ## 6. Page & Panel Controllers
 - **Decomposition:** Keep JSX shells thin. Decompose into `use{Module}PageController` (state, tabs, permissions), `use{Thing}Draft` (form state), and `use{Thing}Actions` (save, bulk, restore handlers).
-- **Soft-Delete URL Sync:** Synchronize `viewingDeleted` with URL via `useTrashMode` (`?view=trash`). Toggling trash must preserve active search and filter state (`mms-soft-delete`).
+- **Soft-Delete URL Sync:** Synchronize `viewingDeleted` with URL via `useDirectoryTrashState` (`?view=trash`). Toggling trash must preserve active search and filter state (`mms-soft-delete`).
 - **Single Soft-Delete Optimistic Pattern:** Eligible non-financial single deletions trigger instant Query cache hide + 5–10s Undo toast that executes `POST /:id/restore` on click without view change.
 - **Memoization:** Memoize non-trivial calculations (`useMemo`) and callbacks (`useCallback`) passed to children to prevent render cascades (`mms-performance.md`).
 

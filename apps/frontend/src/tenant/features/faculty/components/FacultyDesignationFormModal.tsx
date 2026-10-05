@@ -73,6 +73,14 @@ export function FacultyDesignationFormModal({
     setAssignableRoles([]);
   }, [open, designation, availableDesignations]);
 
+  const isDirty = designation
+    ? name !== designation.name
+      || code !== designation.code
+      || hierarchyRank !== designation.hierarchyRank
+      || isActive !== designation.isActive
+      || JSON.stringify(assignableRoles) !== JSON.stringify(designation.assignableRoles ?? [])
+    : Boolean(name.trim() || code.trim() || parentDesignationId || assignableRoles.length > 0 || !isActive);
+
   const handleNameChange = (val: string) => {
     setName(val);
     if (!codeManuallyEdited && !designation) setCode(slugifyDepartmentCode(val));
@@ -121,6 +129,11 @@ export function FacultyDesignationFormModal({
       saveLabel={designation ? t('common.save') : t('faculty.designations.addDesignation')}
       saving={isPending}
       saveDisabled={isPending || !name.trim() || !code.trim()}
+      isDirty={isDirty}
+      discardUnsavedTitle={t('faculty.form.discardUnsavedTitle')}
+      discardUnsavedDescription={t('faculty.form.discardUnsavedDescription')}
+      discardConfirmLabel={t('faculty.form.discardChanges')}
+      discardCancelLabel={t('faculty.form.keepEditing')}
       onSave={() => void handleSubmit()}
     >
       <FacultyDesignationFormFields

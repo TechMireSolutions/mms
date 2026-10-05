@@ -9,6 +9,7 @@ import { nowIso } from '../../lib/softDeleteHelpers.js';
 import { emitOutboxEvent } from '../../services/outboxEventService.js';
 import { revokeFacultySessions } from './facultySoftDeleteSessions.js';
 import { restoreFacultyById, bulkRestoreFaculty } from './facultyRestoreUseCases.js';
+import { cascadeSoftDeleteFacultyAssignments } from '../../db/repositories/facultyAssignmentCascade.js';
 
 export { restoreFacultyById, bulkRestoreFaculty };
 
@@ -76,6 +77,12 @@ export async function softDeleteFacultyById(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
+      await cascadeSoftDeleteFacultyAssignments(
+        tenant,
+        toSave.map((f) => String(f.id)),
+        deletedBy,
+        trimmedReason,
+      );
       for (const f of toSave) {
         await emitOutboxEvent('entity.soft_deleted', {
           entityType: 'faculty',
@@ -162,6 +169,12 @@ export async function bulkSoftDeleteFaculty(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
+      await cascadeSoftDeleteFacultyAssignments(
+        tenant,
+        toSave.map((f) => String(f.id)),
+        deletedBy,
+        trimmedReason,
+      );
       for (const f of toSave) {
         await emitOutboxEvent('entity.soft_deleted', {
           entityType: 'faculty',

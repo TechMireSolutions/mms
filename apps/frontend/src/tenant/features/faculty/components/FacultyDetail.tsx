@@ -1,7 +1,7 @@
 import React from "react";
 import { IdCard, School } from "lucide-react";
 import { hydrateFacultyFromContact, type FacultyMember } from "@mms/shared";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import { FacultyArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
 import { FacultyDetailFieldsSection } from "@/tenant/features/faculty/components/FacultyDetailFieldsSection";
 import { FacultyDetailHeroCard } from "@/tenant/features/faculty/components/FacultyDetailHeroCard";
-import { FacultyDetailNotesSection } from "@/tenant/features/faculty/components/FacultyDetailNotesSection";
+import { DetailNotesBlock } from "@/components/ui/DetailNotesBlock";
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
 import { FacultyAssignmentsSection } from "@/tenant/features/faculty/components/FacultyAssignmentsSection";
@@ -108,7 +108,7 @@ export function FacultyDetail({
     : t("faculty.detail.employeeSubtitle", { id: faculty.employeeId || t("common.notSpecified") });
 
   return (
-    <DetailSheet
+    <Drawer
       onClose={onClose}
       title={t("faculty.detail.title")}
       subtitle={resolvedSubtitle}
@@ -155,10 +155,10 @@ export function FacultyDetail({
 
       {!isArchived ? <FacultyAssignmentsSection faculty={effectiveFaculty} canEdit={Boolean(onEdit)} /> : null}
 
-      {faculty.notes && isFieldEnabled("notes") && (
-        <FacultyDetailNotesSection notes={faculty.notes} />
-      )}
-    </DetailSheet>
+      {faculty.notes && isFieldEnabled("notes") ? (
+        <DetailNotesBlock title={t("faculty.detail.notesSection")} notes={faculty.notes} />
+      ) : null}
+    </Drawer>
   );
 }
 

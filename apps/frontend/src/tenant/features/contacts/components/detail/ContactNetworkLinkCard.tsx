@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import {
   MESSAGING_ICON_BTN,
@@ -91,7 +91,7 @@ export function ContactNetworkLinkCard({
               onEmail={onEmail}
             />
           ) : showLegacyCall ? (
-            <EntityMessagingIconActions
+            <EntityMessagingActions variant="icon-row"
               primaryPhone={legacyPhone}
               labels={{ call: t("contacts.detail.call") }}
               callAriaLabel={t("contacts.detail.callPhone", { phone: legacyPhone })}

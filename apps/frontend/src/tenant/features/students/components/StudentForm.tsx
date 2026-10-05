@@ -2,10 +2,9 @@ import React from "react";
 import { GraduationCap } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { RequiredBanner } from "@/components/ui/RequiredBanner";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { FormFooterEntityChip } from "@/components/ui/FormFooterChip";
-import { GrBadge } from "@/tenant/features/students/components/GrBadge";
+import { FormFooterEntityChip, FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { StudentFormTabContent } from "@/tenant/features/students/components/StudentFormTabContent";
 import { useStudentFormState } from "@/tenant/features/students/hooks/useStudentFormState";
 import type { Student } from "@mms/shared";
@@ -29,14 +28,22 @@ export const StudentForm = (function StudentForm({
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <FormFooterEntityChip>{form.linkedContact.name}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
-        {form.isFieldEnabled("grNumber") ? <GrBadge grNumber={form.studentDraft.grNumber} /> : null}
+        {form.isFieldEnabled("grNumber") && form.studentDraft.grNumber ? (
+          <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+            {form.t("students.grPrefix")}: {form.studentDraft.grNumber}
+          </FormFooterBadge>
+        ) : null}
         {form.isFieldEnabled("status") ? (
           <StatusBadge status={form.studentDraft.status || "active"} size="sm" config={form.statusBadgeConfig} />
         ) : null}
       </div>
     </div>
   ) : form.isFieldEnabled("contactId") ? (
-    <RequiredBanner message={form.t("students.form.contactRequired")} />
+    <WarningCallout
+      tone="destructive"
+      density="compact"
+      description={form.t("students.form.contactRequired")}
+    />
   ) : null;
 
   return (
@@ -56,6 +63,10 @@ export const StudentForm = (function StudentForm({
         onSave={form.handleSave}
         isDirty={form.isDirty}
         saving={form.saving}
+        discardUnsavedTitle={form.t("students.form.discardUnsavedTitle")}
+        discardUnsavedDescription={form.t("students.form.discardUnsavedDescription")}
+        discardConfirmLabel={form.t("students.form.discardChanges")}
+        discardCancelLabel={form.t("students.form.keepEditing")}
         saveDisabled={
           (form.isFieldEnabled("contactId") && !form.studentDraft.contactId)
           || (Boolean(student?.id) && !form.isDirty)

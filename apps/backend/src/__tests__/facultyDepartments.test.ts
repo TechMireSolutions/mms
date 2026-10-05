@@ -141,7 +141,7 @@ describe('facultyDepartmentRouteHandlers', () => {
         id: 'dept-1', name: 'Hadith', code: 'hadith',
       });
       mockWithTenantRead.mockImplementationOnce(async (fn) => {
-        const tx = { select: () => ({ from: () => ({ where: () => [{ count: 3 }] }) }) };
+        const tx = { execute: vi.fn().mockResolvedValue({ rows: [{ count: 3 }] }) };
         return fn(tx);
       });
       const res = await handleDeleteDepartment({
@@ -158,7 +158,7 @@ describe('facultyDepartmentRouteHandlers', () => {
         id: 'dept-1', name: 'Hadith', code: 'hadith',
       });
       mockWithTenantRead.mockImplementationOnce(async (fn) => {
-        const tx = { select: () => ({ from: () => ({ where: () => [{ count: 0 }] }) }) };
+        const tx = { execute: vi.fn().mockResolvedValue({ rows: [{ count: 0 }] }) };
         return fn(tx);
       });
       const res = await handleDeleteDepartment({

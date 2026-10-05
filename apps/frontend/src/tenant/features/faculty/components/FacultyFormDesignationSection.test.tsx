@@ -13,6 +13,14 @@ vi.mock("./FacultyCatalogCreateOverlays", () => ({
   FacultyCatalogCreateOverlays: () => null,
 }));
 
+vi.mock("@/tenant/hooks/collections/organization", () => ({
+  useOrganizationPositions: () => ({ data: [] }),
+}));
+
+vi.mock("@/tenant/components/organization/OrganizationPositionFormModal", () => ({
+  OrganizationPositionFormModal: () => null,
+}));
+
 describe("FacultyFormDesignationSection", () => {
   it("returns null when designation field is disabled", () => {
     const html = renderToStaticMarkup(
@@ -116,11 +124,11 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toContain("faculty.form.tab.designation");
   });
 
-  it("disables designation editing and shows history notice for existing faculty member", () => {
+  it("shows appointment summary CTA for existing faculty instead of editable holdings", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         faculty={{ id: "fac-1", contactId: "cnt-1", status: "active" } as never}
-        facultyDraft={{ designationId: "des-1" }}
+        facultyDraft={{ designationId: "des-1", designation: "Head of Department", department: "Fiqh" }}
         errors={{}}
         designationOptions={[
           {
@@ -138,7 +146,9 @@ describe("FacultyFormDesignationSection", () => {
       />,
     );
 
-    expect(html).toContain("faculty.designations.manageInHistory");
+    expect(html).toContain("faculty.form.primaryRoleAssignmentsHint");
+    expect(html).toContain("faculty.form.manageAppointmentsCta");
+    expect(html).toContain("Head of Department");
     expect(html).not.toContain("faculty.designations.addDesignation");
     expect(html).not.toContain("border-dashed");
   });

@@ -5,9 +5,9 @@ import { formatDate, type PlatformWorkspaceRow as PlatformWorkspaceRowData } fro
 import { tenantUrl } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { DirectoryCard } from '@/components/ui/DirectoryCard';
-import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
+import { EntityCardMetadata } from '@/components/ui/EntityCardMetadata';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
 import { WorkspaceRowActions } from '@/platform/components/workspace/WorkspaceRowActions';
@@ -41,7 +41,7 @@ export function WorkspaceListCards({
   const reducedMotion = useReducedMotion();
 
   return (
-    <DirectoryCardsGrid>
+    <EntityCardsGrid>
       {workspaces.map((workspace) => {
         const isTargetDelete = deletePending && targetWorkspaceSubdomain === workspace.subdomain;
         return (
@@ -75,7 +75,7 @@ export function WorkspaceListCards({
             }
             metadataSlot={
               descriptor ? (
-                <DirectoryCardMetadata
+                <EntityCardMetadata
                   descriptor={descriptor}
                   entity={workspace}
                   visibleColumnIds={['createdAt']}
@@ -110,10 +110,6 @@ export function WorkspaceListCards({
           />
         );
       })}
-    </DirectoryCardsGrid>
+    </EntityCardsGrid>
   );
 }
-
-/** Backward-compatible alias for existing consumers. */
-export type WorkspaceCardsViewProps = WorkspaceListCardsProps;
-export const WorkspaceCardsView = WorkspaceListCards;

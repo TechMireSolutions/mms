@@ -50,21 +50,15 @@ describe('Faculty appointment integrity', () => {
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
   });
 
-  it('soft-stops reports_to on create and update; still rejects inactive faculty targets', async () => {
-    // Create + update ignore client reports_to (forced null) — no cycle path via this field.
-    await expect(saveFacultyAssignment(tenant, appointment('same-person', {
-      reportsToAssignmentId: 'a0',
-    }))).resolves.toBeUndefined();
-    await expect(saveFacultyAssignment(tenant, appointment('same-person', {
-      reportsToAssignmentId: 'a2',
-    }))).resolves.toBeUndefined();
+  it('persists appointments on shared positions without legacy reports_to columns', async () => {
+    await expect(saveFacultyAssignment(tenant, appointment('same-person'))).resolves.toBeUndefined();
     await withTenant(tenant, async (tx) => {
       const result = await tx.execute(sql`
-        SELECT reports_to_assignment_id
+        SELECT position_id
         FROM faculty_assignments
         WHERE workspace_subdomain = ${tenant} AND id = 'same-person'
       `);
-      expect(result.rows[0]?.reports_to_assignment_id ?? null).toBeNull();
+      expect(result.rows[0]?.position_id).toBe('pos-d-g');
     });
     await expect(saveFacultyAssignment(tenant, appointment('a2'))).rejects.toThrow('belongs');
   });

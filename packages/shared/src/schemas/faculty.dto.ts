@@ -21,11 +21,15 @@ const FACULTY_WRITE_AUDIT_META_KEYS = ['id', 'userId', 'createdAt', 'updatedAt',
  * Top-level keys accepted on faculty form drafts / writes (no Contacts profile dual-write keys).
  */
 export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
+  /** Create-only appointment bootstrap (+ shell fields from form seed). No person-level reporting. */
   const extra = [
-    'customDesignation', 'reportingFacultyId', 'hierarchyRank', 'reportingFacultyName',
-    'subordinateCount', 'designationId', 'designationStartsOn', 'designationEndsOn',
-    'designations', 'departmentId',
-    'reportingRole', 'reportingRoleId', 'reportingDesignationId',
+    'customDesignation',
+    'designationId',
+    'designationStartsOn',
+    'designationEndsOn',
+    'designations',
+    'departmentId',
+    'positionId',
   ];
   const keys = new Set<string>([...FACULTY_WRITE_AUDIT_META_KEYS, ...listFacultySystemFormFieldKeys(), ...extra]);
   return [...keys].sort((left, right) => left.localeCompare(right));
@@ -66,21 +70,13 @@ export function buildDynamicFacultySchema(
     contactId: z.union([z.string(), z.number()]).nullish(),
     employeeId: z.string().nullish(),
     specialization: z.string().nullish(),
-    department: z.string().nullish(),
-    designation: z.string().nullish(),
     designationId: z.string().nullish(),
     designationStartsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullish().transform((v) => (v === '' ? undefined : v)),
     designationEndsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullable().nullish().transform((v) => (v === '' ? null : v)),
     designations: facultyDesignationHoldingsSchema.optional(),
     departmentId: z.string().nullish(),
+    positionId: z.string().nullish(),
     customDesignation: z.string().trim().optional(),
-    reportingFacultyId: z.string().nullable().nullish(),
-    reportingRole: z.string().nullable().nullish(),
-    reportingRoleId: z.string().nullable().nullish(),
-    reportingDesignationId: z.string().nullable().nullish(),
-    hierarchyRank: z.coerce.number().int().min(1).max(99).nullish(),
-    reportingFacultyName: z.string().nullish(),
-    subordinateCount: z.coerce.number().int().min(0).nullish(),
     status: z.string().max(FACULTY_STATUS_WRITE_MAX).nullish(),
     joinDate: z.string().nullish(),
     qualification: z.string().nullish(),
@@ -121,8 +117,6 @@ export function buildDynamicFacultySchema(
         }
         if (
           field.key === 'employeeId'
-          || field.key === 'department'
-          || field.key === 'designation'
           || field.key === 'joinDate'
           || field.key === 'notes'
         ) {
@@ -217,9 +211,25 @@ export const facultyDuplicateCheckBodySchema: z.ZodType<FacultyDuplicateCheckBod
   return deepSanitizeStrings(raw);
 }, facultyDuplicateCheckBodyBaseSchema);
 
+/** Person-level reporting / denorm role keys — never persist on faculty writes. */
+const FACULTY_WRITE_STRIP_KEYS = [
+  'department',
+  'designation',
+  'reportingFacultyId',
+  'reportingFacultyName',
+  'reportingRole',
+  'reportingRoleId',
+  'reportingDesignationId',
+  'hierarchyRank',
+  'subordinateCount',
+] as const;
+
 export const facultyWriteSchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   const stripped = stripFacultyWriteNoise(raw as Record<string, unknown>);
+  for (const key of FACULTY_WRITE_STRIP_KEYS) {
+    delete stripped[key];
+  }
   return deepSanitizeStrings(stripped);
 }, facultyCoreSchema);
 

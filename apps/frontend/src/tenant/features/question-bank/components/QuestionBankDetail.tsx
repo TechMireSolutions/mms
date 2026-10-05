@@ -2,10 +2,9 @@ import React from 'react';
 import { FileQuestion } from 'lucide-react';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import { CategoryColorChip } from '@/tenant/features/question-bank/components/CategoryColorChip';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
@@ -31,7 +30,7 @@ export const QuestionBankDetail = (function QuestionBankDetail({
   const isArchived = !!question.deletedAt;
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={t('questionBank.detail.title')}
@@ -51,52 +50,41 @@ export const QuestionBankDetail = (function QuestionBankDetail({
       }
     >
       <div className="flex flex-col gap-6 py-6">
-        <section>
-          <DetailSectionTitle>{t('questionBank.detail.overview')}</DetailSectionTitle>
-          <Card className="overflow-hidden">
-            <div className="divide-y divide-border">
-              <DetailAttributeRow 
-                label={t('questionBank.fields.type')}
-                value={config.typeLabel?.(question.type) || question.type} 
-              />
-              <DetailAttributeRow 
-                label={t('questionBank.fields.difficulty')}
-                value={config.difficultyLabel?.(question.difficulty) || question.difficulty} 
-              />
-              <DetailAttributeRow 
-                label={t('questionBank.fields.category')}
-                value={
-                  <div className="flex flex-wrap gap-1">
-                    {question.categoryIds?.map(catId => (
-                      <CategoryColorChip key={catId} name={config.categories.find(c => c.id === catId)?.name || catId} color={config.categories.find(c => c.id === catId)?.color || 'hsl(var(--muted-foreground))'} />
-                    ))}
-                  </div>
-                } 
-              />
-              <DetailAttributeRow 
-                label={t('questionBank.fields.marks')}
-                value={question.marks ?? 1} 
-              />
-            </div>
-          </Card>
-        </section>
+        <DetailSectionCard title={t('questionBank.detail.overview')} className="overflow-hidden divide-y divide-border">
+          <DetailAttributeRow
+            label={t('questionBank.fields.type')}
+            value={config.typeLabel?.(question.type) || question.type}
+          />
+          <DetailAttributeRow
+            label={t('questionBank.fields.difficulty')}
+            value={config.difficultyLabel?.(question.difficulty) || question.difficulty}
+          />
+          <DetailAttributeRow
+            label={t('questionBank.fields.category')}
+            value={
+              <div className="flex flex-wrap gap-1">
+                {question.categoryIds?.map(catId => (
+                  <CategoryColorChip key={catId} name={config.categories.find(c => c.id === catId)?.name || catId} color={config.categories.find(c => c.id === catId)?.color || 'hsl(var(--muted-foreground))'} />
+                ))}
+              </div>
+            }
+          />
+          <DetailAttributeRow
+            label={t('questionBank.fields.marks')}
+            value={question.marks ?? 1}
+          />
+        </DetailSectionCard>
 
-        <section>
-          <DetailSectionTitle>{t('questionBank.fields.content')}</DetailSectionTitle>
-          <Card className="p-4">
-            <div className="whitespace-pre-line text-sm text-foreground">{question.text}</div>
-          </Card>
-        </section>
+        <DetailSectionCard title={t('questionBank.fields.content')} className="p-4">
+          <div className="whitespace-pre-line text-sm text-foreground">{question.text}</div>
+        </DetailSectionCard>
 
         {question.answer && (
-          <section>
-            <DetailSectionTitle>{t('questionBank.fields.explanation')}</DetailSectionTitle>
-            <Card className="p-4">
-              <div className="whitespace-pre-line text-sm text-foreground">{question.answer}</div>
-            </Card>
-          </section>
+          <DetailSectionCard title={t('questionBank.fields.explanation')} className="p-4">
+            <div className="whitespace-pre-line text-sm text-foreground">{question.answer}</div>
+          </DetailSectionCard>
         )}
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });

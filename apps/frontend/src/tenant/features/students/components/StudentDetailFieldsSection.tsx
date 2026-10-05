@@ -8,9 +8,8 @@ import {
   formatDate,
   formatDateTime,
 } from "@mms/shared";
-import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel, resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
@@ -146,12 +145,14 @@ export function StudentDetailFieldsSection({
       {groups.map(({ group, rows }, index) => {
         const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
         return (
-          <div key={group} className="space-y-2">
-            <DetailSectionTitle>{group}</DetailSectionTitle>
-            <Card accentColor={accent} className="divide-y divide-border/50 p-0">
-              {rows}
-            </Card>
-          </div>
+          <DetailSectionCard
+            key={group}
+            title={group}
+            accentColor={accent}
+            className="divide-y divide-border/50 p-0"
+          >
+            {rows}
+          </DetailSectionCard>
         );
       })}
     </div>

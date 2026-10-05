@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Users, BarChart3, Settings, Download } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
 import { usePlatformAdmins } from '@/platform/hooks/usePlatformAdmins';
@@ -94,7 +94,7 @@ export default function PlatformUsersPage(): React.JSX.Element {
   );
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t('nav.users')} | ${t('platform.consoleTitle')}`}
       seoDescription={t('platform.adminsSubtitle')}
       headerIcon={Users}
@@ -117,7 +117,7 @@ export default function PlatformUsersPage(): React.JSX.Element {
         activeSetupSubTab={activeSetupSubTab}
         onSetupSubTabChange={handleSetupSubTabChange}
       />
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }
 

@@ -4,7 +4,7 @@ import {
   type FacultyQuickFilter,
 } from '@mms/shared';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 import {
   toggleIdInSelection,
   togglePageIdsInSelection,
@@ -23,7 +23,7 @@ export function useFacultyDirectoryFilters({
   setActiveTab: (tab: string) => void;
 }) {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [sortField, setSortField] = useState<FacultySortField>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');
@@ -31,6 +31,9 @@ export function useFacultyDirectoryFilters({
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [filterGender, setFilterGender] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDesignation, setFilterDesignation] = useState('');
+  const [filterReportingFacultyId, setFilterReportingFacultyId] = useState('');
   const [quickFilter, setQuickFilter] = useState<FacultyQuickFilter>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -41,6 +44,9 @@ export function useFacultyDirectoryFilters({
     filterStatus,
     filterSpecialization,
     filterGender,
+    filterDepartment,
+    filterDesignation,
+    filterReportingFacultyId,
     quickFilter,
     showDeleted,
     sortField,
@@ -55,6 +61,9 @@ export function useFacultyDirectoryFilters({
     filterStatus,
     filterSpecialization,
     filterGender,
+    filterDepartment,
+    filterDesignation,
+    filterReportingFacultyId,
     quickFilter,
     showDeleted,
     sortField,
@@ -82,6 +91,9 @@ export function useFacultyDirectoryFilters({
       if (filter.quickFilter && isFacultyQuickFilter(filter.quickFilter)) {
         setQuickFilter(filter.quickFilter);
       }
+      if (filter.department) setFilterDepartment(filter.department);
+      if (filter.designation) setFilterDesignation(filter.designation);
+      if (filter.reportingFacultyId) setFilterReportingFacultyId(filter.reportingFacultyId);
       setActiveTab('faculties');
     },
     [setActiveTab],
@@ -111,6 +123,9 @@ export function useFacultyDirectoryFilters({
     setFilterStatus([]);
     setFilterSpecialization('');
     setFilterGender('');
+    setFilterDepartment('');
+    setFilterDesignation('');
+    setFilterReportingFacultyId('');
     setQuickFilter('all');
   }, []);
 
@@ -123,12 +138,18 @@ export function useFacultyDirectoryFilters({
     filterStatus.length > 0 ||
     Boolean(filterSpecialization) ||
     Boolean(filterGender) ||
+    Boolean(filterDepartment) ||
+    Boolean(filterDesignation) ||
+    Boolean(filterReportingFacultyId) ||
     quickFilter !== 'all';
 
   const activeFilterCount =
     filterStatus.length +
     (filterSpecialization ? 1 : 0) +
     (filterGender ? 1 : 0) +
+    (filterDepartment ? 1 : 0) +
+    (filterDesignation ? 1 : 0) +
+    (filterReportingFacultyId ? 1 : 0) +
     (search.trim() ? 1 : 0) +
     (quickFilter !== 'all' ? 1 : 0);
 
@@ -158,6 +179,12 @@ export function useFacultyDirectoryFilters({
     setFilterSpecialization,
     filterGender,
     setFilterGender,
+    filterDepartment,
+    setFilterDepartment,
+    filterDesignation,
+    setFilterDesignation,
+    filterReportingFacultyId,
+    setFilterReportingFacultyId,
     quickFilter,
     changeQuickFilter,
     selectedIds,

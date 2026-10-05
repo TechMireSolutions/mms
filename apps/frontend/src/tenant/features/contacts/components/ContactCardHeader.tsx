@@ -1,7 +1,7 @@
 import type { Contact } from "@mms/shared";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EntityCard } from "@/components/ui/EntityCard";
 
 export interface ContactCardHeaderProps {
   contact: Contact;
@@ -40,7 +40,7 @@ export function ContactCardHeader({
   ) : undefined;
 
   return (
-    <DirectoryCardHeader
+    <EntityCard.Header
       id={contact.id}
       displayName={displayName}
       avatar={contact.avatar}

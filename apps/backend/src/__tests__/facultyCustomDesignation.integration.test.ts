@@ -26,7 +26,7 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
     mockGetRequestTenant.mockReturnValue('demo');
   });
 
-  it('prepareFacultyRecord maps customDesignation to designation and deletes customDesignation', () => {
+  it('prepareFacultyRecord strips customDesignation without dual-writing designation', () => {
     const input = {
       name: 'Dr. Ahmad',
       contactId: 'c-100',
@@ -35,11 +35,11 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
 
     const prepared = prepareFacultyRecord(input as never);
 
-    expect(prepared.designation).toBe('Visiting Scholar');
+    expect(prepared.designation).toBeUndefined();
     expect((prepared as Record<string, unknown>).customDesignation).toBeUndefined();
   });
 
-  it('createFaculty normalizes custom designation and persists to repository', async () => {
+  it('createFaculty strips custom designation from the faculty row', async () => {
     const store = new Map<string, FacultyRecord>();
     const fakeRepo = {
       findSoftDeletedByContactId: vi.fn().mockResolvedValue(null),
@@ -60,12 +60,12 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
     );
 
     expect(result.restored).toBe(false);
-    expect(result.record.designation).toBe('Head of Arabic Department');
+    expect(result.record.designation).toBeUndefined();
     expect((result.record as Record<string, unknown>).customDesignation).toBeUndefined();
     expect(fakeRepo.save).toHaveBeenCalled();
   });
 
-  it('updateFacultyById handles custom designation and updates repository', async () => {
+  it('updateFacultyById ignores customDesignation for faculty row persistence', async () => {
     const existingFaculty: FacultyRecord = {
       id: 'tch-1',
       contactId: 'c-300',
@@ -83,19 +83,16 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
       save: vi.fn(async (_tenant: string, record: FacultyRecord) => {
         store.set(String(record.id), record);
       }),
+      findSubordinates: vi.fn().mockResolvedValue([]),
     };
 
     const updated = await updateFacultyById(
       'tch-1',
-      {
-        customDesignation: 'Principal Researcher',
-      },
+      { customDesignation: 'Senior Instructor' },
       fakeRepo as never,
     );
 
-    expect(updated).not.toBeNull();
-    expect(updated?.designation).toBe('Principal Researcher');
-    expect((updated as Record<string, unknown>)?.customDesignation).toBeUndefined();
-    expect(fakeRepo.save).toHaveBeenCalled();
+    expect(updated?.designation).toBe('Instructor');
+    expect((updated as Record<string, unknown> | null)?.customDesignation).toBeUndefined();
   });
 });

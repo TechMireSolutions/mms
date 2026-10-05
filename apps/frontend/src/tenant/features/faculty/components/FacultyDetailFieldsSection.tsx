@@ -4,9 +4,9 @@ import type {
   Faculty,
   FacultySettings,
 } from "@mms/shared";
+import { resolveRoleDisplayName } from "@mms/shared";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { facultyMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
@@ -20,6 +20,7 @@ import {
   SYSTEM_FIELD_ICONS,
 } from "@/tenant/features/faculty/components/facultyDetailShared";
 import { buildFacultyContactRows } from "@/tenant/features/faculty/components/facultyDetailContactRows";
+import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
 
 export interface FacultyDetailFieldsSectionProps {
   faculty: Faculty;
@@ -35,6 +36,7 @@ export function FacultyDetailFieldsSection({
   settings,
 }: FacultyDetailFieldsSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const workspaceRoles = useWorkspaceRoles();
   const emptyDash = t("faculty.table.emptyDash");
   const messagingLabels = facultyMessagingLabels(t);
 
@@ -73,7 +75,7 @@ export function FacultyDetailFieldsSection({
               <div className="flex flex-wrap gap-1">
                 {assignableRoles.map((role) => (
                   <Badge key={role} variant="outline" className="text-xs font-normal">
-                    {role}
+                    {resolveRoleDisplayName(role, workspaceRoles, t)}
                   </Badge>
                 ))}
               </div>
@@ -113,12 +115,13 @@ export function FacultyDetailFieldsSection({
     if (tabId === basicTabId) rows.push(...contactRows);
     if (rows.length === 0) return null;
     return (
-      <div key={tabId} className="space-y-2">
-        <DetailSectionTitle>
-          {resolveFacultyTabLabel(settings, tabId, t)}
-        </DetailSectionTitle>
-        <Card className="divide-y divide-border/50 p-0">{rows}</Card>
-      </div>
+      <DetailSectionCard
+        key={tabId}
+        title={resolveFacultyTabLabel(settings, tabId, t)}
+        className="divide-y divide-border/50 p-0"
+      >
+        {rows}
+      </DetailSectionCard>
     );
   });
 

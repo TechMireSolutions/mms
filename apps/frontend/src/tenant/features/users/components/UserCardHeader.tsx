@@ -1,6 +1,6 @@
 import type { SystemUser } from "@mms/shared";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EntityCard } from "@/components/ui/EntityCard";
 
 export interface UserCardHeaderProps {
   user: SystemUser;
@@ -27,7 +27,7 @@ export function UserCardHeader({
   const displayName = user.name?.trim() || user.email || "";
 
   return (
-    <DirectoryCardHeader
+    <EntityCard.Header
       id={user.id}
       displayName={displayName}
       isSelected={isSelected}

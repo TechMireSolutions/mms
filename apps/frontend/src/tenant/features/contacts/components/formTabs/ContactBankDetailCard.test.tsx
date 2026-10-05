@@ -64,6 +64,24 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
       ))}
     </div>
   ),
+  FormListFieldCard: ({
+    label,
+    typeSelect,
+    removeLabel,
+    children,
+  }: {
+    label?: string;
+    typeSelect?: React.ReactNode;
+    removeLabel?: string;
+    children: React.ReactNode;
+  }) => (
+    <div data-testid="list-field-card">
+      {label && <div data-testid="card-label">{label}</div>}
+      {typeSelect ? <div data-testid="card-type-select">{typeSelect}</div> : null}
+      <div data-testid="card-body">{children}</div>
+      {removeLabel && <div data-testid="card-remove-label">{removeLabel}</div>}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/ui/LeadingIconInput", () => ({
@@ -87,7 +105,7 @@ vi.mock("@/components/ui/LeadingIconInput", () => ({
 }));
 
 vi.mock("./ContactSubListCards", () => ({
-  ListFieldCard: ({
+  FormListFieldCard: ({
     label,
     typeSelect,
     removeLabel,

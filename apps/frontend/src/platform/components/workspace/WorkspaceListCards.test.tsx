@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { WorkspaceListCards, WorkspaceCardsView } from "./WorkspaceListCards";
+import { WorkspaceListCards } from "./WorkspaceListCards";
 import type { PlatformWorkspaceRow } from "@mms/shared";
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -38,9 +38,5 @@ describe("WorkspaceListCards Component", () => {
     expect(html).toContain("al-huda");
     expect(html).toContain("Al Huda Academy");
     expect(html).toContain("platform.sort.createdAt");
-  });
-
-  it("exports backward-compatible WorkspaceCardsView alias pointing to WorkspaceListCards", () => {
-    expect(WorkspaceCardsView).toBe(WorkspaceListCards);
   });
 });

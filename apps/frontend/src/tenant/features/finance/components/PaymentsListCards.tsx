@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useWorkCardAction } from '@/hooks/useWorkCardAction';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
-import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
-import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
+import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
+import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { Payment } from '@/lib/data/financeData';
 
@@ -68,7 +66,7 @@ function PaymentCard({
       type="button"
       variant="ghost"
       size="icon"
-      className={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+      className={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
       onClick={() => (showDeleted ? onRestore?.(payment.id) : onRequestDelete(payment.id))}
       aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
     >
@@ -79,14 +77,14 @@ function PaymentCard({
   ) : null;
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={payment.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       accentClassName="bg-success/60 group-hover:bg-success"
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={payment.id}
         displayName={payment.studentName || t("finance.payments")}
         isSelected={isSelected}
@@ -101,37 +99,37 @@ function PaymentCard({
         }
       />
 
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("amount") && (
-          <DirectoryCardMetaTile label={t('finance.columns.amount')}>
+          <EntityCardMetaTile label={t('finance.columns.amount')}>
             <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("date") && (
-          <DirectoryCardMetaTile label={t('finance.columns.paymentDate')}>
+          <EntityCardMetaTile label={t('finance.columns.paymentDate')}>
             {formatDate(payment.date)}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("method") && (
-          <DirectoryCardMetaTile label={t('finance.columns.method')}>
+          <EntityCardMetaTile label={t('finance.columns.method')}>
             <StatusBadge status={payment.method} config={methodConfig} size="sm" />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("receivedBy") && (
-          <DirectoryCardMetaTile label={t('finance.columns.receivedBy')}>
+          <EntityCardMetaTile label={t('finance.columns.receivedBy')}>
             {payment.receivedBy || '—'}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("note") && (
-          <DirectoryCardMetaTile label={t('finance.columns.note')}>
+          <EntityCardMetaTile label={t('finance.columns.note')}>
             {payment.note || '—'}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
+      </EntityCard.MetaGrid>
 
       {/* Footer rendered unconditionally — preserves border-divider chrome when canDelete=false. */}
-      <DirectoryCardFooterActions actions={trailingActions} />
-    </DirectoryEntityCard>
+      <EntityCardFooterActions actions={trailingActions} />
+    </EntityCard>
   );
 }
 
@@ -154,7 +152,7 @@ export function PaymentsListCards({
   const someSelected = selectedIds.length > 0 && selectedIds.length < payments.length;
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={payments}
       selectedIds={selectedIds}
       onSelectAll={canDelete && onToggleSelectAll ? () => onToggleSelectAll(!allSelected) : undefined}

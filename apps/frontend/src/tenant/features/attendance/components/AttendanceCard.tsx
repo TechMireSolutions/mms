@@ -2,11 +2,9 @@ import type React from 'react';
 import { formatDate } from '@mms/shared';
 import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import { TimePicker } from '@/components/ui/TimePicker';
-import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
-import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
+import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
+import { EntityCard } from "@/components/ui/EntityCard";
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
@@ -56,14 +54,14 @@ export function AttendanceCard({
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={attendanceRecord.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       accentClassName={getAttendanceAccentClass(attendanceRecord.status)}
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={attendanceRecord.id}
         displayName={attendanceRecord.studentName}
         isSelected={isSelected}
@@ -77,29 +75,29 @@ export function AttendanceCard({
           ) : undefined
         }
       />
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("date") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.date')}>
+          <EntityCardMetaTile label={t('attendance.columns.date')}>
             <span className="font-mono">{formatDate(attendanceRecord.date, true)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("session") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.session')}>
+          <EntityCardMetaTile label={t('attendance.columns.session')}>
             {attendanceRecord.sessionName || '—'}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("status") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.status')}>
+          <EntityCardMetaTile label={t('attendance.columns.status')}>
             <AttendanceRecordStatusCell
               attendanceRecord={attendanceRecord}
               editingRecord={editingRecord}
               statuses={statuses}
               updateDraft={updateDraft}
             />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("timeIn") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.timeIn')}>
+          <EntityCardMetaTile label={t('attendance.columns.timeIn')}>
             {editingRecord?.id === attendanceRecord.id
               ? <TimePicker
                   id={`attendance-mobile-time-in-${attendanceRecord.id}`}
@@ -110,10 +108,10 @@ export function AttendanceCard({
                   className="w-full min-w-0 text-xs"
                 />
               : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("timeOut") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.timeOut')}>
+          <EntityCardMetaTile label={t('attendance.columns.timeOut')}>
             {editingRecord?.id === attendanceRecord.id
               ? <TimePicker
                   id={`attendance-mobile-time-out-${attendanceRecord.id}`}
@@ -124,15 +122,15 @@ export function AttendanceCard({
                   className="w-full min-w-0 text-xs"
                 />
               : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("notes") && (
-          <DirectoryCardMetaTile label={t('attendance.columns.notes')}>
+          <EntityCardMetaTile label={t('attendance.columns.notes')}>
             <span className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
-      <DirectoryCardFooterActions actions={renderRowActions(attendanceRecord)} />
-    </DirectoryEntityCard>
+      </EntityCard.MetaGrid>
+      <EntityCardFooterActions actions={renderRowActions(attendanceRecord)} />
+    </EntityCard>
   );
 }

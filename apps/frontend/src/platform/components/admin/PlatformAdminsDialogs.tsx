@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PlatformUserProfile } from '@mms/shared';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
+import { EntityDescriptorSections } from '@/components/ui/EntityDescriptorSections';
 import { PlatformEditAdminAccessDialog } from '@/platform/components/PlatformEditAdminAccessDialog';
 import { PlatformAdminDangerDialog } from '@/platform/components/PlatformAdminDangerDialog';
 import type { DangerMode } from '@/platform/components/admin/PlatformAdminsTableView';
@@ -50,14 +51,19 @@ export function PlatformAdminsDialogs({
         />
       ) : null}
 
-      <DetailSheet<PlatformUserProfile>
+      <Drawer
         open={Boolean(inspectAdmin)}
         onClose={onCloseInspect}
-        entityType="platformUsers"
-        descriptor={descriptor}
-        entity={inspectAdmin ?? undefined}
         title={inspectAdmin?.name ?? 'Admin'}
-      />
+      >
+        {inspectAdmin ? (
+          <EntityDescriptorSections
+            entity={inspectAdmin}
+            entityType="platformUsers"
+            descriptor={descriptor}
+          />
+        ) : null}
+      </Drawer>
     </>
   );
 }

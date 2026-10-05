@@ -15,7 +15,7 @@ interface OverlayProps {
   open?: boolean;
 }
 
-/** Minimal consumer of the shared overlay behaviour, mirroring Modal/DetailDrawerShell. */
+/** Minimal consumer of the shared overlay behaviour, mirroring Modal/Drawer. */
 function Overlay({ onClose, open = true }: OverlayProps): React.JSX.Element {
   const ref = useOverlayBehavior<HTMLDivElement>({ open, onClose });
   return (

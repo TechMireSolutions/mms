@@ -6,8 +6,8 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { balanceToneClass } from "@/lib/semanticTone";
@@ -70,28 +70,28 @@ export function CashFlowStatementPanel({
           <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{t('accounting.reports.cashflow.title')}</SectionLabel>
         </header>
         {viewMode === "cards" ? (
-          <DirectoryCardsGrid className="p-3">
-            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
+          <EntityCardsGrid className="p-3">
+            <EntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</span>
                 <span className="font-mono font-semibold">{formatCurrency(netSurplus)}</span>
               </div>
-            </DirectoryEntityCard>
+            </EntityCard>
             {adjustments.map((item) => (
-              <DirectoryEntityCard key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+              <EntityCard key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm text-muted-foreground">{item.label}</span>
                   <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
                 </div>
-              </DirectoryEntityCard>
+              </EntityCard>
             ))}
-            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
+            <EntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</span>
                 <span className="font-mono font-semibold text-foreground">{formatCurrency(netCashFlowIndirect)}</span>
               </div>
-            </DirectoryEntityCard>
-            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/30 p-3 col-span-full">
+            </EntityCard>
+            <EntityCard className="rounded-xl border border-border bg-muted/30 p-3 col-span-full">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</span>
                 <span className="font-mono font-bold text-foreground text-base">
@@ -101,8 +101,8 @@ export function CashFlowStatementPanel({
                   </span>
                 </span>
               </div>
-            </DirectoryEntityCard>
-          </DirectoryCardsGrid>
+            </EntityCard>
+          </EntityCardsGrid>
         ) : (
           <Table>
             <caption className="sr-only">{t('accounting.reports.cashflow.breakdownCaption')}</caption>

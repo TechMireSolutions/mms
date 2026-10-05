@@ -81,7 +81,3 @@ export function FormListFieldCard({
     </motion.div>
   );
 }
-
-/** @deprecated Prefer {@link FormListFieldCard}. Alias kept for contact import paths. */
-export const ListFieldCard = FormListFieldCard;
-export type ListFieldCardProps = FormListFieldCardProps;

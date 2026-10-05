@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Contact } from "@mms/shared";
 import { ContactCardInfoPills } from "./ContactCardSections";
 
-vi.mock("@/components/ui/DirectoryCardInfoPills", () => ({
-  DirectoryCardInfoPills: ({ phones, emails }: {
+vi.mock("@/components/ui/EntityCardInfoPills", () => ({
+  EntityCardInfoPills: ({ phones, emails }: {
     phones: Array<{ phoneDisplay: string }>;
     emails: Array<{ email: string }>;
   }) => (

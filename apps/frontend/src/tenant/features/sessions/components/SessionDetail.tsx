@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Wallet, UserCheck,
 } from "lucide-react";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import {
   DetailDrawerRestoreOrEditAction,
   DrawerSyncStatusFooter,
@@ -116,7 +116,7 @@ export const SessionDetail = (function SessionDetail({
       );
 
       return (
-        <DetailSheet
+        <Drawer
           onClose={onClose}
           title={session.name}
           subtitle={
@@ -189,7 +189,7 @@ export const SessionDetail = (function SessionDetail({
               </AnimatePresence>
             )}
           </div>
-        </DetailSheet>
+        </Drawer>
       );
     });
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { SubTabBadge, SubTabPillBadge } from "@/components/ui/SubTabBarBadge";
+import { SubTabBadge } from "@/components/ui/SubTabBarBadge";
 import {
   SubTabBarAccordionVariant,
   type SubTabBarAccordionVariantProps,
@@ -52,7 +52,7 @@ export function SubTabBarUnderlineVariant<K extends string>({
                 />
               )}
               <span>{tab.label}</span>
-              {tab.badge !== undefined && <SubTabBadge badge={tab.badge} active={active} />}
+              {tab.badge !== undefined && <SubTabBadge badge={tab.badge} active={active} interactive />}
               {active && (
                 <motion.div
                   layoutId={`${panelIdPrefix}-underline`}
@@ -98,7 +98,7 @@ export function SubTabBarPillVariant<K extends string>({
                 {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
                 <span className="truncate">{tab.label}</span>
               </span>
-              {tab.badge !== undefined && <SubTabPillBadge badge={tab.badge} active={active} />}
+              {tab.badge !== undefined && <SubTabBadge badge={tab.badge} active={active} />}
             </button>
           );
         })}
@@ -131,7 +131,7 @@ export function SubTabBarPillVariant<K extends string>({
                 />
               )}
               <span>{t.label}</span>
-              {t.badge !== undefined && <SubTabPillBadge badge={t.badge} active={active} />}
+              {t.badge !== undefined && <SubTabBadge badge={t.badge} active={active} />}
             </button>
           );
         })}

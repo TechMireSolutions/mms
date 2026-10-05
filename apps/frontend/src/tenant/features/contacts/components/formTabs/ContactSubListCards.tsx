@@ -1,14 +1,8 @@
 import React, { type ReactNode } from "react";
 import {
   FormCollectionShell,
-  FormListFieldCard,
   type FormCollectionShellProps,
-  type FormListFieldCardProps,
 } from "@/components/ui/FormPrimitives";
-
-export type { FormListFieldCardProps as ListFieldCardProps };
-/** Contact-local alias of the shared form list card SSOT. */
-export const ListFieldCard = FormListFieldCard;
 
 /** True when any Setup field for the sub-list is enabled or custom fields exist. */
 export function resolveSubListAllowAdd(

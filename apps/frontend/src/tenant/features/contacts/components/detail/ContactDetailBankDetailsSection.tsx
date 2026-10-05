@@ -2,7 +2,8 @@ import React from "react";
 import { Landmark, CreditCard } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DetailSection } from "./DetailSection";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -18,14 +19,14 @@ export function ContactDetailBankDetailsSection({
 
   if (bankDetails.length === 0) {
     return (
-      <DetailSection title={t("contacts.detail.bankDetails")}>
+      <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.bankDetails")}>
         <EmptyState compact icon={Landmark} title={t("contacts.detail.emptyBankDetails")} />
-      </DetailSection>
+      </DetailSectionCard>
     );
   }
 
   return (
-    <DetailSection title={t("contacts.detail.bankDetails")}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.bankDetails")}>
       {bankDetails.map((bank, idx) => {
         const copySummary = [bank.bankName, bank.accountTitle, bank.accountNumber]
           .filter(Boolean)
@@ -72,6 +73,6 @@ export function ContactDetailBankDetailsSection({
           </div>
         );
       })}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

@@ -1,12 +1,14 @@
 import type React from "react";
 import type { BulkSelectionMessageChannel } from "@/components/common/BulkActionDock";
 import type {
-  BulkSelectionPlacement,
-  BulkSelectionTone,
-} from "@/components/ui/BulkSelectionBar";
+  BulkActionDockPlacement,
+  BulkActionDockTone,
+} from "@/components/common/BulkActionDock";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
-export type { BulkSelectionPlacement, BulkSelectionTone, BulkSelectionMessageChannel };
+export type BulkSelectionPlacement = BulkActionDockPlacement;
+export type BulkSelectionTone = BulkActionDockTone;
+export type { BulkSelectionMessageChannel };
 
 export interface WorkActionTransition {
   id: string;

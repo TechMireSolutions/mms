@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Message } from '@mms/shared';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { notify } from '@/lib/notify';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -65,7 +65,7 @@ export const MessagingListCards = (function MessagingListCards({
 
   return (
     <div className="space-y-3">
-      <ModuleDirectoryCards
+      <EntityCardsGrid
         items={logs}
         selectedIds={selectedIdsArray}
         onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}

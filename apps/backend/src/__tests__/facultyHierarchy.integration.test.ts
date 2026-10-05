@@ -5,7 +5,8 @@ import { createFacultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 import {
   HierarchyValidationError,
   HierarchyCycleError,
-} from '../faculty/use-cases/facultyWriteUseCases.js';
+  validateReportingHierarchy,
+} from '../faculty/use-cases/facultyHierarchyValidator.js';
 import { SubordinateReassignmentError } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import type { Faculty } from '@mms/shared';
 import type { FacultyRepository } from '../faculty/repository/facultyRepository.js';
@@ -36,6 +37,11 @@ vi.mock('../faculty/use-cases/facultyHydrateUseCases.js', () => ({
 
 vi.mock('../services/outboxEventService.js', () => ({
   emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
+  cascadeSoftDeleteFacultyAssignments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock('../services/auth/authArtifactService.js', () => ({
@@ -138,22 +144,15 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
   }
 
   it('rejects supervisor assignment if supervisor has lower or equal authority rank', async () => {
-    // Rank 1 = Dean, Rank 2 = HoD, Rank 3 = Professor, Rank 4 = Lecturer
+    // Rank 1 = Dean, Rank 2 = HoD — person-level validation retained for legacy callers.
     const seed: Faculty[] = [
       { id: 'f-hod', hierarchyRank: 2, status: 'active', contactId: 'c1' },
       { id: 'f-dean', hierarchyRank: 1, status: 'active', contactId: 'c2' },
     ];
     const { repo } = createMockFacultyRepo(seed);
-    const useCases = createFacultyUseCases(repo);
 
-    // Attempt to make Dean report to HoD (Dean rank 1 <= HoD rank 2 => violation)
     await expect(
-      useCases.createFaculty({
-        contactId: 'c3',
-        status: 'active',
-        hierarchyRank: 1,
-        reportingFacultyId: 'f-hod',
-      }),
+      validateReportingHierarchy('demo', undefined, 1, 'f-hod', repo),
     ).rejects.toThrow(HierarchyValidationError);
   });
 
@@ -162,12 +161,9 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
       { id: 'f-prof', hierarchyRank: 3, status: 'active', contactId: 'c1' },
     ];
     const { repo } = createMockFacultyRepo(seed);
-    const useCases = createFacultyUseCases(repo);
 
     await expect(
-      useCases.updateFacultyById('f-prof', {
-        reportingFacultyId: 'f-prof',
-      }),
+      validateReportingHierarchy('demo', 'f-prof', 3, 'f-prof', repo),
     ).rejects.toThrow(HierarchyCycleError);
   });
 
@@ -178,14 +174,9 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
       { id: 'f-c', hierarchyRank: 3, reportingFacultyId: 'f-b', status: 'active', contactId: 'c3' },
     ];
     const { repo } = createMockFacultyRepo(seed);
-    const useCases = createFacultyUseCases(repo);
 
-    // Attempting to make f-a report to f-c (would form cycle: a -> c -> b -> a)
     await expect(
-      useCases.updateFacultyById('f-a', {
-        hierarchyRank: 4, // Adjust rank so rank check passes, but cycle detection triggers
-        reportingFacultyId: 'f-c',
-      }),
+      validateReportingHierarchy('demo', 'f-a', 4, 'f-c', repo),
     ).rejects.toThrow(HierarchyCycleError);
   });
 

@@ -2,11 +2,10 @@ import React, { type ReactNode } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkCardAction, type UseWorkCardActionReturn } from "@/hooks/useWorkCardAction";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardInfoPills, type DirectoryCardInfoPillsProps } from "@/components/ui/DirectoryCardInfoPills";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardInfoPills, type EntityCardInfoPillsProps } from "@/components/ui/EntityCardInfoPills";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 
 export interface DirectoryCardHeaderConfig {
@@ -22,7 +21,7 @@ export interface DirectoryCardProps<
   TColumn extends { label: string } = { label: string },
 > {
   entity: TEntity;
-  /** Config for standard DirectoryCardHeader. Optional if headerSlot is provided. */
+  /** Config for standard EntityCard.Header. Optional if headerSlot is provided. */
   header?: DirectoryCardHeaderConfig;
   /** Custom header component replacement. */
   headerSlot?: ReactNode;
@@ -37,7 +36,7 @@ export interface DirectoryCardProps<
   actionState?: UseWorkCardActionReturn<TEntity>;
 
   /** Optional contact action pills (phones, emails, WhatsApp/SMS triggers). */
-  infoPills?: Omit<DirectoryCardInfoPillsProps, "displayName">;
+  infoPills?: Omit<EntityCardInfoPillsProps, "displayName">;
 
   /** Declarative entity descriptor for SSOT metadata tile rendering. */
   descriptor?: EntityDescriptor<TEntity>;
@@ -52,12 +51,12 @@ export interface DirectoryCardProps<
 
   /** Optional archive or status banner. */
   banner?: ReactNode;
-  /** Custom metadata slot when DirectoryCardMetadata cannot be used. */
+  /** Custom metadata slot when EntityCardMetadata cannot be used. */
   metadataSlot?: ReactNode;
   /** Custom additional body content. */
   children?: ReactNode;
 
-  /** Fully custom footer replacement. When omitted, standard DirectoryCardFooterActions is rendered. */
+  /** Fully custom footer replacement. When omitted, standard EntityCardFooterActions is rendered. */
   footer?: ReactNode;
   /** Label for primary view button (defaults to localized "View"). */
   viewLabel?: string;
@@ -74,8 +73,8 @@ export interface DirectoryCardProps<
 /**
  * Unified Work-directory entity card component.
  *
- * Combines useWorkCardAction, DirectoryEntityCard, DirectoryCardHeader,
- * DirectoryCardMetadata, and DirectoryCardFooterActions into a declarative,
+ * Combines useWorkCardAction, EntityCard, EntityCard.Header,
+ * EntityCardMetadata, and EntityCardFooterActions into a declarative,
  * accessible, and token-consistent primitive.
  */
 export function DirectoryCard<
@@ -131,7 +130,7 @@ export function DirectoryCard<
     viewAriaLabel ?? `${defaultViewLabel} - ${displayName}`;
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       isSelected={action.isSelected}
       reducedMotion={effectiveReducedMotion}
       accentClassName={accentClassName}
@@ -139,7 +138,7 @@ export function DirectoryCard<
       {...action.cardProps}
     >
       {headerSlot ?? (header ? (
-        <DirectoryCardHeader
+        <EntityCard.Header
           id={entity.id}
           displayName={header.displayName}
           avatar={header.avatar}
@@ -156,7 +155,7 @@ export function DirectoryCard<
       ) : null)}
 
       {infoPills ? (
-        <DirectoryCardInfoPills
+        <EntityCardInfoPills
           displayName={displayName}
           {...infoPills}
         />
@@ -164,7 +163,7 @@ export function DirectoryCard<
 
       {metadataSlot ?? (
         descriptor || columns ? (
-          <DirectoryCardMetadata
+          <EntityCardMetadata
             descriptor={descriptor}
             entity={entity}
             isColumnVisible={isColumnVisible}
@@ -180,7 +179,7 @@ export function DirectoryCard<
       {children}
 
       {footer ?? (
-        <DirectoryCardFooterActions
+        <EntityCardFooterActions
           onView={onView ? action.onView : undefined}
           viewLabel={viewLabel}
           viewAriaLabel={effectiveViewAriaLabel}
@@ -189,6 +188,6 @@ export function DirectoryCard<
           overflowActions={overflowActions}
         />
       )}
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

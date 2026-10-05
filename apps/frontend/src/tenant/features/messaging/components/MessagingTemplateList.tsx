@@ -5,8 +5,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
@@ -102,7 +102,7 @@ export const MessagingTemplateList = (function MessagingTemplateList({
         filters={filters}
         renderRowActions={renderActions}
         renderCard={(template) => (
-          <DirectoryEntityCard className="space-y-3 p-4">
+          <EntityCard className="space-y-3 p-4">
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
                 <h4 className="truncate text-sm font-semibold text-foreground">{templateLabel(template)}</h4>
@@ -118,8 +118,8 @@ export const MessagingTemplateList = (function MessagingTemplateList({
               <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
               <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap">{template.body}</p>
             </div>
-            <DirectoryCardFooterActions actions={renderActions(template)} />
-          </DirectoryEntityCard>
+            <EntityCardFooterActions actions={renderActions(template)} />
+          </EntityCard>
         )}
         emptyState={<EmptyState title={t("messaging.noTemplates")} compact variant="dashed" />}
       />

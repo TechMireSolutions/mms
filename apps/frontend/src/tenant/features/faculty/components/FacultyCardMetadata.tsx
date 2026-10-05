@@ -1,5 +1,5 @@
 import type { Faculty, FacultyCustomField, ModuleColumnRegistryEntry } from "@mms/shared";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -51,7 +51,7 @@ export function FacultyCardMetadata({
       : undefined;
 
   return (
-    <DirectoryCardMetadata
+    <EntityCardMetadata
       descriptor={descriptor}
       entity={faculty}
       isColumnVisible={isColumnVisible}

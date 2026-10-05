@@ -25,8 +25,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
-vi.mock("@/hooks/useTrashMode", () => ({
-  useTrashMode: () => React.useState(false),
+vi.mock("@/hooks/useDirectoryTrashState", () => ({
+  useDirectoryTrashState: () => React.useState(false),
 }));
 
 vi.mock("@/tenant/features/obligations/hooks/useObligationsApi", () => ({

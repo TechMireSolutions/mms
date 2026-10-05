@@ -1,10 +1,10 @@
 import { Download, Loader2, Mail, MessageCircle, MessageSquare, RotateCcw, type LucideIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import {
-  bulkSelectionActionClassName,
-  bulkSelectionDeleteClassName,
-  bulkSelectionRestoreClassName,
-} from "@/components/ui/BulkSelectionBar";
+  bulkActionDockActionClassName,
+  bulkActionDockDeleteClassName,
+  bulkActionDockRestoreClassName,
+} from "@/components/ui/bulkActionDockStyles";
 import { Button } from "@/components/ui/button";
 
 export type BulkSelectionMessageChannel = "whatsapp" | "sms" | "email";
@@ -35,7 +35,7 @@ export function BulkSelectionMessagingActions({
           type="button"
           variant="outline"
           onClick={() => onChannel("whatsapp")}
-          className={bulkSelectionActionClassName}
+          className={bulkActionDockActionClassName}
         >
           <MessageCircle className="w-3.5 h-3.5 text-success" /> {labels.whatsapp}
         </Button>
@@ -45,7 +45,7 @@ export function BulkSelectionMessagingActions({
           type="button"
           variant="outline"
           onClick={() => onChannel("sms")}
-          className={bulkSelectionActionClassName}
+          className={bulkActionDockActionClassName}
         >
           <MessageSquare className="w-3.5 h-3.5 text-info" /> {labels.sms}
         </Button>
@@ -55,7 +55,7 @@ export function BulkSelectionMessagingActions({
           type="button"
           variant="outline"
           onClick={() => onChannel("email")}
-          className={bulkSelectionActionClassName}
+          className={bulkActionDockActionClassName}
         >
           <Mail className="w-3.5 h-3.5 text-primary" /> {labels.email}
         </Button>
@@ -86,7 +86,7 @@ export function BulkSelectionExportAction({
       onClick={() => {
         void onClick();
       }}
-      className={bulkSelectionActionClassName}
+      className={bulkActionDockActionClassName}
     >
       {isPending ? (
         <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
@@ -113,7 +113,7 @@ export function BulkSelectionRestoreAction({
       type="button"
       variant="outline"
       onClick={onClick}
-      className={bulkSelectionRestoreClassName}
+      className={bulkActionDockRestoreClassName}
     >
       <RotateCcw className="w-3.5 h-3.5" /> {label}
     </Button>
@@ -138,7 +138,7 @@ export function BulkSelectionDeleteAction({
       type="button"
       variant="destructive"
       onClick={onClick}
-      className={bulkSelectionDeleteClassName}
+      className={bulkActionDockDeleteClassName}
     >
       {Icon ? <Icon className="w-3.5 h-3.5" aria-hidden /> : null}
       {label}

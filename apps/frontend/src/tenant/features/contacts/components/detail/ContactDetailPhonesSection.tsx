@@ -4,7 +4,9 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactPhoneFull, resolvePhoneLabel } from "@/lib/contacts/contactI18n";
-import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
+import { CollectionRowItem } from "./ContactDetailShared";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import {
   DetailCollectionEmpty,
   withPrimaryPhone,
@@ -32,7 +34,7 @@ export function ContactDetailPhonesSection({
   const phones = contact.phones && contact.phones.length > 0 ? contact.phones : [];
 
   return (
-    <DetailSection title={t("contacts.form.phonesLabel")}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.form.phonesLabel")}>
       {phones.length === 0 ? (
         <DetailCollectionEmpty title={t("contacts.detail.emptyPhones")} />
       ) : (
@@ -74,6 +76,6 @@ export function ContactDetailPhonesSection({
           );
         })
       )}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

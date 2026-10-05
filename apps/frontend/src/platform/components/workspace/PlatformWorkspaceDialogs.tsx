@@ -7,7 +7,8 @@ import {
   useResetWorkspaceAdminPassword,
   useCreateWorkspaceAdmin,
 } from '@/platform/hooks/usePlatformWorkspaces';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
+import { EntityDescriptorSections } from '@/components/ui/EntityDescriptorSections';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import type { useWorkspaceDeleteState } from '@/platform/components/workspace/useWorkspaceDeleteState';
@@ -53,6 +54,7 @@ export function PlatformWorkspaceDialogs({
 
   const resetAdminPasswordMutation = useResetWorkspaceAdminPassword();
   const createAdminMutation = useCreateWorkspaceAdmin();
+  const inspect = modalState.inspectWorkspace;
 
   return (
     <>
@@ -106,14 +108,19 @@ export function PlatformWorkspaceDialogs({
         />
       ) : null}
 
-      <DetailSheet<PlatformWorkspaceRowData>
-        open={Boolean(modalState.inspectWorkspace)}
+      <Drawer
+        open={Boolean(inspect)}
         onClose={modalState.handleCloseInspect}
-        entityType="platformWorkspaces"
-        descriptor={descriptor}
-        entity={modalState.inspectWorkspace ?? undefined}
-        title={modalState.inspectWorkspace?.madrasaName ?? 'Workspace'}
-      />
+        title={inspect?.madrasaName ?? 'Workspace'}
+      >
+        {inspect ? (
+          <EntityDescriptorSections
+            entity={inspect}
+            entityType="platformWorkspaces"
+            descriptor={descriptor}
+          />
+        ) : null}
+      </Drawer>
     </>
   );
 }

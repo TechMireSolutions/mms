@@ -20,11 +20,16 @@ export async function validatePositionOccupancy(
   }
   const occupied = await tx.execute<{ peak: number }>(sql`
     WITH intervals AS (
-      SELECT start_date, end_date FROM faculty_assignments
-      WHERE workspace_subdomain = ${tenant} AND position_id = ${position.id}
-        AND id <> ${input.id} AND deleted_at IS NULL
-        AND start_date <= COALESCE(${input.endDate ?? null}::date, 'infinity'::date)
-        AND COALESCE(end_date, 'infinity'::date) >= ${input.startDate}::date
+      SELECT a.start_date, a.end_date
+      FROM faculty_assignments a
+      JOIN faculty f
+        ON f.workspace_subdomain = a.workspace_subdomain
+        AND f.id = a.faculty_id
+        AND f.deleted_at IS NULL
+      WHERE a.workspace_subdomain = ${tenant} AND a.position_id = ${position.id}
+        AND a.id <> ${input.id} AND a.deleted_at IS NULL
+        AND a.start_date <= COALESCE(${input.endDate ?? null}::date, 'infinity'::date)
+        AND COALESCE(a.end_date, 'infinity'::date) >= ${input.startDate}::date
       UNION ALL SELECT ${input.startDate}::date, ${input.endDate ?? null}::date
     ), events AS (
       SELECT start_date AS day, 1 AS change FROM intervals

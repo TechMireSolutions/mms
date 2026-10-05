@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Contact } from "@mms/shared";
 import { ContactDetail } from "./ContactDetail";
 
-vi.mock("@/components/ui/DetailDrawerShell", () => ({
-  DetailDrawerShell: ({ title, children, headerActions, headerExtra }: {
+vi.mock("@/components/ui/Drawer", () => ({
+  Drawer: ({ title, children, headerActions, headerExtra }: {
     title: string;
     children: React.ReactNode;
     headerActions?: React.ReactNode;

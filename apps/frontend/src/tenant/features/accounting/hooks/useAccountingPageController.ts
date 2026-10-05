@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useAccountingPageShortcuts } from "@/tenant/features/accounting/hooks/useAccountingPageShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useTrashMode } from "@/hooks/useTrashMode";
+import { useDirectoryTrashState } from "@/hooks/useDirectoryTrashState";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
@@ -51,7 +51,7 @@ export function useAccountingPageController() {
   }));
   const [activeTab, setActiveTab] = usePersistedTabState<string>("accounting_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [createJournalRequestKey, setCreateJournalRequestKey] = useState(0);
 
   const accountsResult = useAllAccountingAccounts({ includeDeleted: false });

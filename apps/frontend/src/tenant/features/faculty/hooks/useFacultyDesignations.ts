@@ -5,6 +5,7 @@ import {
   type FacultyDesignationWrite,
 } from '@mms/shared';
 import { apiContract } from '@/lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 import { FACULTY_QUERY_KEY } from './facultyQueryKeys';
 
 export const FACULTY_DESIGNATIONS_QUERY_KEY = [...FACULTY_QUERY_KEY, 'designations'] as const;
@@ -13,6 +14,7 @@ const fallbackQueryClient = new QueryClient();
 
 /** Server-authoritative dynamic designation definitions. */
 export function useFacultyDesignations(options: { includeDeleted?: boolean } = {}) {
+  const { t } = useTranslation();
   const includeDeleted = Boolean(options.includeDeleted);
   return useQuery({
     queryKey: [...FACULTY_DESIGNATIONS_QUERY_KEY, { includeDeleted }] as const,
@@ -21,9 +23,9 @@ export function useFacultyDesignations(options: { includeDeleted?: boolean } = {
         query: includeDeleted ? { includeDeleted: true } : undefined,
         fetchOptions: { signal },
       });
-      if (response.status !== 200) throw new Error('Failed to load Faculty designations');
+      if (response.status !== 200) throw new Error(t('faculty.errors.loadDesignations'));
       const parsed = facultyDesignationSchema.array().safeParse((response.body as { designations?: unknown }).designations);
-      if (!parsed.success) throw new Error('Invalid Faculty designation response');
+      if (!parsed.success) throw new Error(t('faculty.errors.invalidDesignationsResponse'));
       return parsed.data;
     },
     staleTime: 30_000,

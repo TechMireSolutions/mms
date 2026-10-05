@@ -4,6 +4,7 @@ import { type Contact, getDisplayName, getContactTags } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactIdentityMeta } from "../ContactIdentityMeta";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
+import { DetailNotesBlock } from "@/components/ui/DetailNotesBlock";
 import { Badge } from "@/components/ui/badge";
 import { getGenderCardAccent } from "@/lib/genderUi";
 
@@ -58,20 +59,7 @@ export function ContactDetailHeroCard({
         </div>
       ) : null}
 
-      {notes ? (
-        <div className="space-y-2">
-          <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            {t("contacts.columns.notes")}
-          </div>
-          <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">
-            {notes}
-          </div>
-        </div>
-      ) : null}
+      {notes ? <DetailNotesBlock title={t("contacts.columns.notes")} notes={notes} /> : null}
     </>
   );
 }
-
-/** Backward-compatible alias for existing consumers. */
-export type ContactDetailOverviewHeroProps = ContactDetailHeroCardProps;
-export const ContactDetailOverviewHero = ContactDetailHeroCard;

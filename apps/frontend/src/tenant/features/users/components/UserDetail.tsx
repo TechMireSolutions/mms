@@ -9,7 +9,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import {
   DetailDrawerArchivedBanner,
   DetailDrawerRestoreOrEditAction,
@@ -82,19 +82,11 @@ export function UserDetail({
 
   return (
     <>
-      <DetailSheet
+      <Drawer
         onClose={onClose}
         title={user.name}
         subtitle={isArchived ? t('users.detail.archivedSubtitle') : user.email}
         icon={Shield}
-        archiveState={{
-          isDeleted: isArchived,
-          deletedAt: user.deletedAt,
-          canRestore: canDelete && canManageThisUser,
-          onRestore: onRestore ? () => void onRestore(String(user.id)) : undefined,
-          restoreLabel: t('users.trash.restore'),
-          recordTitle: user.name,
-        }}
         headerActions={
           <DetailDrawerRestoreOrEditAction
             isArchived={isArchived}
@@ -130,7 +122,7 @@ export function UserDetail({
           onVerifyEmail={() => void handleVerifyEmail()}
           verifyEmailPending={verifyEmailMutation.isPending}
         />
-      </DetailSheet>
+      </Drawer>
 
       {messagingTarget && (
         <Suspense fallback={null}>

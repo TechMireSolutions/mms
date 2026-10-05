@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PlatformAdminsListCards, PlatformAdminListCards } from './PlatformAdminsListCards';
+import { PlatformAdminsListCards } from './PlatformAdminsListCards';
 import {
   DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
   FULL_PLATFORM_ADMIN_PERMISSIONS,
@@ -67,9 +67,5 @@ describe('PlatformAdminsListCards Component', () => {
     expect(html).toContain('Jane Super');
     expect(html).toContain('Bob Operator');
     expect(html).toContain('platform.profileMemberSince');
-  });
-
-  it('exports backward-compatible PlatformAdminListCards alias', () => {
-    expect(PlatformAdminListCards).toBe(PlatformAdminsListCards);
   });
 });

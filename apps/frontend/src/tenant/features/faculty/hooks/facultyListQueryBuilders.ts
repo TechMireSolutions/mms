@@ -28,6 +28,11 @@ export function buildFacultyPageUrl(params: FacultyPaginatedParams): string {
   if (params.quickFilter && params.quickFilter !== 'all') queryParams.set('quickFilter', params.quickFilter);
   if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
   if (params.sortDir?.trim()) queryParams.set('sortDir', params.sortDir.trim());
+  if (params.department?.trim()) queryParams.set('department', params.department.trim());
+  if (params.designation?.trim()) queryParams.set('designation', params.designation.trim());
+  if (params.reportingFacultyId?.trim()) {
+    queryParams.set('reportingFacultyId', params.reportingFacultyId.trim());
+  }
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${FACULTY_API}?${queryParams.toString()}`;
 }
@@ -43,6 +48,9 @@ export function facultyListQueryKeyParams(params: FacultyPaginatedParams) {
     quickFilter: params.quickFilter && params.quickFilter !== 'all' ? params.quickFilter : 'all',
     sortField: params.sortField?.trim() || '',
     sortDir: params.sortDir?.trim() || '',
+    department: params.department?.trim() || '',
+    designation: params.designation?.trim() || '',
+    reportingFacultyId: params.reportingFacultyId?.trim() || '',
     includeDeleted: Boolean(params.includeDeleted),
   } as const;
 }
@@ -66,6 +74,9 @@ export function sameFacultyListFilters(
     previous.includeDeleted === next.includeDeleted &&
     previous.sortField === next.sortField &&
     previous.sortDir === next.sortDir &&
+    previous.department === next.department &&
+    previous.designation === next.designation &&
+    previous.reportingFacultyId === next.reportingFacultyId &&
     previous.limit === next.limit
   );
 }

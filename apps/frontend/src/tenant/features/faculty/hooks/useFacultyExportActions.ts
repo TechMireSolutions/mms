@@ -22,6 +22,9 @@ export interface UseFacultyExportActionsOptions {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment: string;
+  filterDesignation: string;
+  filterReportingFacultyId: string;
   quickFilter: FacultyQuickFilter;
   sortField: FacultySortField | null;
   sortDir: "asc" | "desc";
@@ -45,6 +48,9 @@ export function useFacultyExportActions({
   filterStatus,
   filterSpecialization,
   filterGender,
+  filterDepartment,
+  filterDesignation,
+  filterReportingFacultyId,
   quickFilter,
   sortField,
   sortDir,
@@ -61,6 +67,9 @@ export function useFacultyExportActions({
       filterStatus,
       filterSpecialization,
       filterGender,
+      filterDepartment,
+      filterDesignation,
+      filterReportingFacultyId,
       quickFilter,
       sortField,
       sortDir,

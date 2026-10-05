@@ -28,6 +28,7 @@ describe("facultyFormDesignationDraft", () => {
         department: "A",
         departmentId: "dept-a",
         designationId: "des-1",
+        positionId: "",
         status: "inactive",
         startsOn: "2026-01-01",
         endsOn: "",
@@ -37,6 +38,7 @@ describe("facultyFormDesignationDraft", () => {
         department: "B",
         departmentId: "dept-b",
         designationId: "des-2",
+        positionId: "pos-2",
         status: "active",
         startsOn: "2026-02-01",
         endsOn: "",
@@ -46,6 +48,7 @@ describe("facultyFormDesignationDraft", () => {
         department: "C",
         departmentId: "dept-c",
         designationId: "des-3",
+        positionId: "",
         status: "active",
         startsOn: "2026-03-01",
         endsOn: "2026-12-31",
@@ -63,6 +66,7 @@ describe("facultyFormDesignationDraft", () => {
       {
         designationId: "des-2",
         departmentId: "dept-b",
+        positionId: "pos-2",
         status: "active",
         startsOn: "2026-02-01",
         endsOn: null,
@@ -87,6 +91,7 @@ describe("facultyFormDesignationDraft", () => {
           department: "Fiqh",
           departmentId: "dept-1",
           designationId: "des-1",
+          positionId: "pos-1",
           status: "active",
           startsOn: "2026-01-01",
           endsOn: "",
@@ -96,6 +101,7 @@ describe("facultyFormDesignationDraft", () => {
           department: "Hadith",
           departmentId: "dept-2",
           designationId: "des-2",
+          positionId: "",
           status: "inactive",
           startsOn: "2026-02-01",
           endsOn: "",
@@ -112,6 +118,7 @@ describe("facultyFormDesignationDraft", () => {
     expect(patch.designation).toBe("Principal");
     expect(patch.departmentId).toBe("dept-1");
     expect(patch.department).toBe("Fiqh");
+    expect(patch.positionId).toBe("pos-1");
     expect(patch.designationAssignableRoles).toEqual(["admin"]);
     expect(patch.designations).toHaveLength(2);
   });
@@ -124,6 +131,7 @@ describe("facultyFormDesignationDraft", () => {
           department: "",
           departmentId: "",
           designationId: "des-1",
+          positionId: "",
           status: "active",
           startsOn: "2026-01-01",
           endsOn: "",

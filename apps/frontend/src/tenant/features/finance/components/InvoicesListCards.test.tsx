@@ -66,7 +66,7 @@ describe("InvoicesListCards", () => {
     const html = renderToStaticMarkup(
       <InvoicesListCards {...baseProps} selectedIds={["INV-001"]} />,
     );
-    // DirectoryEntityCard applies border-primary/50 for selected
+    // EntityCard applies border-primary/50 for selected
     expect(html).toContain("border-primary/50");
   });
 

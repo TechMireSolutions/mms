@@ -43,6 +43,8 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
       'name',
       'employeeId',
       'designation',
+      'department',
+      'reportingFacultyName',
       'specialization',
       'status',
       'qualification',

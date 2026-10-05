@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
-import { buildFacultyWorkFilterChips } from "@/tenant/features/faculty/components/buildFacultyWorkFilterChips";
+import { useDescriptorFilterChips } from "@/components/common/useDescriptorFilterChips";
 import { computeFacultySelectionTargets } from "@/tenant/features/faculty/hooks/facultySelectionTargets";
+import { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useFacultyEntityDescriptor";
 import { useFacultyStatusConfig } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
-import { useTranslation } from "@/hooks/useTranslation";
 import type { Faculty, FacultySortField } from "@mms/shared";
 import type { FilterChip } from "@/components/ui/FilterChips";
 
@@ -10,9 +10,16 @@ export interface UseFacultyWorkTierActionsProps {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment: string;
+  filterDesignation: string;
+  filterReportingFacultyId: string;
+  supervisorFilterOptions: Array<{ value: string; label: string }>;
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
   onGenderChange: (value: string) => void;
+  onDepartmentChange: (value: string) => void;
+  onDesignationChange: (value: string) => void;
+  onReportingFacultyChange: (value: string) => void;
   sortField: FacultySortField;
   sortDir: "asc" | "desc";
   onSortChange: (field: FacultySortField, dir: "asc" | "desc") => void;
@@ -35,14 +42,20 @@ export interface UseFacultyWorkTierActionsReturn {
 export function useFacultyWorkTierActions(
   props: UseFacultyWorkTierActionsProps,
 ): UseFacultyWorkTierActionsReturn {
-  const { t } = useTranslation();
   const {
     filterStatus,
     filterSpecialization,
     filterGender,
+    filterDepartment,
+    filterDesignation,
+    filterReportingFacultyId,
+    supervisorFilterOptions,
     onToggleStatus,
     onSpecializationChange,
     onGenderChange,
+    onDepartmentChange,
+    onDesignationChange,
+    onReportingFacultyChange,
     sortField,
     sortDir,
     onSortChange,
@@ -52,19 +65,59 @@ export function useFacultyWorkTierActions(
     onClearSelection,
   } = props;
 
-  const filterChips = useMemo(
-    () =>
-      buildFacultyWorkFilterChips({
-        filterStatus,
-        filterSpecialization,
-        filterGender,
-        onToggleStatus,
-        onSpecializationChange,
-        onGenderChange,
-        t,
-      }),
-    [filterStatus, filterSpecialization, filterGender, onToggleStatus, onSpecializationChange, onGenderChange, t],
+  const descriptor = useFacultyEntityDescriptor();
+
+  const supervisorFilterLabel = useMemo(() => {
+    if (!filterReportingFacultyId) return "";
+    return (
+      supervisorFilterOptions.find((option) => option.value === filterReportingFacultyId)?.label ??
+      filterReportingFacultyId
+    );
+  }, [filterReportingFacultyId, supervisorFilterOptions]);
+
+  const activeFilters = useMemo(
+    () => ({
+      status: filterStatus.length > 0 ? filterStatus : undefined,
+      specialization:
+        filterSpecialization && filterSpecialization !== "all" ? filterSpecialization : undefined,
+      gender: filterGender && filterGender !== "all" ? filterGender : undefined,
+      department: filterDepartment || undefined,
+      designation: filterDesignation || undefined,
+      reportingFacultyName: supervisorFilterLabel || undefined,
+    }),
+    [
+      filterStatus,
+      filterSpecialization,
+      filterGender,
+      filterDepartment,
+      filterDesignation,
+      supervisorFilterLabel,
+    ],
   );
+
+  const onRemoveChip = useCallback(
+    (fieldKey: string, value?: string) => {
+      if (fieldKey === "status" && value) {
+        onToggleStatus(value);
+        return;
+      }
+      if (fieldKey === "specialization") onSpecializationChange("");
+      if (fieldKey === "gender") onGenderChange("");
+      if (fieldKey === "department") onDepartmentChange("");
+      if (fieldKey === "designation") onDesignationChange("");
+      if (fieldKey === "reportingFacultyName") onReportingFacultyChange("");
+    },
+    [
+      onToggleStatus,
+      onSpecializationChange,
+      onGenderChange,
+      onDepartmentChange,
+      onDesignationChange,
+      onReportingFacultyChange,
+    ],
+  );
+
+  const filterChips = useDescriptorFilterChips(descriptor, activeFilters, onRemoveChip);
 
   const statusConfig = useFacultyStatusConfig();
 
@@ -122,4 +175,3 @@ export function useFacultyWorkTierActions(
     handleSortFieldChange,
   };
 }
-

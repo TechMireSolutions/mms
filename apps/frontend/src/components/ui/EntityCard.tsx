@@ -4,18 +4,9 @@ import { FORM_CARD } from "@/components/ui/formStyles";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { cn } from "@/lib/utils";
-import {
-  DirectoryCardHeader,
-  type DirectoryCardHeaderProps,
-} from "./DirectoryCardHeader";
-import {
-  DirectoryCardMetaGrid,
-  type DirectoryCardMetaGridProps,
-} from "./DirectoryCardMetaGrid";
-import {
-  DirectoryCardFooter,
-  type DirectoryCardFooterProps,
-} from "./DirectoryCardFooter";
+import { EntityCardHeader, type EntityCardHeaderProps } from "./EntityCardHeader";
+import { EntityCardMetaGrid, type EntityCardMetaGridProps } from "./EntityCardMetaGrid";
+import { EntityCardFooter, type EntityCardFooterProps } from "./EntityCardFooter";
 
 export const entityCardVariants = {
   hidden: { opacity: 0, y: 8 },
@@ -89,13 +80,9 @@ const EntityCardBase = memo(function EntityCardBase({
 });
 
 export const EntityCard = Object.assign(EntityCardBase, {
-  Header: DirectoryCardHeader,
-  MetaGrid: DirectoryCardMetaGrid,
-  Footer: DirectoryCardFooter,
+  Header: EntityCardHeader,
+  MetaGrid: EntityCardMetaGrid,
+  Footer: EntityCardFooter,
 });
 
-export type {
-  DirectoryCardHeaderProps as EntityCardHeaderProps,
-  DirectoryCardMetaGridProps as EntityCardMetaGridProps,
-  DirectoryCardFooterProps as EntityCardFooterProps,
-};
+export type { EntityCardHeaderProps, EntityCardMetaGridProps, EntityCardFooterProps };

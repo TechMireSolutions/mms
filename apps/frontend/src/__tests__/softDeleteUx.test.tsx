@@ -5,7 +5,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 
-import { useTrashMode } from "@/hooks/useTrashMode";
 import { useDirectoryTrashState } from "@/hooks/useDirectoryTrashState";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
@@ -68,7 +67,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
       let currentSearch = "";
 
       function TestComponent() {
-        const [viewing, setViewing] = useTrashMode();
+        const [viewing, setViewing] = useDirectoryTrashState();
         viewingDeleted = viewing;
         setViewingDeleted = setViewing;
         currentSearch = useLocation().search;

@@ -1,7 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 import { normalizeStoredFaculty, stripFacultyWriteNoise } from './facultyUtils.js';
-
 /** Faculty status write bound — matches lookup item max length. */
 export const FACULTY_STATUS_WRITE_MAX = 200;
 
@@ -21,11 +20,16 @@ export const facultyCoreSchema = z.object({
   ),
   employeeId: z.string().optional(),
   specialization: z.string().optional(),
+  /** Read projection from primary assignment — not persisted on faculty. */
   department: z.string().optional(),
+  /** Read projection from primary assignment — not persisted on faculty. */
   designation: z.string().optional(),
+  /** Create-only bootstrap: custom designation label before catalog id exists. */
   customDesignation: z.string().trim().optional(),
+  /** Read projection via organization_positions parent — not persisted on faculty. */
   reportingFacultyId: z.string().nullable().optional(),
-  hierarchyRank: z.coerce.number().int().min(1).max(99).optional().default(10),
+  /** Read projection from designation catalog via primary assignment. */
+  hierarchyRank: z.coerce.number().int().min(1).max(99).optional(),
   reportingFacultyName: z.string().optional(),
   subordinateCount: z.coerce.number().int().min(0).optional(),
   status: z.string().min(1).max(FACULTY_STATUS_WRITE_MAX).optional(),

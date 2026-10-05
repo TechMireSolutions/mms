@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { StudentArchivedBanner } from "@/tenant/features/students/components/Stu
 import { StudentDetailContactSection } from "@/tenant/features/students/components/StudentDetailContactSection";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHeroCard } from "@/tenant/features/students/components/StudentDetailHeroCard";
-import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
+import { DetailNotesBlock } from "@/components/ui/DetailNotesBlock";
 import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
 import { StudentDetailRelationsSection } from "@/tenant/features/students/components/StudentDetailRelationsSection";
 import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
@@ -113,7 +113,7 @@ export const StudentDetail = (function StudentDetail({
     ))();
 
   return (
-    <DetailSheet
+    <Drawer
       onClose={onClose}
       title={t("students.detail.title")}
       subtitle={
@@ -165,7 +165,9 @@ export const StudentDetail = (function StudentDetail({
         />
       )}
 
-      {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
+      {showNotesSection && student.notes ? (
+        <DetailNotesBlock title={t("students.form.notesSection")} notes={student.notes} />
+      ) : null}
 
       <StudentDetailSiblingsSection
         siblings={siblings}
@@ -185,7 +187,7 @@ export const StudentDetail = (function StudentDetail({
         loading={sessionsLoading}
         error={sessionsError}
       />
-    </DetailSheet>
+    </Drawer>
   );
 });
 

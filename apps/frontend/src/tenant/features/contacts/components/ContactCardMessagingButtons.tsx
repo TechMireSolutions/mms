@@ -1,6 +1,6 @@
 import type React from "react";
 import { type Contact, hasWhatsApp } from "@mms/shared";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface HasContactCardFaceChannelsParams {
@@ -56,7 +56,7 @@ export function ContactCardMessagingButtons({
   const { t } = useTranslation();
 
   return (
-    <EntityMessagingIconActions
+    <EntityMessagingActions variant="icon-row"
       primaryPhone={phone}
       primaryEmail={email}
       showArchived={showArchived}

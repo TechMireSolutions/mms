@@ -1,9 +1,6 @@
 import {
-  Award,
-  Building2,
   Download,
   Upload,
-  UserPlus,
 } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import {
@@ -26,21 +23,18 @@ export interface FacultyPageHeaderActionsProps {
   viewingDeleted: boolean;
   onExportEntity: (entity: FacultyIoEntity) => void;
   onImportEntity: (entity: FacultyIoEntity) => void;
-  onAddFaculty?: () => void;
-  onAddDepartment?: () => void;
-  onAddDesignation?: () => void;
 }
 
-/** Module-dashboard IO: Import/Export choosers for all three entities + three Adds. */
+/**
+ * Module-dashboard IO: Import/Export choosers for all three entities.
+ * Per-entity Add lives on {@link FacultyTabIoToolbar} (avoids duplicate Adds).
+ */
 export function FacultyPageHeaderActions({
   canExport,
   canWrite,
   viewingDeleted,
   onExportEntity,
   onImportEntity,
-  onAddFaculty,
-  onAddDepartment,
-  onAddDesignation,
 }: FacultyPageHeaderActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
   if (viewingDeleted) return null;
@@ -93,24 +87,6 @@ export function FacultyPageHeaderActions({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      ) : null}
-
-      {canWrite && onAddDepartment ? (
-        <ActionButton variant="ghost" icon={Building2} onClick={onAddDepartment}>
-          {t("faculty.setup.addDepartment")}
-        </ActionButton>
-      ) : null}
-
-      {canWrite && onAddDesignation ? (
-        <ActionButton variant="ghost" icon={Award} onClick={onAddDesignation}>
-          {t("faculty.designations.addDesignation")}
-        </ActionButton>
-      ) : null}
-
-      {canWrite && onAddFaculty ? (
-        <ActionButton variant="primary" icon={UserPlus} onClick={onAddFaculty}>
-          {t("action.addFaculty")}
-        </ActionButton>
       ) : null}
     </>
   );

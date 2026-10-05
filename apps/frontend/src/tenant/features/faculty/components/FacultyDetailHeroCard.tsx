@@ -1,8 +1,9 @@
 import React from "react";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
-import { EmployeeIdBadge } from "@/tenant/features/faculty/components/EmployeeIdBadge";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { getGenderCardAccent } from "@/lib/genderUi";
+import { useTranslation } from "@/hooks/useTranslation";
 import { resolveFacultyStatus, type Faculty } from "@mms/shared";
 
 export interface FacultyDetailHeroCardProps {
@@ -20,6 +21,8 @@ export function FacultyDetailHeroCard({
   statusConfig,
   showStatus,
 }: FacultyDetailHeroCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <PersonDetailHeroCard
       id={String(faculty.id)}
@@ -31,12 +34,11 @@ export function FacultyDetailHeroCard({
       {showStatus ? (
         <StatusBadge status={resolveFacultyStatus(faculty.status)} config={statusConfig} />
       ) : null}
-      <EmployeeIdBadge employeeId={faculty.employeeId} />
+      {faculty.employeeId ? (
+        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+          {t("faculty.employeeIdPrefix")}: {faculty.employeeId}
+        </FormFooterBadge>
+      ) : null}
     </PersonDetailHeroCard>
   );
 }
-
-/** Backward-compatible aliases for existing consumers. */
-export type FacultyDetailHeroProps = FacultyDetailHeroCardProps;
-export const FacultyDetailHero = FacultyDetailHeroCard;
-

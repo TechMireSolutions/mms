@@ -26,8 +26,8 @@ vi.mock("@/tenant/hooks/collections/students", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/DetailDrawerShell", () => ({
-  DetailDrawerShell: ({ title, subtitle, headerExtra, headerActions, children }: {
+vi.mock("@/components/ui/Drawer", () => ({
+  Drawer: ({ title, subtitle, headerExtra, headerActions, children }: {
     title: string;
     subtitle?: string;
     headerExtra?: React.ReactNode;

@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, foreignKey, varchar, numeric } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { faculty } from "./faculty.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 /**
@@ -42,7 +43,7 @@ export const sessionFaculty = pgTable('session_faculty', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   sessionId: text('session_id').notNull(),
-  facultyId: varchar('faculty_id', { length: 64 }).notNull(),
+  facultyId: text('faculty_id').notNull(),
   facultyName: varchar('faculty_name', { length: 255 }).notNull().default(''),
   role: varchar('role', { length: 100 }).notNull().default('coordinator'),
   status: varchar('status', { length: 50 }).notNull().default('active'),
@@ -53,6 +54,10 @@ export const sessionFaculty = pgTable('session_faculty', {
     columns: [table.workspaceSubdomain, table.sessionId],
     foreignColumns: [sessions.workspaceSubdomain, sessions.id],
   }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.facultyId],
+    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
+  }).onDelete('restrict'),
   index('session_faculty_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
   index('session_faculty_workspace_faculty_idx').on(table.workspaceSubdomain, table.facultyId),
 ]);
@@ -73,7 +78,7 @@ export const sessionClasses = pgTable('session_classes', {
   enrolled: integer('enrolled').notNull().default(0),
   enrollmentDeadline: varchar('enrollment_deadline', { length: 35 }).notNull().default(''),
   status: varchar('status', { length: 50 }).notNull().default('active'),
-  facultyId: varchar('faculty_id', { length: 64 }).notNull().default(''),
+  facultyId: text('faculty_id'),
   facultyName: varchar('faculty_name', { length: 255 }).default(''),
   room: varchar('room', { length: 100 }).default(''),
   sortOrder: integer('sort_order').notNull().default(0),
@@ -84,6 +89,10 @@ export const sessionClasses = pgTable('session_classes', {
     columns: [table.workspaceSubdomain, table.sessionId],
     foreignColumns: [sessions.workspaceSubdomain, sessions.id],
   }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.facultyId],
+    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
+  }).onDelete('restrict'),
   index('session_classes_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
   index('session_classes_workspace_faculty_idx').on(table.workspaceSubdomain, table.facultyId),
   uniqueIndex('session_classes_workspace_session_name_uidx').on(
@@ -183,12 +192,17 @@ export const sessionClassTimetablePeriods = pgTable('session_class_timetable_per
   startTime: varchar('start_time', { length: 20 }).notNull(),
   endTime: varchar('end_time', { length: 20 }).notNull(),
   subject: varchar('subject', { length: 150 }).notNull(),
-  facultyId: varchar('faculty_id', { length: 64 }).default(''),
+  facultyId: text('faculty_id'),
   facultyName: varchar('faculty_name', { length: 255 }).default(''),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.timetableId, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.facultyId],
+    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
+  }).onDelete('restrict'),
   index('session_class_timetable_periods_workspace_timetable_idx').on(table.workspaceSubdomain, table.timetableId),
+  index('session_class_timetable_periods_workspace_faculty_idx').on(table.workspaceSubdomain, table.facultyId),
 ]);
 
 /**

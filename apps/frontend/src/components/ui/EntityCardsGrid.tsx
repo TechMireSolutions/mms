@@ -2,7 +2,7 @@ import React, { useRef, useMemo, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import { EntityCardsSelectAllBar } from "@/components/ui/EntityCardsSelectAllBar";
 import { cn } from "@/lib/utils";
 
 const containerVariants = {
@@ -99,7 +99,7 @@ export function EntityCardsGrid<T = unknown>({
   return (
     <>
       {onSelectAll && items.length > 0 ? (
-        <DirectoryCardsSelectAllBar
+        <EntityCardsSelectAllBar
           checkboxId={`${checkboxIdPrefix}-select-all`}
           allSelected={allSelected}
           someSelected={someSelected}

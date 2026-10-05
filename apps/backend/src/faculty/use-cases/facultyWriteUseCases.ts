@@ -6,15 +6,10 @@ import type { FacultyRepository } from '../repository/facultyRepository.js';
 import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { mergeFacultyPatch, prepareFacultyRecord } from './facultyNormalizeUseCases.js';
 import { generateNextFacultyEmployeeId } from './facultyEmployeeIdService.js';
-import {
-  HierarchyValidationError,
-  HierarchyCycleError,
-  validateReportingHierarchy,
-} from './facultyHierarchyValidator.js';
 import { handleImplicitRestore, saveDesignationOnCreate } from './facultyWriteHelpers.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 
-export { HierarchyValidationError, HierarchyCycleError, validateReportingHierarchy };
+export { HierarchyValidationError, HierarchyCycleError } from './facultyHierarchyValidator.js';
 
 export interface CreateFacultyResult {
   record: FacultyRecord;
@@ -61,14 +56,6 @@ export async function createFaculty(
       normalized.employeeId = generated.employeeId;
     }
 
-    const targetRank = typeof (normalized as { hierarchyRank?: number }).hierarchyRank === 'number'
-      ? (normalized as { hierarchyRank?: number }).hierarchyRank!
-      : 10;
-    const targetSupervisor = (normalized as { reportingFacultyId?: string | null }).reportingFacultyId
-      ? String((normalized as { reportingFacultyId?: string | null }).reportingFacultyId).trim()
-      : null;
-    await validateReportingHierarchy(tenant, normalized.id != null ? String(normalized.id) : undefined, targetRank, targetSupervisor, repo);
-
     const contactId = normalized.contactId != null ? String(normalized.contactId).trim() : '';
     if (contactId) {
       const archived = await repo.findSoftDeletedByContactId(tenant, contactId);
@@ -102,24 +89,6 @@ export async function updateFacultyById(
       ...mergeFacultyPatch(existing, record),
       id,
     });
-
-    const targetRank = typeof (normalized as { hierarchyRank?: number }).hierarchyRank === 'number'
-      ? (normalized as { hierarchyRank?: number }).hierarchyRank!
-      : 10;
-    const targetSupervisor = (normalized as { reportingFacultyId?: string | null }).reportingFacultyId
-      ? String((normalized as { reportingFacultyId?: string | null }).reportingFacultyId).trim()
-      : null;
-    await validateReportingHierarchy(tenant, id, targetRank, targetSupervisor, repo);
-
-    const directSubordinates = repo.findSubordinates ? await repo.findSubordinates(tenant, id) : [];
-    for (const sub of directSubordinates) {
-      const subRank = (sub as { hierarchyRank?: number }).hierarchyRank ?? 10;
-      if (subRank <= targetRank) {
-        throw new HierarchyValidationError(
-          `Cannot set hierarchy rank to ${targetRank}: faculty has a subordinate (${sub.id}) with rank ${subRank}. Subordinates must have lower authority than their supervisor.`,
-        );
-      }
-    }
 
     await repo.save(tenant, normalized);
     return normalized;

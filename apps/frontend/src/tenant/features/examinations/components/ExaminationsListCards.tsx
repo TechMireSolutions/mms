@@ -3,13 +3,11 @@ import { formatDate } from '@mms/shared';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkCardAction } from '@/hooks/useWorkCardAction';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
-import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
-import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
+import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
+import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { ExaminationsRowActions } from '@/tenant/features/examinations/components/ExaminationsRowActions';
@@ -67,14 +65,14 @@ function ExaminationCard({
   const { assignedClasses, studentCount } = getExamMeta(exam, classes, enrollments);
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={exam.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       {...cardProps}
       onClick={props.onRowClick ? () => props.onRowClick!(exam.id) : undefined}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={exam.id}
         displayName={exam.name}
         isSelected={isSelected}
@@ -91,34 +89,34 @@ function ExaminationCard({
         }
       />
 
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible('date') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.date')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.date')}>
             {formatDate(exam.date, true)}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('duration') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.duration')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.duration')}>
             {t('examinations.durationMinutes', { minutes: exam.duration })}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('totalMarks') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.totalMarks')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.totalMarks')}>
             <span className="font-semibold">{exam.totalMarks}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('passingMarks') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.passingMarks')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.passingMarks')}>
             {exam.passingMarks}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('status') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.status')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.status')}>
             <StatusBadge status={exam.status} config={statusConfig} size="sm" />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('classes') && (
-          <DirectoryCardMetaTile label={t('examinations.columns.exam.classes')}>
+          <EntityCardMetaTile label={t('examinations.columns.exam.classes')}>
             <span className="break-words">
               {assignedClasses.length > 0
                 ? assignedClasses.map((c) => c.name).join(', ')
@@ -129,24 +127,24 @@ function ExaminationCard({
                 {t('examinations.studentCount', { count: studentCount })}
               </span>
             )}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
+      </EntityCard.MetaGrid>
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         overflowActions={
           <ExaminationsRowActions
             exam={exam}
             canWrite={canWrite}
             canDelete={canTrashRows}
             showDeleted={showDeleted}
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
             onEdit={onEdit}
             onTrashAction={onTrashAction}
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 
@@ -161,7 +159,7 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): React.
   });
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={exams}
       selectedIds={selectedIds}
       onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}

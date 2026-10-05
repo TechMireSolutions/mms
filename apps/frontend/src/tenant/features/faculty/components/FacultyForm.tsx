@@ -93,6 +93,10 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         onSave={onSaveWithTabFocus}
         isDirty={isDirty}
         saving={saving}
+        discardUnsavedTitle={t("faculty.form.discardUnsavedTitle")}
+        discardUnsavedDescription={t("faculty.form.discardUnsavedDescription")}
+        discardConfirmLabel={t("faculty.form.discardChanges")}
+        discardCancelLabel={t("faculty.form.keepEditing")}
         error={validationErrorSummary}
         saveDisabled={
           (requireContactLink && !facultyDraft.contactId)

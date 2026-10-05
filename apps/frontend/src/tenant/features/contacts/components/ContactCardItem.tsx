@@ -6,21 +6,21 @@ import {
   getPrimaryEmail,
 } from "@mms/shared";
 import {
+  resolveAllContactEmails,
+  resolveAllContactPhones,
   resolveContactPhoneDisplay,
 } from "@/lib/contacts/contactI18n";
 import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { ContactCardActions } from "@/tenant/features/contacts/components/ContactCardActions";
 import { ContactCardHeader } from "@/tenant/features/contacts/components/ContactCardHeader";
 import {
   ContactCardDeletedBanner,
-  ContactCardInfoPills,
   ContactCardMetadataGrid,
 } from "@/tenant/features/contacts/components/ContactCardSections";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useContactEntityDescriptor } from "@/tenant/features/contacts/hooks/useContactEntityDescriptor";
 
 export interface ContactCardItemProps {
@@ -46,7 +46,9 @@ export interface ContactCardItemProps {
   onEmail?: (contacts: Contact[]) => void;
 }
 
-/** Individual Contact Work directory card. */
+/**
+ * Contacts Work directory card — DirectoryCard SSOT (do not hand-compose EntityCard).
+ */
 export const ContactCardItem = React.memo(function ContactCardItem({
   contact,
   isSelected,
@@ -73,14 +75,6 @@ export const ContactCardItem = React.memo(function ContactCardItem({
   const reducedMotion = useReducedMotion();
   const contactDescriptor = useContactEntityDescriptor();
 
-  const { isSelected: derivedSelected, onSelect: handleSelect, onView: handleView, cardProps } = useWorkCardAction<Contact>({
-    entity: contact,
-    selectedIds: isSelected ? [contact.id] : [],
-    onToggleSelected: () => onSelect(contact.id),
-    onView,
-    canSelect: true,
-  });
-
   const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(
     contact,
     prefs,
@@ -91,73 +85,79 @@ export const ContactCardItem = React.memo(function ContactCardItem({
   const displayName = getDisplayName(contact) || phoneDisplay || email || "";
   const showGenderAccent = !isColumnVisible || isColumnVisible("gender");
   const columnVisibleFn = isColumnVisible ?? (() => true);
+  const phones = resolveAllContactPhones(contact, prefs, countryCodesMap, countryCodes);
+  const emails = resolveAllContactEmails(contact);
 
   return (
-    <DirectoryEntityCard
-      isSelected={derivedSelected}
+    <DirectoryCard
+      entity={contact}
+      selectedIds={isSelected ? [contact.id] : []}
+      canSelect
+      onToggleSelected={() => onSelect(contact.id)}
+      onView={onView}
+      onEdit={onEdit}
       reducedMotion={reducedMotion}
       accentClassName={
         showGenderAccent
-          ? getGenderAccentBarClass(derivedSelected, contact.gender)
+          ? getGenderAccentBarClass(isSelected, contact.gender)
           : undefined
       }
-      {...cardProps}
-    >
-      <ContactCardHeader
-        contact={contact}
-        isSelected={derivedSelected}
-        displayName={displayName}
-        onSelect={handleSelect}
-        onView={handleView}
-        isColumnVisible={isColumnVisible}
-        reducedMotion={reducedMotion}
-      />
-
-      <ContactCardInfoPills
-        contact={contact}
-        prefs={prefs}
-        countryCodesMap={countryCodesMap}
-        countryCodes={countryCodes}
-        phone={phone}
-        countryCode={countryCode}
-        phoneDisplay={phoneDisplay}
-        email={email}
-        displayName={displayName}
-        showArchived={showArchived}
-        isColumnVisible={columnVisibleFn}
-        onWhatsApp={onWhatsApp}
-        onSms={onSms}
-        onEmail={onEmail}
-      />
-
-      <ContactCardMetadataGrid
-        contact={contact}
-        prefs={prefs}
-        allContacts={allContacts}
-        contactsMap={contactsMap}
-        otherColumns={otherColumns}
-        isColumnVisible={columnVisibleFn}
-        t={t}
-        descriptor={contactDescriptor}
-        entity={contact}
-      />
-
-      <ContactCardDeletedBanner contact={contact} />
-
-      <ContactCardActions
-        contact={contact}
-        displayName={displayName}
-        showArchived={showArchived}
-        canWrite={canWrite}
-        canDelete={canDelete}
-        onView={handleView}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onRestore={onRestore}
-        onWhatsApp={onWhatsApp}
-        onSms={onSms}
-        onEmail={onEmail}
-      />
-    </DirectoryEntityCard>
+      header={{ displayName }}
+      headerSlot={
+        <ContactCardHeader
+          contact={contact}
+          isSelected={isSelected}
+          displayName={displayName}
+          onSelect={onSelect}
+          onView={onView}
+          isColumnVisible={isColumnVisible}
+          reducedMotion={reducedMotion}
+        />
+      }
+      infoPills={{
+        phones,
+        emails,
+        phone,
+        countryCode,
+        phoneDisplay,
+        email,
+        showPhone: columnVisibleFn("phone"),
+        showEmail: columnVisibleFn("email"),
+        showArchived,
+        onWhatsApp: onWhatsApp ? () => onWhatsApp([contact]) : undefined,
+        onSms: onSms ? () => onSms([contact]) : undefined,
+        onEmail: onEmail ? () => onEmail([contact]) : undefined,
+      }}
+      metadataSlot={
+        <ContactCardMetadataGrid
+          contact={contact}
+          prefs={prefs}
+          allContacts={allContacts}
+          contactsMap={contactsMap}
+          otherColumns={otherColumns}
+          isColumnVisible={columnVisibleFn}
+          t={t}
+          descriptor={contactDescriptor}
+          entity={contact}
+        />
+      }
+      banner={<ContactCardDeletedBanner contact={contact} />}
+      footer={
+        <ContactCardActions
+          contact={contact}
+          displayName={displayName}
+          showArchived={showArchived}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          onView={onView ? () => onView(contact) : undefined}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
+        />
+      }
+    />
   );
 });

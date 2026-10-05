@@ -3,7 +3,7 @@ import { Waypoints } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ErdExplorer } from '@/platform/components/erd/ErdExplorer';
 import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
 
@@ -12,7 +12,7 @@ export default function PlatformErdPage(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t('platform.erdTitle')} | ${t('platform.consoleTitle')}`}
       seoDescription={t('platform.erdSubtitle')}
       headerIcon={Waypoints}
@@ -29,6 +29,6 @@ export default function PlatformErdPage(): React.JSX.Element {
           <ErdExplorer />
         </motion.div>
       </motion.div>
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }

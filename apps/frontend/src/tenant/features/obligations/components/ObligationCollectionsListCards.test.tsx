@@ -125,7 +125,7 @@ describe("ObligationCollectionsListCards", () => {
         getContact={() => undefined}
       />,
     );
-    // DirectoryCardHeader displayName="—"
+    // EntityCard.Header displayName="—"
     expect(html).toContain("—");
   });
 

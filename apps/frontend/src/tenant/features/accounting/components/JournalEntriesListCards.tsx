@@ -6,7 +6,7 @@ import {
   getJournalBalanceDifference,
   isJournalBalanced,
 } from "@/tenant/features/accounting/components/journalEntriesListShared";
-import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
 
   return (
     <div className="space-y-4">
-      <ModuleDirectoryCards
+      <EntityCardsGrid
         items={entries}
         selectedIds={selectedIds}
         onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}

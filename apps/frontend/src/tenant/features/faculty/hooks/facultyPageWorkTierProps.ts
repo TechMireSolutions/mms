@@ -9,12 +9,18 @@ export type FacultyWorkTierSource = {
   filterStatus: WorkTierProps["filterStatus"];
   filterSpecialization: WorkTierProps["filterSpecialization"];
   filterGender: WorkTierProps["filterGender"];
+  filterDepartment: WorkTierProps["filterDepartment"];
+  filterDesignation: WorkTierProps["filterDesignation"];
+  filterReportingFacultyId: WorkTierProps["filterReportingFacultyId"];
   quickFilter: WorkTierProps["quickFilter"];
   changeQuickFilter: WorkTierProps["onQuickFilterChange"];
   genderFilters: WorkTierProps["genderFilters"];
   activeFilterCount: WorkTierProps["activeFilterCount"];
   statusOptions: WorkTierProps["statusOptions"];
   specializationOptions: WorkTierProps["specializationOptions"];
+  departmentFilterOptions: WorkTierProps["departmentFilterOptions"];
+  designationFilterOptions: WorkTierProps["designationFilterOptions"];
+  supervisorFilterOptions: WorkTierProps["supervisorFilterOptions"];
   showDeleted: WorkTierProps["showDeleted"];
   canWrite: WorkTierProps["canWrite"];
   canDelete: WorkTierProps["canDelete"];
@@ -48,6 +54,9 @@ export type FacultyWorkTierSource = {
   toggleStatus: WorkTierProps["onToggleStatus"];
   setFilterSpecialization: WorkTierProps["onSpecializationChange"];
   setFilterGender: WorkTierProps["onGenderChange"];
+  setFilterDepartment: WorkTierProps["onDepartmentChange"];
+  setFilterDesignation: WorkTierProps["onDesignationChange"];
+  setFilterReportingFacultyId: WorkTierProps["onReportingFacultyChange"];
   toggleViewingDeleted: WorkTierProps["onToggleDeleted"];
   clearFilters: WorkTierProps["onClearFilters"];
   onRetry: WorkTierProps["onRetry"];
@@ -76,12 +85,18 @@ export function buildFacultyWorkTierProps(
     filterStatus: source.filterStatus,
     filterSpecialization: source.filterSpecialization,
     filterGender: source.filterGender,
+    filterDepartment: source.filterDepartment,
+    filterDesignation: source.filterDesignation,
+    filterReportingFacultyId: source.filterReportingFacultyId,
     quickFilter: source.quickFilter,
     onQuickFilterChange: source.changeQuickFilter,
     genderFilters: source.genderFilters,
     activeFilterCount: source.activeFilterCount,
     statusOptions: source.statusOptions,
     specializationOptions: source.specializationOptions,
+    departmentFilterOptions: source.departmentFilterOptions,
+    designationFilterOptions: source.designationFilterOptions,
+    supervisorFilterOptions: source.supervisorFilterOptions,
     showDeleted: source.showDeleted,
     canWrite: source.canWrite,
     canDelete: source.canDelete,
@@ -112,6 +127,9 @@ export function buildFacultyWorkTierProps(
     onToggleStatus: source.toggleStatus,
     onSpecializationChange: source.setFilterSpecialization,
     onGenderChange: source.setFilterGender,
+    onDepartmentChange: source.setFilterDepartment,
+    onDesignationChange: source.setFilterDesignation,
+    onReportingFacultyChange: source.setFilterReportingFacultyId,
     onToggleDeleted: source.toggleViewingDeleted,
     onClearFilters: source.clearFilters,
     onRetry: source.onRetry,

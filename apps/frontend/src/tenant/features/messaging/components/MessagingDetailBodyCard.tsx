@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { calculateSmsSegments, type Message } from '@mms/shared';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import { Button } from '@/components/ui/button';
 import { Check, Copy, Mail } from 'lucide-react';
@@ -32,42 +31,43 @@ export function MessagingDetailBodyCard({ log }: MessagingDetailBodyCardProps): 
   };
 
   return (
-    <div className="space-y-2">
-      <DetailSectionTitle>{t('messaging.messageBody')}</DetailSectionTitle>
-      <Card accentColor="info" className="p-0 overflow-hidden divide-y divide-border/50">
-        {log.subject && (
-          <DetailAttributeRow
-            variant="inset"
-            icon={Mail}
-            label={t('messaging.subjectLabel')}
-            value={log.subject}
-          />
-        )}
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-3xs font-mono text-muted-foreground">
-              {smsStats
-                ? t('messaging.smsSegmentStats', {
-                  segments: smsStats.totalSegments,
-                  remaining: smsStats.remainingInSegment,
-                })
-                : `${log.body.length} chars`}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-7 px-2.5 text-xs gap-1.5 ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
-              onClick={() => void copyToClipboard(log.body)}
-            >
-              {copiedBody ? <Check className={`h-3.5 w-3.5 ${SEMANTIC_TEXT.success}`} /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{copiedBody ? t('contacts.table.copied') : t('contacts.table.copy')}</span>
-            </Button>
-          </div>
-          <div className={`whitespace-pre-wrap rounded bg-background/80 p-3 font-sans text-xs text-foreground border border-border/40 leading-relaxed max-h-60 overflow-y-auto selection:${SEMANTIC_BG.primary}`}>
-            {log.body}
-          </div>
+    <DetailSectionCard
+      title={t('messaging.messageBody')}
+      accentColor="info"
+      className="p-0 overflow-hidden divide-y divide-border/50"
+    >
+      {log.subject && (
+        <DetailAttributeRow
+          variant="inset"
+          icon={Mail}
+          label={t('messaging.subjectLabel')}
+          value={log.subject}
+        />
+      )}
+      <div className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-3xs font-mono text-muted-foreground">
+            {smsStats
+              ? t('messaging.smsSegmentStats', {
+                segments: smsStats.totalSegments,
+                remaining: smsStats.remainingInSegment,
+              })
+              : `${log.body.length} chars`}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 px-2.5 text-xs gap-1.5 ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
+            onClick={() => void copyToClipboard(log.body)}
+          >
+            {copiedBody ? <Check className={`h-3.5 w-3.5 ${SEMANTIC_TEXT.success}`} /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{copiedBody ? t('contacts.table.copied') : t('contacts.table.copy')}</span>
+          </Button>
         </div>
-      </Card>
-    </div>
+        <div className={`whitespace-pre-wrap rounded bg-background/80 p-3 font-sans text-xs text-foreground border border-border/40 leading-relaxed max-h-60 overflow-y-auto selection:${SEMANTIC_BG.primary}`}>
+          {log.body}
+        </div>
+      </div>
+    </DetailSectionCard>
   );
 }

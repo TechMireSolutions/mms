@@ -8,11 +8,9 @@ import {
   getJournalTagLabel,
   type JournalEntriesListProps,
 } from "@/tenant/features/accounting/components/journalEntriesListShared";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 
 export type JournalEntriesListCardsProps = Omit<
@@ -54,7 +52,7 @@ export function JournalEntryCard({
   const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={entry.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
@@ -65,7 +63,7 @@ export function JournalEntryCard({
       }
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={entry.id}
         displayName={entry.description}
         isSelected={isSelected}
@@ -93,14 +91,14 @@ export function JournalEntryCard({
           </div>
         }
       />
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("date") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.journal.date")}>
+          <EntityCardMetaTile label={t("accounting.columns.journal.date")}>
             <span className="font-mono">{formatDate(entry.date)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("tags") && (entry.tags || []).length > 0 && (
-          <DirectoryCardMetaTile label={t("accounting.columns.journal.tags")}>
+          <EntityCardMetaTile label={t("accounting.columns.journal.tags")}>
             <span className="flex flex-wrap gap-1">
               {(entry.tags || []).map((tag) => (
                 <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
@@ -108,30 +106,30 @@ export function JournalEntryCard({
                 </Badge>
               ))}
             </span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("status") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.journal.status")}>
+          <EntityCardMetaTile label={t("accounting.columns.journal.status")}>
             <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("debit") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.journal.debit")}>
+          <EntityCardMetaTile label={t("accounting.columns.journal.debit")}>
             <span className="font-mono text-xs font-semibold text-info">{formatAmount(totalDebit)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("credit") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.journal.credit")}>
+          <EntityCardMetaTile label={t("accounting.columns.journal.credit")}>
             <span className="font-mono text-xs font-semibold text-success">{formatAmount(totalCredit)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
-      <DirectoryCardFooterActions
+      </EntityCard.MetaGrid>
+      <EntityCardFooterActions
         onView={handleView}
         viewLabel={t("contacts.actionViewShort")}
         viewAriaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
         overflowActions={renderEntryActionsCards(entry)}
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

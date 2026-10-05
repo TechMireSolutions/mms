@@ -90,7 +90,7 @@ describe("ClassCard", () => {
     expect(onEdit).toHaveBeenCalledWith(mockClass);
   });
 
-  it("renders DirectoryCardFooter unconditionally when canWrite is false", async () => {
+  it("renders EntityCard.Footer unconditionally when canWrite is false", async () => {
     const container = document.createElement("div");
     const root = createRoot(container);
 

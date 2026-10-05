@@ -1,6 +1,6 @@
 import React from "react";
 import { User } from "lucide-react";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import { type Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
@@ -78,7 +78,7 @@ export const EnrollmentDetail = (function EnrollmentDetail({
   ) : undefined;
 
   return (
-    <DetailSheet
+    <Drawer
       open={Boolean(enrollment)}
       onClose={onClose}
       title={student?.name || enrollment.studentName}
@@ -100,6 +100,6 @@ export const EnrollmentDetail = (function EnrollmentDetail({
         onStatusChange={onStatusChange}
         onPaymentStatusChange={onPaymentStatusChange}
       />
-    </DetailSheet>
+    </Drawer>
   );
 });

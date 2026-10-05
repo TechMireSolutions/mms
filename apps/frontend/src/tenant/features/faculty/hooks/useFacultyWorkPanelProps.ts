@@ -10,10 +10,12 @@ import type { useFacultyPageFormState } from "@/tenant/features/faculty/hooks/us
 import type { useFacultyPageOverlayState } from "@/tenant/features/faculty/hooks/useFacultyPageOverlayState";
 import type { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import type { useFacultyLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import type { useFacultyDirectoryFilterCatalog } from "@/tenant/features/faculty/hooks/useFacultyDirectoryFilterCatalog";
 
 export interface UseFacultyWorkPanelPropsInput {
   effectiveTab: string;
   filters: ReturnType<typeof useFacultyDirectoryFilters>;
+  filterCatalog: ReturnType<typeof useFacultyDirectoryFilterCatalog>;
   config: ReturnType<typeof useFacultyConfig>;
   lookups: ReturnType<typeof useFacultyLookupOptions>;
   columnLayout: ReturnType<typeof useFacultyColumnLayout>;
@@ -32,6 +34,7 @@ export interface UseFacultyWorkPanelPropsInput {
 export function useFacultyWorkPanelProps({
   effectiveTab,
   filters,
+  filterCatalog,
   config,
   lookups,
   columnLayout,
@@ -53,12 +56,18 @@ export function useFacultyWorkPanelProps({
     filterStatus: filters.filterStatus,
     filterSpecialization: filters.filterSpecialization,
     filterGender: filters.filterGender,
+    filterDepartment: filters.filterDepartment,
+    filterDesignation: filters.filterDesignation,
+    filterReportingFacultyId: filters.filterReportingFacultyId,
     quickFilter: filters.quickFilter,
     changeQuickFilter: filters.changeQuickFilter,
     genderFilters: config.genderFilters,
     activeFilterCount: filters.activeFilterCount,
     statusOptions: lookups.statusOptions,
     specializationOptions: lookups.specializationOptions,
+    departmentFilterOptions: filterCatalog.departmentFilterOptions,
+    designationFilterOptions: filterCatalog.designationFilterOptions,
+    supervisorFilterOptions: filterCatalog.supervisorFilterOptions,
     showDeleted: filters.showDeleted,
     canWrite,
     canDelete,
@@ -95,6 +104,9 @@ export function useFacultyWorkPanelProps({
     toggleStatus: filters.toggleStatus,
     setFilterSpecialization: filters.setFilterSpecialization,
     setFilterGender: filters.setFilterGender,
+    setFilterDepartment: filters.setFilterDepartment,
+    setFilterDesignation: filters.setFilterDesignation,
+    setFilterReportingFacultyId: filters.setFilterReportingFacultyId,
     toggleViewingDeleted: () => filters.setShowDeleted((previous: boolean) => !previous),
     clearFilters: filters.clearFilters,
     onRetry: () => { void workPageQuery.refetch(); },

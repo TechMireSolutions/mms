@@ -4,7 +4,9 @@ import {
   FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
+import { EntityNotesFormSection } from "@/components/ui/EntityNotesFormSection";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
 import {
   FacultyUserAccountSection,
   type FacultyUserAccountDraft,
@@ -50,6 +52,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     onUserAccountDraftChange = () => {},
   } = props;
 
+  const { t } = useTranslation();
   const effectiveFaculty = faculty;
   const effectiveDraft = facultyDraftProp ?? {};
   const effectiveContactIds = linkedFacultyContactIds ?? [];
@@ -115,15 +118,17 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         errors={errors}
       />
     );
-  } else if (activeTab === "notes") {
+  } else if (activeTab === "notes" && isFieldEnabled("notes")) {
     tabBody = (
-      <FacultyNotesSection
-        notes={effectiveDraft.notes}
-        fields={fields}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
+      <EntityNotesFormSection
+        title={t("faculty.form.notesSection")}
+        subtitle={t("faculty.form.notesSectionDesc")}
+        label={resolveFacultyFieldLabel(fields, "employment", "notes", t)}
+        placeholder={t("faculty.form.notesPlaceholder")}
+        value={effectiveDraft.notes}
+        required={isFieldRequired("notes")}
         error={errors.notes}
+        onChange={(next) => onDraftChange({ notes: next })}
       />
     );
   }

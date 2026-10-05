@@ -17,7 +17,8 @@ describe('Faculty contact / employee-id SQL SSOT', () => {
     );
     expect(listBarrelSrc).toContain('listFacultyLinkedContactIdsSql');
     expect(listBarrelSrc).toContain('countFacultyForNextEmployeeId');
-    expect(listQuerySqlSrc).toContain('faculty.contactId');
+    expect(listQuerySqlSrc).toContain('joinedContactNameExpr');
+    expect(listQuerySqlSrc).toContain('joinedContactGenderExpr');
   });
 
   it('contacts list faculty link filter uses typed contact_id', () => {

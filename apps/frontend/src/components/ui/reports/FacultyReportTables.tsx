@@ -3,7 +3,6 @@ import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { TableSkeleton } from "@/components/ui/LoadingState";
 import {
   Table,
   TableBody,
@@ -11,11 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
 import { FacultyReportWorkloadTable } from "@/components/ui/reports/FacultyReportWorkloadTable";
+import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 
 import type { FacultyReportTablesProps } from "./facultyReportTypes";
 
@@ -51,14 +52,37 @@ export const FacultyReportTables = (function FacultyReportTables({
     );
   }
 
-  if (listLoading) {
-    return <TableSkeleton rows={5} cols={6} />;
-  }
+  const rosterColumns: ExportColumn[] = [
+    { key: "name", header: t("faculty.report.colName") },
+    { key: "employeeId", header: t("faculty.report.colEmployeeId") },
+    { key: "specialization", header: t("faculty.report.colSpecialization") },
+    { key: "qualification", header: t("faculty.report.colQualification") },
+    { key: "gender", header: t("faculty.report.colGender") },
+    { key: "joinDate", header: t("faculty.report.colJoinDate") },
+    { key: "status", header: t("faculty.report.colStatus") },
+  ];
+  const rosterRows = faculty.map((member) => ({
+    name: member.name,
+    employeeId: member.employeeId,
+    specialization: member.specialization,
+    qualification: member.qualification,
+    gender: toTitleCase(member.gender),
+    joinDate: member.joinDate,
+    status: member.status,
+  }));
 
-  return faculty.length === 0 ? (
-    <EmptyState icon={Users} title={t("faculty.report.noFacultyFound")} description={t("faculty.report.adjustFilters")} compact />
-  ) : (
-    <div className={WORK_SURFACE}>
+  return (
+    <ReportDataGridContainer
+      title={t("faculty.report.rosterTab")}
+      columns={rosterColumns}
+      rows={rosterRows}
+      moduleId="faculty"
+      isLoading={listLoading}
+      empty={!listLoading && faculty.length === 0}
+      emptyTitle={t("faculty.report.noFacultyFound")}
+      emptyDescription={t("faculty.report.adjustFilters")}
+      emptyIcon={Users}
+    >
       <div className="space-y-3 p-3 md:hidden">
         {faculty.map((member) => (
           <article key={member.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
@@ -127,6 +151,6 @@ export const FacultyReportTables = (function FacultyReportTables({
           </TableBody>
         </Table>
       </div>
-    </div>
+    </ReportDataGridContainer>
   );
 });

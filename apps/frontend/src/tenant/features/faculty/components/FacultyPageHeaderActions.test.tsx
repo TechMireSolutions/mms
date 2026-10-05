@@ -27,7 +27,7 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
 }));
 
 describe("FacultyPageHeaderActions", () => {
-  it("renders import/export choosers and all three add actions", () => {
+  it("renders import/export choosers without duplicate Add actions", () => {
     const html = renderToStaticMarkup(
       <FacultyPageHeaderActions
         canExport={true}
@@ -35,9 +35,6 @@ describe("FacultyPageHeaderActions", () => {
         viewingDeleted={false}
         onExportEntity={vi.fn()}
         onImportEntity={vi.fn()}
-        onAddFaculty={vi.fn()}
-        onAddDepartment={vi.fn()}
-        onAddDesignation={vi.fn()}
       />,
     );
 
@@ -46,9 +43,9 @@ describe("FacultyPageHeaderActions", () => {
     expect(html).toContain("faculty.tabs.faculties");
     expect(html).toContain("faculty.tabs.departments");
     expect(html).toContain("faculty.tabs.designations");
-    expect(html).toContain("action.addFaculty");
-    expect(html).toContain("faculty.setup.addDepartment");
-    expect(html).toContain("faculty.designations.addDesignation");
+    expect(html).not.toContain("action.addFaculty");
+    expect(html).not.toContain("faculty.setup.addDepartment");
+    expect(html).not.toContain("faculty.designations.addDesignation");
   });
 
   it("hides actions when viewingDeleted is true", () => {
@@ -59,10 +56,8 @@ describe("FacultyPageHeaderActions", () => {
         viewingDeleted={true}
         onExportEntity={vi.fn()}
         onImportEntity={vi.fn()}
-        onAddFaculty={vi.fn()}
       />,
     );
-
     expect(html).toBe("");
   });
 });

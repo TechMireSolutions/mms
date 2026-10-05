@@ -50,6 +50,9 @@ describe('facultyListQueryKeyParams', () => {
       quickFilter: 'all',
       sortField: '',
       sortDir: '',
+      department: '',
+      designation: '',
+      reportingFacultyId: '',
       includeDeleted: false,
     });
   });

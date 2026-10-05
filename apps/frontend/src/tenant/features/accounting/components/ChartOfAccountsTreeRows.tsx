@@ -3,10 +3,9 @@ import { Eye, EyeOff, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 import { cn } from "@/lib/utils";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
@@ -84,7 +83,7 @@ export function AccountMobileCard({
   const { t } = useTranslation();
 
   return (
-    <DirectoryEntityCard className={cn("space-y-3 p-4", account.isActive === false && "opacity-50")}>
+    <EntityCard className={cn("space-y-3 p-4", account.isActive === false && "opacity-50")}>
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {isColumnVisible("code") && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
@@ -103,18 +102,18 @@ export function AccountMobileCard({
           />
         )}
       </div>
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("subtype") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.account.subtype")}>{account.subtype || "—"}</DirectoryCardMetaTile>
+          <EntityCardMetaTile label={t("accounting.columns.account.subtype")}>{account.subtype || "—"}</EntityCardMetaTile>
         )}
         {isColumnVisible("description") && (
-          <DirectoryCardMetaTile label={t("accounting.columns.account.description")} className="break-words">{account.description || "—"}</DirectoryCardMetaTile>
+          <EntityCardMetaTile label={t("accounting.columns.account.description")} className="break-words">{account.description || "—"}</EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
-      <DirectoryCardFooterActions
+      </EntityCard.MetaGrid>
+      <EntityCardFooterActions
         actions={canWrite ? <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} /> : undefined}
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 

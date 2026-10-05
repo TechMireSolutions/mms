@@ -5,7 +5,7 @@ import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useTrashMode } from "@/hooks/useTrashMode";
+import { useDirectoryTrashState } from "@/hooks/useDirectoryTrashState";
 import {
   FINANCE_MODULE_MANIFEST,
   type Payment,
@@ -44,7 +44,7 @@ export function useFinancePageController() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [activePayment, setActivePayment] = useState<Payment | null>(null);
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const invoicesResult = useFinanceInvoicesPaginated({
     includeDeleted: showDeleted,
     page: 1,

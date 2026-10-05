@@ -5,7 +5,7 @@ import {
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PersonDetailHeroCard } from '@/components/ui/PersonDetailHeroCard';
-import { EntityMessagingQuickActions } from '@/components/ui/EntityMessagingQuickActions';
+import { EntityMessagingActions } from '@/components/ui/EntityMessagingActions';
 import { MessagingDetailBodyCard } from './MessagingDetailBodyCard';
 import { MessagingDetailMetadataCard } from './MessagingDetailMetadataCard';
 
@@ -83,7 +83,7 @@ export const MessagingDetail = (function MessagingDetail({
   };
 
   return (
-    <DetailSheet
+    <Drawer
       open={Boolean(log)}
       onClose={onClose}
       title={recipientName}
@@ -166,7 +166,7 @@ export const MessagingDetail = (function MessagingDetail({
             )}
           </div>
 
-          <EntityMessagingQuickActions
+          <EntityMessagingActions variant="button-group"
             primaryPhone={cleanPhone}
             primaryEmail={recipient?.email}
             labels={{
@@ -184,6 +184,6 @@ export const MessagingDetail = (function MessagingDetail({
         <MessagingDetailBodyCard log={log} />
         <MessagingDetailMetadataCard log={log} />
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });

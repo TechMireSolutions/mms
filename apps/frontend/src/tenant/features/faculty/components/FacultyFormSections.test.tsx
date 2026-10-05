@@ -22,6 +22,14 @@ vi.mock("./FacultyCatalogCreateOverlays", () => ({
   FacultyCatalogCreateOverlays: () => null,
 }));
 
+vi.mock("@/tenant/hooks/collections/organization", () => ({
+  useOrganizationPositions: () => ({ data: [] }),
+}));
+
+vi.mock("@/tenant/components/organization/OrganizationPositionFormModal", () => ({
+  OrganizationPositionFormModal: () => null,
+}));
+
 describe("FacultyFormSections Components", () => {
   it("renders FacultyContactSection with contact picker, phone, email, qualification, and specialization pills", () => {
     const html = renderToStaticMarkup(

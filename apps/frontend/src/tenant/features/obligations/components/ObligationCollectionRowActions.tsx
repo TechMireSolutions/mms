@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { Printer } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { EntityMessagingDropdownItems } from '@/components/ui/EntityMessagingDropdownItems';
+import { EntityMessagingActions } from '@/components/ui/EntityMessagingActions';
 import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ObligationCollection } from '@/lib/data/obligationsData';
@@ -66,13 +66,13 @@ export function ObligationCollectionRowActions({
               </DropdownMenuItem>
             ) : null}
             {showMessaging && onMessage ? (
-              <EntityMessagingDropdownItems
+              <EntityMessagingActions variant="dropdown"
                 showWhatsApp
                 showSms
                 showEmail={false}
-                onWhatsAppClick={() => onMessage('whatsapp', [collection])}
-                onSmsClick={() => onMessage('sms', [collection])}
-                onEmailClick={() => undefined}
+                onWhatsApp={() => onMessage('whatsapp', [collection])}
+                onSms={() => onMessage('sms', [collection])}
+                onEmail={() => undefined}
                 labels={{
                   whatsapp: t('obligations.list.actionWhatsApp'),
                   sms: t('obligations.list.actionSms'),

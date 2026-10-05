@@ -15,6 +15,14 @@ vi.mock("./FacultyCatalogCreateOverlays", () => ({
   FacultyCatalogCreateOverlays: () => null,
 }));
 
+vi.mock("@/tenant/hooks/collections/organization", () => ({
+  useOrganizationPositions: () => ({ data: [] }),
+}));
+
+vi.mock("@/tenant/components/organization/OrganizationPositionFormModal", () => ({
+  OrganizationPositionFormModal: () => null,
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

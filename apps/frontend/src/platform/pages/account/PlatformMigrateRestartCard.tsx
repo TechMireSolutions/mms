@@ -10,7 +10,7 @@ import {
 } from "@/platform/hooks/usePlatformSettings";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { notify } from "@/lib/notify";
-import { PlatformTypedConfirmDialog } from "@/platform/components/PlatformTypedConfirmDialog";
+import { TypedConfirmDialog } from "@/components/ui/TypedConfirmDialog";
 
 export function PlatformMigrateRestartCard(): React.JSX.Element {
   const { t } = useTranslation();
@@ -72,7 +72,7 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
         </ActionButton>
       </SectionCard>
 
-      <PlatformTypedConfirmDialog
+      <TypedConfirmDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={t("platform.profileMigrateRestartTitle")}

@@ -10,7 +10,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("./ContactSubListCards", () => ({
-  ListFieldCard: ({ children, typeSelect }: { children: React.ReactNode; typeSelect?: React.ReactNode }) => (
+  FormListFieldCard: ({ children, typeSelect }: { children: React.ReactNode; typeSelect?: React.ReactNode }) => (
     <div data-testid="list-field-card">
       {typeSelect}
       {children}
@@ -43,6 +43,15 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   ),
   FormCheckboxCard: ({ label, checked }: { label: string; checked: boolean }) => (
     <div data-testid="checkbox-card">{label}: {checked ? "yes" : "no"}</div>
+  ),
+  FormListFieldCard: ({ children, typeSelect }: {
+    children: React.ReactNode;
+    typeSelect?: React.ReactNode;
+  }) => (
+    <div data-testid="list-field-card">
+      <div>{typeSelect}</div>
+      <div>{children}</div>
+    </div>
   ),
 }));
 

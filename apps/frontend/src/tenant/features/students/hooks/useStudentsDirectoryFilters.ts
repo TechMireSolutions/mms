@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useTrashMode } from "@/hooks/useTrashMode";
+import { useDirectoryTrashState } from "@/hooks/useDirectoryTrashState";
 import {
   toggleIdInSelection,
   togglePageIdsInSelection,
@@ -23,7 +23,7 @@ export function useStudentsDirectoryFilters({
   setActiveTab: (tab: string) => void;
 }) {
   const [listPage, setListPage] = useState(1);
-  const [viewingDeleted, setViewingDeleted] = useTrashMode();
+  const [viewingDeleted, setViewingDeleted] = useDirectoryTrashState();
   const [sortField, setSortField] = useState<StudentsListContentSortField | null>("grNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [studentSearch, setStudentSearch] = useState("");

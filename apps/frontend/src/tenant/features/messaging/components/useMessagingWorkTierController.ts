@@ -1,16 +1,18 @@
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
+import { useDescriptorFilterChips } from '@/components/common/useDescriptorFilterChips';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { useMessageLogs } from '@/hooks/useMessaging';
 import { useMessagingHistoryColumnLayout } from '../hooks/useMessagingColumnLayouts';
+import { useMessagingEntityDescriptor } from '../hooks/useMessagingEntityDescriptor';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
-import { buildMessagingWorkFilterChips } from './buildMessagingWorkFilterChips';
 import { useMessagingWorkFilters } from './useMessagingWorkFilters';
 import { useMessagingWorkTierBulkActions } from './useMessagingWorkTierBulkActions';
 import { useMessagingWorkTierKeyboardNav } from './useMessagingWorkTierKeyboardNav';
@@ -128,24 +130,56 @@ export function useMessagingWorkTierController({
     filters.setLogsPage(1);
   };
 
-  const filterChips = buildMessagingWorkFilterChips({
-    search: filters.debouncedSearch,
-    onSearchChange: filters.setSearch,
-    channel: filters.channel,
-    onChannelChange: filters.setChannel,
-    channelOptions: channelSelectOptions,
-    status: filters.status,
-    onStatusChange: filters.setStatus,
-    statusOptions,
-    category: filters.category,
-    onCategoryChange: filters.setCategory,
-    categoryOptions: categorySelectOptions,
-    startDate: filters.queryStartDate || '',
-    onStartDateChange: filters.setStartDate,
-    endDate: filters.endDate,
-    onEndDateChange: filters.setEndDate,
-    t,
-  });
+  const descriptor = useMessagingEntityDescriptor();
+  const activeFilters = useMemo(
+    () => ({
+      search: filters.debouncedSearch.trim() || undefined,
+      channel: filters.channel !== 'all' ? filters.channel : undefined,
+      status: filters.status !== 'all' ? filters.status : undefined,
+      category: filters.category !== 'all' ? filters.category : undefined,
+      startDate: filters.queryStartDate || undefined,
+      endDate: filters.endDate || undefined,
+    }),
+    [
+      filters.debouncedSearch,
+      filters.channel,
+      filters.status,
+      filters.category,
+      filters.queryStartDate,
+      filters.endDate,
+    ],
+  );
+
+  const onRemoveChip = useCallback(
+    (fieldKey: string) => {
+      if (fieldKey === 'search') {
+        filters.setSearch('');
+        return;
+      }
+      if (fieldKey === 'channel') {
+        filters.setChannel('all');
+        return;
+      }
+      if (fieldKey === 'status') {
+        filters.setStatus('all');
+        return;
+      }
+      if (fieldKey === 'category') {
+        filters.setCategory('all');
+        return;
+      }
+      if (fieldKey === 'startDate') {
+        filters.setStartDate('');
+        return;
+      }
+      if (fieldKey === 'endDate') {
+        filters.setEndDate('');
+      }
+    },
+    [filters],
+  );
+
+  const filterChips = useDescriptorFilterChips(descriptor, activeFilters, onRemoveChip);
 
   return {
     t,

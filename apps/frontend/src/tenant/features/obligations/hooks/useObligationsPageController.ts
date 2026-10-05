@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
@@ -54,7 +54,7 @@ export function useObligationsPageController() {
     })))();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('obligations_active_tab', 'work');
   const [activeConfigTab, setActiveConfigTab] = useState('wakala');
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
 
   const collectionSelection = useWorkSelection<string>();
   const { clearSelection: clearCollectionSelection } = collectionSelection;

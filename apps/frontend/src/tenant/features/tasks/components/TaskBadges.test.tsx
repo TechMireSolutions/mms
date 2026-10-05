@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { TaskPriorityBadge, TaskStatusBadge } from './TaskBadges';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => ({
@@ -10,15 +11,32 @@ vi.mock('@/hooks/useTranslation', () => ({
 }));
 
 describe('TaskBadges', () => {
-  it('renders priority badge correctly', () => {
+  it('given urgent priority, should render StatusBadge with destructive semantic tone', () => {
+    // Arrange / Act
     const html = renderToStaticMarkup(<TaskPriorityBadge priority="urgent" />);
+
+    // Assert
     expect(html).toContain('tasks.priority.urgent');
-    expect(html).toContain('text-red-600');
+    expect(html).toContain(SEMANTIC_BADGE.destructive.split(' ')[0]);
   });
 
-  it('renders status badge correctly', () => {
+  it('given in_progress status, should render StatusBadge with info semantic tone', () => {
+    // Arrange / Act
     const html = renderToStaticMarkup(<TaskStatusBadge status="in_progress" />);
+
+    // Assert
     expect(html).toContain('tasks.status.in_progress');
-    expect(html).toContain('text-blue-600');
+    expect(html).toContain(SEMANTIC_BADGE.info.split(' ')[0]);
+  });
+
+  it('given status onClick, should render a button badge', () => {
+    // Arrange / Act
+    const html = renderToStaticMarkup(
+      <TaskStatusBadge status="todo" onClick={() => undefined} />,
+    );
+
+    // Assert
+    expect(html).toContain('<button');
+    expect(html).toContain('tasks.status.todo');
   });
 });

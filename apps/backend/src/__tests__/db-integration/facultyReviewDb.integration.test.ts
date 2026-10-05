@@ -16,19 +16,12 @@ import {
 
 beforeAll(async () => { await requireDatabaseConnection(); await applyDrizzleMigrations(); await seedFacultyHierarchy(); });
 afterAll(async () => {
-  await withTenant(tenant, async (tx) => {
-    await tx.execute(sql`UPDATE faculty SET reporting_faculty_id = NULL WHERE workspace_subdomain = ${tenant}`);
-  });
   await cleanupFacultyHierarchy();
   await closeDatabase();
 });
 
 describe('Faculty review fixes against PostgreSQL', () => {
-  it('given a legacy supervisor, reads the ancestor chain from the real driver', async () => {
-    // Arrange
-    await withTenant(tenant, (tx) => tx.execute(sql`UPDATE faculty SET reporting_faculty_id = 'f0'
-      WHERE workspace_subdomain = ${tenant} AND id = 'f1'`));
-    // Act / Assert
+  it('given position-based reporting, reads the ancestor chain from the real driver', async () => {
     expect(await findAncestorChain(tenant, 'f1')).toEqual(['f0']);
   });
 

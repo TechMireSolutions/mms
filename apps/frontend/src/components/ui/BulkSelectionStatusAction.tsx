@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ChevronDown, Tag } from "lucide-react";
-import { bulkSelectionActionClassName } from "@/components/ui/BulkSelectionBar";
+import { bulkActionDockActionClassName } from "@/components/ui/bulkActionDockStyles";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ export function BulkSelectionStatusAction({
           type="button"
           variant="outline"
           disabled={disabled}
-          className={bulkSelectionActionClassName}
+          className={bulkActionDockActionClassName}
         >
           <Tag className="w-3.5 h-3.5 text-primary" /> {label}{" "}
           <ChevronDown className="w-3 h-3 ms-0.5" />

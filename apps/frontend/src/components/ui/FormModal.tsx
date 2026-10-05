@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, type ModalProps } from '@/components/ui/Modal';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { useFormModalLayout } from '@/components/ui/useFormModalLayout';
 import type { SubTab } from '@/components/ui/SubTabBar';
 
@@ -13,6 +14,11 @@ export interface FormModalProps<K extends string = string> extends ModalProps<K>
   builderMode?: boolean;
   onBuilderModeChange?: (active: boolean) => void;
   saveOnTabChange?: boolean;
+  /** When set with isDirty, close is intercepted by a discard confirm dialog. */
+  discardUnsavedTitle?: string;
+  discardUnsavedDescription?: string;
+  discardConfirmLabel?: string;
+  discardCancelLabel?: string;
 }
 
 /**
@@ -54,8 +60,13 @@ export function FormModal<K extends string = string>({
   priority = false,
   saveOnTabChange = true,
   formId,
+  discardUnsavedTitle,
+  discardUnsavedDescription,
+  discardConfirmLabel,
+  discardCancelLabel,
   children,
 }: FormModalProps<K>): React.JSX.Element | null {
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   const handleTabChange = async (nextTab: K) => {
     if (nextTab === activeTab) return;
@@ -68,6 +79,14 @@ export function FormModal<K extends string = string>({
       }
     }
     onTabChange?.(nextTab);
+  };
+
+  const requestClose = () => {
+    if (isDirty && discardUnsavedTitle) {
+      setDiscardOpen(true);
+      return;
+    }
+    onClose();
   };
 
   const {
@@ -91,34 +110,48 @@ export function FormModal<K extends string = string>({
   });
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={title}
-      subtitle={subtitle}
-      icon={icon}
-      size={effectiveSize}
-      headerExtra={resolvedHeaderExtra}
-      headerActions={headerActions}
-      panelClassName={panelClassName}
-      priority={priority}
-      error={error}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-      dir={dir}
-      cancelLabel={cancelLabel}
-      saveLabel={saveLabel}
-      onSave={onSave}
-      saving={saving}
-      saveDisabled={saveDisabled}
-      saved={saved}
-      savedLabel={savedLabel}
-      footerStart={footerStart}
-      hideFooter={hideFooter || builderMode}
-      formId={formId}
-    >
-      {children}
-    </Modal>
+    <>
+      <Modal
+        open={open}
+        onClose={requestClose}
+        title={title}
+        subtitle={subtitle}
+        icon={icon}
+        size={effectiveSize}
+        headerExtra={resolvedHeaderExtra}
+        headerActions={headerActions}
+        panelClassName={panelClassName}
+        priority={priority}
+        error={error}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        dir={dir}
+        cancelLabel={cancelLabel}
+        saveLabel={saveLabel}
+        onSave={onSave}
+        saving={saving}
+        saveDisabled={saveDisabled}
+        saved={saved}
+        savedLabel={savedLabel}
+        footerStart={footerStart}
+        hideFooter={hideFooter || builderMode}
+        formId={formId}
+      >
+        {children}
+      </Modal>
+      {discardUnsavedTitle ? (
+        <ConfirmAlertDialog
+          open={discardOpen}
+          onOpenChange={setDiscardOpen}
+          title={discardUnsavedTitle}
+          description={discardUnsavedDescription ?? ''}
+          confirmLabel={discardConfirmLabel}
+          cancelLabel={discardCancelLabel}
+          destructive
+          onConfirm={onClose}
+        />
+      ) : null}
+    </>
   );
 }

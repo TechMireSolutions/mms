@@ -1,11 +1,9 @@
 import type { JSX } from 'react';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
-import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
-import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
+import { EntityCardFooterActions } from '@/components/ui/EntityCardFooterActions';
+import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -62,13 +60,13 @@ function DistributionCard({
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={distribution.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={distribution.id}
         displayName={distribution.recipientName || distribution.id}
         isSelected={isSelected}
@@ -92,40 +90,40 @@ function DistributionCard({
         }
       />
 
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible('recipientClass') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.recipientClass')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.recipientClass')}>
             {distribution.recipientClass || '—'}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('quantity') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.quantity')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.quantity')}>
             <span className="font-bold">{distribution.quantity}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('reason') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.reason')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.reason')}>
             <span className="break-words">{distribution.reason || '—'}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('issuedDate') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.issuedDate')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedDate')}>
             {distribution.issuedDate}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('issuedBy') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.issuedBy')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.issuedBy')}>
             <span className="break-words">{distribution.issuedBy || '—'}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible('status') && (
-          <DirectoryCardMetaTile label={t('hasanat.columns.distribution.status')}>
+          <EntityCardMetaTile label={t('hasanat.columns.distribution.status')}>
             <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
+      </EntityCard.MetaGrid>
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         overflowActions={
           <DistributionsRowActions
             distribution={distribution}
@@ -136,7 +134,7 @@ function DistributionCard({
             showDeleted={showDeleted}
             canRestoreRows={canRestoreRows}
             canDeleteRows={canDeleteRows}
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
             onMessage={
               onMessage
                 ? (channel, dist) => onMessage(channel, [dist])
@@ -147,7 +145,7 @@ function DistributionCard({
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 
@@ -167,7 +165,7 @@ export function DistributionsListCards(props: DistributionsListCardsProps): JSX.
   }
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={distributions}
       selectedIds={selectedIds}
       onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}

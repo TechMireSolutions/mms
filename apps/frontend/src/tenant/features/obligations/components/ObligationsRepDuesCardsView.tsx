@@ -1,7 +1,7 @@
 import React from "react";
 import { getInitials } from "@mms/shared";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -25,9 +25,9 @@ export function ObligationsRepDuesCardsView({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardsGrid className="p-3">
+    <EntityCardsGrid className="p-3">
       {repSummary.map((representativeSummary) => (
-        <DirectoryEntityCard
+        <EntityCard
           key={representativeSummary.key}
           className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
         >
@@ -82,7 +82,7 @@ export function ObligationsRepDuesCardsView({
               ddClassName="font-mono font-bold text-destructive text-sm"
             />
           </StatGrid>
-        </DirectoryEntityCard>
+        </EntityCard>
       ))}
       <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
         <p className="text-xs font-bold text-muted-foreground uppercase m-0">
@@ -102,6 +102,6 @@ export function ObligationsRepDuesCardsView({
           />
         </StatGrid>
       </article>
-    </DirectoryCardsGrid>
+    </EntityCardsGrid>
   );
 }

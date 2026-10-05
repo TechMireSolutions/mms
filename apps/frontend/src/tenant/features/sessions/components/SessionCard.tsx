@@ -1,9 +1,8 @@
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
@@ -34,7 +33,7 @@ export interface SessionCardProps {
   reducedMotion?: boolean;
 }
 
-/** Sessions Work directory card — shared DirectoryEntityCard chrome + capacity bar. */
+/** Sessions Work directory card — shared EntityCard chrome + capacity bar. */
 export function SessionCard({
   session,
   isSelected,
@@ -70,8 +69,8 @@ export function SessionCard({
   const columnOptions = { t, statusConfig, typeConfig };
 
   return (
-    <DirectoryEntityCard isSelected={effectiveSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <DirectoryCardHeader
+    <EntityCard isSelected={effectiveSelected} reducedMotion={reducedMotion} {...cardProps}>
+      <EntityCard.Header
         id={session.id}
         displayName={session.name}
         isSelected={effectiveSelected}
@@ -88,7 +87,7 @@ export function SessionCard({
         }
       />
 
-      <DirectoryCardMetadata
+      <EntityCardMetadata
         columns={visibleColumns}
         keyFor={(col) => col.key}
         labelFor={(col) => col.label}
@@ -115,7 +114,7 @@ export function SessionCard({
         </div>
       )}
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         onView={() => onView(session)}
         viewLabel={t("sessions.actionViewShort")}
         viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
@@ -127,13 +126,13 @@ export function SessionCard({
               canDelete={canDelete}
               hideViewItem
               onView={onView}
-              triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+              triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
               onRequestDelete={onRequestDelete}
               onRestore={onRestore}
             />
           ) : null
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

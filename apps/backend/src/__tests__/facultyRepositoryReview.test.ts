@@ -19,17 +19,25 @@ describe('Faculty repository review regressions', () => {
   });
 
   it('given stored custom fields and notes, includes them in the directory response', async () => {
-    // Arrange
-    const stored: Record<string, unknown> = {
-      id: 'f', contactId: 'c', status: 'active', hierarchyRank: 10,
-      notes: 'Office hours', customData: { office: 'Room 12' },
+    // Arrange — list path uses LATERAL SQL via tx.execute (count + page + subordinate batch)
+    const stored = {
+      id: 'f', contactId: 'c', status: 'active', notes: 'Office hours',
+      customData: { office: 'Room 12' },
+      workspaceSubdomain: 'demo', userId: null, employeeId: null, specialization: null,
+      qualification: null, joinDate: null, deletedAt: null, deletedBy: null,
+      deletionReason: null, restoredAt: null, restoredBy: null, deletedWithCascade: false,
+      createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'),
+      createdBy: null, updatedBy: null,
     };
-    tx.select.mockImplementation((projection: Record<string, unknown>) => {
+    tx.execute
+      .mockResolvedValueOnce({ rows: [{ count: 1 }] }) // count
+      .mockResolvedValueOnce({ rows: [stored] }) // page
+      .mockResolvedValueOnce({ rows: [] }) // subordinate batch
+      .mockResolvedValue({ rows: [] }); // hydrate appointments if any
+    tx.select.mockImplementation(() => {
       const query = {
-        from: () => query, where: () => query, orderBy: () => query, limit: () => query,
-        offset: () => query, groupBy: async () => [],
-        then: (resolve: (value: unknown) => void) => resolve('count' in projection ? [{ count: 1 }]
-          : [Object.fromEntries(Object.keys(projection).map((key) => [key, stored[key] ?? null]))]),
+        from: () => query, innerJoin: () => query, where: () => query, orderBy: () => query,
+        then: (resolve: (value: unknown) => void) => resolve([]),
       };
       return query;
     });
@@ -48,9 +56,21 @@ describe('Faculty repository review regressions', () => {
   });
 
   it('given no surviving dependents, permits deletion', async () => {
-    // Arrange
+    // Arrange — lock + dependents + session FK checks
     tx.execute.mockResolvedValue({ rows: [] });
     // Act / Assert
     await expect(guardFacultyAssignmentDependents('demo', ['manager', 'child'])).resolves.toBeUndefined();
+    expect(tx.execute).toHaveBeenCalledTimes(3);
+  });
+
+  it('given session faculty links, rejects deletion', async () => {
+    tx.execute
+      .mockResolvedValueOnce({ rows: [] }) // lock
+      .mockResolvedValueOnce({ rows: [] }) // no position dependents
+      .mockResolvedValueOnce({ rows: [{ '?column?': 1 }] }); // session links
+    await expect(guardFacultyAssignmentDependents('demo', ['manager'])).rejects.toMatchObject({
+      statusCode: 409,
+      message: expect.stringContaining('session faculty'),
+    });
   });
 });

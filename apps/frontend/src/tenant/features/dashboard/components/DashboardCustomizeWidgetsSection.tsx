@@ -6,8 +6,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { CustomizeItemRow } from '@/tenant/features/dashboard/components/CustomizeItemRow';
-import { CustomizeSectionCard } from '@/tenant/features/dashboard/components/CustomizeSectionCard';
 
 export interface DashboardCustomizeWidgetsSectionProps {
   customWidgets: CustomWidget[];
@@ -29,6 +29,7 @@ export function DashboardCustomizeWidgetsSection({
   onReorderWidgets,
 }: DashboardCustomizeWidgetsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
+  const title = t('dashboard.chartsWidgetsSettings');
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
     if (!onReorderWidgets) return;
@@ -44,21 +45,92 @@ export function DashboardCustomizeWidgetsSection({
   };
 
   return (
-    <CustomizeSectionCard
-      title={t('dashboard.chartsWidgetsSettings')}
-      description={t('dashboard.chartsWidgetsSettingsDesc')}
-      maxHeightClass="max-h-widget-customizer"
-      headerContent={
-        <div className="space-y-0.5">
-          <p className="font-bold text-foreground">
-            {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
-          </p>
-          <p className="text-xs text-muted-foreground font-semibold">
-            {t('dashboard.totalWidgets', { count: customWidgets.length })}
-          </p>
+    <SectionCard
+      title={title}
+      subtitle={t('dashboard.chartsWidgetsSettingsDesc')}
+      padding="p-6"
+      accentColor="primary"
+    >
+      <fieldset className="space-y-4 border-0 p-0 m-0 min-w-0">
+        <legend className="sr-only">{title}</legend>
+        <div className="text-xs border-b border-border/45 pb-3">
+          <div className="space-y-0.5">
+            <p className="font-bold text-foreground">
+              {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
+            </p>
+            <p className="text-xs text-muted-foreground font-semibold">
+              {t('dashboard.totalWidgets', { count: customWidgets.length })}
+            </p>
+          </div>
         </div>
-      }
-      footer={
+        <div className="space-y-2 max-h-widget-customizer overflow-y-auto pe-1">
+          {customWidgets.length === 0 ? (
+            <EmptyState title={t('dashboard.noWidgets')} compact icon={null} className="italic" />
+          ) : (
+            customWidgets.map((widget, index) => (
+              <CustomizeItemRow
+                key={widget.id}
+                id={`widget-pin-${widget.id}`}
+                checked={Boolean(widget.isPinnedToDashboard)}
+                onToggle={() => onToggleWidgetPin(widget.id)}
+                title={resolveWidgetTitle(widget, t)}
+                subtitle={getCollectionLabel(widget.collection, widget.collection, t)}
+                actions={
+                  <>
+                    {onReorderWidgets && (
+                      <div className="flex items-center gap-0.5">
+                        <Button
+                          onClick={() => handleMove(index, 'up')}
+                          disabled={index === 0}
+                          variant="ghost"
+                          size="icon"
+                          className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={t('dashboard.moveWidgetUp')}
+                          aria-label={t('dashboard.moveWidgetUp')}
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          onClick={() => handleMove(index, 'down')}
+                          disabled={index === customWidgets.length - 1}
+                          variant="ghost"
+                          size="icon"
+                          className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={t('dashboard.moveWidgetDown')}
+                          aria-label={t('dashboard.moveWidgetDown')}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                    <Button
+                      onClick={() => onEditWidget(widget)}
+                      variant="ghost"
+                      size="icon"
+                      className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg"
+                      title={t('dashboard.editWidget')}
+                      aria-label={t('dashboard.editWidget')}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    {!isSeededDashboardWidget(widget.id) && (
+                      <Button
+                        onClick={() => onDeleteWidget(widget.id)}
+                        variant="ghost"
+                        size="icon"
+                        className="border border-border/60 hover:border-destructive/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer rounded-lg"
+                        title={t('dashboard.deleteWidget')}
+                        aria-label={t('dashboard.deleteWidget')}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </>
+                }
+              />
+            ))
+          )}
+        </div>
         <Button
           variant="capsOutline"
           size="caps"
@@ -68,74 +140,7 @@ export function DashboardCustomizeWidgetsSection({
           <Plus className="w-4 h-4" />
           {t('dashboard.createWidget')}
         </Button>
-      }
-    >
-      {customWidgets.length === 0 ? (
-        <EmptyState title={t('dashboard.noWidgets')} compact icon={null} className="italic" />
-      ) : (
-        customWidgets.map((widget, index) => (
-          <CustomizeItemRow
-            key={widget.id}
-            id={`widget-pin-${widget.id}`}
-            checked={Boolean(widget.isPinnedToDashboard)}
-            onToggle={() => onToggleWidgetPin(widget.id)}
-            title={resolveWidgetTitle(widget, t)}
-            subtitle={getCollectionLabel(widget.collection, widget.collection, t)}
-            actions={
-              <>
-                {onReorderWidgets && (
-                  <div className="flex items-center gap-0.5">
-                    <Button
-                      onClick={() => handleMove(index, 'up')}
-                      disabled={index === 0}
-                      variant="ghost"
-                      size="icon"
-                      className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={t('dashboard.moveWidgetUp')}
-                      aria-label={t('dashboard.moveWidgetUp')}
-                    >
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      onClick={() => handleMove(index, 'down')}
-                      disabled={index === customWidgets.length - 1}
-                      variant="ghost"
-                      size="icon"
-                      className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={t('dashboard.moveWidgetDown')}
-                      aria-label={t('dashboard.moveWidgetDown')}
-                    >
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                )}
-                <Button
-                  onClick={() => onEditWidget(widget)}
-                  variant="ghost"
-                  size="icon"
-                  className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg"
-                  title={t('dashboard.editWidget')}
-                  aria-label={t('dashboard.editWidget')}
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                {!isSeededDashboardWidget(widget.id) && (
-                  <Button
-                    onClick={() => onDeleteWidget(widget.id)}
-                    variant="ghost"
-                    size="icon"
-                    className="border border-border/60 hover:border-destructive/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer rounded-lg"
-                    title={t('dashboard.deleteWidget')}
-                    aria-label={t('dashboard.deleteWidget')}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-              </>
-            }
-          />
-        ))
-      )}
-    </CustomizeSectionCard>
+      </fieldset>
+    </SectionCard>
   );
 }

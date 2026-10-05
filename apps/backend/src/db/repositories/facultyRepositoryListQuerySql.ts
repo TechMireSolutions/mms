@@ -7,10 +7,13 @@ import {
   facultyQuickFilterStatusValue,
   type FacultyListQuery,
 } from '@mms/shared';
-import { faculty, contacts } from '../schema.js';
+import { faculty } from '../schema.js';
 import {
-  primaryDepartmentNameExpr,
-  primaryDesignationNameExpr,
+  joinedContactGenderExpr,
+  joinedContactNameExpr,
+  joinedPrimaryDepartmentNameExpr,
+  joinedPrimaryDesignationNameExpr,
+  joinedReportsToFacultyExpr,
 } from './facultyPrimaryAppointmentSql.js';
 
 /** Shared status expression for Faculty list filters + metrics. */
@@ -26,56 +29,23 @@ export function employeeIdExpr(): SQL {
   return sql`lower(trim(COALESCE(${faculty.employeeId}, '')))`;
 }
 
-/** Display name from linked contact for Work sort (Contacts SSOT). */
-function linkedContactNameSortExpr(): SQL {
-  return sql`lower(trim(COALESCE((
-    SELECT COALESCE(
-      NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''),
-      NULLIF(trim(COALESCE(c.name, '')), ''),
-      ''
-    )
-    FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND c.id = ${faculty.contactId}
-    LIMIT 1
-  ), '')))`;
-}
-
-/** Gender from linked contact (Contacts SSOT). */
-function linkedContactGenderExpr(): SQL {
-  return sql`lower(trim(COALESCE((
-    SELECT c.gender
-    FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND c.id = ${faculty.contactId}
-    LIMIT 1
-  ), '')))`;
-}
-
 function buildSearchSql(search: string): SQL | null {
   const normalized = search.trim().toLowerCase();
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   return sql`(
     lower(COALESCE(${faculty.employeeId}, '')) LIKE ${pattern}
-    OR lower(${primaryDesignationNameExpr()}) LIKE ${pattern}
-    OR lower(${primaryDepartmentNameExpr()}) LIKE ${pattern}
+    OR lower(${joinedPrimaryDesignationNameExpr()}) LIKE ${pattern}
+    OR lower(${joinedPrimaryDepartmentNameExpr()}) LIKE ${pattern}
     OR lower(COALESCE(${faculty.specialization}, '')) LIKE ${pattern}
     OR lower(COALESCE(${faculty.qualification}, '')) LIKE ${pattern}
-    OR EXISTS (
-      SELECT 1 FROM ${contacts} c
-      WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
-        AND c.id = ${faculty.contactId}
-        AND (
-          lower(COALESCE(c.name, '')) LIKE ${pattern}
-          OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
-          OR lower(COALESCE(c.first_name, '')) LIKE ${pattern}
-          OR lower(COALESCE(c.last_name, '')) LIKE ${pattern}
-        )
-    )
+    OR lower(${joinedContactNameExpr()}) LIKE ${pattern}
+    OR lower(COALESCE(fc.first_name, '')) LIKE ${pattern}
+    OR lower(COALESCE(fc.last_name, '')) LIKE ${pattern}
   )`;
 }
 
+/** ORDER BY — requires LATERAL primary-appointment FROM (pa_dept / pa_desig / fc). */
 export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
@@ -88,7 +58,7 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
       : sql`${faculty.updatedAt} asc nulls last`;
   }
   if (field === 'name') {
-    const nameSort = linkedContactNameSortExpr();
+    const nameSort = sql`lower(trim(${joinedContactNameExpr()}))`;
     return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
   }
   if (field === 'status') {
@@ -100,13 +70,13 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
     return dir === 'desc' ? sql`${empSort} desc nulls last` : sql`${empSort} asc nulls last`;
   }
   if (field === 'designation') {
-    const designationSort = primaryDesignationNameExpr();
+    const designationSort = joinedPrimaryDesignationNameExpr();
     return dir === 'desc'
       ? sql`lower(${designationSort}) desc nulls last`
       : sql`lower(${designationSort}) asc nulls last`;
   }
   if (field === 'department') {
-    const departmentSort = primaryDepartmentNameExpr();
+    const departmentSort = joinedPrimaryDepartmentNameExpr();
     return dir === 'desc'
       ? sql`lower(${departmentSort}) desc nulls last`
       : sql`lower(${departmentSort}) asc nulls last`;
@@ -128,6 +98,7 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
   return sql`${faculty.id} asc`;
 }
 
+/** WHERE conditions — requires LATERAL primary-appointment FROM for dept/desig/supervisor/contact. */
 export function buildListConditions(subdomain: string, query: FacultyListQuery & { includeDeleted?: boolean }): SQL[] {
   const conditions: SQL[] = [eq(faculty.workspaceSubdomain, subdomain)];
 
@@ -152,21 +123,22 @@ export function buildListConditions(subdomain: string, query: FacultyListQuery &
 
   if ((query as { department?: string }).department?.trim()) {
     const dept = (query as { department?: string }).department!.trim();
-    conditions.push(sql`lower(trim(${primaryDepartmentNameExpr()})) = lower(trim(${dept}))`);
+    conditions.push(sql`lower(trim(${joinedPrimaryDepartmentNameExpr()})) = lower(trim(${dept}))`);
   }
 
   if ((query as { designation?: string }).designation?.trim()) {
     const desig = (query as { designation?: string }).designation!.trim();
-    conditions.push(sql`lower(trim(${primaryDesignationNameExpr()})) = lower(trim(${desig}))`);
+    conditions.push(sql`lower(trim(${joinedPrimaryDesignationNameExpr()})) = lower(trim(${desig}))`);
   }
 
   if ((query as { reportingFacultyId?: string }).reportingFacultyId?.trim()) {
-    conditions.push(eq(faculty.reportingFacultyId, (query as { reportingFacultyId?: string }).reportingFacultyId!.trim()));
+    const supervisorId = (query as { reportingFacultyId?: string }).reportingFacultyId!.trim();
+    conditions.push(joinedReportsToFacultyExpr(supervisorId));
   }
 
   if (query.gender?.trim()) {
     const genderFilter = query.gender.trim().toLowerCase();
-    conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);
+    conditions.push(sql`${joinedContactGenderExpr()} = ${genderFilter}`);
   }
 
   const quickFilter = query.quickFilter;
@@ -187,4 +159,3 @@ export function buildListConditions(subdomain: string, query: FacultyListQuery &
 
   return conditions;
 }
-

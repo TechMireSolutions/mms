@@ -1,12 +1,9 @@
 import { validatePositionOccupancy } from './positionOccupancyValidation.js';
-import { assignmentHierarchySql } from './facultyHierarchySql.js';
-import type { AssignmentTreeNode } from './facultyAssignmentHierarchyRepository.js';
 import { sql } from 'drizzle-orm';
 import type { TenantTransaction } from '../tenant-context.js';
 import type { InsertFacultyAssignmentRow } from '../schema/facultyAssignmentTables.js';
 
 export async function lockFacultyHierarchy(tx: Pick<TenantTransaction, 'execute'>, tenant: string): Promise<void> {
-  // One tenant-scoped lock serializes changes to both hierarchy edges and appointments.
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`faculty:${tenant}`}, 0))`);
 }
 
@@ -25,9 +22,6 @@ export async function validateFacultyAssignment(
   }
   const isCreate = existing.rows.length === 0;
   const currentPositionId = existing.rows[0]?.position_id ?? null;
-  // Faculty-form bootstrap may create appointments without an org position yet.
-  // Org/appointment UI creates that supply a position still run occupancy checks below.
-  // Reject clearing a set position. Legacy nulls may be preserved only by omitting positionId.
   if (!isCreate && currentPositionId && !input.positionId) {
     throw new Error('Cannot clear organization position on an appointment');
   }
@@ -57,26 +51,4 @@ export async function validateFacultyAssignment(
     if (overlaps.rows.length) throw new Error('Primary assignment overlaps an existing appointment');
   }
   if (input.positionId) await validatePositionOccupancy(tx, tenant, input);
-  if (!input.reportsToAssignmentId) return;
-  const parent = await tx.execute<{ id: string; faculty_id: string; reports_to_assignment_id: string | null }>(sql`
-    SELECT a.id, a.faculty_id, a.reports_to_assignment_id FROM faculty_assignments a
-    JOIN faculty f ON f.workspace_subdomain = a.workspace_subdomain AND f.id = a.faculty_id
-    JOIN faculty_departments d ON d.workspace_subdomain = a.workspace_subdomain AND d.id = a.department_id
-    JOIN faculty_designations g ON g.workspace_subdomain = a.workspace_subdomain AND g.id = a.designation_id
-    WHERE a.workspace_subdomain = ${tenant} AND a.id = ${input.reportsToAssignmentId}
-      AND a.deleted_at IS NULL AND f.deleted_at IS NULL AND d.deleted_at IS NULL AND g.deleted_at IS NULL
-    FOR SHARE OF a, f, d, g
-  `);
-  const root = parent.rows[0];
-  if (!root) throw new Error('Reporting assignment is missing or archived');
-  if (root.id === input.id || root.faculty_id === input.facultyId) throw new Error('Circular reporting hierarchy');
-  const chain = await tx.execute<AssignmentTreeNode & Record<string, unknown>>(
-    assignmentHierarchySql(tenant, input.reportsToAssignmentId, 'up', 20),
-  );
-  const visited = new Set([root.id, ...chain.rows.map((row) => row.id)]);
-  if ((root.reports_to_assignment_id && !visited.has(root.reports_to_assignment_id)) || chain.rows.some((row) =>
-    row.id === input.id || row.facultyId === input.facultyId || row.isCycle
-      || (row.reportsToAssignmentId !== null && !visited.has(row.reportsToAssignmentId)))) {
-    throw new Error('Circular reporting hierarchy, archived ancestor, or hierarchy depth limit exceeded');
-  }
 }

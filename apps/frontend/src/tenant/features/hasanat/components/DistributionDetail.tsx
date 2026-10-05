@@ -2,10 +2,9 @@ import React from 'react';
 import { Send } from 'lucide-react';
 import type { Distribution } from '@/lib/data/hasanatData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 
 export interface DistributionDetailProps {
@@ -27,7 +26,7 @@ export const DistributionDetail = (function DistributionDetail({
   const isArchived = !!distribution.deletedAt;
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={t('hasanat.detail.title')}
@@ -47,42 +46,37 @@ export const DistributionDetail = (function DistributionDetail({
       }
     >
       <div className="flex flex-col gap-6 py-6">
-        <section>
-          <DetailSectionTitle>{t('hasanat.detail.overview')}</DetailSectionTitle>
-          <Card className="overflow-hidden">
-            <div className="divide-y divide-border">
-              <DetailAttributeRow 
-                label={t('hasanat.fields.denomination')}
-                value={distribution.denominationName} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.recipient')}
-                value={distribution.recipientName} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.quantity')}
-                value={distribution.quantity} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.status')}
-                value={distribution.status} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.issuedDate')}
-                value={distribution.issuedDate} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.issuedBy')}
-                value={distribution.issuedBy || '—'} 
-              />
-              <DetailAttributeRow 
-                label={t('hasanat.fields.reason')}
-                value={distribution.reason || '—'} 
-              />
-            </div>
-          </Card>
-        </section>
+        <DetailSectionCard title={t('hasanat.detail.overview')} className="overflow-hidden divide-y divide-border">
+          <DetailAttributeRow
+            label={t('hasanat.fields.denomination')}
+            value={distribution.denominationName}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.recipient')}
+            value={distribution.recipientName}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.quantity')}
+            value={distribution.quantity}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.status')}
+            value={distribution.status}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.issuedDate')}
+            value={distribution.issuedDate}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.issuedBy')}
+            value={distribution.issuedBy || '—'}
+          />
+          <DetailAttributeRow
+            label={t('hasanat.fields.reason')}
+            value={distribution.reason || '—'}
+          />
+        </DetailSectionCard>
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });

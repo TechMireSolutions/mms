@@ -2,7 +2,7 @@ import React from 'react';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { PlatformReportsTier } from '@/platform/components/tiers/PlatformReportsTier';
 
 export default function PlatformReportsPage(): React.JSX.Element {
@@ -15,7 +15,7 @@ export default function PlatformReportsPage(): React.JSX.Element {
     : t('platform.adminConsoleSubtitle', { name: userName });
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t('module.reports')} | ${t('platform.consoleTitle')}`}
       seoDescription={subtitle}
       headerIcon={BarChart3}
@@ -23,7 +23,7 @@ export default function PlatformReportsPage(): React.JSX.Element {
       headerSubtitle={subtitle}
     >
       <PlatformReportsTier />
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }
 

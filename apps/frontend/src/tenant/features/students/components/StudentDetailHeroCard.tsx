@@ -1,8 +1,9 @@
 import React from "react";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
-import { GrBadge } from "@/tenant/features/students/components/GrBadge";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { getGenderCardAccent } from "@/lib/genderUi";
+import { useTranslation } from "@/hooks/useTranslation";
 import type { Student } from "@mms/shared";
 
 export interface StudentDetailHeroCardProps {
@@ -14,6 +15,7 @@ export function StudentDetailHeroCard({
   student,
   statusBadgeConfig,
 }: StudentDetailHeroCardProps): React.JSX.Element {
+  const { t } = useTranslation();
   const displayName = student.name?.trim() || "";
   const avatarUrl = typeof student.avatar === "string" ? student.avatar : undefined;
 
@@ -26,11 +28,11 @@ export function StudentDetailHeroCard({
       accentColor={getGenderCardAccent(student.gender)}
     >
       <StatusBadge status={student.status || "active"} config={statusBadgeConfig} />
-      {student.grNumber ? <GrBadge grNumber={student.grNumber} /> : null}
+      {student.grNumber ? (
+        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+          {t("students.grPrefix")}: {student.grNumber}
+        </FormFooterBadge>
+      ) : null}
     </PersonDetailHeroCard>
   );
 }
-
-/** Backward-compatible alias for existing consumers. */
-export type StudentDetailHeroProps = StudentDetailHeroCardProps;
-export const StudentDetailHero = StudentDetailHeroCard;

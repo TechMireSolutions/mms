@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Contact } from "@mms/shared";
 import {
   ContactDetailHeroCard,
-  ContactDetailOverviewHero,
 } from "./ContactDetailHeroCard";
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -68,9 +67,5 @@ describe("ContactDetailHeroCard Component", () => {
     expect(html).toContain("Simple Contact");
     expect(html).not.toContain("AI Intelligence");
     expect(html).not.toContain("Notes");
-  });
-
-  it("exports backward-compatible ContactDetailOverviewHero alias", () => {
-    expect(ContactDetailOverviewHero).toBe(ContactDetailHeroCard);
   });
 });

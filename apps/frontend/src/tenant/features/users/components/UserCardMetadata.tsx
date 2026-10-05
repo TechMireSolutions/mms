@@ -1,5 +1,5 @@
 import type { SystemUser } from "@mms/shared";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
 import { useTranslation } from "@/hooks/useTranslation";
 import { renderUserWorkColumnValue } from "@/tenant/features/users/components/userWorkColumnCell";
 import { useUsersEntityDescriptor } from "@/tenant/features/users/hooks/useUsersEntityDescriptor";
@@ -31,7 +31,7 @@ export function UserCardMetadata({
     .filter((field) => visible(field.key));
 
   return (
-    <DirectoryCardMetadata
+    <EntityCardMetadata
       columns={metaColumns}
       keyFor={(field) => field.key}
       labelFor={(field) => field.label}

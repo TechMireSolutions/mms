@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 
 /** Directory filters and pagination SSOT for Finance Work. */
 export function useFinanceDirectoryFilters() {
   const [invoiceListPage, setInvoiceListPage] = useState(1);
   const [paymentListPage, setPaymentListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [invoiceSearch, setInvoiceSearch] = useState('');
   const debouncedInvoiceSearch = useDebounce(invoiceSearch, 250);
   const [invoiceFilterStatus, setInvoiceFilterStatus] = useState<string[]>([]);

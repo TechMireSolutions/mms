@@ -1,11 +1,10 @@
 import type React from "react";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -68,14 +67,14 @@ function InvoiceCard({
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={invoice.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       accentClassName={getInvoiceAccentClass(invoice.status)}
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={invoice.id}
         displayName={invoice.studentName}
         isSelected={isSelected}
@@ -90,7 +89,7 @@ function InvoiceCard({
         }
       />
 
-      <DirectoryCardMetadata
+      <EntityCardMetadata
         columns={visibleColumns}
         keyFor={(col) => col.key}
         labelFor={(col) => col.label}
@@ -104,7 +103,7 @@ function InvoiceCard({
         }
       />
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         onView={handleView}
         viewLabel={t("finance.table.viewProfile")}
         viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
@@ -116,7 +115,7 @@ function InvoiceCard({
             canWriteMessaging={canWriteMessaging}
             showDeleted={showDeleted}
             hideViewItem
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
             onView={onView}
             onRecord={onRecord}
             onRequestDelete={onRequestDelete}
@@ -125,7 +124,7 @@ function InvoiceCard({
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 
@@ -140,7 +139,7 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
   });
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={invoices}
       selectedIds={selectedIds}
       onSelectAll={canSelectInvoices ? () => onToggleSelectAll(!allVisibleSelected) : undefined}

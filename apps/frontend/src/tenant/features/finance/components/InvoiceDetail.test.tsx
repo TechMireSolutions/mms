@@ -32,8 +32,8 @@ vi.mock("@/tenant/features/finance/hooks/useFinanceCollect", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/DetailDrawerShell", () => ({
-  DetailDrawerShell: ({
+vi.mock("@/components/ui/Drawer", () => ({
+  Drawer: ({
     title,
     headerExtra,
     headerActions,

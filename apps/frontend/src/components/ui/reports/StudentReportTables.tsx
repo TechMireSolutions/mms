@@ -1,9 +1,7 @@
 import React from "react";
 import { Users } from "lucide-react";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { TableSkeleton } from "@/components/ui/LoadingState";
 import {
   Table,
   TableBody,
@@ -11,11 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
-
+import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import type { StudentReportTablesProps } from "./studentReportTypes";
 
 export const StudentReportTables = (function StudentReportTables({
@@ -29,16 +28,40 @@ export const StudentReportTables = (function StudentReportTables({
 }: StudentReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const loading = activeSubTab === "list" ? listLoading : historyLoading;
-  if (loading) {
-    return <TableSkeleton rows={5} cols={6} />;
-  }
-
   if (activeSubTab === "list") {
-    return students.length === 0 ? (
-      <EmptyState icon={Users} title={t("students.report.noStudentsFound")} description={t("students.report.adjustFilters")} compact />
-    ) : (
-      <div className={WORK_SURFACE}>
+    const columns: ExportColumn[] = [
+      { key: "name", header: t("students.report.colName") },
+      { key: "gender", header: t("students.report.colGender") },
+      { key: "class", header: t("students.report.colClass") },
+      { key: "session", header: t("students.report.colSession") },
+      { key: "city", header: t("students.report.colCity") },
+      { key: "age", header: t("students.report.colAge") },
+      { key: "registered", header: t("students.report.colRegistered") },
+      { key: "status", header: t("students.report.colStatus") },
+    ];
+    const rows = students.map((student) => ({
+      name: student.name,
+      gender: toTitleCase(student.gender),
+      class: student.class,
+      session: student.session,
+      city: student.city,
+      age: student.age,
+      registered: student.registered,
+      status: student.status,
+    }));
+
+    return (
+      <ReportDataGridContainer
+        title={t("students.report.studentListTab")}
+        columns={columns}
+        rows={rows}
+        moduleId="students"
+        isLoading={listLoading}
+        empty={!listLoading && students.length === 0}
+        emptyTitle={t("students.report.noStudentsFound")}
+        emptyDescription={t("students.report.adjustFilters")}
+        emptyIcon={Users}
+      >
         <div className="space-y-3 p-3 md:hidden">
           {students.map((student) => (
             <article key={student.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
@@ -48,31 +71,11 @@ export const StudentReportTables = (function StudentReportTables({
               </div>
               <StatGrid>
                 <StatRow className="min-w-0" label={t("students.report.colGender")} value={toTitleCase(student.gender)} />
-                <StatRow
-                  className="min-w-0"
-                  label={t("students.report.colClass")}
-                  value={student.class}
-                  ddClassName="truncate"
-                />
-                <StatRow
-                  className="min-w-0"
-                  label={t("students.report.colSession")}
-                  value={student.session}
-                  ddClassName="truncate"
-                />
-                <StatRow
-                  className="min-w-0"
-                  label={t("students.report.colCity")}
-                  value={student.city}
-                  ddClassName="truncate"
-                />
+                <StatRow className="min-w-0" label={t("students.report.colClass")} value={student.class} ddClassName="truncate" />
+                <StatRow className="min-w-0" label={t("students.report.colSession")} value={student.session} ddClassName="truncate" />
+                <StatRow className="min-w-0" label={t("students.report.colCity")} value={student.city} ddClassName="truncate" />
                 <StatRow className="min-w-0" label={t("students.report.colAge")} value={student.age} />
-                <StatRow
-                  className="min-w-0"
-                  label={t("students.report.colRegistered")}
-                  value={student.registered}
-                  ddClassName="text-muted-foreground"
-                />
+                <StatRow className="min-w-0" label={t("students.report.colRegistered")} value={student.registered} ddClassName="text-muted-foreground" />
               </StatGrid>
             </article>
           ))}
@@ -110,14 +113,37 @@ export const StudentReportTables = (function StudentReportTables({
             </TableBody>
           </Table>
         </div>
-      </div>
+      </ReportDataGridContainer>
     );
   }
 
-  return enrollments.length === 0 ? (
-    <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
-  ) : (
-    <div className={`${WORK_SURFACE} mt-4`}>
+  const historyColumns: ExportColumn[] = [
+    { key: "student", header: t("students.report.colStudent") },
+    { key: "session", header: t("students.report.colSession") },
+    { key: "class", header: t("students.report.colClass") },
+    { key: "enrolled", header: t("students.report.colEnrolled") },
+    { key: "status", header: t("students.report.colStatus") },
+  ];
+  const historyRows = enrollments.map((enrollment) => ({
+    student: enrollment.studentName,
+    session: enrollment.session,
+    class: enrollment.class,
+    enrolled: enrollment.enrolled,
+    status: enrollment.status,
+  }));
+
+  return (
+    <ReportDataGridContainer
+      title={t("students.report.enrollmentHistoryTab")}
+      columns={historyColumns}
+      rows={historyRows}
+      moduleId="students"
+      className="mt-4"
+      isLoading={historyLoading}
+      empty={!historyLoading && enrollments.length === 0}
+      emptyTitle={t("students.report.noEnrollmentsFound")}
+      emptyIcon={Users}
+    >
       <div className="space-y-3 p-3 md:hidden">
         {enrollments.map((enrollment) => (
           <article key={enrollment.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
@@ -128,12 +154,7 @@ export const StudentReportTables = (function StudentReportTables({
             <StatGrid>
               <StatRow className="min-w-0" label={t("students.report.colSession")} value={enrollment.session} />
               <StatRow className="min-w-0" label={t("students.report.colClass")} value={enrollment.class} />
-              <StatRow
-                fullWidth
-                label={t("students.report.colEnrolled")}
-                value={enrollment.enrolled}
-                ddClassName="text-muted-foreground"
-              />
+              <StatRow fullWidth label={t("students.report.colEnrolled")} value={enrollment.enrolled} ddClassName="text-muted-foreground" />
             </StatGrid>
           </article>
         ))}
@@ -143,14 +164,8 @@ export const StudentReportTables = (function StudentReportTables({
           <caption className="sr-only">{t("students.report.enrollmentHistoryTab")}</caption>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-              {[
-                { key: "student", label: t("students.report.colStudent") },
-                { key: "session", label: t("students.report.colSession") },
-                { key: "class", label: t("students.report.colClass") },
-                { key: "enrolled", label: t("students.report.colEnrolled") },
-                { key: "status", label: t("students.report.colStatus") },
-              ].map((header) => (
-                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-4 py-3">{header.label}</ModuleTableHeaderCell>
+              {historyColumns.map((header) => (
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-4 py-3">{header.header}</ModuleTableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
@@ -169,6 +184,6 @@ export const StudentReportTables = (function StudentReportTables({
           </TableBody>
         </Table>
       </div>
-    </div>
+    </ReportDataGridContainer>
   );
 });

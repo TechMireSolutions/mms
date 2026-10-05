@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
 import { baseListQueryFields } from './apiSchemas.js';
-import { FACULTY_STATUS_WRITE_MAX } from './facultyModuleManifest.js';
 import {
   FACULTY_SORT_FIELDS,
   FACULTY_SORT_FIELD_SET,
@@ -70,7 +69,7 @@ export function facultyQuickFilterStatusValue(preset: FacultyQuickFilter): strin
 /** Validates Faculty Work list query received over HTTP (SQL page is authoritative). */
 export const facultyListQuerySchema = z.object({
   ...baseListQueryFields,
-  status: z.string().max(FACULTY_STATUS_WRITE_MAX).optional(),
+  status: z.string().optional(),
   specialization: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),

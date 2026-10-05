@@ -65,6 +65,13 @@ export function FacultyDepartmentFormModal({
     }
   }, [open, department]);
 
+  const isDirty = department
+    ? name !== department.name
+      || code !== department.code
+      || (parentId || '') !== (department.parentId || '')
+      || isActive !== (department.isActive !== false)
+    : Boolean(name.trim() || code.trim() || parentId || !isActive);
+
   const handleNameChange = (val: string) => {
     setName(val);
     if (!codeManuallyEdited && !department) {
@@ -113,6 +120,11 @@ export function FacultyDepartmentFormModal({
       saveLabel={department ? t('faculty.setup.updateDepartment') : t('faculty.setup.addDepartment')}
       saving={isPending}
       saveDisabled={isPending || !name.trim()}
+      isDirty={isDirty}
+      discardUnsavedTitle={t('faculty.form.discardUnsavedTitle')}
+      discardUnsavedDescription={t('faculty.form.discardUnsavedDescription')}
+      discardConfirmLabel={t('faculty.form.discardChanges')}
+      discardCancelLabel={t('faculty.form.keepEditing')}
       onSave={() => void handleSubmit()}
     >
       <div className="space-y-4 py-1 text-start">

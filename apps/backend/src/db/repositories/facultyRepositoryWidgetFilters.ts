@@ -1,15 +1,19 @@
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type { FacultyWidgetQuery } from '@mms/shared';
-import { faculty, contacts } from '../schema.js';
+import { faculty } from '../schema.js';
 import {
-  primaryDepartmentNameExpr,
-  primaryDesignationNameExpr,
+  joinedContactNameExpr,
+  joinedPrimaryDepartmentNameExpr,
+  joinedPrimaryDesignationNameExpr,
+  joinedPrimaryHierarchyRankExpr,
+  joinedReportsToFacultyExpr,
 } from './facultyPrimaryAppointmentSql.js';
 
 export function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt))!;
 }
 
+/** Field exprs assuming LATERAL primary-appointment FROM (pa_dept / pa_desig / fc). */
 export function resolveFacultyFieldExpr(field: string): SQL {
   const f = field.trim();
   if (f === 'status') return sql`COALESCE(${faculty.status}, 'active')`;
@@ -18,23 +22,17 @@ export function resolveFacultyFieldExpr(field: string): SQL {
   if (f === 'qualification') return sql`COALESCE(${faculty.qualification}, '')`;
   if (f === 'joinDate' || f === 'join_date') return sql`COALESCE(${faculty.joinDate}, '')`;
   if (f === 'notes') return sql`COALESCE(${faculty.notes}, '')`;
-  if (f === 'department') return primaryDepartmentNameExpr();
-  if (f === 'designation') return primaryDesignationNameExpr();
-  if (f === 'hierarchyRank' || f === 'hierarchy_rank') return sql`COALESCE(${faculty.hierarchyRank}::text, '10')`;
-  if (f === 'reportingFacultyId' || f === 'reporting_faculty_id') return sql`COALESCE(${faculty.reportingFacultyId}, '')`;
+  if (f === 'department') return joinedPrimaryDepartmentNameExpr();
+  if (f === 'designation') return joinedPrimaryDesignationNameExpr();
+  if (f === 'hierarchyRank' || f === 'hierarchy_rank') return sql`${joinedPrimaryHierarchyRankExpr()}::text`;
+  if (f === 'reportingFacultyId' || f === 'reporting_faculty_id') {
+    return sql`''`;
+  }
 
-  if (f === 'gender') {
-    return sql`COALESCE((SELECT c.gender FROM ${contacts} c WHERE c.workspace_subdomain = current_setting('app.current_tenant', true) AND c.id = ${faculty.contactId} LIMIT 1), '')`;
-  }
-  if (f === 'dob') {
-    return sql`COALESCE((SELECT c.dob::text FROM ${contacts} c WHERE c.workspace_subdomain = current_setting('app.current_tenant', true) AND c.id = ${faculty.contactId} LIMIT 1), '')`;
-  }
-  if (f === 'city') {
-    return sql`COALESCE((SELECT c.city FROM ${contacts} c WHERE c.workspace_subdomain = current_setting('app.current_tenant', true) AND c.id = ${faculty.contactId} LIMIT 1), '')`;
-  }
-  if (f === 'name') {
-    return sql`COALESCE((SELECT COALESCE(NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''), c.name) FROM ${contacts} c WHERE c.workspace_subdomain = current_setting('app.current_tenant', true) AND c.id = ${faculty.contactId} LIMIT 1), '')`;
-  }
+  if (f === 'gender') return sql`COALESCE(fc.gender, '')`;
+  if (f === 'dob') return sql`COALESCE(fc.dob::text, '')`;
+  if (f === 'city') return sql`COALESCE(fc.city, '')`;
+  if (f === 'name') return joinedContactNameExpr();
 
   return sql`''`;
 }
@@ -46,9 +44,19 @@ export function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const fieldExpr = resolveFacultyFieldExpr(trimmedField);
   const op = operator ?? 'equals';
   const valNormalized = value.trim().toLowerCase();
+
+  if (
+    (trimmedField === 'reportingFacultyId' || trimmedField === 'reporting_faculty_id')
+    && op === 'equals'
+  ) {
+    const supervisorId = value.trim();
+    if (!supervisorId) return null;
+    return joinedReportsToFacultyExpr(supervisorId);
+  }
+
+  const fieldExpr = resolveFacultyFieldExpr(trimmedField);
 
   if (op === 'equals') {
     return sql`lower(trim(${fieldExpr}::text)) = ${valNormalized}`;

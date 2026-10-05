@@ -1,8 +1,7 @@
 import type React from "react";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { User } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import type { Contact } from "@mms/shared";
@@ -49,7 +48,6 @@ export function ContactForm({
   const { language } = useGlobalSettings();
   const { enabledTabIds } = useContactConfig();
   const [tab, setTab] = useState("basic");
-  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   const branding = getScopedBrandingSettings();
   const effectiveCountry = defaultCountry || branding.country || "";
@@ -71,16 +69,7 @@ export function ContactForm({
   useEffect(() => {
     if (!open) return;
     setTab("basic");
-    setConfirmDiscardOpen(false);
   }, [open]);
-
-  const handleRequestClose = useCallback(() => {
-    if (draft.isDirty) {
-      setConfirmDiscardOpen(true);
-      return;
-    }
-    onClose();
-  }, [draft.isDirty, onClose]);
 
   const tabErrorCounts = useMemo(
     () => computeContactTabErrorCounts(draft.validationErrors),
@@ -98,7 +87,6 @@ export function ContactForm({
     [draft.collectionCounts, tabErrorCounts, enabledTabIds, t],
   );
 
-  // Synchronously guard active tab — avoids the post-render useEffect extra paint
   const activeTab = visibleTabs.some((tabItem) => tabItem.key === tab)
     ? tab
     : (visibleTabs[0]?.key ?? "basic");
@@ -109,83 +97,74 @@ export function ContactForm({
   );
 
   return (
-    <>
-      <FormModal
-        open={open}
-        onClose={handleRequestClose}
-        title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
-        subtitle={
-          contact
-            ? t("contacts.form.editing", { name: contact.name || "" })
-            : t("contacts.form.createNewContact")
-        }
-        icon={User}
-        size="xl"
-        tall
-        priority={Boolean(priority || nested)}
-        saveOnTabChange={false}
-        error={validationErrorSummary}
-        tabs={visibleTabs}
-        activeTab={activeTab}
-        onTabChange={setTab}
-        tabPanelIdPrefix="contact-form-tab"
-        lang={language}
-        dir={dir}
-        cancelLabel={t("common.cancel")}
-        saveLabel={t("contacts.form.saveContact")}
-        onSave={draft.handleSave}
-        isDirty={draft.isDirty}
-        saving={draft.saving}
-        saveDisabled={
-          draft.lookupsLoading ||
-          !draft.contactDraft.firstName?.trim() ||
-          (Boolean(contact) && !draft.isDirty)
-        }
-        footerStart={
-          <ContactFormFooterStart
-            contactDraft={draft.contactDraft}
-            collectionCounts={draft.collectionCounts}
-            t={t}
-          />
-        }
-        formId="contact-form"
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
+      subtitle={
+        contact
+          ? t("contacts.form.editing", { name: contact.name || "" })
+          : t("contacts.form.createNewContact")
+      }
+      icon={User}
+      size="xl"
+      tall
+      priority={Boolean(priority || nested)}
+      saveOnTabChange={false}
+      error={validationErrorSummary}
+      tabs={visibleTabs}
+      activeTab={activeTab}
+      onTabChange={setTab}
+      tabPanelIdPrefix="contact-form-tab"
+      lang={language}
+      dir={dir}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("contacts.form.saveContact")}
+      onSave={draft.handleSave}
+      isDirty={draft.isDirty}
+      saving={draft.saving}
+      saveDisabled={
+        draft.lookupsLoading ||
+        !draft.contactDraft.firstName?.trim() ||
+        (Boolean(contact) && !draft.isDirty)
+      }
+      discardUnsavedTitle={t("contacts.form.discardUnsavedTitle")}
+      discardUnsavedDescription={t("contacts.form.discardUnsavedDescription")}
+      discardConfirmLabel={t("contacts.form.discardChanges")}
+      discardCancelLabel={t("contacts.form.keepEditing")}
+      footerStart={
+        <ContactFormFooterStart
+          contactDraft={draft.contactDraft}
+          collectionCounts={draft.collectionCounts}
+          t={t}
+        />
+      }
+      formId="contact-form"
+    >
+      <form
+        id="contact-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (
+            !draft.lookupsLoading &&
+            draft.contactDraft.firstName?.trim() &&
+            !(Boolean(contact) && !draft.isDirty)
+          ) {
+            void draft.handleSave();
+          }
+        }}
       >
-        <form
-          id="contact-form"
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (
-              !draft.lookupsLoading &&
-              draft.contactDraft.firstName?.trim() &&
-              !(Boolean(contact) && !draft.isDirty)
-            ) {
-              void draft.handleSave();
-            }
-          }}
-        >
-          <ContactFormTabContent
-            tab={tab}
-            draft={draft}
-            lockGender={lockGender}
-            defaultCountry={effectiveCountry}
-            defaultCity={effectiveCity}
-            defaultProvince={effectiveProvince}
-          />
-        </form>
-      </FormModal>
-
-      <ConfirmAlertDialog
-        open={confirmDiscardOpen}
-        onOpenChange={setConfirmDiscardOpen}
-        title={t("contacts.form.discardUnsavedTitle")}
-        description={t("contacts.form.discardUnsavedDescription")}
-        confirmLabel={t("contacts.form.discardChanges")}
-        cancelLabel={t("contacts.form.keepEditing")}
-        destructive
-        onConfirm={onClose}
-      />
-    </>
+        <ContactFormTabContent
+          tab={tab}
+          draft={draft}
+          lockGender={lockGender}
+          defaultCountry={effectiveCountry}
+          defaultCity={effectiveCity}
+          defaultProvince={effectiveProvince}
+        />
+      </form>
+    </FormModal>
   );
 }
 

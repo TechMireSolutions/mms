@@ -1,8 +1,14 @@
 import React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Student } from "@mms/shared";
-import { StudentDetailHeroCard, StudentDetailHero } from "./StudentDetailHeroCard";
+import { StudentDetailHeroCard } from "./StudentDetailHeroCard";
+
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
+}));
 
 const mockStudent: Student = {
   id: "std-hero-1",
@@ -50,9 +56,5 @@ describe("StudentDetailHeroCard Component", () => {
 
     expect(html).toContain("Ali Raza");
     expect(html).not.toContain("GR-");
-  });
-
-  it("exports backward-compatible StudentDetailHero alias pointing to StudentDetailHeroCard", () => {
-    expect(StudentDetailHero).toBe(StudentDetailHeroCard);
   });
 });

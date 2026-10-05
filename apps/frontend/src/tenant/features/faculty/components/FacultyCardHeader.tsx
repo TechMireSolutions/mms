@@ -1,11 +1,11 @@
 import type { Faculty } from '@mms/shared';
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import {
   DirectoryCardSubtitleStack,
   PersonIdentityMeta,
 } from "@/components/ui/PersonIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EntityCard } from "@/components/ui/EntityCard";
 
 export interface FacultyCardHeaderProps {
   faculty: Faculty;
@@ -62,7 +62,7 @@ export function FacultyCardHeader({
   ) : undefined;
 
   return (
-    <DirectoryCardHeader
+    <EntityCard.Header
       id={facultyId}
       displayName={displayName}
       avatar={faculty.avatar}

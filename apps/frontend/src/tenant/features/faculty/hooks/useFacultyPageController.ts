@@ -27,6 +27,7 @@ import {
   resolveFacultyPageTab,
 } from '@/tenant/features/faculty/facultyPageWorkSubTabs';
 import { useFacultyIoActions } from '@/tenant/features/faculty/hooks/useFacultyIoActions';
+import { useFacultyDirectoryFilterCatalog } from '@/tenant/features/faculty/hooks/useFacultyDirectoryFilterCatalog';
 
 export function useFacultyPageController() {
   const { t } = useTranslation();
@@ -81,6 +82,7 @@ export function useFacultyPageController() {
   useEmployeeIdMigration(effectiveTab, canEditSetup);
 
   const filters = useFacultyDirectoryFilters({ setActiveTab });
+  const filterCatalog = useFacultyDirectoryFilterCatalog(effectiveTab === 'faculties');
 
   useEffect(() => {
     filters.setListPage(1);
@@ -109,6 +111,9 @@ export function useFacultyPageController() {
     filterStatus: filters.filterStatus,
     filterSpecialization: filters.filterSpecialization,
     filterGender: filters.filterGender,
+    filterDepartment: filters.filterDepartment,
+    filterDesignation: filters.filterDesignation,
+    filterReportingFacultyId: filters.filterReportingFacultyId,
     quickFilter: filters.quickFilter,
     sortField: filters.sortField,
     sortDir: filters.sortDir,
@@ -124,6 +129,7 @@ export function useFacultyPageController() {
   const tabPanelProps = useFacultyWorkPanelProps({
     effectiveTab,
     filters,
+    filterCatalog,
     config,
     lookups,
     columnLayout,

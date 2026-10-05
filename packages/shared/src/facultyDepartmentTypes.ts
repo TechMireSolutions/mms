@@ -50,7 +50,6 @@ export const facultyAssignmentSchema = z.object({
   departmentId: z.string().min(1).max(100),
   designationId: z.string().min(1).max(100),
   positionId: z.string().min(1).max(100).nullable().optional(),
-  reportsToAssignmentId: z.string().min(1).max(100).nullable().optional(),
   isPrimary: z.boolean().default(false),
   status: z.enum(FACULTY_ASSIGNMENT_STATUSES).default('active'),
   startDate: isoDate,
@@ -91,9 +90,10 @@ export type FacultyAssignmentWrite = z.infer<typeof facultyAssignmentWriteSchema
 
 export const facultyAssignmentTreeNodeSchema = facultyAssignmentSchema.pick({
   id: true, facultyId: true, departmentId: true, designationId: true,
-  reportsToAssignmentId: true, isPrimary: true, startDate: true, endDate: true,
+  isPrimary: true, startDate: true, endDate: true,
 }).extend({
-  reportsToAssignmentId: z.string().nullable(),
+  /** Display name of the faculty member on this assignment (hydrated). */
+  facultyName: z.string().optional(),
   endDate: z.iso.date().nullable(),
   depth: z.number().int().min(1).max(20),
   path: z.array(z.string()).min(2).max(21),

@@ -1,5 +1,5 @@
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Faculty } from '@mms/shared';
 import { FacultyListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
@@ -39,7 +39,7 @@ export function FacultyCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooterActions
+    <EntityCardFooterActions
       onView={() => onView(faculty)}
       viewLabel={t("faculty.actionViewShort")}
       viewAriaLabel={`${t("faculty.list.viewDetails")} - ${displayName}`}
@@ -51,7 +51,7 @@ export function FacultyCardActions({
           canWrite={canWrite}
           canDelete={canDelete}
           hideViewItem
-          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
           onEdit={onEdit}
           onRequestDelete={onRequestDelete}
           onView={onView}

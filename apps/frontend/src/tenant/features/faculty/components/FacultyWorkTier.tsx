@@ -61,6 +61,12 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
           filterStatus={props.filterStatus}
           filterSpecialization={props.filterSpecialization}
           filterGender={props.filterGender}
+          filterDepartment={props.filterDepartment}
+          filterDesignation={props.filterDesignation}
+          filterReportingFacultyId={props.filterReportingFacultyId}
+          departmentFilterOptions={props.departmentFilterOptions}
+          designationFilterOptions={props.designationFilterOptions}
+          supervisorFilterOptions={props.supervisorFilterOptions}
           quickFilter={props.quickFilter}
           onQuickFilterChange={props.onQuickFilterChange}
           genderFilters={props.genderFilters}
@@ -85,6 +91,9 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
           onToggleStatus={props.onToggleStatus}
           onSpecializationChange={props.onSpecializationChange}
           onGenderChange={props.onGenderChange}
+          onDepartmentChange={props.onDepartmentChange}
+          onDesignationChange={props.onDesignationChange}
+          onReportingFacultyChange={props.onReportingFacultyChange}
           onToggleDeleted={props.onToggleDeleted}
           filterChips={
             filterChips.length > 0 ? (

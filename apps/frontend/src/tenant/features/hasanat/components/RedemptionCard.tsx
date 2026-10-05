@@ -5,10 +5,8 @@ import { formatDate } from "@mms/shared";
 import type { Redemption } from "@/lib/data/hasanatData";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 
 export interface RedemptionCardProps {
   redemption: Redemption;
@@ -38,12 +36,12 @@ export function RedemptionCard({
   ) : undefined;
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       className="space-y-3 p-4"
       {...cardProps}
       {...motionProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={redemption.id}
         displayName={redemption.studentName || "—"}
         subtitle={subtitle}
@@ -52,23 +50,23 @@ export function RedemptionCard({
         selectAriaLabel=""
         showSelect={false}
       />
-      <DirectoryCardMetaGrid className="pt-2 border-t border-border/40 ms-0">
+      <EntityCard.MetaGrid className="pt-2 border-t border-border/40 ms-0">
         {columnVisible("reward") && (
-          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.reward")}>
+          <EntityCardMetaTile label={t("hasanat.columns.redemption.reward")}>
             <span className="break-words">{redemption.reward}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {columnVisible("date") && (
-          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.date")}>
+          <EntityCardMetaTile label={t("hasanat.columns.redemption.date")}>
             <span className="font-mono">{formatDate(redemption.date)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {columnVisible("approvedBy") && (
-          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.approvedBy")}>
+          <EntityCardMetaTile label={t("hasanat.columns.redemption.approvedBy")}>
             <span className="break-words">{redemption.approvedBy || "—"}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
-    </DirectoryEntityCard>
+      </EntityCard.MetaGrid>
+    </EntityCard>
   );
 }

@@ -5,8 +5,8 @@ export type { FacultyAssignmentTreeNode as AssignmentTreeNode } from '@mms/share
 import type { FacultyAssignmentTreeNode as AssignmentTreeNode } from '@mms/shared';
 
 /**
- * Upward traversal: traverses the `reports_to_assignment_id` chain to surface
- * manager assignments up to the organisational apex or maxDepth.
+ * Upward traversal: walks organization_positions.parent_position_id via eligible
+ * primary assignments to surface manager assignments up to maxDepth.
  */
 export async function findAssignmentManagerChain(
   tenant: string,
@@ -53,7 +53,7 @@ export async function findFacultyManagerChain(
   });
 }
 
-/** Validates that setting reports_to_assignment_id = parentId does not create a cycle. */
+/** Validates that child assignment is not an ancestor of parent in the position hierarchy. */
 export async function checkAssignmentCycleSafe(
   tenant: string,
   childId: string,
@@ -62,5 +62,5 @@ export async function checkAssignmentCycleSafe(
 ): Promise<boolean> {
   if (childId === parentId) return false;
   const ancestors = await findAssignmentManagerChain(tenant, parentId, maxDepth);
-  return !ancestors.some((a) => a.id === childId || a.isCycle || (a.depth === maxDepth && a.reportsToAssignmentId !== null));
+  return !ancestors.some((a) => a.id === childId || a.isCycle);
 }

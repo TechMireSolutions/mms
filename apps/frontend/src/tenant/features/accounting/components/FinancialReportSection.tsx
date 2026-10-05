@@ -6,8 +6,8 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -62,12 +62,12 @@ export function ReportSection({
         <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{title}</SectionLabel>
       </header>
       {viewMode === "cards" ? (
-        <DirectoryCardsGrid className="p-3">
+        <EntityCardsGrid className="p-3">
           {rows.map((reportRow, index) => {
             const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
             const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
             return (
-              <DirectoryEntityCard
+              <EntityCard
                 key={reportRow.id}
                 className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
               >
@@ -86,14 +86,14 @@ export function ReportSection({
                   fillClassName="bg-primary/40"
                   aria-hidden="true"
                 />
-              </DirectoryEntityCard>
+              </EntityCard>
             );
           })}
           <article className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-3 col-span-full">
             <span className="font-bold text-foreground">{totalLabel}</span>
             <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
           </article>
-        </DirectoryCardsGrid>
+        </EntityCardsGrid>
       ) : (
         <Table>
           <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>

@@ -14,7 +14,6 @@ import {
   closeAssignment,
   softDeleteFacultyAssignment,
 } from '../../../db/repositories/facultyAssignmentRepository.js';
-import { checkAssignmentCycleSafe } from '../../../db/repositories/facultyAssignmentHierarchyRepository.js';
 
 export {
   handleGetSubordinates,
@@ -33,7 +32,6 @@ function toFacultyAssignmentEntity(row: FacultyAssignmentRow): FacultyAssignment
     departmentId: row.departmentId,
     designationId: row.designationId,
     positionId: row.positionId,
-    reportsToAssignmentId: row.reportsToAssignmentId ?? null,
     isPrimary: Boolean(row.isPrimary),
     status: row.status === 'inactive' ? 'inactive' : 'active',
     startDate: row.startDate,
@@ -84,26 +82,8 @@ export async function handleSaveAssignment({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
   }
   try {
-    const existing = await findFacultyAssignmentById(String(tenantId), id);
-    // Compatibility-only: ignore reportsToAssignmentId on create; validate only on update when present.
-    const reportsToAssignmentId = existing
-      ? (body.reportsToAssignmentId !== undefined
-        ? body.reportsToAssignmentId
-        : existing.reportsToAssignmentId ?? null)
-      : null;
-    if (reportsToAssignmentId) {
-      if (reportsToAssignmentId === id) {
-        return { status: 400 as const, body: { type: 'validation_error', message: 'Assignment cannot report to itself' } };
-      }
-      const isSafe = await checkAssignmentCycleSafe(String(tenantId), id, reportsToAssignmentId);
-      if (!isSafe) {
-        return { status: 400 as const, body: { type: 'validation_error', message: 'Circular reporting hierarchy detected' } };
-      }
-    }
-
     await saveFacultyAssignment(String(tenantId), {
       ...body,
-      reportsToAssignmentId,
       id,
       facultyId,
       workspaceSubdomain: String(tenantId),

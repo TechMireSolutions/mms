@@ -52,8 +52,19 @@ export const organizationPositions = pgTable('organization_positions', {
     .on(table.workspaceSubdomain, table.parentPositionId)
     .where(sql`${table.deletedAt} is null`),
 
+  index('organization_positions_workspace_deleted_idx')
+    .on(table.workspaceSubdomain, table.deletedAt),
+
+  index('organization_positions_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+
   index('organization_positions_dept_active_idx')
     .on(table.workspaceSubdomain, table.departmentId)
+    .where(sql`${table.deletedAt} is null`),
+
+  index('organization_positions_designation_active_idx')
+    .on(table.workspaceSubdomain, table.designationId)
     .where(sql`${table.deletedAt} is null`),
 
   index('organization_positions_location_active_idx')

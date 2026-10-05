@@ -1,7 +1,7 @@
 /**
  * facultyAssignmentsHierarchy.integration.test.ts
  *
- * Traversal tests for downward subordinate trees and upward manager chains.
+ * Traversal tests for position-parent subordinate trees and manager chains.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -15,9 +15,9 @@ import {
 describe('Faculty assignments — downward subordinate tree', () => {
   it('returns direct reports at depth 1', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-dean', isPrimary: true }),
-      makeAssignment({ id: 'hod1', facultyId: 'f-hod1', reportsToAssignmentId: 'root' }),
-      makeAssignment({ id: 'hod2', facultyId: 'f-hod2', reportsToAssignmentId: 'root' }),
+      makeAssignment({ id: 'root', facultyId: 'f-dean', positionId: 'pos-root', parentPositionId: null }),
+      makeAssignment({ id: 'hod1', facultyId: 'f-hod1', positionId: 'pos-hod1', parentPositionId: 'pos-root' }),
+      makeAssignment({ id: 'hod2', facultyId: 'f-hod2', positionId: 'pos-hod2', parentPositionId: 'pos-root' }),
     ];
 
     const tree = simulateSubordinateTree(assignments, 'tenantA', 'root');
@@ -26,10 +26,10 @@ describe('Faculty assignments — downward subordinate tree', () => {
 
   it('returns nested subordinates at correct depths', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-dean' }),
-      makeAssignment({ id: 'hod', facultyId: 'f-hod', reportsToAssignmentId: 'root' }),
-      makeAssignment({ id: 'lect', facultyId: 'f-lect', reportsToAssignmentId: 'hod' }),
-      makeAssignment({ id: 'asst', facultyId: 'f-asst', reportsToAssignmentId: 'lect' }),
+      makeAssignment({ id: 'root', facultyId: 'f-dean', positionId: 'pos-root', parentPositionId: null }),
+      makeAssignment({ id: 'hod', facultyId: 'f-hod', positionId: 'pos-hod', parentPositionId: 'pos-root' }),
+      makeAssignment({ id: 'lect', facultyId: 'f-lect', positionId: 'pos-lect', parentPositionId: 'pos-hod' }),
+      makeAssignment({ id: 'asst', facultyId: 'f-asst', positionId: 'pos-asst', parentPositionId: 'pos-lect' }),
     ];
 
     const tree = simulateSubordinateTree(assignments, 'tenantA', 'root');
@@ -40,9 +40,15 @@ describe('Faculty assignments — downward subordinate tree', () => {
 
   it('excludes soft-deleted assignments from traversal', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-dean' }),
-      makeAssignment({ id: 'hod', facultyId: 'f-hod', reportsToAssignmentId: 'root', deletedAt: new Date() }),
-      makeAssignment({ id: 'lect', facultyId: 'f-lect', reportsToAssignmentId: 'hod' }),
+      makeAssignment({ id: 'root', facultyId: 'f-dean', positionId: 'pos-root', parentPositionId: null }),
+      makeAssignment({
+        id: 'hod',
+        facultyId: 'f-hod',
+        positionId: 'pos-hod',
+        parentPositionId: 'pos-root',
+        deletedAt: new Date(),
+      }),
+      makeAssignment({ id: 'lect', facultyId: 'f-lect', positionId: 'pos-lect', parentPositionId: 'pos-hod' }),
     ];
 
     const tree = simulateSubordinateTree(assignments, 'tenantA', 'root');
@@ -52,7 +58,7 @@ describe('Faculty assignments — downward subordinate tree', () => {
 
   it('returns empty array when root has no direct reports', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-dean' }),
+      makeAssignment({ id: 'root', facultyId: 'f-dean', positionId: 'pos-root', parentPositionId: null }),
     ];
     expect(simulateSubordinateTree(assignments, 'tenantA', 'root')).toHaveLength(0);
   });
@@ -61,8 +67,13 @@ describe('Faculty assignments — downward subordinate tree', () => {
 describe('Faculty assignments — upward manager chain', () => {
   it('returns immediate supervisor at depth 1', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'dean-asgn', facultyId: 'f-dean' }),
-      makeAssignment({ id: 'hod-asgn', facultyId: 'f-hod', reportsToAssignmentId: 'dean-asgn' }),
+      makeAssignment({ id: 'dean-asgn', facultyId: 'f-dean', positionId: 'pos-dean', parentPositionId: null }),
+      makeAssignment({
+        id: 'hod-asgn',
+        facultyId: 'f-hod',
+        positionId: 'pos-hod',
+        parentPositionId: 'pos-dean',
+      }),
     ];
 
     const chain = simulateManagerChain(assignments, 'tenantA', 'hod-asgn');
@@ -73,9 +84,19 @@ describe('Faculty assignments — upward manager chain', () => {
 
   it('surfaces the full chain: lecturer → HoD → Dean', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'dean-asgn', facultyId: 'f-dean' }),
-      makeAssignment({ id: 'hod-asgn', facultyId: 'f-hod', reportsToAssignmentId: 'dean-asgn' }),
-      makeAssignment({ id: 'lect-asgn', facultyId: 'f-lect', reportsToAssignmentId: 'hod-asgn' }),
+      makeAssignment({ id: 'dean-asgn', facultyId: 'f-dean', positionId: 'pos-dean', parentPositionId: null }),
+      makeAssignment({
+        id: 'hod-asgn',
+        facultyId: 'f-hod',
+        positionId: 'pos-hod',
+        parentPositionId: 'pos-dean',
+      }),
+      makeAssignment({
+        id: 'lect-asgn',
+        facultyId: 'f-lect',
+        positionId: 'pos-lect',
+        parentPositionId: 'pos-hod',
+      }),
     ];
 
     const chain = simulateManagerChain(assignments, 'tenantA', 'lect-asgn');
@@ -86,7 +107,7 @@ describe('Faculty assignments — upward manager chain', () => {
 
   it('returns empty for root assignment with no supervisor', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-root', reportsToAssignmentId: null }),
+      makeAssignment({ id: 'root', facultyId: 'f-root', positionId: 'pos-root', parentPositionId: null }),
     ];
     expect(simulateManagerChain(assignments, 'tenantA', 'root')).toHaveLength(0);
   });

@@ -3,8 +3,9 @@
  * @description Bulk archive/restore chrome for Tasks Work selection.
  */
 
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { CheckSquare } from "lucide-react";
+import { TASKS_MODULE_MANIFEST } from "@mms/shared";
+import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 
 export interface TasksBulkActionBarProps {
   selectedCount: number;
@@ -13,8 +14,10 @@ export interface TasksBulkActionBarProps {
   onClearSelection: () => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  bulkActions?: readonly string[];
 }
 
+/** Tasks Work bulk bar — thin adapter delegating to shared ModuleUniversalBulkActionBar. */
 export function TasksBulkActionBar({
   selectedCount,
   viewingDeleted,
@@ -22,26 +25,19 @@ export function TasksBulkActionBar({
   onClearSelection,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  bulkActions = TASKS_MODULE_MANIFEST.work.bulkActions,
 }: TasksBulkActionBarProps): React.JSX.Element | null {
-  const { t } = useTranslation();
-  if (selectedCount === 0) return null;
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
       viewingDeleted={viewingDeleted}
-      countLabel={t('tasks.selectedCount', { count: selectedCount })}
-      leading={<span className="text-sm font-medium">{t('nav.tasks')}</span>}
-      deselectLabel={t('common.deselect')}
       canDelete={canDelete}
-      restoreLabel={t('tasks.restore')}
+      onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
-      deleteAction={
-        !viewingDeleted && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
-          : undefined
-      }
+      bulkActions={bulkActions}
+      leadingIcon={CheckSquare}
+      i18nNamespace="tasks"
     />
   );
 }

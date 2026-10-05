@@ -2,7 +2,8 @@ import React from "react";
 import { Award, Building2, Clock, CheckCircle2, Sparkles } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DetailSection } from "./DetailSection";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import {
   MESSAGING_ICON_BTN,
@@ -22,16 +23,16 @@ export function ContactDetailSkillsSection({
 
   if (skillsList.length === 0) {
     return (
-      <DetailSection title={t("contacts.detail.skills")}>
+      <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.skills")}>
         <div className="p-3 text-xs text-muted-foreground italic">
           {t("contacts.detail.emptySkills")}
         </div>
-      </DetailSection>
+      </DetailSectionCard>
     );
   }
 
   return (
-    <DetailSection title={t("contacts.detail.skills")}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.skills")}>
       {skillsList.map((skill, idx) => {
         const copyText = [
           skill.name,
@@ -113,6 +114,6 @@ export function ContactDetailSkillsSection({
           </div>
         );
       })}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

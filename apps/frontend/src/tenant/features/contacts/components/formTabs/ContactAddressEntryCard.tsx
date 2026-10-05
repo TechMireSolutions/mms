@@ -8,7 +8,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import { cn } from "@/lib/utils";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -69,7 +69,7 @@ export function ContactAddressEntryCard({
   const countryError = getListItemError("addresses", "country", idx);
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       id={localId}
       index={idx}
       icon={MapPin}
@@ -192,6 +192,6 @@ export function ContactAddressEntryCard({
           </div>
         ) : null}
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }

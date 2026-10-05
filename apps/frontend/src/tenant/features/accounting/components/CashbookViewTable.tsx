@@ -3,8 +3,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import { resolveVisibleColumns, toColumnResize, type DataTableColumnLayout } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -44,9 +44,9 @@ export function CashbookViewTable({
   if (viewMode === "cards") {
     return (
       <div className={WORK_SURFACE}>
-        <DirectoryCardsGrid className="p-3">
+        <EntityCardsGrid className="p-3">
           {rows.map((row) => (
-            <DirectoryEntityCard key={row.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+            <EntityCard key={row.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground m-0">{formatDate(row.date)}</p>
@@ -72,7 +72,7 @@ export function CashbookViewTable({
                   ddClassName="font-mono font-bold text-destructive"
                 />
               </StatGrid>
-            </DirectoryEntityCard>
+            </EntityCard>
           ))}
           <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
             <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("accounting.cashbook.transactionCount", { count: rows.length })}</p>
@@ -91,7 +91,7 @@ export function CashbookViewTable({
               />
             </StatGrid>
           </article>
-        </DirectoryCardsGrid>
+        </EntityCardsGrid>
       </div>
     );
   }

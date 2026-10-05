@@ -7,11 +7,9 @@ export const PURGE_SELF_FK_NULLS: ReadonlyArray<{
   table: string;
   column: string;
 }> = [
-  { table: 'faculty_assignments', column: 'reports_to_assignment_id' },
   { table: 'organization_positions', column: 'parent_position_id' },
   { table: 'faculty_departments', column: 'parent_id' },
   { table: 'organization_locations', column: 'parent_location_id' },
-  { table: 'faculty', column: 'reporting_faculty_id' },
   { table: 'tasks', column: 'parent_task_id' },
 ];
 

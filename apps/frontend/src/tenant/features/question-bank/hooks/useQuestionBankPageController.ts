@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
@@ -39,7 +39,7 @@ export function useQuestionBankPageController() {
     canViewReports,
     workLabelKey: "nav.questionBank",
   });
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
   const questions = useQuestionBankQuestionsCollection({ includeDeleted: showDeleted });
   const tests = useQuestionBankTestsCollection();

@@ -14,6 +14,8 @@ export interface StatusBadgeProps {
   status: string;
   config?: Record<string, StatusBadgeConfigItem>;
   size?: "sm" | "md";
+  /** When set, renders a button and stops click propagation (directory row safe). */
+  onClick?: () => void;
 }
 
 const DEFAULT_CLS: Record<string, string> = {
@@ -45,6 +47,7 @@ export const StatusBadge = (function StatusBadge({
   status,
   config = {},
   size = "md",
+  onClick,
 }: StatusBadgeProps): React.ReactElement {
   const { t } = useTranslation();
 
@@ -83,14 +86,36 @@ export const StatusBadge = (function StatusBadge({
   const badgeConfigByStatus = { ...defaultConfig, ...(config || {}) };
   const badgeConfig = badgeConfigByStatus[status] || { label: status, cls: SEMANTIC_BADGE.muted };
   const sizeClass = size === "sm" ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-0.5";
+  const className = cn(
+    "inline-flex items-center gap-1 font-bold rounded-md border",
+    sizeClass,
+    badgeConfig.cls,
+    onClick && "cursor-pointer hover:opacity-80 transition-colors",
+  );
 
-  return (
-    <span className={cn("inline-flex items-center gap-1 font-bold rounded-md border", sizeClass, badgeConfig.cls)}>
+  const content = (
+    <>
       {badgeConfig.dot && (
         <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", badgeConfig.dot)} />
       )}
       {badgeConfig.label}
-    </span>
+    </>
   );
-});
 
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <span className={className}>{content}</span>;
+});

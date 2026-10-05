@@ -2,6 +2,7 @@ import { faculty } from '../schema.js';
 import type { AppDb } from '../tenant-context.js';
 import type { FacultyMember } from '@mms/shared';
 import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
+import { attachPrimaryAppointmentFields } from './facultyPrimaryAppointmentHydrate.js';
 
 export type FacultyInsert = typeof faculty.$inferInsert;
 
@@ -13,10 +14,6 @@ export const FACULTY_PROJECTION_COLUMNS = {
   employeeId: faculty.employeeId,
   status: faculty.status,
   specialization: faculty.specialization,
-  department: faculty.department,
-  designation: faculty.designation,
-  reportingFacultyId: faculty.reportingFacultyId,
-  hierarchyRank: faculty.hierarchyRank,
   qualification: faculty.qualification,
   joinDate: faculty.joinDate,
   notes: faculty.notes,
@@ -35,7 +32,6 @@ export const FACULTY_PROJECTION_COLUMNS = {
 
 export function facultyWriteValues(subdomain: string, facultyMember: FacultyMember): FacultyInsert {
   const audit = mapAuditToInsert(facultyMember);
-  const f = facultyMember as FacultyMember & { reportingFacultyId?: string | null; hierarchyRank?: number };
   const knownKeys = new Set([
     'id', 'contactId', 'userId', 'employeeId', 'status', 'specialization', 'department',
     'designation', 'designationId', 'designationStartsOn', 'designationEndsOn',
@@ -57,10 +53,6 @@ export function facultyWriteValues(subdomain: string, facultyMember: FacultyMemb
     employeeId: facultyMember.employeeId ?? null,
     status: facultyMember.status ?? 'active',
     specialization: facultyMember.specialization ?? null,
-    department: facultyMember.department ?? null,
-    designation: facultyMember.designation ?? null,
-    reportingFacultyId: f.reportingFacultyId ?? null,
-    hierarchyRank: typeof f.hierarchyRank === 'number' ? f.hierarchyRank : 10,
     qualification: facultyMember.qualification ?? null,
     joinDate: facultyMember.joinDate ?? null,
     notes: facultyMember.notes ?? null,
@@ -79,10 +71,6 @@ export function facultyRowToRecord(row: typeof faculty.$inferSelect): FacultyMem
     status: row.status ?? 'active',
     employeeId: row.employeeId ?? undefined,
     specialization: row.specialization ?? undefined,
-    department: row.department ?? undefined,
-    designation: row.designation ?? undefined,
-    reportingFacultyId: row.reportingFacultyId ?? null,
-    hierarchyRank: row.hierarchyRank ?? 10,
     qualification: row.qualification ?? undefined,
     joinDate: row.joinDate ?? undefined,
     notes: row.notes ?? undefined,
@@ -91,11 +79,20 @@ export function facultyRowToRecord(row: typeof faculty.$inferSelect): FacultyMem
 }
 
 export async function hydrateFacultyList(
-  _tx: AppDb,
-  _subdomain: string,
+  tx: AppDb,
+  subdomain: string,
   rows: (typeof faculty.$inferSelect)[],
 ): Promise<FacultyMember[]> {
-  return rows.map(facultyRowToRecord);
+  const mapped = rows.map(facultyRowToRecord);
+  return attachPrimaryAppointmentFields(tx, subdomain, mapped);
+}
+
+export async function attachPrimaryAppointmentToFacultyList(
+  tx: AppDb,
+  subdomain: string,
+  rows: FacultyMember[],
+): Promise<FacultyMember[]> {
+  return attachPrimaryAppointmentFields(tx, subdomain, rows);
 }
 
 export function facultyUpdateSetValues(subdomain: string, facultyMember: FacultyMember) {
@@ -109,21 +106,15 @@ export async function persistFacultyTx(
   facultyMember: FacultyMember,
   options?: { createOnly?: boolean },
 ): Promise<void> {
-  // Soft-stop: never write person-level reporting on create or update (legacy rows remain readable).
-  const softStoppedMember = {
-    ...facultyMember,
-    reportingFacultyId: null,
-  } as FacultyMember;
-
   if (options?.createOnly) {
-    await tx.insert(faculty).values(facultyWriteValues(subdomain, softStoppedMember));
+    await tx.insert(faculty).values(facultyWriteValues(subdomain, facultyMember));
     return;
   }
   await tx
     .insert(faculty)
-    .values(facultyWriteValues(subdomain, softStoppedMember))
+    .values(facultyWriteValues(subdomain, facultyMember))
     .onConflictDoUpdate({
       target: [faculty.workspaceSubdomain, faculty.id],
-      set: facultyUpdateSetValues(subdomain, softStoppedMember),
+      set: facultyUpdateSetValues(subdomain, facultyMember),
     });
 }

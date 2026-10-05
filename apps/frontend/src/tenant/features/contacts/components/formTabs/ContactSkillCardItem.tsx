@@ -7,7 +7,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
@@ -67,7 +67,7 @@ export function ContactSkillCardItem({
   const descriptionError = getListItemError("skills", "description", idx);
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       key={getLocalId("skills", idx)}
       id={getLocalId("skills", idx)}
       index={idx}
@@ -155,7 +155,7 @@ export function ContactSkillCardItem({
           t={t}
         />
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }
 

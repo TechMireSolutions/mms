@@ -18,6 +18,11 @@ export const facultyDesignations = pgTable('faculty_designations', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('faculty_designations_workspace_deleted_idx')
+    .on(table.workspaceSubdomain, table.deletedAt),
+  index('faculty_designations_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
   uniqueIndex('faculty_designations_ws_code_active_uidx').on(table.workspaceSubdomain, table.code)
     .where(sql`${table.deletedAt} is null`),
   index('faculty_designations_active_rank_idx').on(table.workspaceSubdomain, table.hierarchyRank)

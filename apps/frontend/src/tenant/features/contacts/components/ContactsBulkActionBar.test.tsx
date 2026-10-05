@@ -11,26 +11,26 @@ type ExportAction = {
 
 let lastExportAction: ExportAction | undefined;
 
-vi.mock("@/components/ui/ModuleWorkBulkActionBar", () => ({
-  ModuleWorkBulkActionBar: ({
-    countLabel,
-    deleteAction,
+vi.mock("@/components/ui/ModuleUniversalBulkActionBar", () => ({
+  ModuleUniversalBulkActionBar: ({
+    selectedCount,
+    deleteLabel,
     exportAction,
   }: {
-    countLabel: string;
-    deleteAction?: { label: string; onClick: () => void };
+    selectedCount: number;
+    deleteLabel?: string;
     exportAction?: ExportAction;
   }) => {
     lastExportAction = exportAction;
     return (
       <div data-testid="bulk-action-bar">
-        <span>{countLabel}</span>
-        {deleteAction && <button>{deleteAction.label}</button>}
-        {exportAction && (
+        <span>{`contacts.selectedCount:${selectedCount}`}</span>
+        {deleteLabel ? <button>{deleteLabel}</button> : null}
+        {exportAction ? (
           <button data-exporting={String(Boolean(exportAction.isPending))}>
             {exportAction.label}
           </button>
-        )}
+        ) : null}
       </div>
     );
   },

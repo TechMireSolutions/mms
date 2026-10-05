@@ -1,14 +1,24 @@
 import React from "react";
 import { BookOpen, School, Users, DoorOpen } from "lucide-react";
-import { sessionTypeI18nKey } from "@mms/shared";
+import { sessionTypeI18nKey, type AppTranslationKey } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FacultyAssignedClassItem } from "@/lib/faculty/facultyAssignment";
+
+function sessionStatusLabel(
+  status: string,
+  t: (key: AppTranslationKey) => string,
+): string {
+  const key = `sessions.status.${status}` as AppTranslationKey;
+  const translated = t(key);
+  return translated === key ? status : translated;
+}
 
 export interface FacultyDetailSessionsSectionProps {
   assignedClasses: FacultyAssignedClassItem[];
@@ -26,51 +36,42 @@ export function FacultyDetailSessionsSection({
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
-        <div className="space-y-2.5">
-          <Skeleton className="h-12 w-full rounded-xl" />
-          <Skeleton className="h-12 w-full rounded-xl" />
-        </div>
-      </div>
+      <DetailSectionCard title={assignedClassesTitle} className="p-3.5 space-y-2.5">
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-12 w-full rounded-xl" />
+      </DetailSectionCard>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-3">
-        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
+      <DetailSectionCard title={assignedClassesTitle} className="p-3.5">
         <ErrorState
           compact
           title={t("faculty.loadFailed")}
           description={t("faculty.loadFailedHint")}
         />
-      </div>
+      </DetailSectionCard>
     );
   }
 
   if (assignedClasses.length === 0) {
     return (
-      <div className="space-y-3">
-        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
+      <DetailSectionCard title={assignedClassesTitle} className="p-3.5">
         <EmptyState
           compact
           icon={School}
           title={t("faculty.detail.noAssignedClasses")}
           description={t("faculty.empty.subtitle")}
         />
-      </div>
+      </DetailSectionCard>
     );
   }
 
+  // Multi-card list: title + per-class cards (DetailSectionCard is single-card).
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
-        <span className="text-xs font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-muted/60">
-          {assignedClasses.length}
-        </span>
-      </div>
+      <DetailSectionTitle count={assignedClasses.length}>{assignedClassesTitle}</DetailSectionTitle>
 
       <div className="space-y-2.5">
         {assignedClasses.map((item) => {
@@ -102,11 +103,11 @@ export function FacultyDetailSessionsSection({
                   <span className="font-semibold text-foreground/90 truncate">
                     {item.sessionName}
                   </span>
-                  {item.sessionStatus && (
+                  {item.sessionStatus ? (
                     <span className="text-2xs uppercase font-bold text-muted-foreground tracking-wider">
-                      {item.sessionStatus}
+                      {sessionStatusLabel(item.sessionStatus, t)}
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-3xs text-muted-foreground border-t border-border/40">
@@ -137,4 +138,3 @@ export function FacultyDetailSessionsSection({
     </div>
   );
 }
-

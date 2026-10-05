@@ -78,7 +78,7 @@ describe("DirectoryCard", () => {
     expect(html).toContain("zayd@madrasa.com");
   });
 
-  it("renders metadata columns using DirectoryCardMetadata", () => {
+  it("renders metadata columns using EntityCardMetadata", () => {
     const html = renderToStaticMarkup(
       <DirectoryCard
         entity={mockEntity}

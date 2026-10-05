@@ -384,7 +384,7 @@ export const ERD_DOMAIN_STUDENTS: ErdDomain = {
   ],
 };
 
-/** Staff rows linked to contacts, tenant users, and supervisory hierarchy (Drizzle `faculty.ts`). */
+/** Staff rows linked to contacts; org shape via faculty_assignments + organization_positions. */
 export const ERD_DOMAIN_FACULTY: ErdDomain = {
   id: 'faculty',
   labelKey: 'nav.faculty',
@@ -397,12 +397,33 @@ export const ERD_DOMAIN_FACULTY: ErdDomain = {
         { name: 'contact_id', type: 'text', kind: 'fk' },
         { name: 'user_id', type: 'text', kind: 'fk' },
         { name: 'employee_id', type: 'varchar(100)', kind: 'column' },
-        { name: 'reporting_faculty_id', type: 'text', kind: 'fk' },
-        { name: 'hierarchy_rank', type: 'integer', kind: 'column' },
-        { name: 'department', type: 'varchar(150)', kind: 'column' },
-        { name: 'designation', type: 'varchar(150)', kind: 'column' },
         { name: 'specialization', type: 'varchar(150)', kind: 'column' },
+        { name: 'qualification', type: 'varchar(255)', kind: 'column' },
+        { name: 'join_date', type: 'date', kind: 'column' },
         { name: 'status', type: 'varchar(50)', kind: 'column' },
+      ],
+    },
+    {
+      name: 'faculty_assignments',
+      columns: [
+        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
+        { name: 'id', type: 'text', kind: 'pk' },
+        { name: 'faculty_id', type: 'text', kind: 'fk' },
+        { name: 'department_id', type: 'text', kind: 'fk' },
+        { name: 'designation_id', type: 'text', kind: 'fk' },
+        { name: 'position_id', type: 'text', kind: 'fk' },
+        { name: 'is_primary', type: 'boolean', kind: 'column' },
+        { name: 'status', type: 'varchar(20)', kind: 'column' },
+      ],
+    },
+    {
+      name: 'organization_positions',
+      columns: [
+        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
+        { name: 'id', type: 'text', kind: 'pk' },
+        { name: 'parent_position_id', type: 'text', kind: 'fk' },
+        { name: 'department_id', type: 'text', kind: 'fk' },
+        { name: 'designation_id', type: 'text', kind: 'fk' },
       ],
     },
     {
@@ -471,12 +492,26 @@ export const ERD_DOMAIN_FACULTY: ErdDomain = {
       onDelete: 'set null',
     },
     {
-      fromTable: 'faculty',
-      fromColumn: 'reporting_faculty_id',
+      fromTable: 'faculty_assignments',
+      fromColumn: 'faculty_id',
       toTable: 'faculty',
       toColumn: 'id',
       cardinality: 'N:1',
-      onDelete: 'set null',
+      onDelete: 'cascade',
+    },
+    {
+      fromTable: 'faculty_assignments',
+      fromColumn: 'position_id',
+      toTable: 'organization_positions',
+      toColumn: 'id',
+      cardinality: 'N:1',
+    },
+    {
+      fromTable: 'organization_positions',
+      fromColumn: 'parent_position_id',
+      toTable: 'organization_positions',
+      toColumn: 'id',
+      cardinality: 'N:1',
     },
   ],
 };

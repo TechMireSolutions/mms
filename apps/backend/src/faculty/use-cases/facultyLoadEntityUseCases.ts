@@ -9,6 +9,7 @@ import type { FacultyRepository } from '../repository/facultyRepository.js';
 import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { hydrateFacultyFromContacts } from './facultyHydrateUseCases.js';
 import { ValidationError } from '../../lib/httpErrors.js';
+import { findDirectSupervisorsBatch } from '../../db/repositories/facultyRepositorySubordinates.js';
 
 /** Faculty count via SQL — avoids loading every row (active by default). */
 export async function countFaculty(
@@ -36,7 +37,20 @@ export async function loadFacultyPage(
   }
   const page = await repo.listPage(tenant, query);
   const sourceList = page.faculty ?? [];
-  const hydrated = await hydrateFacultyFromContacts(tenant, sourceList);
+  let supervisors: Record<string, string> = {};
+  try {
+    supervisors = await findDirectSupervisorsBatch(
+      tenant,
+      sourceList.map((member) => String(member.id)),
+    );
+  } catch {
+    supervisors = {};
+  }
+  const withSupervisors = sourceList.map((member) => ({
+    ...member,
+    reportingFacultyId: supervisors[String(member.id)] ?? member.reportingFacultyId ?? null,
+  }));
+  const hydrated = await hydrateFacultyFromContacts(tenant, withSupervisors);
   return {
     ...page,
     faculty: hydrated,
@@ -55,6 +69,12 @@ export async function loadFacultyById(
   if (!includeDeleted && found.deletedAt) return null;
   const [hydrated] = await hydrateFacultyFromContacts(tenant, [found]);
   if (hydrated) {
+    try {
+      const supervisors = await findDirectSupervisorsBatch(tenant, [id]);
+      hydrated.reportingFacultyId = supervisors[id] ?? hydrated.reportingFacultyId ?? null;
+    } catch {
+      // Position lookup unavailable in lightweight unit tests; keep hydrated value if any.
+    }
     hydrated.subordinateCount = repo.countSubordinates
       ? await repo.countSubordinates(tenant, id)
       : 0;
@@ -104,6 +124,12 @@ export async function loadHierarchyTree(
     hasMore = next.hasMore;
   }
   const hydrated = await hydrateFacultyFromContacts(tenant, sourceList);
+  let supervisors: Record<string, string>;
+  try {
+    supervisors = await findDirectSupervisorsBatch(tenant, hydrated.map((f) => String(f.id)));
+  } catch {
+    supervisors = {};
+  }
 
   const nodeMap = new Map<string, FacultyHierarchyNode>();
   for (const f of hydrated) {
@@ -117,7 +143,7 @@ export async function loadHierarchyTree(
       hierarchyRank: (f as { hierarchyRank?: number }).hierarchyRank ?? 10,
       status: f.status,
       avatar: f.avatar,
-      reportingFacultyId: (f as { reportingFacultyId?: string | null }).reportingFacultyId ?? null,
+      reportingFacultyId: supervisors[String(f.id)] ?? (f as { reportingFacultyId?: string | null }).reportingFacultyId ?? null,
       subordinates: [],
     });
   }

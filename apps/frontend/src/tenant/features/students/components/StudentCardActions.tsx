@@ -1,6 +1,6 @@
 import type { Student, toMessagingRecipient } from "@mms/shared";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
 
@@ -40,7 +40,7 @@ export function StudentCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooterActions
+    <EntityCardFooterActions
       onView={() => onViewStudent(student)}
       viewLabel={t("students.actionViewShort")}
       viewAriaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
@@ -53,7 +53,7 @@ export function StudentCardActions({
           canDelete={canDelete}
           includeMessaging={Boolean(onOpenComposer) && canWriteMessaging && !viewingDeleted}
           hideViewItem
-          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
           contentClassName="w-40"
           iconClassName="w-3.5 h-3.5"
           onViewStudent={onViewStudent}

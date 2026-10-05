@@ -10,8 +10,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/DetailDrawerShell", () => ({
-  DetailDrawerShell: ({ children, title }: any) => (
+vi.mock("@/components/ui/Drawer", () => ({
+  Drawer: ({ children, title }: any) => (
     <div data-testid="detail-drawer">
       <h2>{title}</h2>
       {children}

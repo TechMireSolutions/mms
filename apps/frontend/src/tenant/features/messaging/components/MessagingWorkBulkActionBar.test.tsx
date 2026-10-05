@@ -17,7 +17,8 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("MessagingWorkBulkActionBar", () => {
-  it("renders selected count, export, resend, and clear logs actions when enabled", () => {
+  it("given write permissions, should render selected count, export, resend, and clear logs via ModuleUniversalBulkActionBar", () => {
+    // Arrange / Act
     const html = renderToStaticMarkup(
       <MessagingWorkBulkActionBar
         selectedCount={3}
@@ -27,28 +28,31 @@ describe("MessagingWorkBulkActionBar", () => {
         onBulkExport={() => {}}
         onBulkResend={() => {}}
         onClearLogsRequest={() => {}}
-      />
+      />,
     );
 
+    // Assert
     expect(html).toContain("3 selected");
-    expect(html).toContain("Deselect (Esc)");
+    expect(html).toContain("Deselect");
     expect(html).toContain("Resend");
     expect(html).toContain("Export (3)");
     expect(html).toContain("Clear");
   });
 
-  it("hides write and clear actions when canWrite and canClearLogs are false", () => {
+  it("given no write or clear permissions, should hide export and clear actions", () => {
+    // Arrange / Act
     const html = renderToStaticMarkup(
       <MessagingWorkBulkActionBar
         selectedCount={2}
         canWrite={false}
         canClearLogs={false}
         onClearSelection={() => {}}
-      />
+      />,
     );
 
+    // Assert
     expect(html).toContain("2 selected");
-    expect(html).toContain("Deselect (Esc)");
+    expect(html).toContain("Deselect");
     expect(html).not.toContain("Export");
     expect(html).not.toContain("Clear");
   });

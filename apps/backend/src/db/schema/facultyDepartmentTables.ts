@@ -36,6 +36,11 @@ export const facultyDepartments = pgTable('faculty_departments', {
   updatedBy: text('updated_by'),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('faculty_departments_workspace_deleted_idx')
+    .on(table.workspaceSubdomain, table.deletedAt),
+  index('faculty_departments_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
   // Unique dept code per workspace among active rows
   uniqueIndex('faculty_departments_ws_code_active_uidx')
     .on(table.workspaceSubdomain, table.code)

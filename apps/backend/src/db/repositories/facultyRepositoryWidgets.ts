@@ -3,7 +3,6 @@ import type {
   FacultyWidgetAggregateResult,
   FacultyWidgetQuery,
 } from '@mms/shared';
-import { faculty } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import {
   activeWorkspaceWhere,
@@ -11,8 +10,9 @@ import {
   resolveFacultyFieldExpr,
   widgetFilterSql,
 } from './facultyRepositoryWidgetFilters.js';
+import { facultyWithPrimaryAppointmentFromSql } from './facultyPrimaryAppointmentSql.js';
 
-/** SQL widget aggregates for faculty (Students parity — no full-collection dump). */
+/** SQL widget aggregates for faculty — LATERAL primary appointment for dept/desig grouping. */
 export async function aggregateFacultyWidgetQueries(
   tenant: string,
   queries: FacultyWidgetQuery[],
@@ -22,11 +22,13 @@ export async function aggregateFacultyWidgetQueries(
   if (queries.length === 0) return results;
 
   return withTenantRead(subdomain, async (tx) => {
-    const totalRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(faculty)
-      .where(activeWorkspaceWhere(subdomain));
-    const totalCount = Number(totalRows[0]?.count ?? 0);
+    const fromSql = facultyWithPrimaryAppointmentFromSql();
+    const totalResult = await tx.execute<{ count: number }>(sql`
+      SELECT count(*)::int AS count
+      ${fromSql}
+      WHERE ${activeWorkspaceWhere(subdomain)}
+    `);
+    const totalCount = Number(totalResult.rows[0]?.count ?? 0);
 
     const queryResults = await Promise.all(
       queries.map(async (query) => {
@@ -38,11 +40,12 @@ export async function aggregateFacultyWidgetQueries(
 
         let value = 0;
         if (query.operation === 'count' || query.operation === 'percentage') {
-          const countRows = await tx
-            .select({ count: sql<number>`count(*)::int` })
-            .from(faculty)
-            .where(whereClause);
-          const filteredCount = Number(countRows[0]?.count ?? 0);
+          const countResult = await tx.execute<{ count: number }>(sql`
+            SELECT count(*)::int AS count
+            ${fromSql}
+            WHERE ${whereClause}
+          `);
+          const filteredCount = Number(countResult.rows[0]?.count ?? 0);
           value =
             query.operation === 'percentage'
               ? totalCount > 0
@@ -53,22 +56,22 @@ export async function aggregateFacultyWidgetQueries(
           const target = query.targetField?.trim() || '';
           if (target) {
             const targetExpr = resolveFacultyFieldExpr(target);
-            const aggRows = await tx
-              .select({
-                sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
-                count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
-              })
-              .from(faculty)
-              .where(whereClause);
-            const sum = Number(aggRows[0]?.sum ?? 0);
-            const count = Number(aggRows[0]?.count ?? 0);
+            const aggResult = await tx.execute<{ sum: number; count: number }>(sql`
+              SELECT
+                coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0) AS sum,
+                count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int AS count
+              ${fromSql}
+              WHERE ${whereClause}
+            `);
+            const sum = Number(aggResult.rows[0]?.sum ?? 0);
+            const count = Number(aggResult.rows[0]?.count ?? 0);
             value = query.operation === 'sum' ? sum : count > 0 ? Math.round(sum / count) : 0;
           }
         }
 
         const xAxis = query.xAxisField?.trim() || 'status';
         const xAxisExpr = resolveFacultyFieldExpr(xAxis);
-        const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisExpr}::text), ''), 'Unknown')`;
+        const groupExpr = sql`COALESCE(NULLIF(trim(${xAxisExpr}::text), ''), 'Unknown')`;
 
         const target =
           (query.operation === 'sum' || query.operation === 'avg')
@@ -78,17 +81,17 @@ export async function aggregateFacultyWidgetQueries(
         let chartData: { name: string; value: number }[];
         if (target) {
           const targetExpr = resolveFacultyFieldExpr(target);
-          const numericChart = await tx
-            .select({
-              name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
-            })
-            .from(faculty)
-            .where(whereClause)
-            .groupBy(groupExpr)
-            .limit(chartLimit);
-          chartData = numericChart
+          const numericChart = await tx.execute<{ name: string; sum: number; count: number }>(sql`
+            SELECT
+              ${groupExpr} AS name,
+              coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0) AS sum,
+              count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int AS count
+            ${fromSql}
+            WHERE ${whereClause}
+            GROUP BY ${groupExpr}
+            LIMIT ${chartLimit}
+          `);
+          chartData = numericChart.rows
             .map((row) => {
               const sum = Number(row.sum ?? 0);
               const count = Number(row.count ?? 0);
@@ -100,17 +103,17 @@ export async function aggregateFacultyWidgetQueries(
             .sort((a, b) => b.value - a.value)
             .slice(0, chartLimit);
         } else {
-          const chartRows = await tx
-            .select({
-              name: groupExpr,
-              value: sql<number>`count(*)::int`,
-            })
-            .from(faculty)
-            .where(whereClause)
-            .groupBy(groupExpr)
-            .orderBy(sql`count(*) desc`)
-            .limit(chartLimit);
-          chartData = chartRows.map((row) => ({
+          const chartRows = await tx.execute<{ name: string; value: number }>(sql`
+            SELECT
+              ${groupExpr} AS name,
+              count(*)::int AS value
+            ${fromSql}
+            WHERE ${whereClause}
+            GROUP BY ${groupExpr}
+            ORDER BY count(*) DESC
+            LIMIT ${chartLimit}
+          `);
+          chartData = chartRows.rows.map((row) => ({
             name: row.name,
             value: Number(row.value ?? 0),
           }));

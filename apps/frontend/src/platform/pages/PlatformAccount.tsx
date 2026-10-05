@@ -8,7 +8,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { CardSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ModuleScaffold } from "@/components/common/ModuleScaffold";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 
 import { containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformProfileCard } from "./account/PlatformProfileCard";
@@ -44,7 +44,7 @@ export default function PlatformAccount(): React.JSX.Element {
   ];
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t("platform.profileTitle")} | ${t("platform.consoleTitle")}`}
       seoDescription={t("platform.profileSubtitle")}
       headerIcon={User}
@@ -111,6 +111,6 @@ export default function PlatformAccount(): React.JSX.Element {
           </div>
         )}
       </div>
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }

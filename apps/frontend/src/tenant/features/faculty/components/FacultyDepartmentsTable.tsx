@@ -1,8 +1,9 @@
 import React from 'react';
 import { Building2, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
-import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import {
   DataTable,
   DataTableRowActions,
@@ -37,6 +38,10 @@ export function FacultyDepartmentsTable({
   const parentName = (d: FacultyDepartmentEntity) => (d.parentId ? parentMap.get(d.parentId) : undefined);
   const statusLabel = (d: FacultyDepartmentEntity) =>
     d.isActive !== false ? t('faculty.status.active') : t('faculty.status.inactive');
+  const statusConfig: Record<string, StatusBadgeConfigItem> = {
+    active: { label: t('faculty.status.active'), cls: SEMANTIC_BADGE.success },
+    inactive: { label: t('faculty.status.inactive'), cls: SEMANTIC_BADGE.muted },
+  };
 
   const columns: DataTableColumn<FacultyDepartmentEntity>[] = [
     {
@@ -45,7 +50,7 @@ export function FacultyDepartmentsTable({
       fixed: true,
       render: (d) => (
         <div className="flex items-center gap-1.5 font-medium min-w-0">
-          {d.parentId && <ChevronRight className="size-3 text-muted-foreground shrink-0 ms-2" aria-hidden />}
+          {d.parentId && <ChevronRight className="size-3 text-muted-foreground shrink-0 ms-2 rtl:rotate-180" aria-hidden />}
           <span className="truncate">{d.name}</span>
         </div>
       ),
@@ -70,9 +75,11 @@ export function FacultyDepartmentsTable({
       width: 120,
       searchValue: statusLabel,
       render: (d) => (
-        <Badge variant={d.isActive !== false ? 'default' : 'secondary'} className="text-xs">
-          {statusLabel(d)}
-        </Badge>
+        <StatusBadge
+          status={d.isActive !== false ? 'active' : 'inactive'}
+          config={statusConfig}
+          size="sm"
+        />
       ),
     },
   ];
@@ -126,7 +133,7 @@ export function FacultyDepartmentsTable({
           ]}
         />
       )}
-      emptyState={<EmptyState icon={Building2} title={t('faculty.setup.noDepartments')} compact variant="dashed" />}
+      emptyState={<EmptyState icon={Building2} title={t('faculty.setup.noDepartments')} description={t('faculty.setup.departmentsHint')} compact variant="dashed" />}
     />
   );
 }

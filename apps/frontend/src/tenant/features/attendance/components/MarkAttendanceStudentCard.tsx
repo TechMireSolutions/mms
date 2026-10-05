@@ -1,9 +1,7 @@
 import React from "react";
 import type { HTMLMotionProps } from "framer-motion";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import type { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { MarkAttendanceFieldControl } from "./MarkAttendanceFieldControl";
@@ -33,12 +31,12 @@ export function MarkAttendanceStudentCard({
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       className={cn("space-y-3 p-4", statusInfo?.bg)}
       {...cardProps}
       {...motionProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={row.studentId}
         displayName={row.name}
         subtitle={<span className="font-mono text-xs text-muted-foreground">{row.rollNo}</span>}
@@ -47,9 +45,9 @@ export function MarkAttendanceStudentCard({
         selectAriaLabel=""
         showSelect={false}
       />
-      <DirectoryCardMetaGrid className="grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/40 ms-0">
+      <EntityCard.MetaGrid className="grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/40 ms-0">
         {enabledFields.map((field) => (
-          <DirectoryCardMetaTile
+          <EntityCardMetaTile
             key={field.id}
             label={`${field.label}${field.required ? " *" : ""}`}
             className={field.id === "notes" ? "sm:col-span-2" : ""}
@@ -62,9 +60,9 @@ export function MarkAttendanceStudentCard({
                 onFieldChange={onFieldChange}
               />
             </div>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         ))}
-      </DirectoryCardMetaGrid>
-    </DirectoryEntityCard>
+      </EntityCard.MetaGrid>
+    </EntityCard>
   );
 }

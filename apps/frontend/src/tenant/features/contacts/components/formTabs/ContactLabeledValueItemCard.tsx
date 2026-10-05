@@ -8,7 +8,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import { cn } from "@/lib/utils";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import type {
@@ -124,7 +124,7 @@ export function ContactLabeledValueItemCard({
   );
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       key={getLocalId(listKey, idx)}
       id={getLocalId(listKey, idx)}
       index={idx}
@@ -168,6 +168,6 @@ export function ContactLabeledValueItemCard({
           </Field>
         ) : null}
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }

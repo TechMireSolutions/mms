@@ -24,8 +24,8 @@ vi.mock("@/hooks/useCurrency", () => ({
   }),
 }));
 
-vi.mock("@/components/common/DetailSheet", () => ({
-  DetailSheet: ({
+vi.mock("@/components/ui/Drawer", () => ({
+  Drawer: ({
     title,
     headerExtra,
     headerActions,

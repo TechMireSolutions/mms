@@ -59,7 +59,8 @@ describe("StudentDetailSiblingsSection Component", () => {
       />,
     );
 
-    expect(html).toContain("Siblings (2)");
+    expect(html).toContain("Siblings");
+    expect(html).toContain(">2<");
     expect(html).toContain("Hussein Ali");
     expect(html).toContain("GR-204");
     expect(html).toContain("Tahfeez Morning, Tajweed Advanced");

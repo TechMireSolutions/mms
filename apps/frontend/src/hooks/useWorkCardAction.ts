@@ -48,7 +48,7 @@ export interface UseWorkCardActionReturn<TEntity extends WorkCardEntity> {
    * - Enter → triggers onView (or fallback to onEdit)
    */
   onKeyDown: (e: KeyboardEvent) => void;
-  /** Pre-configured container props for DirectoryEntityCard. */
+  /** Pre-configured container props for EntityCard. */
   cardProps: {
     tabIndex?: number;
     role: "article";

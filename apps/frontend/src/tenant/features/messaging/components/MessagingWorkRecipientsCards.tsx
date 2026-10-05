@@ -5,11 +5,9 @@ import {
   getPrimaryPhone,
   type Contact,
 } from '@mms/shared';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
-import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { EntityCardMetaTile } from '@/components/ui/EntityCardMetaTile';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
@@ -58,8 +56,8 @@ function MessagingRecipientCard({
   const email = getPrimaryEmail(contact);
 
   return (
-    <DirectoryEntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <DirectoryCardHeader
+    <EntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
+      <EntityCard.Header
         id={contact.id}
         displayName={displayName}
         avatar={contact.avatar}
@@ -70,28 +68,28 @@ function MessagingRecipientCard({
         showSelect={true}
       />
       {(showPhoneCol || showEmailCol) && (
-        <DirectoryCardMetaGrid>
+        <EntityCard.MetaGrid>
           {showPhoneCol && (
-            <DirectoryCardMetaTile label={t('contacts.form.primaryPhone')}>
+            <EntityCardMetaTile label={t('contacts.form.primaryPhone')}>
               {phone ? (
                 <span className="font-mono text-xs">{phone}</span>
               ) : (
                 <MissingFieldBadge label={t('messaging.missingPhone')} />
               )}
-            </DirectoryCardMetaTile>
+            </EntityCardMetaTile>
           )}
           {showEmailCol && (
-            <DirectoryCardMetaTile label={t('contacts.form.primaryEmail')}>
+            <EntityCardMetaTile label={t('contacts.form.primaryEmail')}>
               {email ? (
                 <span className="text-xs">{email}</span>
               ) : (
                 <MissingFieldBadge label={t('messaging.missingEmail')} />
               )}
-            </DirectoryCardMetaTile>
+            </EntityCardMetaTile>
           )}
-        </DirectoryCardMetaGrid>
+        </EntityCard.MetaGrid>
       )}
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 
@@ -116,7 +114,7 @@ export function MessagingWorkRecipientsCards({
   );
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={contacts}
       selectedIds={selectedIds}
       onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}

@@ -35,6 +35,19 @@ export const FACULTY_DIRECTORY_COLUMN_SURFACES = [
     mapping: { tabId: 'employment', fieldId: 'designation' },
   },
   {
+    key: 'department', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 2, exportOrder: 2,
+    label: 'Department', labelKey: 'faculty.field.department' as AppTranslationKey,
+    exportLabel: 'Department', width: 140, sortable: true,
+    mapping: { tabId: 'employment', fieldId: 'department' },
+  },
+  {
+    key: 'reportingFacultyName', work: false, sort: false, export: true, fixed: false,
+    workOrder: -1, sortOrder: -1, exportOrder: 3,
+    label: 'Supervisor', labelKey: 'faculty.columns.supervisor' as AppTranslationKey,
+    exportLabel: 'Supervisor', width: 140, sortable: false,
+  },
+  {
     key: 'specialization', work: true, sort: true, export: true, fixed: false,
     workOrder: 2, sortOrder: 3, exportOrder: 3,
     label: 'Specialization', labelKey: 'faculty.field.specialization' as AppTranslationKey,

@@ -1,6 +1,8 @@
 import type { FacultyDesignationHolding, FacultyRecord } from '@mms/shared';
 import { facultyDesignationHoldingsSchema } from '@mms/shared';
 import { saveFacultyAssignment } from '../../db/repositories/facultyAssignmentRepository.js';
+import { listOrganizationPositions } from '../../db/repositories/organizationPositionRepository.js';
+import { ValidationError } from '../../lib/httpErrors.js';
 import { prepareFacultyRecord } from './facultyNormalizeUseCases.js';
 
 function resolveHoldingDates(
@@ -35,6 +37,19 @@ function resolveHoldingDepartmentId(
   return typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
 }
 
+function resolveHoldingPositionId(
+  holding: FacultyDesignationHolding,
+  rawRecord: Record<string, unknown>,
+): string | null {
+  if (typeof holding.positionId === 'string' && holding.positionId.trim()) {
+    return holding.positionId.trim();
+  }
+  if (typeof rawRecord.positionId === 'string' && rawRecord.positionId.trim()) {
+    return rawRecord.positionId.trim();
+  }
+  return null;
+}
+
 /** Parse designations[] from create payload, or synthesize one row from legacy designationId. */
 export function parseDesignationHoldings(rawRecord: Record<string, unknown>): FacultyDesignationHolding[] {
   const parsed = facultyDesignationHoldingsSchema.safeParse(rawRecord.designations);
@@ -45,11 +60,18 @@ export function parseDesignationHoldings(rawRecord: Record<string, unknown>): Fa
   const designationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';
   if (!designationId) return [];
   const departmentId = typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
+  const positionId = typeof rawRecord.positionId === 'string' ? rawRecord.positionId.trim() : '';
   return [{
     designationId,
     status: 'active',
     ...(departmentId ? { departmentId } : {}),
+    ...(positionId ? { positionId } : {}),
   }];
+}
+
+async function tenantRequiresPosition(tenant: string): Promise<boolean> {
+  const positions = await listOrganizationPositions(tenant);
+  return positions.some((p) => p.isActive !== false);
 }
 
 async function persistDesignationHoldings(
@@ -61,6 +83,7 @@ async function persistDesignationHoldings(
 ): Promise<void> {
   if (holdings.length === 0) return;
 
+  const requiresPosition = await tenantRequiresPosition(tenant);
   let primaryAssigned = false;
   let writeIndex = 0;
   for (const holding of holdings) {
@@ -75,12 +98,20 @@ async function persistDesignationHoldings(
     if (isPrimary) primaryAssigned = true;
     writeIndex += 1;
 
+    const positionId = resolveHoldingPositionId(holding, rawRecord);
+    if (requiresPosition && isPrimary && !positionId) {
+      throw new ValidationError(
+        'Organization position is required for the primary appointment when positions exist',
+      );
+    }
+
     await saveFacultyAssignment(tenant, {
       id: `fa-${facultyId}-${writeIndex}`,
       workspaceSubdomain: tenant,
       facultyId,
       departmentId,
       designationId: holding.designationId,
+      positionId,
       startDate: startsOn,
       endDate: endsOn,
       isPrimary,

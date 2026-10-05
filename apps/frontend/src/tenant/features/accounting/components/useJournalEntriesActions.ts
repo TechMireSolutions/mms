@@ -11,7 +11,7 @@ import {
 } from '@/tenant/features/accounting/components/journalEntriesControllerActions';
 import { useJournalEntriesTrashReversal } from '@/tenant/features/accounting/components/useJournalEntriesTrashReversal';
 import { createJournalEntryActionsRenderer } from '@/tenant/features/accounting/components/journalEntriesControllerSelection';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 
 export interface UseJournalEntriesActionsOptions {
@@ -117,7 +117,7 @@ export function useJournalEntriesActions({
       requestRowTrash: trashReversal.requestRowTrash,
       handleReverse: trashReversal.requestReverse,
     },
-    { triggerClassName: DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS, hideViewItem: true },
+    { triggerClassName: ENTITY_CARD_OVERFLOW_TRIGGER_CLASS, hideViewItem: true },
   );
 
   return {

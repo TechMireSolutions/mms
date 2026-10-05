@@ -5,7 +5,7 @@ import { TASKS_MODULE_MANIFEST, type TaskRecord, type TaskInsert, type TaskStatu
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -29,7 +29,7 @@ export default function TasksPage(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
-  const [viewingDeleted, setViewingDeleted] = useTrashMode();
+  const [viewingDeleted, setViewingDeleted] = useDirectoryTrashState();
   const {
     selectedIds,
     toggleSelected,

@@ -2,11 +2,13 @@ import type { Contact, FieldDefinition, Student } from "@mms/shared";
 import {
   StudentContactSection,
   StudentGuardianSection,
-  StudentNotesSection,
   StudentRegistrationSection,
   type StudentFieldErrorGetter,
   type StudentStatusSelectOption,
 } from "@/tenant/features/students/components/StudentFormSections";
+import { EntityNotesFormSection } from "@/components/ui/EntityNotesFormSection";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStudentFieldLabel } from "@/tenant/features/students/components/StudentFormSectionShared";
 import React from "react";
 
 export interface StudentFormTabContentProps {
@@ -54,6 +56,8 @@ export const StudentFormTabContent = (function StudentFormTabContent({
   onGrNumberChange,
   onDraftChange,
 }: StudentFormTabContentProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6 pb-6">
       {/* Top Section: Contact Association */}
@@ -95,13 +99,17 @@ export const StudentFormTabContent = (function StudentFormTabContent({
         onGrNumberChange={onGrNumberChange}
         onDraftChange={onDraftChange}
       />
-      <StudentNotesSection
-        notes={studentDraft.notes}
-        fields={fields}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-      />
+      {isFieldEnabled("notes") ? (
+        <EntityNotesFormSection
+          title={t("students.form.notesSection")}
+          subtitle={t("students.form.notesSectionDesc")}
+          label={resolveStudentFieldLabel(fields, "registration", "notes", "students.form.notesLabel", t)}
+          placeholder={t("students.form.notesPlaceholder")}
+          value={studentDraft.notes}
+          required={isFieldRequired("notes")}
+          onChange={(next) => onDraftChange({ notes: next })}
+        />
+      ) : null}
     </div>
   );
 });

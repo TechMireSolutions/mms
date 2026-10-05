@@ -1,5 +1,5 @@
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { EntityMessagingDropdownItems } from '@/components/ui/EntityMessagingDropdownItems';
+import { EntityMessagingActions } from '@/components/ui/EntityMessagingActions';
 
 export interface PersonMessagingRowActionsExtrasProps {
   /** Primary phone (or null when the row has none) — drives SMS visibility. */
@@ -25,7 +25,7 @@ export interface PersonMessagingRowActionsExtrasProps {
  * WhatsApp / SMS / Email trio for person-directory Work row/card action menus.
  *
  * Computes channel visibility from primary channels + optional handlers, renders
- * the separator + {@link EntityMessagingDropdownItems}, and returns null when no
+ * the separator + {@link EntityMessagingActions}, and returns null when no
  * channel is available — Contacts, Students, and Teachers pass only channels,
  * closures, and labels (no per-module `*Items` wrappers).
  */
@@ -49,13 +49,13 @@ export function PersonMessagingRowActionsExtras({
   return (
     <>
       <DropdownMenuSeparator />
-      <EntityMessagingDropdownItems
+      <EntityMessagingActions variant="dropdown"
         showWhatsApp={showWhatsApp}
         showSms={showSms}
         showEmail={showEmail}
-        onWhatsAppClick={() => onWhatsApp?.()}
-        onSmsClick={() => onSms?.()}
-        onEmailClick={() => onEmail?.()}
+        onWhatsApp={() => onWhatsApp?.()}
+        onSms={() => onSms?.()}
+        onEmail={() => onEmail?.()}
         labels={labels}
       />
     </>

@@ -44,6 +44,25 @@ describe("useFacultyWorkTierActions", () => {
   let container: HTMLDivElement;
   let root: Root;
 
+  const directoryFilterProps: Pick<
+    UseFacultyWorkTierActionsProps,
+    | "filterDepartment"
+    | "filterDesignation"
+    | "filterReportingFacultyId"
+    | "supervisorFilterOptions"
+    | "onDepartmentChange"
+    | "onDesignationChange"
+    | "onReportingFacultyChange"
+  > = {
+    filterDepartment: "",
+    filterDesignation: "",
+    filterReportingFacultyId: "",
+    supervisorFilterOptions: [],
+    onDepartmentChange: vi.fn(),
+    onDesignationChange: vi.fn(),
+    onReportingFacultyChange: vi.fn(),
+  };
+
   const mockFaculty: Faculty = {
     id: "fac-1",
     contactId: "cnt-1",
@@ -82,6 +101,7 @@ describe("useFacultyWorkTierActions", () => {
             filterStatus: ["active"],
             filterSpecialization: "all",
             filterGender: "all",
+            ...directoryFilterProps,
             onToggleStatus: vi.fn(),
             onSpecializationChange: vi.fn(),
             onGenderChange: vi.fn(),
@@ -119,6 +139,7 @@ describe("useFacultyWorkTierActions", () => {
             filterStatus: [],
             filterSpecialization: "all",
             filterGender: "all",
+            ...directoryFilterProps,
             onToggleStatus: vi.fn(),
             onSpecializationChange: vi.fn(),
             onGenderChange: vi.fn(),

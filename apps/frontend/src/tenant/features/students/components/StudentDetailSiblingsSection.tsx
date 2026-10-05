@@ -1,10 +1,9 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { GrBadge } from "@/tenant/features/students/components/GrBadge";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -34,12 +33,13 @@ export function StudentDetailSiblingsSection({
   if (siblings.length === 0) return null;
 
   return (
-    <div className="space-y-3 pt-2">
-      <DetailSectionTitle>
-        {t("students.detail.siblings")} ({siblings.length})
-      </DetailSectionTitle>
-
-      <Card accentColor="success" className="divide-y divide-border/50 p-0">
+    <div className="pt-2">
+      <DetailSectionCard
+        title={t("students.detail.siblings")}
+        count={siblings.length}
+        accentColor="success"
+        className="divide-y divide-border/50 p-0"
+      >
         {siblings.map((sibling) => {
           const isInteractive = Boolean(onViewSibling);
           const handleKeyDown = isInteractive
@@ -76,7 +76,11 @@ export function StudentDetailSiblingsSection({
                       <span className="text-xs font-bold text-foreground truncate" title={sibling.name}>
                         {sibling.name}
                       </span>
-                      {sibling.grNumber && <GrBadge grNumber={sibling.grNumber} />}
+                      {sibling.grNumber ? (
+                        <FormFooterBadge tone="primary" className="px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                          {t("students.grPrefix")}: {sibling.grNumber}
+                        </FormFooterBadge>
+                      ) : null}
                       {sibling.status && (
                         <StatusBadge
                           status={sibling.status}
@@ -100,7 +104,7 @@ export function StudentDetailSiblingsSection({
             </div>
           );
         })}
-      </Card>
+      </DetailSectionCard>
     </div>
   );
 }

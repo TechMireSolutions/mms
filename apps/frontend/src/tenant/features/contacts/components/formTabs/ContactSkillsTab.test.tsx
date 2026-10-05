@@ -13,7 +13,7 @@ vi.mock("./ContactSubListCards", () => ({
   ContactSubListShell: ({ children, isEmpty, emptyMessage }: { children: React.ReactNode; isEmpty?: boolean; emptyMessage?: React.ReactNode }) => (
     <div data-testid="sublist-shell">{isEmpty ? <div>{emptyMessage}</div> : children}</div>
   ),
-  ListFieldCard: ({ children, typeSelect }: {
+  FormListFieldCard: ({ children, typeSelect }: {
     children: React.ReactNode;
     typeSelect?: React.ReactNode;
   }) => (
@@ -50,6 +50,15 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   ),
   FormCheckboxCard: ({ label, checked }: { label: string; checked: boolean }) => (
     <div data-testid="checkbox-card">{label}: {checked ? "yes" : "no"}</div>
+  ),
+  FormListFieldCard: ({ children, typeSelect }: {
+    children: React.ReactNode;
+    typeSelect?: React.ReactNode;
+  }) => (
+    <div data-testid="list-field-card">
+      <div>{typeSelect}</div>
+      <div>{children}</div>
+    </div>
   ),
 }));
 

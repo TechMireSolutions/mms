@@ -8,9 +8,26 @@ import { ConflictError } from '../lib/httpErrors.js';
 vi.mock('../lib/tenantContext.js', () => ({ getRequestTenant: () => 'demo' }));
 vi.mock('../db/database.js', () => ({ runInTransaction: (work: () => Promise<unknown>) => work() }));
 vi.mock('../lib/livePush.js', () => ({ broadcastCollection: vi.fn() }));
+vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
+  cascadeSoftDeleteFacultyAssignments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
+}));
 vi.mock('../faculty/use-cases/facultyHydrateUseCases.js', () => ({
   hydrateFacultyFromContacts: (_tenant: string, rows: unknown[]) => Promise.resolve(rows),
 }));
+vi.mock('../db/repositories/facultyRepositorySubordinates.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db/repositories/facultyRepositorySubordinates.js')>();
+  return {
+    ...actual,
+    findDirectSupervisorsBatch: vi.fn(async (_tenant: string, ids: string[]) => {
+      const map: Record<string, string> = {};
+      for (const id of ids) {
+        if (id === '0') map[id] = '149';
+      }
+      return map;
+    }),
+  };
+});
 
 describe('Faculty review regressions', () => {
   it.each([undefined, '2026-01-01T00:00:00.000Z'])('given an existing ID (%s), rejects create without overwriting it', async (deletedAt) => {

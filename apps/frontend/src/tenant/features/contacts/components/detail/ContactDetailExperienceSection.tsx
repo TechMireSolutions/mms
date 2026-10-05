@@ -2,7 +2,8 @@ import React from "react";
 import { Briefcase, Building2, MapPin, Calendar } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DetailSection } from "./DetailSection";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import {
   MESSAGING_ICON_BTN,
@@ -22,16 +23,16 @@ export function ContactDetailExperienceSection({
 
   if (experienceList.length === 0) {
     return (
-      <DetailSection title={t("contacts.detail.experience")}>
+      <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.experience")}>
         <div className="p-3 text-xs text-muted-foreground italic">
           {t("contacts.detail.emptyExperience")}
         </div>
-      </DetailSection>
+      </DetailSectionCard>
     );
   }
 
   return (
-    <DetailSection title={t("contacts.detail.experience")}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.experience")}>
       {experienceList.map((exp, idx) => {
         const period = [
           exp.startDate,
@@ -117,6 +118,6 @@ export function ContactDetailExperienceSection({
           </div>
         );
       })}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

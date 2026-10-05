@@ -2,10 +2,9 @@ import React from 'react';
 import { Banknote } from 'lucide-react';
 import type { Payment } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 
 export interface PaymentDetailProps {
@@ -27,7 +26,7 @@ export const PaymentDetail = (function PaymentDetail({
   const isArchived = !!payment.deletedAt;
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={t('finance.payments.detail.title')}
@@ -47,42 +46,37 @@ export const PaymentDetail = (function PaymentDetail({
       }
     >
       <div className="flex flex-col gap-6 py-6">
-        <section>
-          <DetailSectionTitle>{t('finance.payments.detail.overview')}</DetailSectionTitle>
-          <Card className="overflow-hidden">
-            <div className="divide-y divide-border">
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.invoiceId')}
-                value={payment.invoiceId} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.student')}
-                value={payment.studentName} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.amount')}
-                value={payment.amount.toString()} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.date')}
-                value={payment.date} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.method')}
-                value={payment.method} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.receivedBy')}
-                value={payment.receivedBy || '—'} 
-              />
-              <DetailAttributeRow 
-                label={t('finance.fields.payment.note')}
-                value={payment.note || '—'} 
-              />
-            </div>
-          </Card>
-        </section>
+        <DetailSectionCard title={t('finance.payments.detail.overview')} className="overflow-hidden divide-y divide-border">
+          <DetailAttributeRow
+            label={t('finance.fields.payment.invoiceId')}
+            value={payment.invoiceId}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.student')}
+            value={payment.studentName}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.amount')}
+            value={payment.amount.toString()}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.date')}
+            value={payment.date}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.method')}
+            value={payment.method}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.receivedBy')}
+            value={payment.receivedBy || '—'}
+          />
+          <DetailAttributeRow
+            label={t('finance.fields.payment.note')}
+            value={payment.note || '—'}
+          />
+        </DetailSectionCard>
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });

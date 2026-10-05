@@ -3,7 +3,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import { formatDate, isJournalEntryBalanced, moneyToCents } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import { ACCOUNT_TYPE_META, type Account, type JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE, balanceToneClass } from "@/lib/semanticTone";
@@ -12,8 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { DetailDrawerArchivedBanner } from "@/components/ui/DetailDrawerArchiveChrome";
 import { JournalEntryDetailLines } from "@/tenant/features/accounting/components/JournalEntryDetailLines";
-import { Card } from "@/components/ui/card";
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 
 interface JournalEntryDetailProps {
@@ -71,7 +70,7 @@ export function JournalEntryDetail({
   const balanceDifference = Math.abs(moneyToCents(totalDebit) - moneyToCents(totalCredit)) / 100;
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={entry.ref}
@@ -122,15 +121,12 @@ export function JournalEntryDetail({
       }
     >
       <div className="space-y-5">
-        <div className="space-y-2">
-          <DetailSectionTitle>{t("common.overview" as AppTranslationKey)}</DetailSectionTitle>
-          <Card className="divide-y divide-border/50 p-0">
-            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.date")} value={formatDate(entry.date)} />
-            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.createdBy")} value={entry.created_by || "—"} />
-            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.fiscalYear")} value={entry.fiscal_year || "—"} />
-            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.narration")} value={entry.description} />
-          </Card>
-        </div>
+        <DetailSectionCard title={t("common.overview" as AppTranslationKey)} className="divide-y divide-border/50 p-0">
+          <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.date")} value={formatDate(entry.date)} />
+          <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.createdBy")} value={entry.created_by || "—"} />
+          <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.fiscalYear")} value={entry.fiscal_year || "—"} />
+          <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.narration")} value={entry.description} />
+        </DetailSectionCard>
 
           {(entry.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-1.5" aria-label={t("accounting.columns.journal.tags")}>
@@ -160,6 +156,6 @@ export function JournalEntryDetail({
             }
           </div>
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 }

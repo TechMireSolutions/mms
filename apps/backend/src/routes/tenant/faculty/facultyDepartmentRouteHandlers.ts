@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import {
   type User,
@@ -9,7 +9,6 @@ import {
 } from '@mms/shared';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { withTenantRead } from '../../../db/tenant-context.js';
-import { facultyAssignments } from '../../../db/schema/facultyAssignmentTables.js';
 import {
   findFacultyDepartmentById,
   listFacultyDepartments,
@@ -133,17 +132,18 @@ export async function handleDeleteDepartment({
     }
 
     const inUse = await withTenantRead(String(tenantId), async (tx) => {
-      const rows = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(facultyAssignments)
-        .where(
-          and(
-            eq(facultyAssignments.workspaceSubdomain, String(tenantId)),
-            eq(facultyAssignments.departmentId, id),
-            isNull(facultyAssignments.deletedAt),
-          ),
-        );
-      return (rows[0]?.count ?? 0) > 0;
+      const rows = await tx.execute<{ count: number }>(sql`
+        SELECT count(*)::int AS count
+        FROM faculty_assignments a
+        JOIN faculty f
+          ON f.workspace_subdomain = a.workspace_subdomain
+          AND f.id = a.faculty_id
+          AND f.deleted_at IS NULL
+        WHERE a.workspace_subdomain = ${String(tenantId)}
+          AND a.department_id = ${id}
+          AND a.deleted_at IS NULL
+      `);
+      return Number(rows.rows[0]?.count ?? 0) > 0;
     });
 
     if (inUse) {

@@ -42,12 +42,6 @@ export {
 
 
 export {
-  DetailSheet,
-  type DetailSheetProps,
-  type DetailDrawerSize,
-} from "@/components/common/DetailSheet";
-
-export {
   BulkActionDock,
   type BulkActionDockProps,
   BulkSelectionClearAction,

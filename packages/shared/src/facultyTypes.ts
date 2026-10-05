@@ -110,7 +110,7 @@ export const FACULTY_HIERARCHY_RANK_PRESETS: readonly FacultyHierarchyPreset[] =
   { rank: 10, label: 'Lecturer / Staff' },
 ] as const;
 
-/** Matches DB/Zod default (`faculty.hierarchy_rank` DEFAULT 10). */
+/** Default when no designation rank is projected from primary faculty_assignments. */
 export const DEFAULT_FACULTY_HIERARCHY_RANK = 10;
 
 /** Hierarchical tree node for organizational chart and task delegation. */

@@ -1,9 +1,8 @@
 import type { JSX } from "react";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCard } from "@/components/ui/EntityCard";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
@@ -70,14 +69,14 @@ export function QuestionCard({
   );
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={question.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       {...cardProps}
       onClick={onRowClick ? () => onRowClick(question.id) : undefined}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={question.id}
         displayName={question.text}
         isSelected={isSelected}
@@ -104,7 +103,7 @@ export function QuestionCard({
         t={t}
       />
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         overflowActions={
           <QuestionsRowActions
             question={question}
@@ -113,12 +112,12 @@ export function QuestionCard({
             canTrashRows={canTrashRows}
             showDeleted={showDeleted}
             hideViewItem
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
             onEditQuestion={onEditQuestion}
             onTrashAction={onTrashAction}
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

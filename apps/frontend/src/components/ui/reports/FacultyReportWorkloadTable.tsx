@@ -8,11 +8,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
 import type { FacultyWorkloadItem } from "@/components/ui/reports/facultyReportTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 
 interface FacultyReportWorkloadTableProps {
   t: TranslationFunction;
@@ -28,9 +30,26 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
   onToggleFacultyFilter,
 }: FacultyReportWorkloadTableProps): React.JSX.Element {
   const maxClasses = Math.max(...rows.map((row) => row.classes), 1);
+  const columns: ExportColumn[] = [
+    { key: "faculty", header: t("faculty.report.colFaculty") },
+    { key: "classes", header: t("faculty.report.colClasses") },
+    { key: "sessions", header: t("faculty.report.colSessions") },
+    { key: "students", header: t("faculty.report.colStudents") },
+  ];
+  const exportRows = rows.map((row) => ({
+    faculty: row.faculty,
+    classes: row.classes,
+    sessions: row.sessions,
+    students: row.totalStudents,
+  }));
 
   return (
-    <div className={WORK_SURFACE}>
+    <ReportDataGridContainer
+      title={t("faculty.report.workloadReportTitle")}
+      columns={columns}
+      rows={exportRows}
+      moduleId="faculty"
+    >
       <div className="space-y-3 p-3 md:hidden">
         {rows.map((faculty) => (
           <article
@@ -112,6 +131,6 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
           </TableBody>
         </Table>
       </div>
-    </div>
+    </ReportDataGridContainer>
   );
 });

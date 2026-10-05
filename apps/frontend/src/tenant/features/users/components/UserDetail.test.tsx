@@ -44,8 +44,8 @@ vi.mock('@/tenant/hooks/collections/users', () => ({
   }),
 }));
 
-vi.mock('@/components/ui/DetailDrawerShell', () => ({
-  DetailDrawerShell: ({ title, subtitle, headerActions, children }: any) => (
+vi.mock('@/components/ui/Drawer', () => ({
+  Drawer: ({ title, subtitle, headerActions, children }: any) => (
     <div data-testid="detail-drawer">
       <h2>{title}</h2>
       <h3>{subtitle}</h3>

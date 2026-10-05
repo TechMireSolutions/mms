@@ -1,48 +1,40 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { persistFacultyTx } from '../db/repositories/facultyRepositoryColumns.js';
 
-function makeTx(existing: { reportingFacultyId: string | null } | null) {
-  const onConflictDoUpdate = vi.fn().mockResolvedValue(undefined);
-  const values = vi.fn(() => ({ onConflictDoUpdate }));
-  return {
-    tx: {
-      select: vi.fn(() => ({
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            limit: vi.fn().mockResolvedValue(existing ? [existing] : []),
-          })),
-        })),
+describe('persistFacultyTx employment profile writes', () => {
+  const tx = {
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
       })),
-      insert: vi.fn(() => ({ values })),
-    },
-    values,
+    })),
   };
-}
 
-describe('persistFacultyTx soft-stop for reportingFacultyId', () => {
-  it('forces reportingFacultyId null on create', async () => {
-    const { tx, values } = makeTx(null);
-    await persistFacultyTx(tx as never, 'demo', {
-      id: 'f-new',
-      contactId: 'c1',
-      status: 'active',
-      reportingFacultyId: 'f-boss',
-    } as never);
-    expect(values).toHaveBeenCalledWith(
-      expect.objectContaining({ reportingFacultyId: null }),
-    );
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('forces reportingFacultyId null on update even when legacy value exists', async () => {
-    const { tx, values } = makeTx({ reportingFacultyId: 'f-legacy' });
+  it('persists core employment fields without legacy denormalized columns', async () => {
     await persistFacultyTx(tx as never, 'demo', {
       id: 'f1',
       contactId: 'c1',
       status: 'active',
-      reportingFacultyId: 'f-legacy',
+      reportingFacultyId: 'legacy-sup',
+      department: 'Legacy Dept',
+      designation: 'Legacy Title',
+      hierarchyRank: 3,
     } as never);
-    expect(values).toHaveBeenCalledWith(
-      expect.objectContaining({ reportingFacultyId: null }),
-    );
+
+    expect(tx.insert).toHaveBeenCalled();
+    const valuesArg = tx.insert.mock.results[0]?.value.values.mock.calls[0]?.[0];
+    expect(valuesArg).toMatchObject({
+      id: 'f1',
+      contactId: 'c1',
+      status: 'active',
+    });
+    expect(valuesArg).not.toHaveProperty('department');
+    expect(valuesArg).not.toHaveProperty('designation');
+    expect(valuesArg).not.toHaveProperty('reportingFacultyId');
+    expect(valuesArg).not.toHaveProperty('hierarchyRank');
   });
 });

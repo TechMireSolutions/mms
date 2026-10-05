@@ -8,7 +8,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   type ContactBankDetail,
@@ -54,7 +54,7 @@ export function ContactBankDetailCard({
   const accountNumberError = getListItemError?.("bankDetails", "accountNumber", idx);
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       id={getLocalId("bankDetails", idx)}
       index={idx}
       icon={Landmark}
@@ -123,6 +123,6 @@ export function ContactBankDetailCard({
           </Field>
         )}
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }

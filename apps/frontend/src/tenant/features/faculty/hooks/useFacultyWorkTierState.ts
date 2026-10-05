@@ -22,6 +22,9 @@ export interface UseFacultyWorkTierStateInput {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment: string;
+  filterDesignation: string;
+  filterReportingFacultyId: string;
   quickFilter: FacultyQuickFilter;
   sortField: FacultySortField;
   sortDir: "asc" | "desc";
@@ -41,6 +44,9 @@ export function useFacultyWorkTierState({
   filterStatus,
   filterSpecialization,
   filterGender,
+  filterDepartment,
+  filterDesignation,
+  filterReportingFacultyId,
   quickFilter,
   sortField,
   sortDir,
@@ -69,6 +75,9 @@ export function useFacultyWorkTierState({
     filterStatus,
     filterSpecialization,
     filterGender,
+    filterDepartment,
+    filterDesignation,
+    filterReportingFacultyId,
     quickFilter,
     sortField,
     sortDir,
@@ -88,6 +97,9 @@ export function useFacultyWorkTierState({
         filterStatus,
         filterSpecialization,
         filterGender,
+        filterDepartment,
+        filterDesignation,
+        filterReportingFacultyId,
         quickFilter,
         sortField,
         sortDir,

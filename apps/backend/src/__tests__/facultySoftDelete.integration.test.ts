@@ -184,10 +184,10 @@ describe('faculty soft delete routes', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
       },
-      payload: { ids: ['t1'], status: 'sabbatical' },
+      payload: { ids: ['t1'], status: 'on_leave' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkUpdateFacultyStatus).toHaveBeenCalledWith(['t1'], 'sabbatical');
+    expect(mockBulkUpdateFacultyStatus).toHaveBeenCalledWith(['t1'], 'on_leave');
     await app.close();
   });
 });

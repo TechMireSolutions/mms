@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { ClipboardList, XCircle } from "lucide-react";
 import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
-import { bulkSelectionActionClassName } from "@/components/ui/BulkSelectionBar";
+import { bulkActionDockActionClassName } from "@/components/ui/bulkActionDockStyles";
 import { Button } from "@/components/ui/button";
 import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -56,7 +56,7 @@ export function EnrollmentsBulkActionBar({
             type="button"
             variant="outline"
             onClick={onRequestBulkCancel}
-            className={bulkSelectionActionClassName}
+            className={bulkActionDockActionClassName}
           >
             <XCircle className="w-3.5 h-3.5 text-muted-foreground" aria-hidden /> {t("enrollments.bulkCancel")}
           </Button>

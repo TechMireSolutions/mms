@@ -22,11 +22,9 @@ async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'ten
         set_config('app.allow_hard_purge', 'true', true)
     `);
     if (columnName === 'workspace_subdomain') {
-      await tx.execute(sql`UPDATE "faculty_assignments" SET "reports_to_assignment_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "organization_positions" SET "parent_position_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "faculty_departments" SET "parent_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "organization_locations" SET "parent_location_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
-      await tx.execute(sql`UPDATE "faculty" SET "reporting_faculty_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "tasks" SET "parent_task_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
     }
     const result = await tx.execute(sql`

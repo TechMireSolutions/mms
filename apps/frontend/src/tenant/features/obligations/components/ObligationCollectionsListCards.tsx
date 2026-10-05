@@ -5,13 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -68,13 +66,13 @@ function ObligationCollectionCard({
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       key={collection.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       {...cardProps}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={collection.id}
         displayName={sender?.name || "—"}
         isSelected={isSelected}
@@ -91,38 +89,38 @@ function ObligationCollectionCard({
         }
       />
 
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("receivedDate") && (
-          <DirectoryCardMetaTile label={t("obligations.columns.receivedDate")}>
+          <EntityCardMetaTile label={t("obligations.columns.receivedDate")}>
             {formatDate(collection.received_date)}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("obligationType") && (
-          <DirectoryCardMetaTile label={t("obligations.columns.obligationType")}>
+          <EntityCardMetaTile label={t("obligations.columns.obligationType")}>
             <Badge pill tone="primary" className="px-2 font-bold">{obligationType?.name || "—"}</Badge>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("repMujtahid") && (
-          <DirectoryCardMetaTile label={t("obligations.columns.repMujtahid")}>
+          <EntityCardMetaTile label={t("obligations.columns.repMujtahid")}>
             <span>{rep?.name || "—"}</span>
             {mujtahid && (
               <span className="block text-xs text-muted-foreground">{mujtahid.name}</span>
             )}
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("amount") && (
-          <DirectoryCardMetaTile label={t("obligations.columns.amount")}>
+          <EntityCardMetaTile label={t("obligations.columns.amount")}>
             <span className="font-semibold">{formatObligationCollectionAmount(collection)}</span>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
         {isColumnVisible("paymentMode") && (
-          <DirectoryCardMetaTile label={t("obligations.columns.paymentMode")}>
+          <EntityCardMetaTile label={t("obligations.columns.paymentMode")}>
             <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
+      </EntityCard.MetaGrid>
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         onView={handleView}
         viewLabel={t("obligations.actions.viewShort")}
         viewAriaLabel={t("obligations.actions.view", { receipt: collection.receipt_no })}
@@ -151,11 +149,11 @@ function ObligationCollectionCard({
             onPrint={onPrint}
             onMessage={onMessage}
             onTrashAction={onTrashAction}
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }
 
@@ -170,7 +168,7 @@ export function ObligationCollectionsListCards(props: ObligationCollectionListCa
   });
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={collections}
       selectedIds={selectedIds}
       onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}

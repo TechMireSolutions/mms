@@ -8,7 +8,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactEducation } from "@mms/shared";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
@@ -59,7 +59,7 @@ export function ContactEducationEntryCard({
   const gradeError = getErr("grade");
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       id={localId}
       index={idx}
       icon={GraduationCap}
@@ -195,6 +195,6 @@ export function ContactEducationEntryCard({
           label={t("contacts.form.currentlyStudyingHere")}
         />
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }

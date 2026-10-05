@@ -1,20 +1,9 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DetailSection, FieldGroupCard } from "./DetailSection";
+import { FieldGroupCard } from "./DetailSection";
 
-describe("DetailSection & FieldGroupCard Components", () => {
-  it("renders DetailSection with title and card content", () => {
-    const html = renderToStaticMarkup(
-      <DetailSection title="General Information">
-        <p>Some content</p>
-      </DetailSection>,
-    );
-
-    expect(html).toContain("General Information");
-    expect(html).toContain("Some content");
-  });
-
+describe("FieldGroupCard", () => {
   it("renders FieldGroupCard with valid fields", () => {
     const html = renderToStaticMarkup(
       <FieldGroupCard
@@ -28,5 +17,16 @@ describe("DetailSection & FieldGroupCard Components", () => {
     expect(html).toContain("Identity");
     expect(html).toContain("Gender");
     expect(html).toContain("Male");
+  });
+
+  it("returns null when no fields have values", () => {
+    const html = renderToStaticMarkup(
+      <FieldGroupCard
+        group="Empty"
+        fields={[{ key: "x", label: "X", type: "text" }]}
+        formatValue={() => null}
+      />,
+    );
+    expect(html).toBe("");
   });
 });

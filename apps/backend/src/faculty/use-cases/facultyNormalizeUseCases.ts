@@ -43,9 +43,7 @@ export function mergeFacultyPatch(
  */
 export function prepareFacultyRecord(record: FacultyRecord | Record<string, unknown>): FacultyRecord {
   const raw: Record<string, unknown> = { ...record };
-  if ('customDesignation' in raw && typeof raw.customDesignation === 'string' && raw.customDesignation.trim()) {
-    raw.designation = raw.customDesignation.trim();
-  }
+  // customDesignation is create-bootstrap catalog UX only — not a faculty column.
   delete raw.customDesignation;
   const withId = {
     ...raw,

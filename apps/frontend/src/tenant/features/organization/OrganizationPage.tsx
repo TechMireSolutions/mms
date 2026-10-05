@@ -7,7 +7,7 @@ import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useIndustryTerminology } from '@/tenant/hooks/useIndustryTerminology';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -26,7 +26,7 @@ export default function OrganizationPage(): React.JSX.Element {
   const { canWrite, canDelete } = useModulePermissions(ORGANIZATION_MODULE_MANIFEST);
   const [activeTab, setActiveTab] = useState<'chart' | 'locations' | 'setup'>('chart');
   const [blueprintOpen, setBlueprintOpen] = useState(false);
-  const [viewingDeleted, setViewingDeleted] = useTrashMode();
+  const [viewingDeleted, setViewingDeleted] = useDirectoryTrashState();
 
   const { data: positions = [] } = useOrganizationPositions({ includeDeleted: false });
   const { data: locations = [] } = useOrganizationLocations({ includeDeleted: false });

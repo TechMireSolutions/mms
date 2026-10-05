@@ -4,9 +4,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { PlatformAdminsDialogs } from './PlatformAdminsDialogs';
 import type { PlatformUserProfile } from '@mms/shared';
 
-vi.mock('@/components/common/DetailSheet', () => ({
-  DetailSheet: ({ open, title }: { open: boolean; title: string }) =>
-    open ? <div data-testid="detail-sheet">{title}</div> : null,
+vi.mock('@/components/ui/Drawer', () => ({
+  Drawer: ({ open, title, children }: { open: boolean; title: string; children?: React.ReactNode }) =>
+    open ? <div data-testid="detail-sheet">{title}{children}</div> : null,
+}));
+
+vi.mock('@/components/ui/EntityDescriptorSections', () => ({
+  EntityDescriptorSections: () => <span>descriptor-body</span>,
 }));
 
 vi.mock('@/platform/components/PlatformEditAdminAccessDialog', () => ({

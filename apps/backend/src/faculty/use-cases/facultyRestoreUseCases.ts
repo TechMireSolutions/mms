@@ -8,7 +8,7 @@ import { ConflictError } from '../../lib/httpErrors.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
 import { buildRestoredRecord, nowIso } from '../../lib/softDeleteHelpers.js';
 import { emitOutboxEvent } from '../../services/outboxEventService.js';
-
+import { cascadeRestoreFacultyAssignments } from '../../db/repositories/facultyAssignmentCascade.js';
 export async function restoreFacultyById(
   id: string,
   userId?: string,
@@ -34,6 +34,7 @@ export async function restoreFacultyById(
     const next = buildRestoredRecord(existing, userId);
     try {
       await repo.save(tenant, next);
+      await cascadeRestoreFacultyAssignments(tenant, [id], userId);
     } catch (err: unknown) {
       if (isUniqueViolation(err) || (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')) {
         throw new ConflictError('Cannot restore faculty: active record with this unique identifier already exists');
@@ -90,6 +91,11 @@ export async function bulkRestoreFaculty(
     if (toSave.length > 0) {
       try {
         await repo.bulkSave(tenant, toSave);
+        await cascadeRestoreFacultyAssignments(
+          tenant,
+          toSave.map((m) => String(m.id)),
+          userId,
+        );
       } catch (err: unknown) {
         if (isUniqueViolation(err) || (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')) {
           throw new ConflictError('Cannot restore faculty: active record with this unique identifier already exists');

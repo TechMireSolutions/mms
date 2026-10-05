@@ -1,8 +1,7 @@
 import React from "react";
 import { EntityCard } from "@/components/ui/EntityCard";
 import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 import type { DataTableCardContext, DataTableCardSlots, DataTableColumn } from "./dataTableTypes";
 
 export interface DataTableCardsProps<TData extends { id: string | number }> {
@@ -47,13 +46,13 @@ export function DataTableCards<TData extends { id: string | number }>({
           {card?.badge ? <div className="shrink-0">{card.badge(row)}</div> : null}
         </div>
         {metaColumns.length > 0 ? (
-          <DirectoryCardMetaGrid>
+          <EntityCard.MetaGrid>
             {metaColumns.map((column) => (
-              <DirectoryCardMetaTile key={column.id} label={column.label}>
+              <EntityCardMetaTile key={column.id} label={column.label}>
                 {column.render(row, index)}
-              </DirectoryCardMetaTile>
+              </EntityCardMetaTile>
             ))}
-          </DirectoryCardMetaGrid>
+          </EntityCard.MetaGrid>
         ) : null}
         {renderRowActions ? (
           <div

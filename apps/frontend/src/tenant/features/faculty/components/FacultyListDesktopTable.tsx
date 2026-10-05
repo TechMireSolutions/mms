@@ -50,7 +50,7 @@ export function FacultyListDesktopTable(props: FacultyListDesktopTableProps): Re
   } = props;
   const items = faculty;
   const { t } = useTranslation();
-  const emptyDash = t("faculty.table.emptyDash") || "—";
+  const emptyDash = t("faculty.table.emptyDash");
 
   const visibleColumns = getFacultyVisibleWorkColumns(columnRegistry, isColumnVisible);
 

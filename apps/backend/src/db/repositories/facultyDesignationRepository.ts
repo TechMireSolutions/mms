@@ -121,8 +121,15 @@ export async function softDeleteFacultyDesignation(tenant: string, id: string, a
   await withTenant(workspaceSubdomain, async (tx) => {
     await lockFacultyHierarchy(tx, workspaceSubdomain);
     const dependents = await tx.execute(sql`
-      SELECT id FROM faculty_assignments WHERE workspace_subdomain = ${workspaceSubdomain}
-        AND designation_id = ${id} AND deleted_at IS NULL
+      SELECT a.id
+      FROM faculty_assignments a
+      JOIN faculty f
+        ON f.workspace_subdomain = a.workspace_subdomain
+        AND f.id = a.faculty_id
+        AND f.deleted_at IS NULL
+      WHERE a.workspace_subdomain = ${workspaceSubdomain}
+        AND a.designation_id = ${id}
+        AND a.deleted_at IS NULL
       LIMIT 1
     `);
     if (dependents.rows.length) throw new Error('Designation has dependent appointments');

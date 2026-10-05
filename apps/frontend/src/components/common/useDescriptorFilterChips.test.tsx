@@ -152,6 +152,37 @@ describe("useDescriptorFilterChips", () => {
     cleanup();
   });
 
+  it("emits one chip per array filter value and passes the value to onRemove", () => {
+    const onRemove = vi.fn();
+    const { getResult, cleanup } = renderHookInDom(() =>
+      useDescriptorFilterChips(
+        makeMockDescriptor(),
+        { status: ["active", "archived"] },
+        onRemove,
+      ),
+    );
+    const chips = getResult();
+    expect(chips).toHaveLength(2);
+    expect(chips[0]?.key).toBe("status:active");
+    chips[1]?.onRemove();
+    expect(onRemove).toHaveBeenCalledWith("status", "archived");
+    cleanup();
+  });
+
+  it("respects explicit filterable text fields", () => {
+    const descriptor = makeMockDescriptor();
+    descriptor.fields = [
+      ...descriptor.fields,
+      { key: "specialization", label: "Specialization", type: "text", filterable: true },
+    ];
+    const { getResult, cleanup } = renderHookInDom(() =>
+      useDescriptorFilterChips(descriptor, { specialization: "Tajweed" }, vi.fn()),
+    );
+    expect(getResult()).toHaveLength(1);
+    expect(getResult()[0]?.label).toBe("Specialization: Tajweed");
+    cleanup();
+  });
+
   it("returns empty array when descriptor is undefined", () => {
     const { getResult, cleanup } = renderHookInDom(() =>
       useDescriptorFilterChips(undefined, { status: "active" }, vi.fn()),

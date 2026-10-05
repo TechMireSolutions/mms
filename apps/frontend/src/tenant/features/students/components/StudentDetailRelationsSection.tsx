@@ -1,7 +1,6 @@
 import React from "react";
 import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
-import { Card } from "@/components/ui/card";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   StudentRelationshipCard,
@@ -26,14 +25,13 @@ export function StudentDetailRelationsSection({
   if (relationships.length === 0) return null;
 
   return (
-    <div className="space-y-2 pt-2">
-      <div className="flex items-center justify-between">
-        <DetailSectionTitle>
-          {t("students.detail.allRelationships")} ({relationships.length})
-        </DetailSectionTitle>
-      </div>
-
-      <Card accentColor="info" className="divide-y divide-border/50 p-0 overflow-hidden">
+    <div className="pt-2">
+      <DetailSectionCard
+        title={t("students.detail.allRelationships")}
+        count={relationships.length}
+        accentColor="info"
+        className="divide-y divide-border/50 p-0 overflow-hidden"
+      >
         {relationships.map((rel) => (
           <StudentRelationshipCard
             key={rel.key}
@@ -43,7 +41,7 @@ export function StudentDetailRelationsSection({
             onNavigateToContact={onNavigateToContact}
           />
         ))}
-      </Card>
+      </DetailSectionCard>
     </div>
   );
 }

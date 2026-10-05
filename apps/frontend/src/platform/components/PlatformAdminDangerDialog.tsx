@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { PlatformUserProfile } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PlatformTypedConfirmDialog } from '@/platform/components/PlatformTypedConfirmDialog';
+import { TypedConfirmDialog } from "@/components/ui/TypedConfirmDialog";
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import {
   useDeletePlatformAdmin,
@@ -77,7 +77,7 @@ export function PlatformAdminDangerDialog({
   };
 
   return (
-    <PlatformTypedConfirmDialog
+    <TypedConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={t(titleKey)}

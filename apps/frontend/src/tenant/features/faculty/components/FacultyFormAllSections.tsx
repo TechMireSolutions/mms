@@ -12,7 +12,9 @@ import {
   type FacultyStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
+import { EntityNotesFormSection } from "@/components/ui/EntityNotesFormSection";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
 import {
   FacultyUserAccountSection,
   type FacultyUserAccountDraft,
@@ -44,6 +46,7 @@ export interface FacultyFormAllSectionsProps {
 }
 
 export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): React.JSX.Element {
+  const { t } = useTranslation();
   const {
     faculty,
     facultyDraft = {},
@@ -110,14 +113,18 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         onDraftChange={onDraftChange}
       />
 
-      <FacultyNotesSection
-        notes={facultyDraft.notes}
-        fields={fields}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-        error={errors.notes}
-      />
+      {isFieldEnabled("notes") ? (
+        <EntityNotesFormSection
+          title={t("faculty.form.notesSection")}
+          subtitle={t("faculty.form.notesSectionDesc")}
+          label={resolveFacultyFieldLabel(fields, "employment", "notes", t)}
+          placeholder={t("faculty.form.notesPlaceholder")}
+          value={facultyDraft.notes}
+          required={isFieldRequired("notes")}
+          error={errors.notes}
+          onChange={(next) => onDraftChange({ notes: next })}
+        />
+      ) : null}
 
       <FacultyUserAccountSection
         facultyDraft={facultyDraft}

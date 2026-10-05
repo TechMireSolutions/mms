@@ -46,7 +46,7 @@ metadata:
 | Shell | `apps/frontend/src/components/ui/ModulePageShell.tsx` |
 | Tier tabs | `apps/frontend/src/tenant/hooks/useModuleTierTabs.ts` (`useFilteredModuleTierTabs`) |
 | Permissions | `apps/frontend/src/tenant/hooks/usePermissions.ts` (`useModulePermissions`) |
-| Tab + trash state | `apps/frontend/src/hooks/usePersistedTabState.ts`, `apps/frontend/src/hooks/useTrashMode.ts` |
+| Tab + trash state | `apps/frontend/src/hooks/usePersistedTabState.ts`, `apps/frontend/src/hooks/useDirectoryTrashState.ts` |
 | Router | `apps/frontend/src/components/routing/HostRoutes.tsx` |
 | Policy | `packages/shared/src/moduleAccessPolicy.ts` + `ModuleAccessRoute` |
 | Template | `examples/TemplateModulePage.tsx` |
@@ -63,7 +63,7 @@ Derive allowed tabs with `useFilteredModuleTierTabs({ workLabelKey: 'nav.<module
 - [ ] Reports + Setup present when permitted; lazy-loaded behind Suspense + ErrorBoundary + ModuleTierMotion
 - [ ] Active tier from usePersistedTabState
 - [ ] Work directory virtualizes > 30 rows (@tanstack/react-virtual)
-- [ ] Trash mode (?view=trash) via useTrashMode, with restore + bulk restore wired
+- [ ] Trash mode (?view=trash) via useDirectoryTrashState, with restore + bulk restore wired
 - [ ] Write surfaces use FormModal + mms-form-architecture chrome (not DetailSheet embeds)
 - [ ] i18n keys added to en/ar/ur/fa (pnpm run check:i18n)
 - [ ] Verify: pnpm typecheck && pnpm --filter mms-frontend lint

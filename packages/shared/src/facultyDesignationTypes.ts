@@ -13,6 +13,8 @@ export type FacultyDesignationHoldingStatus = (typeof FACULTY_DESIGNATION_HOLDIN
 export const facultyDesignationHoldingSchema = z.object({
   designationId: z.string().min(1).max(100),
   departmentId: z.string().min(1).max(100).optional(),
+  /** Organization position for the appointment (required when tenant has active positions). */
+  positionId: z.string().min(1).max(100).nullable().optional(),
   status: z.enum(FACULTY_DESIGNATION_HOLDING_STATUSES).default('active'),
   startsOn: z.string().regex(isoDate).optional(),
   endsOn: z.string().regex(isoDate).nullable().optional(),

@@ -7,6 +7,7 @@ import {
   FormCardTypeSelect,
   FormListFieldCard,
   FormSelect,
+  FormSelectWithQuickCreate,
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -25,9 +26,12 @@ export interface FacultyFormDesignationRowsProps {
   showDepartment: boolean;
   departmentRequired: boolean;
   disabled: boolean;
+  positionOptions?: Array<{ value: string; label: string }>;
+  requiresPosition?: boolean;
   canAddCatalog?: boolean;
   onOpenAddDepartment?: (rowKey: string) => void;
   onOpenAddDesignation?: (rowKey: string) => void;
+  onOpenAddPosition?: (rowKey: string) => void;
   onChangeRows: (rows: FacultyDesignationDraftRow[]) => void;
 }
 
@@ -42,9 +46,12 @@ export function FacultyFormDesignationRows({
   showDepartment,
   departmentRequired,
   disabled,
+  positionOptions = [],
+  requiresPosition = false,
   canAddCatalog = false,
   onOpenAddDepartment,
   onOpenAddDesignation,
+  onOpenAddPosition,
   onChangeRows,
 }: FacultyFormDesignationRowsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -149,9 +156,28 @@ export function FacultyFormDesignationRows({
                 }
                 designationOptions={designationOptions}
                 onChange={(patch) => {
-                  patchRow(row.key, { designationId: patch.designationId });
+                  patchRow(row.key, { designationId: patch.designationId, positionId: "" });
                 }}
               />
+
+              {!disabled && (requiresPosition || positionOptions.length > 0) && index === 0 ? (
+                <Field
+                  id={`position-${row.key}`}
+                  label={t("faculty.assignments.position")}
+                  required={requiresPosition}
+                  error={errors.positionId || errors[`designations.${index}.positionId`]}
+                >
+                  <FormSelectWithQuickCreate
+                    id={`position-${row.key}`}
+                    value={row.positionId}
+                    onChange={(value) => patchRow(row.key, { positionId: value })}
+                    options={positionOptions}
+                    canAdd={canAddCatalog}
+                    onOpenAdd={onOpenAddPosition ? () => onOpenAddPosition(row.key) : undefined}
+                    addAriaLabel={t("faculty.assignments.position")}
+                  />
+                </Field>
+              ) : null}
 
               <Field
                 label={t("faculty.designations.startsOn")}

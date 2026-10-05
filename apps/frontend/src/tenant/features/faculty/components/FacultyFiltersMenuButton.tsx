@@ -21,6 +21,12 @@ export interface FacultyFiltersMenuButtonProps {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment: string;
+  filterDesignation: string;
+  filterReportingFacultyId: string;
+  departmentFilterOptions: Array<{ value: string; label: string }>;
+  designationFilterOptions: Array<{ value: string; label: string }>;
+  supervisorFilterOptions: Array<{ value: string; label: string }>;
   quickFilter: FacultyQuickFilter;
   onQuickFilterChange: (preset: string) => void;
   genderFilters: string[];
@@ -32,6 +38,9 @@ export interface FacultyFiltersMenuButtonProps {
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
   onGenderChange: (value: string) => void;
+  onDepartmentChange: (value: string) => void;
+  onDesignationChange: (value: string) => void;
+  onReportingFacultyChange: (value: string) => void;
   onSortChange: (field: FacultySortField) => void;
   onClearFilters: () => void;
 }
@@ -41,6 +50,12 @@ export function FacultyFiltersMenuButton({
   filterStatus,
   filterSpecialization,
   filterGender,
+  filterDepartment,
+  filterDesignation,
+  filterReportingFacultyId,
+  departmentFilterOptions,
+  designationFilterOptions,
+  supervisorFilterOptions,
   quickFilter,
   onQuickFilterChange,
   genderFilters,
@@ -52,6 +67,9 @@ export function FacultyFiltersMenuButton({
   onToggleStatus,
   onSpecializationChange,
   onGenderChange,
+  onDepartmentChange,
+  onDesignationChange,
+  onReportingFacultyChange,
   onSortChange,
   onClearFilters,
 }: FacultyFiltersMenuButtonProps): React.JSX.Element {
@@ -104,6 +122,51 @@ export function FacultyFiltersMenuButton({
         ]}
         onValueChange={onGenderChange}
       />
+
+      {departmentFilterOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("faculty.filter.department")}
+            value={filterDepartment || "all"}
+            options={[
+              { value: "all", label: t("faculty.filter.allDepartments") },
+              ...departmentFilterOptions,
+            ]}
+            onValueChange={(value) => onDepartmentChange(value === "all" ? "" : value)}
+          />
+        </>
+      )}
+
+      {designationFilterOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("faculty.filter.designation")}
+            value={filterDesignation || "all"}
+            options={[
+              { value: "all", label: t("faculty.filter.allDesignations") },
+              ...designationFilterOptions,
+            ]}
+            onValueChange={(value) => onDesignationChange(value === "all" ? "" : value)}
+          />
+        </>
+      )}
+
+      {supervisorFilterOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("faculty.filter.supervisor")}
+            value={filterReportingFacultyId || "all"}
+            options={[
+              { value: "all", label: t("faculty.filter.allSupervisors") },
+              ...supervisorFilterOptions,
+            ]}
+            onValueChange={(value) => onReportingFacultyChange(value === "all" ? "" : value)}
+          />
+        </>
+      )}
 
       {specializationOptions.length > 0 && (
         <>

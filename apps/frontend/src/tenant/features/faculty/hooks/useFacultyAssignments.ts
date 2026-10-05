@@ -6,6 +6,8 @@ import {
 } from '@mms/shared';
 import { apiContract } from '@/lib/api';
 import { FACULTY_QUERY_KEY } from './facultyQueryKeys';
+import { invalidateFacultyQueries } from './invalidateFacultyQueries';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const FACULTY_ASSIGNMENTS_QUERY_KEY = (facultyId: string) =>
   [...FACULTY_QUERY_KEY, 'assignments', facultyId] as const;
@@ -20,6 +22,7 @@ export function useFacultyAssignments(
   facultyId: string,
   options: { activeOnly?: boolean; enabled?: boolean } = {},
 ) {
+  const { t } = useTranslation();
   return useQuery({
     queryKey: [...FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId), { activeOnly: options.activeOnly ?? true }],
     queryFn: async ({ signal }): Promise<FacultyAssignmentEntity[]> => {
@@ -28,11 +31,11 @@ export function useFacultyAssignments(
         query: { activeOnly: options.activeOnly ?? true },
         fetchOptions: { signal },
       });
-      if (response.status !== 200) throw new Error('Failed to load faculty assignments');
+      if (response.status !== 200) throw new Error(t('faculty.errors.loadAssignments'));
       const parsed = facultyAssignmentSchema
         .array()
         .safeParse((response.body as { assignments?: unknown }).assignments);
-      if (!parsed.success) throw new Error('Invalid faculty assignments response');
+      if (!parsed.success) throw new Error(t('faculty.errors.invalidAssignmentsResponse'));
       return parsed.data;
     },
     enabled: Boolean(facultyId) && (options.enabled ?? true),
@@ -59,8 +62,10 @@ export function useSaveFacultyAssignment(facultyId: string) {
         (response.body as { assignment?: unknown }).assignment,
       );
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) });
+      invalidateFacultyQueries(queryClient);
+    },
   });
 }
 
@@ -80,8 +85,10 @@ export function useCloseFacultyAssignment(facultyId: string) {
         throw new Error(message);
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) });
+      invalidateFacultyQueries(queryClient);
+    },
   });
 }
 
@@ -101,8 +108,10 @@ export function useDeleteFacultyAssignment(facultyId: string) {
         throw new Error(message);
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: FACULTY_ASSIGNMENTS_QUERY_KEY(facultyId) });
+      invalidateFacultyQueries(queryClient);
+    },
   });
 }
 

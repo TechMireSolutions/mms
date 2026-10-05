@@ -1,25 +1,29 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-export function SubTabBadge({ badge, active }: { badge: number | string; active: boolean }): React.JSX.Element {
+export interface SubTabBadgeProps {
+  badge: number | string;
+  active: boolean;
+  /** When true, applies group-hover muted treatment (underline sub-tab chrome). */
+  interactive?: boolean;
+}
+
+/** Single sub-tab count pill SSOT. */
+export function SubTabBadge({
+  badge,
+  active,
+  interactive = false,
+}: SubTabBadgeProps): React.JSX.Element {
   return (
     <span
       className={cn(
         "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold transition-colors",
-        active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/20",
-      )}
-    >
-      {badge}
-    </span>
-  );
-}
-
-export function SubTabPillBadge({ badge, active }: { badge: number | string; active: boolean }): React.JSX.Element {
-  return (
-    <span
-      className={cn(
-        "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold",
-        active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+        active
+          ? "bg-primary/15 text-primary"
+          : cn(
+              "bg-muted text-muted-foreground",
+              interactive && "group-hover:bg-muted-foreground/20",
+            ),
       )}
     >
       {badge}

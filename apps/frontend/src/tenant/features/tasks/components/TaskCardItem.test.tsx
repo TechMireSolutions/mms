@@ -19,24 +19,19 @@ vi.mock('@/hooks/useWorkCardAction', () => ({
   }),
 }));
 
-vi.mock('@/components/ui/DirectoryEntityCard', () => ({
-  DirectoryEntityCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+vi.mock('@/components/ui/EntityCard', () => {
+  const EntityCard = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+  EntityCard.Header = ({ displayName }: { displayName: string }) => <div>{displayName}</div>;
+  EntityCard.MetaGrid = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+  return { EntityCard };
+});
+
+vi.mock('@/components/ui/EntityCardMetaTile', () => ({
+  EntityCardMetaTile: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('@/components/ui/DirectoryCardHeader', () => ({
-  DirectoryCardHeader: ({ displayName }: { displayName: string }) => <div>{displayName}</div>,
-}));
-
-vi.mock('@/components/ui/DirectoryCardMetaGrid', () => ({
-  DirectoryCardMetaGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('@/components/ui/DirectoryCardMetaTile', () => ({
-  DirectoryCardMetaTile: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('@/components/ui/DirectoryCardFooterActions', () => ({
-  DirectoryCardFooterActions: () => null,
+vi.mock('@/components/ui/EntityCardFooterActions', () => ({
+  EntityCardFooterActions: () => null,
 }));
 
 vi.mock('@/components/common/data-table', () => ({

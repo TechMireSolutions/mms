@@ -6,9 +6,6 @@ import type { InsertFacultyAssignmentRow } from '../schema/facultyAssignmentTabl
 import { validateFacultyAssignment, lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 import { findFacultyAssignmentById } from './facultyAssignmentRepository.js';
 import { recordModernAuditEvent } from '../../services/auditTrailService.js';
-import { syncFacultyCurrentDesignation } from './facultyDesignationSync.js';
-
-/* ── Write helpers ────────────────────────────────────────────────────────── */
 
 export async function saveFacultyAssignment(
   tenant: string,
@@ -18,15 +15,12 @@ export async function saveFacultyAssignment(
   await withTenant(subdomain, async (tx) => {
     await lockFacultyHierarchy(tx, subdomain);
     const current = await findFacultyAssignmentById(subdomain, assignment.id);
-    // Soft-stop: never write reports_to on create or update (legacy rows remain readable).
     assignment = {
       ...assignment,
-      reportsToAssignmentId: null,
       positionId: assignment.positionId === undefined
         ? current?.positionId ?? null
         : assignment.positionId,
     };
-    const reportsToAssignmentId = null;
     await validateFacultyAssignment(tx, subdomain, assignment);
     await tx
       .insert(facultyAssignments)
@@ -37,7 +31,6 @@ export async function saveFacultyAssignment(
           departmentId: assignment.departmentId,
           designationId: assignment.designationId,
           ...(assignment.positionId !== undefined ? { positionId: assignment.positionId } : {}),
-          reportsToAssignmentId,
           isPrimary: assignment.isPrimary,
           status: assignment.status ?? 'active',
           startDate: assignment.startDate,
@@ -49,7 +42,6 @@ export async function saveFacultyAssignment(
       });
     await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_assignments',
       recordId: assignment.id, actionType: 'UPDATE', realUserId: assignment.updatedBy, newState: assignment });
-    await syncFacultyCurrentDesignation(tx, subdomain, assignment.facultyId);
   });
 }
 
@@ -77,7 +69,6 @@ export async function closeAssignment(
       );
     await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_assignments',
       recordId: id, actionType: 'UPDATE', realUserId: updatedBy, newState: { endDate } });
-    await syncFacultyCurrentDesignation(tx, subdomain, current.facultyId);
   });
 }
 
@@ -90,10 +81,19 @@ export async function softDeleteFacultyAssignment(
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await lockFacultyHierarchy(tx, subdomain);
-    const dependents = await tx.execute(sql`SELECT id FROM faculty_assignments
-      WHERE workspace_subdomain = ${subdomain} AND reports_to_assignment_id = ${id}
-        AND deleted_at IS NULL LIMIT 1`);
-    if (dependents.rows.length) throw new Error('Assignment has active reporting dependents');
+    const dependents = await tx.execute(sql`
+      SELECT child.id FROM faculty_assignments parent
+      JOIN organization_positions pop ON pop.workspace_subdomain = parent.workspace_subdomain
+        AND pop.id = parent.position_id AND pop.deleted_at IS NULL
+      JOIN organization_positions child_pos ON child_pos.workspace_subdomain = pop.workspace_subdomain
+        AND child_pos.parent_position_id = pop.id AND child_pos.deleted_at IS NULL
+      JOIN faculty_assignments child ON child.workspace_subdomain = child_pos.workspace_subdomain
+        AND child.position_id = child_pos.id AND child.deleted_at IS NULL
+      WHERE parent.workspace_subdomain = ${subdomain} AND parent.id = ${id}
+        AND child.id <> parent.id AND child.faculty_id <> parent.faculty_id
+      LIMIT 1
+    `);
+    if (dependents.rows.length) throw new Error('Assignment has active position dependents');
     const deletedAt = new Date();
     const changed = await tx
       .update(facultyAssignments)
@@ -110,6 +110,5 @@ export async function softDeleteFacultyAssignment(
       recordId: id, actionType: 'DELETE', realUserId: deletedBy, newState: { reason } });
     await emitOutboxEvent(tx, 'entity.soft_deleted', { entityType: 'faculty_assignments', entityId: id,
       tenantId: subdomain, deletedAt: deletedAt.toISOString(), deletedBy, deletionReason: reason, version: deletedAt.getTime() });
-    await syncFacultyCurrentDesignation(tx, subdomain, changed[0].facultyId);
   });
 }

@@ -76,7 +76,9 @@ export async function findFacultyByContactId(tenant: string, contactId: string):
         isNull(faculty.deletedAt),
       ))
       .limit(1);
-    return rows[0] ? facultyRowToRecord(rows[0]) : null;
+    if (!rows[0]) return null;
+    const [hydrated] = await hydrateFacultyList(tx, subdomain, [rows[0]]);
+    return hydrated ?? null;
   });
 }
 
@@ -114,10 +116,6 @@ export async function bulkSaveFaculty(tenant: string, items: Faculty[]): Promise
           employeeId: sql`excluded.employee_id`,
           status: sql`excluded.status`,
           specialization: sql`excluded.specialization`,
-          department: sql`excluded.department`,
-          designation: sql`excluded.designation`,
-          reportingFacultyId: sql`excluded.reporting_faculty_id`,
-          hierarchyRank: sql`excluded.hierarchy_rank`,
           qualification: sql`excluded.qualification`,
           joinDate: sql`excluded.join_date`,
           notes: sql`excluded.notes`,

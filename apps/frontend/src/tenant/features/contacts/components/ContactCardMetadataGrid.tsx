@@ -6,7 +6,7 @@ import {
   type Contact,
   type ContactPreferences,
 } from "@mms/shared";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
@@ -80,7 +80,7 @@ export function ContactCardMetadataGrid({
       : undefined;
 
   return (
-    <DirectoryCardMetadata
+    <EntityCardMetadata
       descriptor={descriptor}
       entity={entity ?? contact}
       isColumnVisible={isColumnVisible}
@@ -102,8 +102,4 @@ export function ContactCardDeletedBanner({
 }: ContactCardDeletedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
 }
-
-/** Canonical alias aligning with FacultyCardMetadata, StudentCardMetadata, and UserCardMetadata. */
-export type ContactCardMetadataProps = ContactCardMetadataGridProps;
-export const ContactCardMetadata = ContactCardMetadataGrid;
 

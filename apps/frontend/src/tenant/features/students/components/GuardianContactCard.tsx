@@ -1,4 +1,4 @@
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -44,7 +44,7 @@ export function GuardianContactCard({
         </div>
       </div>
       {phone || email ? (
-        <EntityMessagingIconActions
+        <EntityMessagingActions variant="icon-row"
           primaryPhone={phone}
           primaryEmail={email}
           labels={{

@@ -5,7 +5,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { EntityMessagingDropdownItems } from '@/components/ui/EntityMessagingDropdownItems';
+import { EntityMessagingActions } from '@/components/ui/EntityMessagingActions';
 import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Distribution } from '@/lib/data/hasanatData';
@@ -89,13 +89,13 @@ export function DistributionsRowActions({
               <>
                 {showStatus ? <DropdownMenuSeparator /> : null}
                 <DropdownMenuLabel className="text-xs">{t('messaging.channel')}</DropdownMenuLabel>
-                <EntityMessagingDropdownItems
+                <EntityMessagingActions variant="dropdown"
                   showWhatsApp
                   showSms
                   showEmail={false}
-                  onWhatsAppClick={() => onMessage('whatsapp', distribution)}
-                  onSmsClick={() => onMessage('sms', distribution)}
-                  onEmailClick={() => undefined}
+                  onWhatsApp={() => onMessage('whatsapp', distribution)}
+                  onSms={() => onMessage('sms', distribution)}
+                  onEmail={() => undefined}
                   labels={{
                     whatsapp: t('messaging.channel.whatsapp'),
                     sms: t('messaging.channel.sms'),

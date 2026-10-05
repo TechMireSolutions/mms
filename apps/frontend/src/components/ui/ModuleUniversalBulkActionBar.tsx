@@ -35,6 +35,8 @@ export interface ModuleUniversalBulkActionBarProps<T = unknown> {
   exportAction?: {
     label: string;
     onClick: () => void | Promise<void>;
+    /** Export in flight — disables the CTA and shows a spinner. */
+    isPending?: boolean;
   };
   // Messaging
   messagingTargets?: {
@@ -133,7 +135,11 @@ export function ModuleUniversalBulkActionBar<T>({
       }
       exportAction={
         exportAction
-          ? { label: exportAction.label, onClick: exportAction.onClick }
+          ? {
+              label: exportAction.label,
+              onClick: exportAction.onClick,
+              isPending: exportAction.isPending,
+            }
           : bulkActions?.includes("export") && canExport && onBulkExport
             ? { label: exportLabel ?? t(`${i18nNamespace}.bulkExport` as AppTranslationKey), onClick: onBulkExport }
             : undefined

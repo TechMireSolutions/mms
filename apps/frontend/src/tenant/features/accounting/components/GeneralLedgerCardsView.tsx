@@ -2,8 +2,8 @@ import React from "react";
 import { formatDate } from "@mms/shared";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { GeneralLedgerLineWithRunning } from "./useGeneralLedger";
 
@@ -26,9 +26,9 @@ export function GeneralLedgerCardsView({
 }: GeneralLedgerCardsViewProps): React.JSX.Element {
   return (
     <div className={WORK_SURFACE}>
-      <DirectoryCardsGrid className="p-3">
+      <EntityCardsGrid className="p-3">
         {linesWithRunning.map((line, index) => (
-          <DirectoryEntityCard
+          <EntityCard
             key={`${line.ref}-${index}`}
             className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
           >
@@ -60,7 +60,7 @@ export function GeneralLedgerCardsView({
                 ddClassName="font-mono text-xs font-semibold text-success"
               />
             </StatGrid>
-          </DirectoryEntityCard>
+          </EntityCard>
         ))}
         <article className="rounded-xl border border-border bg-muted/30 p-3 col-span-full">
           <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.ledger.closingBalance")}</p>
@@ -82,7 +82,7 @@ export function GeneralLedgerCardsView({
             />
           </StatGrid>
         </article>
-      </DirectoryCardsGrid>
+      </EntityCardsGrid>
     </div>
   );
 }

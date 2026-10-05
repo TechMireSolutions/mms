@@ -99,7 +99,7 @@ export async function persistSessionClassesTx(
       enrolled: c.enrolled ?? 0,
       enrollmentDeadline: c.enrollmentDeadline || '',
       status: c.status || 'active',
-      facultyId: c.facultyId || '',
+      facultyId: c.facultyId?.trim() ? c.facultyId.trim() : null,
       facultyName: c.facultyName || '',
       room: c.room || '',
       sortOrder: idx,
@@ -180,7 +180,7 @@ export async function persistSessionClassesTx(
           startTime: p.startTime,
           endTime: p.endTime,
           subject: p.subject,
-          facultyId: p.facultyId || '',
+          facultyId: p.facultyId?.trim() ? p.facultyId.trim() : null,
           facultyName: p.facultyName || '',
         });
       }

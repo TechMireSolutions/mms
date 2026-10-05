@@ -2,9 +2,8 @@ import React from "react";
 import { ArrowUpRight, IdCard, MapPin, ShieldCheck, Tag } from "lucide-react";
 import type { Address, EmailAddress, PhoneNumber, StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { toMessagingRecipient } from "@mms/shared";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES } from "@/components/ui/messagingActionStyles";
@@ -92,29 +91,31 @@ export function StudentDetailContactSection({
   };
 
   return (
-    <div className="space-y-2 pt-2">
-      <div className="flex items-center justify-between">
-        <DetailSectionTitle>{t("students.detail.contactProfile")}</DetailSectionTitle>
+    <div className="pt-2">
+      <DetailSectionCard
+        title={t("students.detail.contactProfile")}
+        accentColor="primary"
+        className="p-3.5 space-y-3"
+      >
         {contactId && onNavigateToContact && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onNavigateToContact(contactId)}
-            className={cn(
-              MESSAGING_ICON_BTN,
-              MESSAGING_ICON_BTN_TONES.link,
-              "h-7 px-2 text-xs gap-1 font-medium",
-            )}
-            title={t("students.detail.viewInContacts")}
-          >
-            <span>{t("students.detail.viewInContacts")}</span>
-            <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
-          </Button>
+          <div className="flex justify-end -mt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigateToContact(contactId)}
+              className={cn(
+                MESSAGING_ICON_BTN,
+                MESSAGING_ICON_BTN_TONES.link,
+                "h-7 px-2 text-xs gap-1 font-medium",
+              )}
+              title={t("students.detail.viewInContacts")}
+            >
+              <span>{t("students.detail.viewInContacts")}</span>
+              <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
+            </Button>
+          </div>
         )}
-      </div>
-
-      <Card accentColor="primary" className="p-3.5 space-y-3">
         <StudentDetailContactChannels
           phones={phones}
           emails={emails}
@@ -179,7 +180,7 @@ export function StudentDetailContactSection({
             )}
           </div>
         )}
-      </Card>
+      </DetailSectionCard>
     </div>
   );
 }

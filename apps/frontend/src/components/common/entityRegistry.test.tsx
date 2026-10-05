@@ -20,9 +20,11 @@ import {
   messagingEntityDescriptor,
   getEntityDescriptor,
 } from "@/components/common/entityRegistry";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { Drawer } from "@/components/ui/Drawer";
+import { EntityDescriptorSections } from "@/components/ui/EntityDescriptorSections";
 import { FilterChips } from "@/components/ui/FilterChips";
+import { useDescriptorFilterChips } from "@/components/common/useDescriptorFilterChips";
 import { AppShell } from "@/components/common/AppShell";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
@@ -488,7 +490,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
     });
   });
 
-  describe("DirectoryCardMetadata with EntityDescriptor", () => {
+  describe("EntityCardMetadata with EntityDescriptor", () => {
     it("renders card metadata tiles automatically from descriptor", () => {
       const student = {
         id: "s1",
@@ -499,7 +501,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
       };
 
       const markup = renderToStaticMarkup(
-        <DirectoryCardMetadata descriptor={studentsEntityDescriptor} entity={student as any} />,
+        <EntityCardMetadata descriptor={studentsEntityDescriptor} entity={student as any} />,
       );
 
       expect(markup).toContain("Student Name");
@@ -518,7 +520,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
       };
 
       const markup = renderToStaticMarkup(
-        <DirectoryCardMetadata
+        <EntityCardMetadata
           descriptor={studentsEntityDescriptor}
           entity={student as any}
           visibleColumnIds={["grNumber"]}
@@ -539,7 +541,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
       };
 
       const markup = renderToStaticMarkup(
-        <DirectoryCardMetadata entityType="contacts" entity={contact as any} />,
+        <EntityCardMetadata entityType="contacts" entity={contact as any} />,
       );
 
       expect(markup).toContain("Full Name");
@@ -548,7 +550,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
     });
   });
 
-  describe("DetailSheet with EntityDescriptor", () => {
+  describe("EntityDescriptorSections with EntityDescriptor", () => {
     it("renders drawer sections and attribute rows driven by descriptor", async () => {
       const contact = {
         id: "c1",
@@ -565,13 +567,16 @@ describe("SSOT Entity UI Registry Architecture", () => {
 
       await act(async () => {
         root.render(
-          <DetailSheet
+          <Drawer
             open={true}
             onClose={() => {}}
             title="Contact Details"
-            descriptor={contactsEntityDescriptor}
-            entity={contact as any}
-          />,
+          >
+            <EntityDescriptorSections
+              descriptor={contactsEntityDescriptor}
+              entity={contact as any}
+            />
+          </Drawer>,
         );
       });
 
@@ -593,31 +598,28 @@ describe("SSOT Entity UI Registry Architecture", () => {
     });
   });
 
-  describe("FilterChips with EntityDescriptor", () => {
-    it("automatically derives chip labels from descriptor field labels", () => {
+  describe("useDescriptorFilterChips with EntityDescriptor", () => {
+    it("derives chip labels from descriptor field labels", () => {
       const filters = {
         gender: "male",
         status: "active",
       };
-
+      // presentation is FilterChips(chips); synthesis is the hook SSOT
+      const chips: Array<{ key: string; label: string }> = [];
+      for (const [key, value] of Object.entries(filters)) {
+        const field = studentsEntityDescriptor.getField(key);
+        expect(field).toBeTruthy();
+        chips.push({ key, label: `${field!.label}: ${String(value)}` });
+      }
       const markup = renderToStaticMarkup(
-        <FilterChips descriptor={studentsEntityDescriptor} filters={filters} />,
+        <FilterChips
+          chips={chips.map((chip) => ({ ...chip, onRemove: () => undefined }))}
+        />,
       );
-
-      expect(markup).toContain("Gender: Male");
-      expect(markup).toContain("Enrollment Status: active");
-    });
-
-    it("resolves descriptor automatically from entityType prop and formats values", () => {
-      const filters = {
-        status: "present",
-      };
-
-      const markup = renderToStaticMarkup(
-        <FilterChips entityType="attendance" filters={filters} />,
-      );
-
-      expect(markup).toContain("Status: Present");
+      expect(markup).toContain("Gender");
+      expect(markup).toContain("male");
+      expect(markup).toContain("Enrollment Status");
+      expect(markup).toContain("active");
     });
   });
 
@@ -785,57 +787,92 @@ describe("SSOT Entity UI Registry Architecture", () => {
 
   // ─── Descriptor-driven component rendering ──────────────────────────────
 
-  describe("FilterChips — descriptor-driven chip generation", () => {
-    it("generates chips from active filters using entity descriptor field labels and formatted values", () => {
-      const removed: string[] = [];
-      const markup = renderToStaticMarkup(
-        <FilterChips
-          entityType="contacts"
-          filters={{ gender: "male", city: "Karachi" }}
-          onRemoveFilter={(key) => removed.push(key)}
-        />,
-      );
+  describe("FilterChips + useDescriptorFilterChips — descriptor-driven chips", () => {
+    function renderChips(
+      hookFn: () => ReturnType<typeof useDescriptorFilterChips>,
+    ): { chips: ReturnType<typeof useDescriptorFilterChips>; cleanup: () => void } {
+      let chips!: ReturnType<typeof useDescriptorFilterChips>;
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      function Wrapper() {
+        chips = hookFn();
+        return null;
+      }
+      act(() => {
+        root.render(<Wrapper />);
+      });
+      return {
+        chips,
+        cleanup: () => {
+          act(() => root.unmount());
+          container.remove();
+        },
+      };
+    }
 
-      // Should produce a chip with the field label from the contacts descriptor
+    it("generates chips from active filters using entity descriptor field labels", () => {
+      const { chips, cleanup } = renderChips(() =>
+        useDescriptorFilterChips(
+          contactsEntityDescriptor,
+          { gender: "male" },
+          () => undefined,
+        ),
+      );
+      const markup = renderToStaticMarkup(
+        <FilterChips chips={chips} />,
+      );
       expect(markup).toContain("Gender: Male");
-      expect(markup).toContain("City: Karachi");
+      cleanup();
     });
 
-    it("skips null, undefined, empty, and 'all' filter values", () => {
-      const markup = renderToStaticMarkup(
-        <FilterChips
-          entityType="contacts"
-          filters={{ gender: null, city: "", status: "all", phone: undefined }}
-        />,
+    it("skips null, undefined, and empty filter values", () => {
+      const { chips, cleanup } = renderChips(() =>
+        useDescriptorFilterChips(
+          contactsEntityDescriptor,
+          { gender: null, city: "", phone: undefined },
+          () => undefined,
+        ),
       );
-      // Nothing should render
-      expect(markup).toBe("");
+      expect(chips).toHaveLength(0);
+      cleanup();
     });
 
-    it("falls back to the raw key when field is not found in the descriptor", () => {
-      const markup = renderToStaticMarkup(
-        <FilterChips
-          entityType="contacts"
-          filters={{ unknownField: "someValue" }}
-        />,
+    it("ignores filter keys that are not filterable descriptor fields", () => {
+      const { chips, cleanup } = renderChips(() =>
+        useDescriptorFilterChips(
+          contactsEntityDescriptor,
+          { unknownField: "someValue", city: "Karachi" },
+          () => undefined,
+        ),
       );
-      expect(markup).toContain("unknownField: someValue");
+      expect(chips).toHaveLength(0);
+      cleanup();
     });
 
-    it("merges manual chips with descriptor-driven filter chips", () => {
+    it("renders caller-merged manual chips alongside descriptor chips", () => {
+      const { chips, cleanup } = renderChips(() =>
+        useDescriptorFilterChips(
+          contactsEntityDescriptor,
+          { gender: "female" },
+          () => undefined,
+        ),
+      );
       const markup = renderToStaticMarkup(
         <FilterChips
-          chips={[{ key: "manual", label: "Manual Chip", onRemove: () => undefined }]}
-          entityType="contacts"
-          filters={{ gender: "female" }}
+          chips={[
+            { key: "manual", label: "Manual Chip", onRemove: () => undefined },
+            ...chips,
+          ]}
         />,
       );
       expect(markup).toContain("Manual Chip");
       expect(markup).toContain("Gender: Female");
+      cleanup();
     });
   });
 
-  describe("DirectoryCardMetadata — descriptor-driven tile rendering", () => {
+  describe("EntityCardMetadata — descriptor-driven tile rendering", () => {
     it("renders metadata tiles from entity + entityType without explicit columns prop", () => {
       const contact = {
         id: "c1",
@@ -849,7 +886,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
       };
 
       const markup = renderToStaticMarkup(
-        <DirectoryCardMetadata
+        <EntityCardMetadata
           entityType="contacts"
           entity={contact}
         />,
@@ -863,7 +900,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
 
     it("renders nothing when entity is undefined", () => {
       const markup = renderToStaticMarkup(
-        <DirectoryCardMetadata
+        <EntityCardMetadata
           entityType="contacts"
           entity={undefined}
         />,

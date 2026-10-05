@@ -73,7 +73,7 @@ describe("PaymentsListCards", () => {
     const html = renderToStaticMarkup(
       <PaymentsListCards {...baseProps} canDelete={false} />,
     );
-    // DirectoryCardFooter always renders its container div
+    // EntityCard.Footer always renders its container div
     expect(html).toContain("border-t border-border");
   });
 

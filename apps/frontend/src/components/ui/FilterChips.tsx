@@ -4,9 +4,6 @@ import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { EntityDescriptor } from "@/types/entityRegistry";
-import { getEntityDescriptor } from "@/components/common/entityRegistry";
-import { resolveFieldLabel } from "@/components/ui/DirectoryCardMetadata";
 
 export interface FilterChip {
   key: string;
@@ -14,13 +11,8 @@ export interface FilterChip {
   onRemove: () => void;
 }
 
-export interface FilterChipsProps<T = unknown> {
-  chips?: FilterChip[];
-  /** Optional SSOT descriptor-driven active filters */
-  filters?: Record<string, unknown>;
-  entityType?: string;
-  descriptor?: EntityDescriptor<T>;
-  onRemoveFilter?: (fieldKey: string) => void;
+export interface FilterChipsProps {
+  chips: FilterChip[];
   onClearAll?: () => void;
   /** Max chips to show before collapsing into "+n more" disclosure. Default: 4. */
   maxVisible?: number;
@@ -29,55 +21,22 @@ export interface FilterChipsProps<T = unknown> {
 
 /**
  * FilterChips — shows active filter pills with clear actions.
- * Supports both manual chip arrays and declarative entity descriptor-driven active filter state.
- * Collapses chips beyond `maxVisible` into a "+n more" disclosure button (P2-4).
+ * Chip models come from {@link useDescriptorFilterChips} (SSOT); this is presentation only.
  */
-export function FilterChips<T = unknown>({
-  chips = [],
-  filters,
-  entityType,
-  descriptor,
-  onRemoveFilter,
+export function FilterChips({
+  chips,
   onClearAll,
   maxVisible = 4,
   className,
-}: FilterChipsProps<T>): React.ReactElement | null {
+}: FilterChipsProps): React.ReactElement | null {
   const { t } = useTranslation();
   const [expanded, setExpanded] = React.useState(false);
 
-  const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor(entityType) : undefined)) as
-    | EntityDescriptor<unknown>
-    | undefined;
+  if (chips.length === 0) return null;
 
-  const effectiveChips = React.useMemo(() => {
-    const list = [...chips];
-    if (filters && effectiveDescriptor) {
-      for (const [key, value] of Object.entries(filters)) {
-        if (value === undefined || value === null || value === "" || value === "all") continue;
-        const field = effectiveDescriptor.getField(key);
-        const fieldLabel = field ? resolveFieldLabel(field, t) : key;
-        let valueLabel: string;
-        try {
-          const formatted = effectiveDescriptor.formatFieldValue(key, { [key]: value });
-          valueLabel = formatted && formatted !== "—" ? formatted : String(value);
-        } catch {
-          valueLabel = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
-        }
-        list.push({
-          key,
-          label: `${fieldLabel}: ${valueLabel}`,
-          onRemove: () => onRemoveFilter?.(key),
-        });
-      }
-    }
-    return list;
-  }, [chips, filters, effectiveDescriptor, onRemoveFilter]);
-
-  if (effectiveChips.length === 0) return null;
-
-  const overflow = effectiveChips.length > maxVisible;
-  const visibleChips = overflow && !expanded ? effectiveChips.slice(0, maxVisible) : effectiveChips;
-  const hiddenCount = effectiveChips.length - maxVisible;
+  const overflow = chips.length > maxVisible;
+  const visibleChips = overflow && !expanded ? chips.slice(0, maxVisible) : chips;
+  const hiddenCount = chips.length - maxVisible;
 
   return (
     <AnimatePresence>
@@ -122,7 +81,7 @@ export function FilterChips<T = unknown>({
           </button>
         )}
 
-        {effectiveChips.length > 1 && onClearAll && (
+        {chips.length > 1 && onClearAll && (
           <Button
             type="button"
             variant="ghost"

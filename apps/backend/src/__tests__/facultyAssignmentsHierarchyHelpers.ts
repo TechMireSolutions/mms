@@ -1,7 +1,7 @@
 /**
  * facultyAssignmentsHierarchyHelpers.ts
  *
- * Mock CTE simulators and fixtures for assignment hierarchy testing.
+ * In-memory simulators for position-parent assignment hierarchy (org chart SSOT).
  */
 
 import type { AssignmentTreeNode } from '../db/repositories/facultyAssignmentRepository.js';
@@ -12,11 +12,23 @@ export interface MockAssignment {
   facultyId: string;
   departmentId: string;
   designationId: string;
-  reportsToAssignmentId: string | null;
+  positionId: string | null;
+  /** Position this assignment occupies reports to (parent_position_id). */
+  parentPositionId: string | null;
   isPrimary: boolean;
   startDate: string;
   endDate: string | null;
   deletedAt: Date | null;
+}
+
+function activePrimary(all: MockAssignment[], tenant: string): MockAssignment[] {
+  return all.filter(
+    (a) =>
+      a.workspaceSubdomain === tenant
+      && !a.deletedAt
+      && a.isPrimary
+      && a.positionId != null,
+  );
 }
 
 export function simulateSubordinateTree(
@@ -25,14 +37,15 @@ export function simulateSubordinateTree(
   rootId: string,
   maxDepth = 20,
 ): AssignmentTreeNode[] {
-  const active = allAssignments.filter(
-    (a) => a.workspaceSubdomain === tenant && !a.deletedAt,
-  );
+  const active = activePrimary(allAssignments, tenant);
+  const root = active.find((a) => a.id === rootId);
+  if (!root?.positionId) return [];
+
   const results: AssignmentTreeNode[] = [];
   const queue: { node: MockAssignment; depth: number; path: string[] }[] = [];
 
-  for (const a of active.filter((a) => a.reportsToAssignmentId === rootId)) {
-    queue.push({ node: a, depth: 1, path: [rootId, a.id] });
+  for (const child of active.filter((a) => a.parentPositionId === root.positionId)) {
+    queue.push({ node: child, depth: 1, path: [rootId, child.id] });
   }
 
   let qHead = 0;
@@ -44,7 +57,6 @@ export function simulateSubordinateTree(
       facultyId: node.facultyId,
       departmentId: node.departmentId,
       designationId: node.designationId,
-      reportsToAssignmentId: node.reportsToAssignmentId,
       isPrimary: node.isPrimary,
       startDate: node.startDate,
       endDate: node.endDate,
@@ -52,8 +64,10 @@ export function simulateSubordinateTree(
       path,
       isCycle,
     });
-    if (isCycle || depth >= maxDepth) continue;
-    for (const child of active.filter((a) => a.reportsToAssignmentId === node.id && !path.includes(a.id))) {
+    if (isCycle || depth >= maxDepth || !node.positionId) continue;
+    for (const child of active.filter(
+      (a) => a.parentPositionId === node.positionId && !path.includes(a.id),
+    )) {
       queue.push({ node: child, depth: depth + 1, path: [...path, child.id] });
     }
   }
@@ -66,16 +80,16 @@ export function simulateManagerChain(
   startId: string,
   maxDepth = 20,
 ): AssignmentTreeNode[] {
-  const active = allAssignments.filter(
-    (a) => a.workspaceSubdomain === tenant && !a.deletedAt,
+  const active = activePrimary(allAssignments, tenant);
+  const byPosition = new Map(
+    active.filter((a) => a.positionId).map((a) => [a.positionId!, a]),
   );
-  const byId = new Map(active.map((a) => [a.id, a]));
-  const start = byId.get(startId);
-  if (!start?.reportsToAssignmentId) return [];
+  const start = active.find((a) => a.id === startId);
+  if (!start?.parentPositionId) return [];
 
   const results: AssignmentTreeNode[] = [];
   const visited = new Set<string>([startId]);
-  let current = byId.get(start.reportsToAssignmentId);
+  let current = byPosition.get(start.parentPositionId);
   let depth = 1;
 
   while (current && depth <= maxDepth) {
@@ -85,7 +99,6 @@ export function simulateManagerChain(
       facultyId: current.facultyId,
       departmentId: current.departmentId,
       designationId: current.designationId,
-      reportsToAssignmentId: current.reportsToAssignmentId,
       isPrimary: current.isPrimary,
       startDate: current.startDate,
       endDate: current.endDate,
@@ -95,7 +108,9 @@ export function simulateManagerChain(
     });
     if (isCycle) break;
     visited.add(current.id);
-    current = current.reportsToAssignmentId ? byId.get(current.reportsToAssignmentId) : undefined;
+    current = current.parentPositionId
+      ? byPosition.get(current.parentPositionId)
+      : undefined;
     depth++;
   }
   return results;
@@ -108,8 +123,9 @@ export function makeAssignment(
     workspaceSubdomain: 'tenantA',
     departmentId: 'dept-cs',
     designationId: 'des-lecturer',
-    reportsToAssignmentId: null,
-    isPrimary: false,
+    positionId: overrides.positionId ?? `pos-${overrides.id}`,
+    parentPositionId: null,
+    isPrimary: true,
     startDate: '2024-01-01',
     endDate: null,
     deletedAt: null,

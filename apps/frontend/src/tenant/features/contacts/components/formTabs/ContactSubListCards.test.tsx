@@ -2,11 +2,8 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Plus } from "lucide-react";
-import {
-  ListFieldCard,
-  ContactSubListShell,
-  resolveSubListAllowAdd,
-} from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
+import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 
 vi.mock("@/components/ui/EmptyState", () => ({
   EmptyState: ({
@@ -30,9 +27,9 @@ describe("ContactSubListCards Components", () => {
     expect(resolveSubListAllowAdd([false, false], 1)).toBe(true);
   });
 
-  it("renders ListFieldCard with typeSelect chrome", () => {
+  it("renders FormListFieldCard with typeSelect chrome", () => {
     const html = renderToStaticMarkup(
-      <ListFieldCard
+      <FormListFieldCard
         id="card-1"
         index={0}
         label={undefined}
@@ -41,7 +38,7 @@ describe("ContactSubListCards Components", () => {
         removeLabel="Remove item"
       >
         <div>Content</div>
-      </ListFieldCard>,
+      </FormListFieldCard>,
     );
 
     expect(html).toContain("Type control");

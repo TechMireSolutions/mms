@@ -1,34 +1,26 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { Badge, type BadgeTone } from '@/components/ui/badge';
 
-const META_BADGE_STYLES = {
-  primary: 'border-primary/30 bg-primary/10 text-primary',
-  muted: 'border-border bg-muted text-muted-foreground',
-  warning:
-    'border-warning/40 bg-warning/10 text-warning dark:border-warning/40 dark:bg-warning/10 dark:text-warning',
-  success:
-    'border-success/40 bg-success/10 text-success dark:border-success/40 dark:bg-success/10 dark:text-success',
-  destructive:
-    'border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/10 dark:text-destructive',
-} as const;
+const META_TO_TONE: Record<string, BadgeTone> = {
+  primary: 'primary',
+  muted: 'muted',
+  warning: 'warning',
+  success: 'success',
+  destructive: 'destructive',
+};
 
-/** Compact status chip for settings section summaries. */
+/** Compact status chip for settings — thin adapter over shared Badge. */
 export function SettingsMetaBadge({
   variant = 'muted',
   children,
 }: {
-  variant?: keyof typeof META_BADGE_STYLES;
+  variant?: keyof typeof META_TO_TONE;
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <span
-      className={cn(
-        'rounded-md border px-2 py-0.5 text-xs font-medium',
-        META_BADGE_STYLES[variant],
-      )}
-    >
+    <Badge as="span" tone={META_TO_TONE[variant] ?? 'muted'} size="sm">
       {children}
-    </span>
+    </Badge>
   );
 }
 

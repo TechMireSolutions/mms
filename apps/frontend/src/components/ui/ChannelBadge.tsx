@@ -2,6 +2,8 @@ import React from 'react';
 import { Mail, MessageSquare, MessageCircle } from 'lucide-react';
 import { getChannelBadgeStyle, getChannelLabelKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export interface ChannelBadgeProps {
   channel: 'sms' | 'whatsapp' | 'email' | string;
@@ -10,7 +12,7 @@ export interface ChannelBadgeProps {
 }
 
 /**
- * Reusable ChannelBadge primitive displaying normalized channel style and localized label.
+ * Channel pill — Badge shell + shared channel style/label map.
  */
 export function ChannelBadge({
   channel,
@@ -23,14 +25,18 @@ export function ChannelBadge({
   const labelKey = getChannelLabelKey(channel);
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-black uppercase ${getChannelBadgeStyle(
-        channel
-      )} ${className}`}
+    <Badge
+      as="span"
+      size="sm"
+      className={cn(
+        'font-black uppercase border-transparent',
+        getChannelBadgeStyle(channel),
+        className,
+      )}
     >
-      {showIcon && <Icon className="w-3 h-3 flex-shrink-0" />}
+      {showIcon && <Icon className="w-3 h-3 flex-shrink-0" aria-hidden />}
       {t(labelKey)}
-    </span>
+    </Badge>
   );
 }
 

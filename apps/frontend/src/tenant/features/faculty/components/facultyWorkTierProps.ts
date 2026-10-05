@@ -14,12 +14,18 @@ export interface FacultyWorkTierProps {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment: string;
+  filterDesignation: string;
+  filterReportingFacultyId: string;
   quickFilter: FacultyQuickFilter;
   onQuickFilterChange: (preset: string) => void;
   genderFilters: string[];
   activeFilterCount: number;
   statusOptions: string[];
   specializationOptions: string[];
+  departmentFilterOptions: Array<{ value: string; label: string }>;
+  designationFilterOptions: Array<{ value: string; label: string }>;
+  supervisorFilterOptions: Array<{ value: string; label: string }>;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -49,6 +55,9 @@ export interface FacultyWorkTierProps {
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
   onGenderChange: (value: string) => void;
+  onDepartmentChange: (value: string) => void;
+  onDesignationChange: (value: string) => void;
+  onReportingFacultyChange: (value: string) => void;
   onToggleDeleted: () => void;
   onClearFilters: () => void;
   onRetry: () => unknown;

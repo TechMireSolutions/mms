@@ -1,6 +1,6 @@
 import type { Student } from "@mms/shared";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EntityCard } from "@/components/ui/EntityCard";
 
 export interface StudentCardHeaderProps {
   student: Student;
@@ -57,7 +57,7 @@ export function StudentCardHeader({
   ) : undefined;
 
   return (
-    <DirectoryCardHeader
+    <EntityCard.Header
       id={id}
       displayName={studentName}
       avatar={typeof student.avatar === "string" ? student.avatar : undefined}
@@ -72,4 +72,3 @@ export function StudentCardHeader({
     />
   );
 }
-

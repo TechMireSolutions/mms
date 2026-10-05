@@ -11,8 +11,7 @@ import {
   Clock,
 } from "lucide-react";
 import { formatMoney, formatDate } from "@mms/shared";
-import { Card } from "@/components/ui/card";
-import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -49,74 +48,71 @@ export function ObligationCollectionAttributesCard({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-2">
-      <DetailSectionTitle>{t("obligations.detail.title")}</DetailSectionTitle>
-      <Card className="divide-y divide-border/50 p-0">
+    <DetailSectionCard title={t("obligations.detail.title")} className="divide-y divide-border/50 p-0">
+      <DetailAttributeRow
+        variant="inset"
+        icon={User}
+        label={t("obligations.columns.sender")}
+        value={sender?.name}
+      />
+      {reference && (
         <DetailAttributeRow
           variant="inset"
-          icon={User}
-          label={t("obligations.columns.sender")}
-          value={sender?.name}
+          icon={Users}
+          label={t("obligations.form.reference")}
+          value={reference?.name}
         />
-        {reference && (
-          <DetailAttributeRow
-            variant="inset"
-            icon={Users}
-            label={t("obligations.form.reference")}
-            value={reference?.name}
-          />
-        )}
+      )}
+      <DetailAttributeRow
+        variant="inset"
+        icon={Bookmark}
+        label={t("obligations.columns.obligationType")}
+        value={obType?.name}
+      />
+      {obType?.designated_for && (
         <DetailAttributeRow
           variant="inset"
-          icon={Bookmark}
-          label={t("obligations.columns.obligationType")}
-          value={obType?.name}
+          icon={Target}
+          label={t("obligations.detail.designatedFor")}
+          value={obType.designated_for}
         />
-        {obType?.designated_for && (
-          <DetailAttributeRow
-            variant="inset"
-            icon={Target}
-            label={t("obligations.detail.designatedFor")}
-            value={obType.designated_for}
-          />
-        )}
-        <DetailAttributeRow
-          variant="inset"
-          icon={UserCheck}
-          label={t("obligations.form.representative")}
-          value={rep?.name}
-        />
-        <DetailAttributeRow
-          variant="inset"
-          icon={ShieldCheck}
-          label={t("obligations.form.mujtahidLabel")}
-          value={mujtahid?.name}
-        />
-        <DetailAttributeRow
-          variant="inset"
-          icon={Coins}
-          label={t("obligations.columns.amount")}
-          value={<span className="font-mono">{formatMoney(collection.amount, currency?.code)}</span>}
-        />
-        <DetailAttributeRow
-          variant="inset"
-          icon={CreditCard}
-          label={t("obligations.columns.paymentMode")}
-          value={<StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />}
-        />
-        <DetailAttributeRow
-          variant="inset"
-          icon={UserCheck}
-          label={t("obligations.form.receivedBy")}
-          value={user?.name}
-        />
-        <DetailAttributeRow
-          variant="inset"
-          icon={Clock}
-          label={t("obligations.detail.created")}
-          value={formatDate(collection.created_at)}
-        />
-      </Card>
-    </div>
+      )}
+      <DetailAttributeRow
+        variant="inset"
+        icon={UserCheck}
+        label={t("obligations.form.representative")}
+        value={rep?.name}
+      />
+      <DetailAttributeRow
+        variant="inset"
+        icon={ShieldCheck}
+        label={t("obligations.form.mujtahidLabel")}
+        value={mujtahid?.name}
+      />
+      <DetailAttributeRow
+        variant="inset"
+        icon={Coins}
+        label={t("obligations.columns.amount")}
+        value={<span className="font-mono">{formatMoney(collection.amount, currency?.code)}</span>}
+      />
+      <DetailAttributeRow
+        variant="inset"
+        icon={CreditCard}
+        label={t("obligations.columns.paymentMode")}
+        value={<StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />}
+      />
+      <DetailAttributeRow
+        variant="inset"
+        icon={UserCheck}
+        label={t("obligations.form.receivedBy")}
+        value={user?.name}
+      />
+      <DetailAttributeRow
+        variant="inset"
+        icon={Clock}
+        label={t("obligations.detail.created")}
+        value={formatDate(collection.created_at)}
+      />
+    </DetailSectionCard>
   );
 }

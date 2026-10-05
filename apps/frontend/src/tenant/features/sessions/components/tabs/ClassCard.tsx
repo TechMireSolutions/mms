@@ -4,11 +4,9 @@ import type { FacultyMember } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
@@ -55,12 +53,12 @@ export function ClassCard({ sessionClass, faculty, onEdit, onDelete, onMessage, 
   });
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       className="group p-4 flex flex-col justify-between hover:border-primary/50 transition-all"
       {...cardProps}
     >
       <div>
-        <DirectoryCardHeader
+        <EntityCard.Header
           id={sessionClass.id}
           displayName={sessionClass.name}
           subtitle={
@@ -76,16 +74,16 @@ export function ClassCard({ sessionClass, faculty, onEdit, onDelete, onMessage, 
           viewAriaLabel={t("sessions.classes.editNamed", { name: sessionClass.name })}
         />
 
-        <DirectoryCardMetaGrid className="mb-3 mt-4">
-          <DirectoryCardMetaTile label={t("sessions.classes.ageRange")}>
+        <EntityCard.MetaGrid className="mb-3 mt-4">
+          <EntityCardMetaTile label={t("sessions.classes.ageRange")}>
             <span className="font-semibold text-foreground">
               {t("sessions.classes.ageYears", { min: minAge, max: maxAge })}
             </span>
-          </DirectoryCardMetaTile>
-          <DirectoryCardMetaTile label={t("sessions.classes.form.gender")}>
+          </EntityCardMetaTile>
+          <EntityCardMetaTile label={t("sessions.classes.form.gender")}>
             <StatusBadge status={sessionClass.gender || "mixed"} config={genderConfig} size="sm" />
-          </DirectoryCardMetaTile>
-        </DirectoryCardMetaGrid>
+          </EntityCardMetaTile>
+        </EntityCard.MetaGrid>
 
         <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-3.5 w-3.5" aria-hidden="true" />
@@ -131,7 +129,7 @@ export function ClassCard({ sessionClass, faculty, onEdit, onDelete, onMessage, 
         </div>
       </div>
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         actions={
           canWrite ? (
             <div className="flex shrink-0 items-center gap-1">
@@ -181,6 +179,6 @@ export function ClassCard({ sessionClass, faculty, onEdit, onDelete, onMessage, 
           ) : null
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Modal } from "@/components/ui/Modal";
 import { FormModal } from "@/components/ui/FormModal";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { Drawer } from "@/components/ui/Drawer";
 
 declare global {
    
@@ -118,17 +118,17 @@ describe("Overlay Primitives Accessibility (WCAG 2.2 / WAI-ARIA)", () => {
     });
   });
 
-  describe("DetailDrawerShell primitive", () => {
+  describe("Drawer primitive", () => {
     it("renders role='dialog' with aria-modal='true' and accessible titleId", async () => {
       await act(async () => {
         root.render(
-          <DetailDrawerShell
+          <Drawer
             open={true}
             onClose={() => {}}
             title="Entity Detail View"
           >
             <div>Drawer Content</div>
-          </DetailDrawerShell>,
+          </Drawer>,
         );
       });
 

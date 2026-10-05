@@ -13,7 +13,6 @@ import {
 export interface ModuleWorkBulkActionBarProps {
   selectedCount: number;
   viewingDeleted?: boolean;
-  showDeleted?: boolean;
   countLabel: string;
   leading: ReactNode;
   deselectLabel: string;
@@ -52,8 +51,7 @@ export interface ModuleWorkBulkActionBarProps {
 /** Shared Work bulk selection chrome — Contacts/Students compose labels + slots. */
 export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
   selectedCount,
-  viewingDeleted,
-  showDeleted,
+  viewingDeleted = false,
   countLabel,
   leading,
   deselectLabel,
@@ -66,7 +64,6 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
   extraActions,
   deleteAction,
 }: ModuleWorkBulkActionBarProps): JSX.Element {
-  const isViewingDeleted = viewingDeleted ?? showDeleted ?? false;
   const trailingNode = (() => (
       <BulkSelectionClearAction label={deselectLabel} onClick={onClearSelection} />
     ))();
@@ -82,7 +79,7 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
       onClearSelection={onClearSelection}
       enableEscapeKey={true}
     >
-      {isViewingDeleted ? (
+      {viewingDeleted ? (
         canDelete && (
           <BulkSelectionRestoreAction label={restoreLabel} onClick={onRequestBulkRestore} />
         )

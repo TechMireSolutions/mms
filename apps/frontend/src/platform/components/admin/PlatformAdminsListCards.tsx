@@ -3,9 +3,9 @@ import type { PlatformUserProfile } from '@mms/shared';
 import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { DirectoryCard } from '@/components/ui/DirectoryCard';
-import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
+import { EntityCardMetadata } from '@/components/ui/EntityCardMetadata';
 import {
   PlatformAdminStatusBadges,
   PlatformAdminPermissionsBadges,
@@ -46,7 +46,7 @@ export function PlatformAdminsListCards({
   const reducedMotion = useReducedMotion();
 
   return (
-    <DirectoryCardsGrid>
+    <EntityCardsGrid>
       {admins.map((admin) => (
         <DirectoryCard
           key={admin.id}
@@ -75,7 +75,7 @@ export function PlatformAdminsListCards({
             </div>
           }
           metadataSlot={
-            <DirectoryCardMetadata descriptor={descriptor} entity={admin} visibleColumnIds={['email']} />
+            <EntityCardMetadata descriptor={descriptor} entity={admin} visibleColumnIds={['email']} />
           }
           footer={
             <div
@@ -103,10 +103,6 @@ export function PlatformAdminsListCards({
           <PlatformAdminPermissionsBadges admin={admin} />
         </DirectoryCard>
       ))}
-    </DirectoryCardsGrid>
+    </EntityCardsGrid>
   );
 }
-
-/** Backward-compatible alias aligning with singular/plural naming variants. */
-export type PlatformAdminListCardsProps = PlatformAdminsListCardsProps;
-export const PlatformAdminListCards = PlatformAdminsListCards;

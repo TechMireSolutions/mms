@@ -29,6 +29,9 @@ export interface FacultyDirectoryQueryInput {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment?: string;
+  filterDesignation?: string;
+  filterReportingFacultyId?: string;
   quickFilter: FacultyQuickFilter;
   sortField: FacultySortField | null | undefined;
   sortDir: 'asc' | 'desc';
@@ -40,6 +43,9 @@ export function buildFacultyDirectoryQuery({
   filterStatus,
   filterSpecialization,
   filterGender,
+  filterDepartment,
+  filterDesignation,
+  filterReportingFacultyId,
   quickFilter,
   sortField,
   sortDir,
@@ -49,6 +55,9 @@ export function buildFacultyDirectoryQuery({
     status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
     specialization: filterSpecialization || undefined,
     gender: filterGender || undefined,
+    department: filterDepartment?.trim() || undefined,
+    designation: filterDesignation?.trim() || undefined,
+    reportingFacultyId: filterReportingFacultyId?.trim() || undefined,
     quickFilter: quickFilter !== 'all' ? quickFilter : undefined,
     sortField: sortField ?? undefined,
     sortDir: sortField ? sortDir : undefined,

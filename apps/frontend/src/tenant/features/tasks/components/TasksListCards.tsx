@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import type { TaskRecord, TaskStatus } from '@mms/shared';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
@@ -74,7 +74,7 @@ export function TasksListCards({
       {isLoading && tasks.length === 0 ? (
         <p className="text-sm text-muted-foreground px-1 py-6">{t('common.loading')}</p>
       ) : (
-        <ModuleDirectoryCards
+        <EntityCardsGrid
           items={tasks}
           selectedIds={selectedIds}
           onSelectAll={canDelete ? () => onToggleSelectAll(!allSelected, pageIds) : undefined}

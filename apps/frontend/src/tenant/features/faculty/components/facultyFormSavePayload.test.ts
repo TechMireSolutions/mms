@@ -26,7 +26,7 @@ describe("facultyFormSavePayload", () => {
         autoGenerateId: false,
       });
 
-      expect(payload.name).toBe("Ustadh Ahmad");
+      expect(payload.name).toBeUndefined();
       expect(payload.employeeId).toBe("EMP-001");
       expect(payload.contactId).toBe("cnt-1");
     });
@@ -44,25 +44,44 @@ describe("facultyFormSavePayload", () => {
       expect(payload.employeeId).toBe("EMP-099");
     });
 
-    it("strips transient and presentation fields", () => {
+    it("strips read projections on update", () => {
       const draft = {
         name: "Ustadh Ahmad",
         contactId: "cnt-1",
         designationAssignableRoles: ["admin"],
         designationEndsOn: "2026-12-31",
+        department: "Academics",
+        reportingFacultyId: "sup-1",
         contact: { id: "cnt-1" } as Contact,
         subordinates: [],
       } as unknown as Partial<FacultyMember>;
 
       const payload = buildFacultySavePayload({
         facultyDraft: draft,
+        faculty: { id: "fac-1" } as FacultyMember,
         autoGenerateId: false,
       });
 
       expect((payload as Record<string, unknown>).designationAssignableRoles).toBeUndefined();
-      expect(payload.designationEndsOn).toBe("2026-12-31");
+      expect(payload.designationEndsOn).toBeUndefined();
+      expect(payload.department).toBeUndefined();
+      expect(payload.reportingFacultyId).toBeUndefined();
       expect((payload as Record<string, unknown>).contact).toBeUndefined();
       expect((payload as Record<string, unknown>).subordinates).toBeUndefined();
+    });
+
+    it("keeps create bootstrap designation fields", () => {
+      const payload = buildFacultySavePayload({
+        facultyDraft: {
+          contactId: "cnt-1",
+          designationEndsOn: "2026-12-31",
+          designationId: "des-1",
+        },
+        autoGenerateId: false,
+      });
+
+      expect(payload.designationEndsOn).toBe("2026-12-31");
+      expect(payload.designationId).toBe("des-1");
     });
   });
 

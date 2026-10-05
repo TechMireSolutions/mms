@@ -6,6 +6,7 @@ export interface FacultyDesignationDraftRow {
   department: string;
   departmentId: string;
   designationId: string;
+  positionId: string;
   status: "active" | "inactive";
   startsOn: string;
   endsOn: string;
@@ -28,6 +29,10 @@ export function getInitialDesignationRows(
       department: holding.departmentName ?? faculty?.department ?? "",
       departmentId: holding.departmentId ?? "",
       designationId: holding.designationId,
+      positionId:
+        typeof (holding as { positionId?: string | null }).positionId === "string"
+          ? (holding as { positionId?: string | null }).positionId ?? ""
+          : "",
       status: holding.status === "inactive" ? "inactive" : "active",
       startsOn: holding.startsOn ?? faculty?.designationStartsOn ?? todayISO(),
       endsOn: holding.endsOn ?? faculty?.designationEndsOn ?? "",
@@ -39,6 +44,9 @@ export function getInitialDesignationRows(
       department: faculty?.department ?? "",
       departmentId: typeof faculty?.departmentId === "string" ? faculty.departmentId : "",
       designationId: faculty?.designationId ?? "",
+      positionId: typeof (faculty as { positionId?: string } | undefined)?.positionId === "string"
+        ? (faculty as { positionId?: string }).positionId ?? ""
+        : "",
       status: "active",
       startsOn: faculty?.designationStartsOn ?? todayISO(),
       endsOn: faculty?.designationEndsOn ?? "",
@@ -60,6 +68,7 @@ export function toDesignationHoldings(
     return {
       designationId: row.designationId.trim(),
       departmentId: row.departmentId.trim(),
+      ...(row.positionId.trim() ? { positionId: row.positionId.trim() } : {}),
       status: row.status,
       startsOn: row.startsOn.trim() || undefined,
       endsOn: row.endsOn.trim() ? row.endsOn.trim() : null,
@@ -103,6 +112,7 @@ export function syncPrimaryDesignationPatch(
     designationEndsOn: primaryRow?.endsOn ? primaryRow.endsOn : null,
     department: dept,
     departmentId: primaryRow?.departmentId ?? "",
+    positionId: primaryRow?.positionId ?? "",
   };
 }
 
@@ -114,6 +124,7 @@ export function createEmptyDesignationRow(
     department: defaults?.department ?? "",
     departmentId: defaults?.departmentId ?? "",
     designationId: "",
+    positionId: "",
     status: "active",
     startsOn: defaults?.startsOn ?? todayISO(),
     endsOn: "",

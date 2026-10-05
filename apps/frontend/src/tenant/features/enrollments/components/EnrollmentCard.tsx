@@ -1,10 +1,9 @@
 import React from "react";
 import type { ModuleColumnRegistryEntry, Student } from "@mms/shared";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetadata } from "@/components/ui/EntityCardMetadata";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCard } from "@/components/ui/EntityCard";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
@@ -69,8 +68,8 @@ export function EnrollmentCard({
   });
 
   return (
-    <DirectoryEntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
-      <DirectoryCardHeader
+    <EntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
+      <EntityCard.Header
         id={enrollment.id}
         displayName={studentDisplayName || enrollment.studentName}
         isSelected={isSelected}
@@ -89,7 +88,7 @@ export function EnrollmentCard({
         }
       />
 
-      <DirectoryCardMetadata
+      <EntityCardMetadata
         columns={visibleColumns}
         keyFor={(col) => col.key}
         labelFor={(col) => col.label}
@@ -105,7 +104,7 @@ export function EnrollmentCard({
         }
       />
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         onView={handleView}
         viewLabel={t("enrollments.actions.viewShort")}
         viewAriaLabel={`${t("enrollments.table.viewProfile")} - ${studentDisplayName}`}
@@ -117,7 +116,7 @@ export function EnrollmentCard({
             canDelete={canDelete}
             showDeleted={showDeleted}
             hideViewItem
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
             onView={onView}
             onCancel={onCancel}
             onDelete={onDelete}
@@ -126,6 +125,6 @@ export function EnrollmentCard({
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

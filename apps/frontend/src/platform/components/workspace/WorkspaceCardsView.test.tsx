@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { WorkspaceCardsView } from "./WorkspaceCardsView";
+import { WorkspaceListCards } from "./WorkspaceListCards";
 import type { PlatformWorkspaceRow } from "@mms/shared";
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -20,10 +20,10 @@ const mockWorkspaces: PlatformWorkspaceRow[] = [
   },
 ];
 
-describe("WorkspaceCardsView Component", () => {
+describe("WorkspaceListCards Component", () => {
   it("renders workspace cards grid with workspace details", () => {
     const html = renderToStaticMarkup(
-      <WorkspaceCardsView
+      <WorkspaceListCards
         workspaces={mockWorkspaces}
         appDomain="mms.local"
         togglePending={false}

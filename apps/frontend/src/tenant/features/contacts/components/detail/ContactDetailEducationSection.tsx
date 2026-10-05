@@ -2,7 +2,8 @@ import React from "react";
 import { GraduationCap, School, Calendar, Award } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DetailSection } from "./DetailSection";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import {
   MESSAGING_ICON_BTN,
@@ -22,16 +23,16 @@ export function ContactDetailEducationSection({
 
   if (educationList.length === 0) {
     return (
-      <DetailSection title={t("contacts.detail.education")}>
+      <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.education")}>
         <div className="p-3 text-xs text-muted-foreground italic">
           {t("contacts.detail.emptyEducation")}
         </div>
-      </DetailSection>
+      </DetailSectionCard>
     );
   }
 
   return (
-    <DetailSection title={t("contacts.detail.education")}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={t("contacts.detail.education")}>
       {educationList.map((edu, idx) => {
         const fullDetails = [
           edu.fieldOfStudy ? `${t("contacts.fields.educationFieldOfStudy")}: ${edu.fieldOfStudy}` : null,
@@ -98,6 +99,6 @@ export function ContactDetailEducationSection({
           </div>
         );
       })}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

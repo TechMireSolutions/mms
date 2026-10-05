@@ -1,7 +1,7 @@
 import React from "react";
 import { Mail, Phone } from "lucide-react";
 import type { EmailAddress, PhoneNumber } from "@mms/shared";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface StudentDetailContactChannelsProps {
@@ -54,7 +54,7 @@ export function StudentDetailContactChannels({
                 )}
               </div>
               {canMessage && (
-                <EntityMessagingIconActions
+                <EntityMessagingActions variant="icon-row"
                   primaryPhone={phone.number}
                   labels={{
                     call: t("students.detail.call"),
@@ -99,7 +99,7 @@ export function StudentDetailContactChannels({
                 )}
               </div>
               {canMessage && hasOpenComposer && (
-                <EntityMessagingIconActions
+                <EntityMessagingActions variant="icon-row"
                   primaryEmail={email.address}
                   labels={{ email: t("students.list.actionEmail") }}
                   emailAriaLabel={t("students.list.actionEmail")}

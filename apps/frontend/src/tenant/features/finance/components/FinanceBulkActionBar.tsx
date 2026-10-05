@@ -3,7 +3,7 @@ import { Printer, ReceiptText } from "lucide-react";
 import { FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
-import { bulkSelectionActionClassName } from "@/components/ui/BulkSelectionBar";
+import { bulkActionDockActionClassName } from "@/components/ui/bulkActionDockStyles";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -57,7 +57,7 @@ export function FinanceBulkActionBar({
             type="button"
             variant="outline"
             onClick={onBulkPrintReceipts}
-            className={bulkSelectionActionClassName}
+            className={bulkActionDockActionClassName}
           >
             <Printer className="w-3.5 h-3.5" aria-hidden /> {t("finance.printReceipts")}
           </Button>

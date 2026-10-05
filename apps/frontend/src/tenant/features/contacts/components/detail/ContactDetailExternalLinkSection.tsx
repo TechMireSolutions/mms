@@ -2,8 +2,9 @@ import { MapPin, type LucideIcon } from "lucide-react";
 import {
   CollectionRowItem,
   type CollectionRowAction,
-  DetailSection,
 } from "./ContactDetailShared";
+import { DetailSectionCard } from "@/components/ui/DetailSectionCard";
+import { COLLECTION_CONTAINER_CLASS } from "./contactDetailStyles";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import {
   MESSAGING_ICON_BTN,
@@ -37,7 +38,7 @@ export function ContactDetailExternalLinkSection({
   actionTitle,
 }: ContactDetailExternalLinkSectionProps): React.JSX.Element {
   return (
-    <DetailSection title={title}>
+    <DetailSectionCard className={COLLECTION_CONTAINER_CLASS} title={title}>
       {rows.length === 0 ? (
         <DetailCollectionEmpty title={emptyMessage} />
       ) : (
@@ -50,10 +51,11 @@ export function ContactDetailExternalLinkSection({
             ? [
                 {
                   key: "open",
-                  icon: actionIcon,
                   title: actionTitle,
-                  href: row.href,
-                  external: true,
+                  icon: actionIcon,
+                  onClick: () => {
+                    window.open(row.href, "_blank", "noopener,noreferrer");
+                  },
                   className: cn(MESSAGING_ICON_BTN, tone),
                 },
               ]
@@ -63,12 +65,11 @@ export function ContactDetailExternalLinkSection({
               key={row.key}
               label={row.label}
               value={row.value || emptyDash}
-              copyable={Boolean(row.value)}
               actions={actions}
             />
           );
         })
       )}
-    </DetailSection>
+    </DetailSectionCard>
   );
 }

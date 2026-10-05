@@ -8,7 +8,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
@@ -96,7 +96,7 @@ export const ContactsListCards = React.memo(function ContactsListCards({
   });
 
   return (
-    <ModuleDirectoryCards
+    <EntityCardsGrid
       items={contacts}
       selectedIds={selected}
       onSelectAll={onSelectAll}

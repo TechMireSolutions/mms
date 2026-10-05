@@ -3,7 +3,7 @@ import React from 'react';
 import { User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
 import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
@@ -40,7 +40,7 @@ export default function PlatformConsole(): React.JSX.Element {
   const hasAnyCapability = perms.canWorkspaces || perms.canAdmins || perms.canSystem;
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${controller.headerProps.title} | ${t('platform.consoleTitle')}`}
       seoDescription={controller.headerProps.subtitle}
       headerIcon={controller.headerProps.icon}
@@ -113,6 +113,6 @@ export default function PlatformConsole(): React.JSX.Element {
           </motion.div>
         )}
       </motion.div>
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }

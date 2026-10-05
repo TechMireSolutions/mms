@@ -3,7 +3,7 @@ import React from 'react';
 import { LayoutDashboard } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { PlatformDashboard } from '@/platform/components/PlatformDashboard';
 
 export default function PlatformDashboardPage(): React.JSX.Element {
@@ -21,7 +21,7 @@ export default function PlatformDashboardPage(): React.JSX.Element {
   ) : undefined;
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t('dashboard.title')} | ${t('platform.consoleTitle')}`}
       seoDescription={subtitle}
       headerIcon={LayoutDashboard}
@@ -30,6 +30,6 @@ export default function PlatformDashboardPage(): React.JSX.Element {
       headerActions={headerActions}
     >
       <PlatformDashboard />
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }

@@ -1,6 +1,6 @@
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PlatformTypedConfirmDialog } from '@/platform/components/PlatformTypedConfirmDialog';
+import { TypedConfirmDialog } from "@/components/ui/TypedConfirmDialog";
 
 interface PlatformWorkspaceDeleteDialogProps {
   workspace: PlatformWorkspaceRowData;
@@ -32,7 +32,7 @@ export function PlatformWorkspaceDeleteDialog({
   const { t } = useTranslation();
 
   return (
-    <PlatformTypedConfirmDialog
+    <TypedConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={t('platform.deleteWorkspaceTitle')}

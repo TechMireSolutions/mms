@@ -1,6 +1,6 @@
 import type { Contact } from "@mms/shared";
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/entityCardChrome";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
 import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -37,7 +37,7 @@ export function ContactCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooterActions
+    <EntityCardFooterActions
       onView={onView ? () => onView(contact) : undefined}
       viewLabel={t("contacts.actionViewShort")}
       viewAriaLabel={`${t("contacts.table.viewProfile")} - ${displayName}`}
@@ -55,7 +55,7 @@ export function ContactCardActions({
           canWrite={canWrite}
           canDelete={canDelete}
           hideViewItem={Boolean(onView)}
-          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+          triggerClassName={ENTITY_CARD_OVERFLOW_TRIGGER_CLASS}
         />
       }
     />

@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
-import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
+import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 
 /** Fixed 6 static system relationship options aligned 1:1 with relationship inference engine. */
@@ -112,7 +113,7 @@ export function ContactRelationshipTab({
                 ];
 
             return (
-              <ListFieldCard
+              <FormListFieldCard
                 key={getLocalId("relationship", idx)}
                 id={getLocalId("relationship", idx)}
                 index={idx}
@@ -163,7 +164,7 @@ export function ContactRelationshipTab({
                     </div>
                   ) : null}
                 </div>
-              </ListFieldCard>
+              </FormListFieldCard>
             );
           })}
         </AnimatePresence>

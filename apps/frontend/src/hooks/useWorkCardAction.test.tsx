@@ -12,7 +12,7 @@ const entity: TestEntity = { id: "ent-1", name: "Test Entity" };
 
 type HookOptions = Parameters<typeof useWorkCardAction<TestEntity>>[0];
 
-/** Minimal renderHook using React DOM (same pattern as useTrashMode.test.tsx and useWorkDirectoryController.test.tsx). */
+/** Minimal renderHook using React DOM (same pattern as useDirectoryTrashState.test.tsx and useWorkDirectoryController.test.tsx). */
 function renderHook(options: HookOptions) {
   let result!: ReturnType<typeof useWorkCardAction<TestEntity>>;
   const container = document.createElement("div");
@@ -294,7 +294,7 @@ describe("useWorkCardAction", () => {
     unmount();
   });
 
-  it("cardProps provides stable container props for DirectoryEntityCard", () => {
+  it("cardProps provides stable container props for EntityCard", () => {
     const { result, unmount } = renderHook(makeOptions({ selectedIds: ["ent-1"] }));
     expect(result.cardProps.tabIndex).toBe(0);
     expect(result.cardProps.role).toBe("article");

@@ -1,7 +1,8 @@
 /**
  * facultyAssignmentsHierarchyAdvanced.integration.test.ts
  *
- * Advanced hierarchy tests: cycle detection, depth caps, and multi-tenant RLS isolation.
+ * Advanced hierarchy tests: cycle detection, depth caps, and multi-tenant isolation
+ * under the position-parent org chart model.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -12,12 +13,27 @@ import {
   simulateSubordinateTree,
 } from './facultyAssignmentsHierarchyHelpers.js';
 
-describe('Faculty assignments — cycle detection (A→B→C→A)', () => {
+describe('Faculty assignments — cycle detection (position loop)', () => {
   it('terminates safely and flags the cycle node with isCycle=true', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'a', facultyId: 'f-a', reportsToAssignmentId: 'c' }),
-      makeAssignment({ id: 'b', facultyId: 'f-b', reportsToAssignmentId: 'a' }),
-      makeAssignment({ id: 'c', facultyId: 'f-c', reportsToAssignmentId: 'b' }),
+      makeAssignment({
+        id: 'a',
+        facultyId: 'f-a',
+        positionId: 'pos-a',
+        parentPositionId: 'pos-c',
+      }),
+      makeAssignment({
+        id: 'b',
+        facultyId: 'f-b',
+        positionId: 'pos-b',
+        parentPositionId: 'pos-a',
+      }),
+      makeAssignment({
+        id: 'c',
+        facultyId: 'f-c',
+        positionId: 'pos-c',
+        parentPositionId: 'pos-b',
+      }),
     ];
 
     const chain = simulateManagerChain(assignments, 'tenantA', 'b');
@@ -28,8 +44,8 @@ describe('Faculty assignments — cycle detection (A→B→C→A)', () => {
 
   it('downward CTE also terminates on a cycle', () => {
     const assignments: MockAssignment[] = [
-      makeAssignment({ id: 'root', facultyId: 'f-root' }),
-      makeAssignment({ id: 'b', facultyId: 'f-b', reportsToAssignmentId: 'root' }),
+      makeAssignment({ id: 'root', facultyId: 'f-root', positionId: 'pos-root', parentPositionId: null }),
+      makeAssignment({ id: 'b', facultyId: 'f-b', positionId: 'pos-b', parentPositionId: 'pos-root' }),
     ];
     const tree = simulateSubordinateTree(assignments, 'tenantA', 'root', 20);
     expect(tree.length).toBeLessThanOrEqual(100);
@@ -40,7 +56,8 @@ describe('Faculty assignments — cycle detection (A→B→C→A)', () => {
       makeAssignment({
         id: `n${i}`,
         facultyId: `f${i}`,
-        reportsToAssignmentId: i === 0 ? null : `n${i - 1}`,
+        positionId: `pos-${i}`,
+        parentPositionId: i === 0 ? null : `pos-${i - 1}`,
       }),
     );
 
@@ -50,12 +67,36 @@ describe('Faculty assignments — cycle detection (A→B→C→A)', () => {
   });
 });
 
-describe('Faculty assignments — multi-tenant RLS isolation', () => {
+describe('Faculty assignments — multi-tenant isolation', () => {
   const assignments: MockAssignment[] = [
-    makeAssignment({ id: 'a-root', facultyId: 'fa-dean', workspaceSubdomain: 'tenantA' }),
-    makeAssignment({ id: 'a-hod', facultyId: 'fa-hod', workspaceSubdomain: 'tenantA', reportsToAssignmentId: 'a-root' }),
-    makeAssignment({ id: 'b-root', facultyId: 'fb-dean', workspaceSubdomain: 'tenantB' }),
-    makeAssignment({ id: 'b-hod', facultyId: 'fb-hod', workspaceSubdomain: 'tenantB', reportsToAssignmentId: 'b-root' }),
+    makeAssignment({
+      id: 'a-root',
+      facultyId: 'fa-dean',
+      workspaceSubdomain: 'tenantA',
+      positionId: 'pos-a-root',
+      parentPositionId: null,
+    }),
+    makeAssignment({
+      id: 'a-hod',
+      facultyId: 'fa-hod',
+      workspaceSubdomain: 'tenantA',
+      positionId: 'pos-a-hod',
+      parentPositionId: 'pos-a-root',
+    }),
+    makeAssignment({
+      id: 'b-root',
+      facultyId: 'fb-dean',
+      workspaceSubdomain: 'tenantB',
+      positionId: 'pos-b-root',
+      parentPositionId: null,
+    }),
+    makeAssignment({
+      id: 'b-hod',
+      facultyId: 'fb-hod',
+      workspaceSubdomain: 'tenantB',
+      positionId: 'pos-b-hod',
+      parentPositionId: 'pos-b-root',
+    }),
   ];
 
   it('Tenant A subordinate tree does not include Tenant B nodes', () => {
@@ -74,14 +115,15 @@ describe('Faculty assignments — multi-tenant RLS isolation', () => {
     expect(ids).not.toContain('a-hod');
   });
 
-  it('cross-tenant IDs referenced as reportsToAssignmentId are ignored by tenant filter', () => {
+  it('cross-tenant parent_position ids are ignored by tenant filter', () => {
     const crossTenantAssignments: MockAssignment[] = [
       ...assignments,
       makeAssignment({
         id: 'b-hod2',
         facultyId: 'fb-hod2',
         workspaceSubdomain: 'tenantB',
-        reportsToAssignmentId: 'a-root',
+        positionId: 'pos-b-hod2',
+        parentPositionId: 'pos-a-root',
       }),
     ];
     const tree = simulateSubordinateTree(crossTenantAssignments, 'tenantB', 'b-root');
@@ -99,16 +141,5 @@ describe('Faculty departments — hierarchy validation', () => {
     const parent = { id: 'p1', parentId: null, name: 'Faculty of Engineering', code: 'eng' };
     const child = { id: 'c1', parentId: parent.id, name: 'Dept. of CS', code: 'cs' };
     expect(child.parentId).toBe(parent.id);
-  });
-
-  it('rejects self-parentId (same id and parentId)', () => {
-    const dept = { id: 'd1', parentId: 'd1', name: 'Broken Dept', code: 'broken' };
-    expect(dept.parentId === dept.id).toBe(true);
-  });
-
-  it('code uniqueness per workspace (case-insensitive slug)', () => {
-    const existing = new Set(['eng', 'cs', 'math']);
-    expect(existing.has('eng')).toBe(true);
-    expect(existing.has('bio')).toBe(false);
   });
 });

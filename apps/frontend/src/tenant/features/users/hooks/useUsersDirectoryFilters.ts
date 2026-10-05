@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useTrashMode } from '@/hooks/useTrashMode';
+import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
 
 /** Directory filters, trash, and selection SSOT for Users Work (Students-shaped). */
 export function useUsersDirectoryFilters() {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useTrashMode();
+  const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
   const [roleFilter, setRoleFilter] = useState('all');

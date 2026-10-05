@@ -15,6 +15,8 @@ import {
 import { useFacultyDepartments } from './useFacultyDepartments';
 import { useFacultyDesignations } from './useFacultyDesignations';
 import {
+  useCloseFacultyAssignment,
+  useDeleteFacultyAssignment,
   useFacultyAssignments,
   useSaveFacultyAssignment,
 } from './useFacultyAssignments';
@@ -56,6 +58,8 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
   const designationsQuery = useFacultyDesignations();
   const { data: positions = [] } = useOrganizationPositions();
   const saveMutation = useSaveFacultyAssignment(faculty.id);
+  const closeMutation = useCloseFacultyAssignment(faculty.id);
+  const deleteMutation = useDeleteFacultyAssignment(faculty.id);
 
   const assignments = assignmentsQuery.data ?? [];
   const designationOptions = (designationsQuery.data ?? [])
@@ -154,14 +158,39 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
       void invalidateOrganizationQueries(queryClient);
       notify.success(t('faculty.assignments.saved'));
       reset();
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : t('faculty.assignments.saveFailed'));
+    } catch {
+      notify.error(t('faculty.assignments.saveFailed'));
+    }
+  }
+
+  async function handleClose(assignmentId: string) {
+    try {
+      await closeMutation.mutateAsync({
+        id: assignmentId,
+        endDate: today,
+      });
+      void invalidateOrganizationQueries(queryClient);
+      notify.success(t('faculty.assignments.closed'));
+    } catch {
+      notify.error(t('faculty.assignments.closeFailed'));
+    }
+  }
+
+  async function handleDelete(assignmentId: string) {
+    try {
+      await deleteMutation.mutateAsync(assignmentId);
+      void invalidateOrganizationQueries(queryClient);
+      notify.success(t('faculty.assignments.deleted'));
+    } catch {
+      notify.error(t('faculty.assignments.deleteFailed'));
     }
   }
 
   return {
     assignments,
     isPending: assignmentsQuery.isPending,
+    isError: assignmentsQuery.isError,
+    refetch: assignmentsQuery.refetch,
     mode,
     form,
     setForm,
@@ -172,10 +201,12 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
     requiresPosition,
     allowEmptyPosition,
     showLegacyPositionWarning,
-    isBusy: saveMutation.isPending,
+    isBusy: saveMutation.isPending || closeMutation.isPending || deleteMutation.isPending,
     reset,
     openEdit,
     openAdd,
     handleSubmit,
+    handleClose,
+    handleDelete,
   };
 }

@@ -2,10 +2,9 @@ import React from 'react';
 import { FileSignature } from 'lucide-react';
 import type { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailSheet } from '@/components/common/DetailSheet';
+import { Drawer } from '@/components/ui/Drawer';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import { formatDate } from '@mms/shared';
 
@@ -30,21 +29,12 @@ export const ExaminationDetail = (function ExaminationDetail({
   
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={exam.name}
-      subtitle={undefined}
       icon={FileSignature}
-      archiveState={{
-        isDeleted: isArchived,
-        deletedAt: exam.deletedAt,
-        canRestore: canDelete,
-        onRestore: onRestore ? () => void onRestore(exam.id) : undefined,
-        restoreLabel: t('common.restore'),
-        recordTitle: exam.name,
-      }}
-      headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={exam.deletedAt} />}
+      headerExtra={isArchived ? <DetailDrawerArchivedBanner deletedAt={exam.deletedAt} /> : null}
       headerActions={
         <DetailDrawerRestoreOrEditAction
           isArchived={isArchived}
@@ -58,35 +48,27 @@ export const ExaminationDetail = (function ExaminationDetail({
       }
     >
       <div className="flex flex-col gap-6 py-6">
-        <section>
-          <DetailSectionTitle>{t('examinations.detail.overview')}</DetailSectionTitle>
-          <Card className="overflow-hidden">
-            <div className="divide-y divide-border">
-              <DetailAttributeRow 
-                label={t('examinations.fields.status')}
-                value={exam.status || '—'} 
-              />
-              <DetailAttributeRow 
-                label={t('examinations.fields.date')}
-                value={exam.date ? formatDate(exam.date) : '—'} 
-              />
-              <DetailAttributeRow 
-                label={t('examinations.fields.classTargets')}
-                value={exam.classIds?.length > 0 ? exam.classIds.join(', ') : '—'} 
-              />
-            </div>
-          </Card>
-        </section>
+        <DetailSectionCard title={t('examinations.detail.overview')} className="overflow-hidden divide-y divide-border">
+          <DetailAttributeRow
+            label={t('examinations.fields.status')}
+            value={exam.status || '—'}
+          />
+          <DetailAttributeRow
+            label={t('examinations.fields.date')}
+            value={exam.date ? formatDate(exam.date) : '—'}
+          />
+          <DetailAttributeRow
+            label={t('examinations.fields.classTargets')}
+            value={exam.classIds?.length > 0 ? exam.classIds.join(', ') : '—'}
+          />
+        </DetailSectionCard>
 
         {exam.description && (
-          <section>
-            <DetailSectionTitle>{t('examinations.fields.description')}</DetailSectionTitle>
-            <Card className="p-4">
-              <p className="whitespace-pre-wrap text-sm text-foreground m-0">{exam.description}</p>
-            </Card>
-          </section>
+          <DetailSectionCard title={t('examinations.fields.description')} className="p-4">
+            <p className="whitespace-pre-wrap text-sm text-foreground m-0">{exam.description}</p>
+          </DetailSectionCard>
         )}
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });

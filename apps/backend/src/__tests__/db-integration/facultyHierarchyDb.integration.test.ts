@@ -41,16 +41,16 @@ describe('Faculty recursive SQL against PostgreSQL', () => {
 
   it('returns a cycle marker once, then terminates in either direction', async () => {
     await withTenant(tenant, async (tx) => {
-      await tx.execute(sql`UPDATE faculty_assignments SET reports_to_assignment_id = 'a2'
-        WHERE workspace_subdomain = ${tenant} AND id = 'a0'`);
+      await tx.execute(sql`UPDATE organization_positions SET parent_position_id = 'pos2'
+        WHERE workspace_subdomain = ${tenant} AND id = 'pos0'`);
       try {
         const chain = await findAssignmentManagerChain(tenant, 'a0');
         expect(chain.map((n) => [n.id, n.isCycle])).toEqual([['a2', false], ['a1', false], ['a0', true]]);
         const tree = await findAssignmentSubordinateTree(tenant, 'a0');
         expect(tree.filter((n) => n.isCycle).map((n) => n.id)).toEqual(['a0']);
       } finally {
-        await tx.execute(sql`UPDATE faculty_assignments SET reports_to_assignment_id = NULL
-          WHERE workspace_subdomain = ${tenant} AND id = 'a0'`);
+        await tx.execute(sql`UPDATE organization_positions SET parent_position_id = NULL
+          WHERE workspace_subdomain = ${tenant} AND id = 'pos0'`);
       }
     });
   });

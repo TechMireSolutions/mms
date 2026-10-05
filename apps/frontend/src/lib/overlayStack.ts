@@ -6,7 +6,7 @@ import { useEffect } from "react";
  * Every dismissible overlay used to attach its own `window` keydown listener and
  * close on Escape unconditionally. With two overlays mounted at once that closed
  * BOTH: `ContactDetail` renders a `ConfirmAlertDialog` inside a
- * `DetailDrawerShell`, so pressing Escape to dismiss the confirm dialog also
+ * `Drawer`, so pressing Escape to dismiss the confirm dialog also
  * dismissed the drawer behind it and dropped the user out of the record.
  *
  * Overlays now register when they open and only the topmost one reacts to

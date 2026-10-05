@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import { Alert } from "@/components/ui/Alert";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { ROUTES } from "@/lib/config/routes";
 import { tenantUrl } from "@/lib/config/tenantConfig";
@@ -38,9 +38,12 @@ export function OnboardingWizardFooter({
   return (
     <>
       {submitError ? (
-        <Alert
+        <WarningCallout
+          tone="destructive"
+          density="compact"
+          role="alert"
           className="mt-4"
-          message={
+          description={
             <>
               {submitError}{" "}
               {signInHref ? (

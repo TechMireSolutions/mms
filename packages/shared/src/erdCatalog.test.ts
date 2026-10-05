@@ -101,11 +101,14 @@ describe('erdCatalog', () => {
     expect(listErdTableNames(faculty.tables)).toContain('faculty');
     expect(listErdTableNames(faculty.tables)).toContain('faculty_lookups');
 
-    const hierarchyRel = faculty.relationships.find(
-      (rel) => rel.fromTable === 'faculty' && rel.toTable === 'faculty' && rel.fromColumn === 'reporting_faculty_id',
+    const positionHierarchyRel = faculty.relationships.find(
+      (rel) => rel.fromTable === 'organization_positions'
+        && rel.toTable === 'organization_positions'
+        && rel.fromColumn === 'parent_position_id',
     );
-    expect(hierarchyRel).toBeDefined();
-    expect(hierarchyRel?.cardinality).toBe('N:1');
-    expect(hierarchyRel?.onDelete).toBe('set null');
+    expect(positionHierarchyRel).toBeDefined();
+    expect(positionHierarchyRel?.cardinality).toBe('N:1');
+    expect(listErdTableNames(faculty.tables)).toContain('faculty_assignments');
+    expect(listErdTableNames(faculty.tables)).toContain('organization_positions');
   });
 });

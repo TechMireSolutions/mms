@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AppTranslationKey } from "@mms/shared";
 
@@ -63,9 +63,9 @@ export function TrialBalanceTypeGroup({
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
       </header>
       {viewMode === "cards" ? (
-        <DirectoryCardsGrid className="p-3">
+        <EntityCardsGrid className="p-3">
           {sortedRows.map((trialBalanceRow) => (
-            <DirectoryEntityCard
+            <EntityCard
               key={trialBalanceRow.id}
               className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
             >
@@ -94,7 +94,7 @@ export function TrialBalanceTypeGroup({
                   ddClassName="font-mono text-xs font-semibold text-success"
                 />
               </StatGrid>
-            </DirectoryEntityCard>
+            </EntityCard>
           ))}
           <article className="rounded-xl border border-border bg-muted/20 p-3 col-span-full">
             <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
@@ -111,7 +111,7 @@ export function TrialBalanceTypeGroup({
               />
             </StatGrid>
           </article>
-        </DirectoryCardsGrid>
+        </EntityCardsGrid>
       ) : (
         <Table>
           <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>

@@ -36,6 +36,11 @@ vi.mock('../services/outboxEventService.js', () => ({
   emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
+  cascadeSoftDeleteFacultyAssignments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
+}));
+
 import { createFacultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 
 function fakeFaculty(id: string, overrides: Partial<Faculty> = {}): Faculty {

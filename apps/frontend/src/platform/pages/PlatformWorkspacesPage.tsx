@@ -3,7 +3,7 @@ import React from 'react';
 import { Building2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
-import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import PlatformWorkspaceList from '@/platform/components/PlatformWorkspaceList';
 
 export default function PlatformWorkspacesPage(): React.JSX.Element {
@@ -21,7 +21,7 @@ export default function PlatformWorkspacesPage(): React.JSX.Element {
   ) : undefined;
 
   return (
-    <ModuleScaffold
+    <ModulePageShell
       seoTitle={`${t('platform.manageMadrasas')} | ${t('platform.consoleTitle')}`}
       seoDescription={subtitle}
       headerIcon={Building2}
@@ -30,6 +30,6 @@ export default function PlatformWorkspacesPage(): React.JSX.Element {
       headerActions={headerActions}
     >
       <PlatformWorkspaceList />
-    </ModuleScaffold>
+    </ModulePageShell>
   );
 }

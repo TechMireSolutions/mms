@@ -8,7 +8,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard } from "./ContactSubListCards";
+import { FormListFieldCard } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
 import { ContactExperienceDatesSection } from "./ContactExperienceDatesSection";
 import { cn } from "@/lib/utils";
@@ -66,7 +66,7 @@ export function ContactExperienceEntryCard({
   const descriptionError = getErr("description");
 
   return (
-    <ListFieldCard
+    <FormListFieldCard
       id={getLocalId("experience", idx)}
       index={idx}
       icon={Briefcase}
@@ -195,6 +195,6 @@ export function ContactExperienceEntryCard({
           </Field>
         ) : null}
       </div>
-    </ListFieldCard>
+    </FormListFieldCard>
   );
 }

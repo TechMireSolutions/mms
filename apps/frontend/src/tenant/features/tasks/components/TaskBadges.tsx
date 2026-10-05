@@ -1,32 +1,50 @@
 import React from 'react';
 import { type TaskPriority, type TaskStatus, type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 
-const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  low: 'bg-muted text-muted-foreground border-border',
-  medium: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900',
-  high: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900',
-  urgent: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900',
+const PRIORITY_CLS: Record<TaskPriority, string> = {
+  low: SEMANTIC_BADGE.muted,
+  medium: SEMANTIC_BADGE.info,
+  high: SEMANTIC_BADGE.warning,
+  urgent: SEMANTIC_BADGE.destructive,
 };
 
-const STATUS_STYLES: Record<TaskStatus, string> = {
-  todo: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800',
-  in_progress: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900',
-  in_review: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900',
-  blocked: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900',
-  completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
-  cancelled: 'bg-zinc-500/10 text-zinc-500 border-zinc-200 dark:border-zinc-800',
+const STATUS_CLS: Record<TaskStatus, string> = {
+  todo: SEMANTIC_BADGE.muted,
+  in_progress: SEMANTIC_BADGE.info,
+  in_review: SEMANTIC_BADGE.secondary,
+  blocked: SEMANTIC_BADGE.destructive,
+  completed: SEMANTIC_BADGE.success,
+  cancelled: SEMANTIC_BADGE.muted,
 };
+
+function useTaskPriorityConfig(): Record<string, StatusBadgeConfigItem> {
+  const { t } = useTranslation();
+  return {
+    low: { label: t('tasks.priority.low' as AppTranslationKey), cls: PRIORITY_CLS.low },
+    medium: { label: t('tasks.priority.medium' as AppTranslationKey), cls: PRIORITY_CLS.medium },
+    high: { label: t('tasks.priority.high' as AppTranslationKey), cls: PRIORITY_CLS.high },
+    urgent: { label: t('tasks.priority.urgent' as AppTranslationKey), cls: PRIORITY_CLS.urgent },
+  };
+}
+
+function useTaskStatusConfig(): Record<string, StatusBadgeConfigItem> {
+  const { t } = useTranslation();
+  return {
+    todo: { label: t('tasks.status.todo' as AppTranslationKey), cls: STATUS_CLS.todo },
+    in_progress: { label: t('tasks.status.in_progress' as AppTranslationKey), cls: STATUS_CLS.in_progress },
+    in_review: { label: t('tasks.status.in_review' as AppTranslationKey), cls: STATUS_CLS.in_review },
+    blocked: { label: t('tasks.status.blocked' as AppTranslationKey), cls: STATUS_CLS.blocked },
+    completed: { label: t('tasks.status.completed' as AppTranslationKey), cls: STATUS_CLS.completed },
+    cancelled: { label: t('tasks.status.cancelled' as AppTranslationKey), cls: STATUS_CLS.cancelled },
+  };
+}
 
 export function TaskPriorityBadge({ priority }: { priority: TaskPriority }): React.JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${PRIORITY_STYLES[priority]}`}
-    >
-      {t(`tasks.priority.${priority}` as AppTranslationKey)}
-    </span>
-  );
+  const config = useTaskPriorityConfig();
+  return <StatusBadge status={priority} config={config} size="sm" />;
 }
 
 export function TaskStatusBadge({
@@ -36,20 +54,6 @@ export function TaskStatusBadge({
   status: TaskStatus;
   onClick?: () => void;
 }): React.JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick?.();
-      }}
-      disabled={!onClick}
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
-        STATUS_STYLES[status]
-      } ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
-    >
-      {t(`tasks.status.${status}` as AppTranslationKey)}
-    </button>
-  );
+  const config = useTaskStatusConfig();
+  return <StatusBadge status={status} config={config} size="sm" onClick={onClick} />;
 }

@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Contact } from "@mms/shared";
 import { ContactDetailOverview } from "./ContactDetailOverview";
 
-vi.mock("./ContactDetailOverviewHero", () => ({
-  ContactDetailOverviewHero: ({ contact }: { contact: Contact }) => (
+vi.mock("./ContactDetailHeroCard", () => ({
+  ContactDetailHeroCard: ({ contact }: { contact: Contact }) => (
     <div data-testid="overview-hero">{contact.name}</div>
   ),
 }));

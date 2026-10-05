@@ -78,7 +78,7 @@ const EXEMPT_PATTERNS = [
   /AvatarCropper/,         // canvas positioning
   /ChartTooltip/,          // absolute positioning
   /DetailDrawerShell/,     // dynamic height/width
-  /DirectoryEntityCard/,   // dynamic styles
+  /EntityCard/,           // dynamic styles
   /EditableMultiSelectParts/, // dynamic absolute positioning
   /LegendChip/,            // dynamic user-defined color
   /LoadingState/,          // dynamic animation delays

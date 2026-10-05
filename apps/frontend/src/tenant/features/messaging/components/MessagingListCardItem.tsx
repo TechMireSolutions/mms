@@ -8,11 +8,9 @@ import {
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardFooterActions } from "@/components/ui/EntityCardFooterActions";
+import { EntityCardMetaTile } from "@/components/ui/EntityCardMetaTile";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
@@ -61,7 +59,7 @@ export function MessagingListCardItem({
   const categoryKey = log.category ? getMessageCategoryLabelKey(log.category) : null;
 
   return (
-    <DirectoryEntityCard
+    <EntityCard
       isSelected={isSelected}
       reducedMotion={reducedMotion}
       accentClassName={getMessagingChannelAccentBarClass(isSelected, log.channel)}
@@ -70,7 +68,7 @@ export function MessagingListCardItem({
         isFailed && `border-destructive/30 ${SEMANTIC_TEXT.destructive}`,
       )}
     >
-      <DirectoryCardHeader
+      <EntityCard.Header
         id={log.id}
         displayName={name}
         isSelected={isSelected}
@@ -95,9 +93,9 @@ export function MessagingListCardItem({
         }
       />
 
-      <DirectoryCardMetaGrid>
+      <EntityCard.MetaGrid>
         {isColumnVisible("channel") && (
-          <DirectoryCardMetaTile label={t("messaging.channel")}>
+          <EntityCardMetaTile label={t("messaging.channel")}>
             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
               <ChannelBadge channel={log.channel} />
               {smsSegments && (
@@ -113,11 +111,11 @@ export function MessagingListCardItem({
                 />
               )}
             </div>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
 
         {isColumnVisible("body") && (
-          <DirectoryCardMetaTile label={t("messaging.messageBody")} className="sm:col-span-2">
+          <EntityCardMetaTile label={t("messaging.messageBody")} className="sm:col-span-2">
             <div className="flex items-start justify-between gap-2 mt-0.5">
               <div className="min-w-0 flex-1">
                 {log.channel === "email" && log.subject && (
@@ -142,9 +140,9 @@ export function MessagingListCardItem({
                 )}
               </Button>
             </div>
-          </DirectoryCardMetaTile>
+          </EntityCardMetaTile>
         )}
-      </DirectoryCardMetaGrid>
+      </EntityCard.MetaGrid>
 
       {isFailed && (
         <div className={`flex items-center gap-1.5 text-3xs font-medium ${SEMANTIC_TEXT.destructive}`}>
@@ -153,7 +151,7 @@ export function MessagingListCardItem({
         </div>
       )}
 
-      <DirectoryCardFooterActions
+      <EntityCardFooterActions
         onView={onViewLog ? () => onViewLog(log) : undefined}
         viewAriaLabel={`${t("contacts.table.viewProfile")} - ${name}`}
         viewLabel={t("contacts.actionViewShort")}
@@ -167,6 +165,6 @@ export function MessagingListCardItem({
           />
         }
       />
-    </DirectoryEntityCard>
+    </EntityCard>
   );
 }

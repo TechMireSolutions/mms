@@ -1,16 +1,15 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Users, Tag } from "lucide-react";
-import type { Contact } from "@mms/shared";
-import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
+import { CONTACTS_MODULE_MANIFEST, type Contact } from "@mms/shared";
+import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 import { Button } from "@/components/ui/button";
-import type { BulkSelectionMessageChannel } from "@/components/ui/BulkSelectionActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactsBulkTagModal } from "@/tenant/features/contacts/components/ContactsBulkTagModal";
 
 export interface ContactsBulkActionBarProps {
   selectedCount: number;
   viewingDeleted: boolean;
-  bulkActions: readonly string[];
+  bulkActions?: readonly string[];
   canWriteMessaging: boolean;
   canExport: boolean;
   canDelete: boolean;
@@ -33,10 +32,11 @@ export interface ContactsBulkActionBarProps {
   isTagPending?: boolean;
 }
 
+/** Contacts Work bulk bar — delegates core actions to ModuleUniversalBulkActionBar. */
 export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
   selectedCount,
   viewingDeleted,
-  bulkActions,
+  bulkActions = CONTACTS_MODULE_MANIFEST.work.bulkActions,
   canWriteMessaging,
   canExport,
   canDelete,
@@ -56,56 +56,36 @@ export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
   const { t } = useTranslation();
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
-  const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;
-  const showSms = bulkActions.includes("sms") && canWriteMessaging;
-  const showEmail = bulkActions.includes("email") && canWriteMessaging;
-  const showMessaging = !viewingDeleted && (showWhatsApp || showSms || showEmail);
-
-  const handleChannel = useCallback(
-    (channel: BulkSelectionMessageChannel): void => {
-      if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
-      else if (channel === "sms") onSms(selectedTargets.smsReady);
-      else if (channel === "email") onEmail(selectedTargets.emailReady);
-    },
-    [onWhatsApp, onSms, onEmail, selectedTargets],
-  );
-
   return (
     <>
-      <ModuleWorkBulkActionBar
+      <ModuleUniversalBulkActionBar<Contact>
         selectedCount={selectedCount}
         viewingDeleted={viewingDeleted}
-        countLabel={t("contacts.selectedCount", { count: selectedCount })}
-        leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
-        deselectLabel={t("common.deselect")}
+        canWrite={canWrite}
         canDelete={canDelete}
-        restoreLabel={t("contacts.bulkRestore")}
-        onRequestBulkRestore={onRequestBulkRestore}
+        canExport={canExport}
+        canWriteMessaging={canWriteMessaging}
+        leadingIcon={Users}
+        i18nNamespace="contacts"
+        bulkActions={bulkActions}
         onClearSelection={onClearSelection}
-        messaging={
-          showMessaging
+        onRequestBulkDelete={onRequestBulkDelete}
+        onRequestBulkRestore={onRequestBulkRestore}
+        messagingTargets={selectedTargets}
+        onWhatsApp={onWhatsApp}
+        onSms={onSms}
+        onEmail={onEmail}
+        exportAction={
+          bulkActions.includes("export") && canExport
             ? {
-                onChannel: handleChannel,
-                labels: {
-                  whatsapp: t("contacts.whatsappBulk", {
-                    count: selectedTargets.waTargets.length,
-                  }),
-                  sms: t("contacts.smsBulk", { count: selectedTargets.smsReady.length }),
-                  email: t("contacts.emailBulk", { count: selectedTargets.emailReady.length }),
-                },
-                channels: {
-                  whatsapp: showWhatsApp,
-                  sms: showSms,
-                  email: showEmail,
-                },
+                label: t("contacts.bulkExport"),
+                onClick: onBulkExport,
+                isPending: isExporting,
               }
             : undefined
         }
-        exportAction={
-          bulkActions.includes("export") && canExport
-            ? { label: t("contacts.bulkExport"), onClick: onBulkExport, isPending: isExporting }
-            : undefined
-        }
+        deleteLabel={t("contacts.bulkDelete")}
+        restoreLabel={t("contacts.bulkRestore")}
         extraActions={
           !viewingDeleted && canWrite && onBulkTag ? (
             <Button
@@ -120,13 +100,8 @@ export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
             </Button>
           ) : undefined
         }
-        deleteAction={
-          bulkActions.includes("delete") && canDelete
-            ? { label: t("contacts.bulkDelete"), onClick: onRequestBulkDelete }
-            : undefined
-        }
       />
-      {tagModalOpen && onBulkTag && (
+      {tagModalOpen && onBulkTag ? (
         <ContactsBulkTagModal
           open={tagModalOpen}
           onClose={() => setTagModalOpen(false)}
@@ -134,7 +109,7 @@ export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
           onConfirm={onBulkTag}
           isPending={isTagPending}
         />
-      )}
+      ) : null}
     </>
   );
 });

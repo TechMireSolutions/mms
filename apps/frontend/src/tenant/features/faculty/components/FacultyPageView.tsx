@@ -65,8 +65,8 @@ function EntityTabPanel({
 }
 
 /**
- * Faculty page — five peer tabs. Dashboard header has multi-entity IO;
- * each entity tab also has a scoped Add/Import/Export strip.
+ * Faculty page — five peer tabs. Dashboard header has multi-entity Import/Export;
+ * each entity tab owns its scoped Add + Import/Export strip.
  */
 export function FacultyPageView({
   canWrite,
@@ -90,7 +90,7 @@ export function FacultyPageView({
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${terminology.facultyLabel}`}
+      seoTitle={t("page.faculty.seoTitle")}
       seoDescription={t("page.faculty.subtitle")}
       headerIcon={School}
       headerTitle={terminology.facultyLabel}
@@ -102,9 +102,6 @@ export function FacultyPageView({
           viewingDeleted={viewingDeleted}
           onExportEntity={onExportEntity}
           onImportEntity={onImportEntity}
-          onAddFaculty={openCreateForm}
-          onAddDepartment={openCreateDepartment}
-          onAddDesignation={openCreateDesignation}
         />
       }
       metricsStrip={

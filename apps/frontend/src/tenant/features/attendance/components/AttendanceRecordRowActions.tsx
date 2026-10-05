@@ -5,7 +5,7 @@ import {
   MODULE_ROW_ACTIONS_TRIGGER_CLASS,
   ModuleRowActionsMenu,
 } from '@/components/ui/ModuleRowActionsMenu';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
+import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
@@ -41,7 +41,7 @@ export function AttendanceRecordRowActions({
 }: AttendanceRecordRowActionsProps): React.JSX.Element {
   const isEditing = editingRecord?.id === attendanceRecord.id;
   const triggerClassName = variant === 'cards'
-    ? DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS
+    ? ENTITY_CARD_OVERFLOW_TRIGGER_CLASS
     : MODULE_ROW_ACTIONS_TRIGGER_CLASS;
 
   return (

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar, date, check } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, primaryKey, foreignKey, varchar, date, check, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts, tenantUsers } from "./contacts.js";
@@ -10,8 +10,7 @@ export * from "./facultyAssignmentTables.js";
 
 /**
  * Faculty profile; personal identifiers are owned by contacts.
- * Legacy teachers were renamed by 0112 and their compatibility view removed in 0122.
- * Department/designation text remains a compatibility projection during assignment migration.
+ * Department/designation/rank come from primary faculty_assignments (not stored here).
  */
 export const faculty = pgTable('faculty', {
   id: text('id').notNull(),
@@ -21,10 +20,6 @@ export const faculty = pgTable('faculty', {
   employeeId: varchar('employee_id', { length: 100 }),
   status: varchar('status', { length: 50 }).notNull().default('active'),
   specialization: varchar('specialization', { length: 150 }),
-  department: varchar('department', { length: 150 }),
-  designation: varchar('designation', { length: 150 }),
-  reportingFacultyId: text('reporting_faculty_id'),
-  hierarchyRank: integer('hierarchy_rank').notNull().default(10),
   qualification: varchar('qualification', { length: 255 }),
   joinDate: date('join_date', { mode: 'string' }),
   notes: text('notes'),
@@ -75,18 +70,8 @@ export const faculty = pgTable('faculty', {
   uniqueIndex('faculty_workspace_contact_active_uidx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_reporting_faculty_idx')
-    .on(table.workspaceSubdomain, table.reportingFacultyId)
-    .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_hierarchy_rank_idx')
-    .on(table.workspaceSubdomain, table.hierarchyRank)
-    .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_status_rank_idx')
-    .on(table.workspaceSubdomain, table.status, table.hierarchyRank)
-    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
-  check('faculty_no_self_reporting_check', sql`${table.reportingFacultyId} is null or ${table.reportingFacultyId} <> ${table.id}`),
-  check('faculty_hierarchy_rank_positive_check', sql`${table.hierarchyRank} > 0`),
+  check('faculty_status_check', sql`lower(btrim(${table.status})) in ('active', 'inactive', 'on_leave')`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
@@ -95,15 +80,9 @@ export const faculty = pgTable('faculty', {
     columns: [table.workspaceSubdomain, table.userId],
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }).onDelete('set null'),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.reportingFacultyId],
-    foreignColumns: [table.workspaceSubdomain, table.id],
-  }).onDelete('set null'),
 ]);
 
-/**
- * Faculty Setup option lists (statuses, specializations, departments, designations).
- */
+/** Faculty Setup option lists (statuses, specializations, genderFilters). */
 export const facultyLookups = pgTable('faculty_lookups', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -140,9 +119,7 @@ export const facultyModulePreferences = pgTable('faculty_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-/**
- * Faculty Setup Config — deterministic dynamic Employee ID generation engine state.
- */
+/** Faculty Setup Config — deterministic dynamic Employee ID generation engine state. */
 export const facultySetupConfig = pgTable('faculty_setup_config', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   prefix: varchar('prefix', { length: 20 }).notNull().default('FAC'),
@@ -155,10 +132,6 @@ export const facultySetupConfig = pgTable('faculty_setup_config', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
-
-/* ========================================================================= */
-/*                         ROW INFER TYPES                                   */
-/* ========================================================================= */
 
 export type FacultyRow = typeof faculty.$inferSelect;
 export type InsertFacultyRow = typeof faculty.$inferInsert;
@@ -174,4 +147,3 @@ export type InsertFacultySetupConfigRow = typeof facultySetupConfig.$inferInsert
 export type Faculty = FacultyRow;
 export type NewFaculty = InsertFacultyRow;
 export type FacultyWithContact = FacultyRow & { contact?: unknown };
-

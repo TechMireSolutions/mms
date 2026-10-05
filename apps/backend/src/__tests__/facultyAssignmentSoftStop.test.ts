@@ -35,50 +35,15 @@ vi.mock('../db/schema.js', () => ({
     startDate: 'start_date',
     endDate: 'end_date',
   },
-  facultyDesignations: {
-    workspaceSubdomain: 'workspace_subdomain',
-    id: 'id',
-    name: 'name',
-    hierarchyRank: 'hierarchy_rank',
-  },
-  facultyDepartments: {
-    workspaceSubdomain: 'workspace_subdomain',
-    id: 'id',
-    name: 'name',
-  },
-  faculty: {
-    workspaceSubdomain: 'workspace_subdomain',
-    id: 'id',
-    designation: 'designation',
-    department: 'department',
-    hierarchyRank: 'hierarchy_rank',
-    updatedAt: 'updated_at',
-  },
 }));
 
 import { saveFacultyAssignment } from '../db/repositories/facultyAssignmentWriteRepository.js';
 
-describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
+describe('saveFacultyAssignment position-first writes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     withTenant.mockImplementation(async (_tenant: string, fn: (tx: unknown) => Promise<void>) => {
       const tx = {
-        select: vi.fn(() => ({
-          from: vi.fn(() => ({
-            innerJoin: vi.fn(() => ({
-              innerJoin: vi.fn(() => ({
-                where: vi.fn(() => ({
-                  orderBy: vi.fn().mockResolvedValue([]),
-                })),
-              })),
-            })),
-          })),
-        })),
-        update: vi.fn(() => ({
-          set: vi.fn(() => ({
-            where: vi.fn().mockResolvedValue(undefined),
-          })),
-        })),
         insert: vi.fn(() => ({
           values: vi.fn(() => ({
             onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
@@ -92,37 +57,10 @@ describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
     recordModernAuditEvent.mockResolvedValue(undefined);
   });
 
-  it('forces reportsToAssignmentId null on create even when body provides one', async () => {
-    findFacultyAssignmentById.mockResolvedValue(null);
-
-    await saveFacultyAssignment('demo', {
-      id: 'a-new',
-      facultyId: 'f1',
-      departmentId: 'd1',
-      designationId: 'des1',
-      positionId: 'p1',
-      reportsToAssignmentId: 'a-parent',
-      isPrimary: true,
-      startDate: '2026-01-01',
-      endDate: null,
-      notes: null,
-      updatedBy: 'u1',
-    } as never);
-
-    expect(validateFacultyAssignment).toHaveBeenCalledWith(
-      expect.anything(),
-      'demo',
-      expect.objectContaining({
-        reportsToAssignmentId: null,
-      }),
-    );
-  });
-
-  it('forces reportsToAssignmentId null on update even when legacy value exists', async () => {
+  it('preserves positionId on update when omitted from payload', async () => {
     findFacultyAssignmentById.mockResolvedValue({
       id: 'a1',
       positionId: 'p1',
-      reportsToAssignmentId: 'a-legacy',
     });
 
     await saveFacultyAssignment('demo', {
@@ -139,7 +77,7 @@ describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
       expect.anything(),
       'demo',
       expect.objectContaining({
-        reportsToAssignmentId: null,
+        positionId: 'p1',
       }),
     );
   });

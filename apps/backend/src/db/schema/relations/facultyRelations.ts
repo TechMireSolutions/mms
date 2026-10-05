@@ -3,6 +3,7 @@ import { workspaces } from '../platform.js';
 import { contacts, tenantUsers } from '../contacts.js';
 import { faculty, facultyDesignations, facultyDesignationRoles,
   facultyDepartments, facultyAssignments } from '../faculty.js';
+import { organizationPositions } from '../organizationPositionTables.js';
 import { hasanatDistributions } from '../hasanat.js';
 
 export const facultyDesignationsRelations = relations(facultyDesignations, ({ one, many }) => ({
@@ -34,14 +35,6 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
     fields: [faculty.workspaceSubdomain, faculty.userId],
     references: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }),
-  supervisor: one(faculty, {
-    fields: [faculty.workspaceSubdomain, faculty.reportingFacultyId],
-    references: [faculty.workspaceSubdomain, faculty.id],
-    relationName: 'faculty_reporting',
-  }),
-  subordinates: many(faculty, {
-    relationName: 'faculty_reporting',
-  }),
   hasanatDistributions: many(hasanatDistributions),
   assignments: many(facultyAssignments),
 }));
@@ -62,7 +55,7 @@ export const facultyDepartmentsRelations = relations(facultyDepartments, ({ one,
   assignments: many(facultyAssignments),
 }));
 
-export const facultyAssignmentsRelations = relations(facultyAssignments, ({ one, many }) => ({
+export const facultyAssignmentsRelations = relations(facultyAssignments, ({ one }) => ({
   workspace: one(workspaces, {
     fields: [facultyAssignments.workspaceSubdomain],
     references: [workspaces.subdomain],
@@ -79,12 +72,8 @@ export const facultyAssignmentsRelations = relations(facultyAssignments, ({ one,
     fields: [facultyAssignments.workspaceSubdomain, facultyAssignments.designationId],
     references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
   }),
-  supervisorAssignment: one(facultyAssignments, {
-    fields: [facultyAssignments.workspaceSubdomain, facultyAssignments.reportsToAssignmentId],
-    references: [facultyAssignments.workspaceSubdomain, facultyAssignments.id],
-    relationName: 'assignment_reporting',
-  }),
-  subordinateAssignments: many(facultyAssignments, {
-    relationName: 'assignment_reporting',
+  position: one(organizationPositions, {
+    fields: [facultyAssignments.workspaceSubdomain, facultyAssignments.positionId],
+    references: [organizationPositions.workspaceSubdomain, organizationPositions.id],
   }),
 }));

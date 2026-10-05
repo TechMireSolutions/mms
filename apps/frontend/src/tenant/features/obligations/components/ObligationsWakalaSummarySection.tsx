@@ -1,5 +1,5 @@
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { EntityCard } from "@/components/ui/EntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -87,9 +87,9 @@ export function ObligationsWakalaSummarySection({
       ) : (
         <div className={WORK_SURFACE}>
           {viewMode === "cards" ? (
-            <DirectoryCardsGrid className="p-3">
+            <EntityCardsGrid className="p-3">
               {wakalaSummary.map((wakalaSummaryItem) => (
-                <DirectoryEntityCard key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+                <EntityCard key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                   <div>
                     <h4 className="text-sm font-semibold text-foreground m-0">{wakalaSummaryItem.repName}</h4>
                     {!wakalaSummaryItem.hasWakala && (
@@ -131,13 +131,13 @@ export function ObligationsWakalaSummarySection({
                       </div>
                     </div>
                   )}
-                </DirectoryEntityCard>
+                </EntityCard>
               ))}
               <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
                 <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</p>
                 <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
               </article>
-            </DirectoryCardsGrid>
+            </EntityCardsGrid>
           ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>

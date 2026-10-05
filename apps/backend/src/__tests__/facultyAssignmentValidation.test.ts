@@ -67,41 +67,6 @@ describe('Faculty assignment production validation', () => {
     ).rejects.toThrow('overlaps');
   });
 
-  it('rejects a reporting chain that is still open at the depth limit', async () => {
-    assignmentQueries();
-    tx.execute
-      .mockResolvedValueOnce({
-        rows: [{ id: 'pos-1', capacity: 2, department_id: 'd', designation_id: 'g' }],
-      })
-      .mockResolvedValueOnce({ rows: [{ peak: 1 }] })
-      .mockResolvedValueOnce({ rows: [{ id: 'parent', faculty_id: 'parent-person', reports_to_assignment_id: 'far' }] })
-      .mockResolvedValueOnce({ rows: [{ id: 'far', facultyId: 'other', reportsToAssignmentId: 'further', depth: 20, isCycle: false }] });
-    await expect(
-      validateFacultyAssignment(tx, 'tenant', {
-        ...input,
-        positionId: 'pos-1',
-        reportsToAssignmentId: 'parent',
-      }),
-    ).rejects.toThrow('depth limit');
-  });
-
-  it('rejects a repeated person even when assignment IDs differ', async () => {
-    assignmentQueries();
-    tx.execute
-      .mockResolvedValueOnce({
-        rows: [{ id: 'pos-1', capacity: 2, department_id: 'd', designation_id: 'g' }],
-      })
-      .mockResolvedValueOnce({ rows: [{ peak: 1 }] })
-      .mockResolvedValueOnce({ rows: [{ id: 'different', faculty_id: 'f', depth: 0, cycle: false }] });
-    await expect(
-      validateFacultyAssignment(tx, 'tenant', {
-        ...input,
-        positionId: 'pos-1',
-        reportsToAssignmentId: 'different',
-      }),
-    ).rejects.toThrow('Circular');
-  });
-
   it('rejects archived assignments instead of resurrecting them through upsert', async () => {
     tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: new Date() }] });
     await expect(validateFacultyAssignment(tx, 'tenant', input)).rejects.toThrow('archived');

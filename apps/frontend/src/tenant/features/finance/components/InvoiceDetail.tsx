@@ -2,12 +2,11 @@ import React from "react";
 import { ReceiptText, User, Calendar, CreditCard, Printer } from "lucide-react";
 import { type Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/common/DetailSheet";
+import { Drawer } from '@/components/ui/Drawer';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
+import { DetailSectionCard } from '@/components/ui/DetailSectionCard';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 
 import { useTranslation } from "@/hooks/useTranslation";
@@ -92,7 +91,7 @@ export const InvoiceDetail = (function InvoiceDetail({
   ))();
 
   return (
-    <DetailSheet
+    <Drawer
       open
       onClose={onClose}
       title={t("finance.detail.title", { id: invoice.id })}
@@ -129,18 +128,14 @@ export const InvoiceDetail = (function InvoiceDetail({
           </div>
         </div>
 
-        {/* Fee breakdown */}
-        <div className="space-y-2">
-          <DetailSectionTitle>{t("finance.detail.breakdown")}</DetailSectionTitle>
-          <Card className="divide-y divide-border/50 p-0">
-            {rows.map((row) => (
-              <div key={row.label} className={cn("flex items-center justify-between px-3 py-2", row.highlight ? "bg-primary/5" : "")}>
-                <span className={cn("text-xs font-bold uppercase leading-none tracking-tight", row.highlight ? "text-foreground" : "text-muted-foreground")}>{row.label}</span>
-                <span className={cn("text-sm font-semibold text-end", row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground")}>{row.value}</span>
-              </div>
-            ))}
-          </Card>
-        </div>
+        <DetailSectionCard title={t("finance.detail.breakdown")} className="divide-y divide-border/50 p-0">
+          {rows.map((row) => (
+            <div key={row.label} className={cn("flex items-center justify-between px-3 py-2", row.highlight ? "bg-primary/5" : "")}>
+              <span className={cn("text-xs font-bold uppercase leading-none tracking-tight", row.highlight ? "text-foreground" : "text-muted-foreground")}>{row.label}</span>
+              <span className={cn("text-sm font-semibold text-end", row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground")}>{row.value}</span>
+            </div>
+          ))}
+        </DetailSectionCard>
 
         {/* Payment info */}
         {invoice.paidDate && (
@@ -150,7 +145,7 @@ export const InvoiceDetail = (function InvoiceDetail({
           </div>
         )}
       </div>
-    </DetailSheet>
+    </Drawer>
   );
 });
 
