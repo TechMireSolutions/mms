@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
-import { Users } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/ContactsCommandMetrics";
 import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDataBanner";
@@ -94,7 +95,20 @@ export function ContactsPageView({
       >
         <AnimatePresence mode="wait">
           {effectiveTab === "work" ? (
-            <ContactsWorkTier {...tabPanelProps.workTierProps} />
+            <div className="space-y-5">
+              <ModuleEntityIoToolbar
+                canExport={canExport}
+                canWrite={canWrite}
+                viewingDeleted={viewingDeleted}
+                onExport={handleExportCSV}
+                onImport={handleOpenImport}
+                onAdd={handleNew}
+                addLabel={t("contacts.addContact")}
+                addIcon={UserPlus}
+                importLabel={t("contacts.import")}
+              />
+              <ContactsWorkTier {...tabPanelProps.workTierProps} />
+            </div>
           ) : effectiveTab === "reports" ? (
             <Suspense fallback={<RouteStatusFallback />}>
               <ContactsReportsTier />

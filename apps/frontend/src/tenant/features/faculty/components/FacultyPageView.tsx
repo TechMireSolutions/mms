@@ -5,7 +5,6 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { useTranslation } from "@/hooks/useTranslation";
 import { useIndustryTerminology } from "@/tenant/hooks/useIndustryTerminology";
 import { FacultyCommandMetrics } from "@/tenant/features/faculty/components/FacultyCommandMetrics";
-import { FacultyDepartmentsSetupSection } from "@/tenant/features/faculty/components/FacultyDepartmentsSetupSection";
 import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 import { FacultyPageHeaderActions } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 import { FacultyPageOverlays } from "@/tenant/features/faculty/components/FacultyPageOverlays";
@@ -65,8 +64,8 @@ function EntityTabPanel({
 }
 
 /**
- * Faculty page — five peer tabs. Dashboard header has multi-entity Import/Export;
- * each entity tab owns its scoped Add + Import/Export strip.
+ * Faculty page — faculties, designations, reports, setup.
+ * Departments catalog stays available via designation / form quick-create.
  */
 export function FacultyPageView({
   canWrite,
@@ -78,7 +77,6 @@ export function FacultyPageView({
   viewingDeleted,
   shownCount,
   openCreateForm,
-  openCreateDepartment,
   openCreateDesignation,
   onExportEntity,
   onImportEntity,
@@ -102,6 +100,8 @@ export function FacultyPageView({
           viewingDeleted={viewingDeleted}
           onExportEntity={onExportEntity}
           onImportEntity={onImportEntity}
+          onAddFaculty={openCreateForm}
+          onAddDesignation={openCreateDesignation}
         />
       }
       metricsStrip={
@@ -126,18 +126,6 @@ export function FacultyPageView({
               onAdd={openCreateForm}
             >
               <FacultyWorkTier {...tabPanelProps.workTierProps} />
-            </EntityTabPanel>
-          ) : activeTab === "departments" ? (
-            <EntityTabPanel
-              entity="departments"
-              canWrite={canWrite}
-              canExport={canExport}
-              viewingDeleted={viewingDeleted}
-              onExportEntity={onExportEntity}
-              onImportEntity={onImportEntity}
-              onAdd={openCreateDepartment}
-            >
-              <FacultyDepartmentsSetupSection canWrite={canWrite} />
             </EntityTabPanel>
           ) : activeTab === "designations" ? (
             <EntityTabPanel

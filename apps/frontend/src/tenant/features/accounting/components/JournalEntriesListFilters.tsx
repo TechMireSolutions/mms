@@ -1,4 +1,4 @@
-import { Download, Plus } from "lucide-react";
+import { Download } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/FilterChips";
@@ -106,19 +106,7 @@ export function JournalEntriesListFilters({
             }}
           />
         }
-        primaryAction={
-          canWrite && !showDeleted ? (
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={onOpenNew}
-              className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
-            >
-              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
-            </Button>
-          ) : undefined
-        }
+        primaryAction={undefined}
         trashToggle={
           canDelete && onToggleDeleted
             ? {

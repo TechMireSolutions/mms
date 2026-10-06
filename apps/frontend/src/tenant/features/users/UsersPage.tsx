@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
-import { UserCog, Download, Mail, Plus } from 'lucide-react';
+import { UserCog, Download, Mail, Plus, UserPlus } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { UsersModalLayer } from '@/tenant/features/users/components/UsersModalLayer';
@@ -96,7 +97,21 @@ export default function UsersPage(): React.JSX.Element {
             </Suspense>
           )}
           {controller.effectiveTab === 'work' && (
-            <UsersWorkTier {...controller.workTierProps} />
+            <div className="space-y-5">
+              {controller.effectiveSubTab === 'users' ? (
+                <ModuleEntityIoToolbar
+                  canExport={controller.canExport}
+                  canWrite={controller.canWrite}
+                  viewingDeleted={controller.showDeleted}
+                  onExport={() => { void controller.handleExportCSV(); }}
+                  onAdd={controller.onAddUser}
+                  addLabel={controller.t('users.add')}
+                  addIcon={UserPlus}
+                  exportLabel={controller.t('users.exportCsv')}
+                />
+              ) : null}
+              <UsersWorkTier {...controller.workTierProps} />
+            </div>
           )}
         </ErrorBoundary>
       </ResponsiveAccordionTabs>

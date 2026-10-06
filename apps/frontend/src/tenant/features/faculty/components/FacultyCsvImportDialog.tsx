@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import {
-  parseFacultyDepartmentsCsv,
   parseFacultyDesignationsCsv,
   parseFacultyMembersCsv,
 } from "@mms/shared";
@@ -11,7 +10,6 @@ import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import {
-  startServerFacultyDepartmentsImport,
   startServerFacultyDesignationsImport,
   startServerFacultyMembersImport,
 } from "@/lib/backgroundJobs/startServerFacultyImport";
@@ -24,7 +22,7 @@ export interface FacultyCsvImportDialogProps {
   canWrite: boolean;
 }
 
-/** CSV import dialog for Faculties / Departments / Designations. */
+/** CSV import dialog for Faculties / Designations. */
 export function FacultyCsvImportDialog({
   open,
   entity,
@@ -42,9 +40,7 @@ export function FacultyCsvImportDialog({
   const title =
     entity === "faculties"
       ? t("faculty.io.importFaculties")
-      : entity === "departments"
-        ? t("faculty.io.importDepartments")
-        : t("faculty.io.importDesignations");
+      : t("faculty.io.importDesignations");
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -58,13 +54,6 @@ export function FacultyCsvImportDialog({
         await startServerFacultyMembersImport({
           rows,
           label: t("faculty.io.importFacultiesJob"),
-        });
-      } else if (entity === "departments") {
-        const rows = parseFacultyDepartmentsCsv(text);
-        if (rows.length === 0) throw new Error(t("faculty.io.importEmpty"));
-        await startServerFacultyDepartmentsImport({
-          rows,
-          label: t("faculty.io.importDepartmentsJob"),
         });
       } else {
         const rows = parseFacultyDesignationsCsv(text);

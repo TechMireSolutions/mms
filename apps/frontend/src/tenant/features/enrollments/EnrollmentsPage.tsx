@@ -1,7 +1,8 @@
 import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -126,7 +127,20 @@ export default function EnrollmentsPage() {
             )}
 
             {tab === "work" && (
-              <EnrollmentsWorkTier
+              <div className="space-y-5">
+                <ModuleEntityIoToolbar
+                  canExport={canExport}
+                  canWrite={canWriteEnrollments}
+                  viewingDeleted={showDeleted}
+                  onExport={() => void handleExportCSV()}
+                  onAdd={() => {
+                    setTab("work");
+                    setShowWizard(true);
+                  }}
+                  addLabel={t("enrollments.new")}
+                  addIcon={Plus}
+                />
+                <EnrollmentsWorkTier
                 activeSubTab={activeSubTab}
                 subTabs={SUB_TABS}
                 enrollments={enrollments}
@@ -177,6 +191,7 @@ export default function EnrollmentsPage() {
                   },
                 }}
               />
+              </div>
             )}
 
             {tab === "setup" && (

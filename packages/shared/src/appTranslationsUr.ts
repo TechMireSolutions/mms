@@ -1302,6 +1302,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "common.edit": "ترمیم",
   "common.enterPlaceholder": "درج کریں…",
   "common.export": "برآمد",
+  "common.import": "درآمد",
   "common.filters": "فلٹرز",
   "common.formPleaseFixErrors": "براہ کرم درج ذیل غلطیاں درست کریں",
   "common.formProgress": "پیشرفت",

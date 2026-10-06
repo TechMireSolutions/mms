@@ -53,6 +53,7 @@ export function useAccountingPageController() {
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [createJournalRequestKey, setCreateJournalRequestKey] = useState(0);
+  const [createAccountRequestKey, setCreateAccountRequestKey] = useState(0);
 
   const accountsResult = useAllAccountingAccounts({ includeDeleted: false });
   const journalList = useJournalEntriesListQueryState(showDeleted);
@@ -100,6 +101,12 @@ export function useAccountingPageController() {
     setCreateJournalRequestKey((key) => key + 1);
   };
 
+  const openAccountCreate = () => {
+    setActiveTab("work");
+    setActiveSubTab("coa");
+    setCreateAccountRequestKey((key) => key + 1);
+  };
+
   const { handleShortcutStateChange } = useAccountingPageShortcuts({
     activeTab,
     activeSubTab,
@@ -128,6 +135,7 @@ export function useAccountingPageController() {
     showDeleted,
     setShowDeleted,
     createJournalRequestKey,
+    createAccountRequestKey,
     accounts,
     journalEntries,
     aggregateEntries,
@@ -154,5 +162,6 @@ export function useAccountingPageController() {
     handleBulkRestoreEntries,
     handleShortcutStateChange,
     openJournalCreate,
+    openAccountCreate,
   };
 }

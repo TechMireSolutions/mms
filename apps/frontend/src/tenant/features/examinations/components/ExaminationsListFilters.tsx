@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { WorkTaskToolbar } from '@/components/common/work';
@@ -80,17 +79,7 @@ export function ExaminationsListFilters({
           onClearAll={clearFilters}
         />
       }
-      primaryAction={
-        canWrite && !showDeleted ? (
-          <Button
-            type="button"
-            onClick={onNew}
-            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            {t('examinations.newExam')}
-          </Button>
-        ) : undefined
-      }
+      primaryAction={undefined}
       trashToggle={
         canDelete && onToggleDeleted
           ? {

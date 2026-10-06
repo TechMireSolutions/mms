@@ -172,6 +172,7 @@ export function AccountingWorkTier({
           onChange={onAccountsChange}
           onFilteredCountChange={onFilteredCountChange}
           canWrite={canWrite}
+          createRequestKey={createAccountRequestKey}
           {...accountColumnProps}
         />
       )}

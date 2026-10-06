@@ -65,6 +65,6 @@ describe("ExaminationsListFilters Component", () => {
 
     expect(html).toContain("Filter Button");
     expect(html).toContain("Filter Chips");
-    expect(html).toContain("examinations.newExam");
+    expect(html).not.toContain("examinations.newExam");
   });
 });

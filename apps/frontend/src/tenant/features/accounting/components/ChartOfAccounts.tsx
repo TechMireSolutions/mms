@@ -26,6 +26,7 @@ interface ChartOfAccountsProps {
   onChange: (accounts: Account[] | ((prev: Account[]) => Account[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
+  createRequestKey?: number;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -47,6 +48,7 @@ export function ChartOfAccounts({
   onChange,
   onFilteredCountChange,
   canWrite = true,
+  createRequestKey = 0,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -99,6 +101,12 @@ export function ChartOfAccounts({
 
   const existingCodes = accounts.map((account) => account.code);
   const openAddAccount = () => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true });
+
+  useEffect(() => {
+    if (createRequestKey > 0 && canWrite) {
+      openAddAccount();
+    }
+  }, [createRequestKey, canWrite]);
 
   const exportCSV = () => {
     runGridCsvExportJob({

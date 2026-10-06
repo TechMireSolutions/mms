@@ -1,7 +1,8 @@
 import React, { type JSX, Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Library } from 'lucide-react';
+import { Library, Plus } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -72,7 +73,15 @@ export default function QuestionBankPage(): JSX.Element {
             )}
 
             {c.effectiveTab === 'work' && (
-              <QuestionBankWorkTier
+              <div className="space-y-5">
+                <ModuleEntityIoToolbar
+                  canWrite={c.canWrite}
+                  viewingDeleted={c.showDeleted}
+                  onAdd={c.openAddQuestion}
+                  addLabel={c.t('questionBank.addQuestion')}
+                  addIcon={Plus}
+                />
+                <QuestionBankWorkTier
                 tabs={c.OPS_SUB_TABS}
                 activeSubTab={c.effectiveSubTab}
                 showDeleted={c.showDeleted}
@@ -104,6 +113,7 @@ export default function QuestionBankPage(): JSX.Element {
                   if (q) c.setActiveQuestion(q);
                 }}
               />
+              </div>
             )}
           </ModuleTierMotion>
         </AnimatePresence>

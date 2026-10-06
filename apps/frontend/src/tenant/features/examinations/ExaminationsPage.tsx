@@ -1,7 +1,8 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Layers } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -77,7 +78,15 @@ export default function Examinations(): React.JSX.Element {
             )}
 
             {c.effectiveTab === 'work' && (
-              <ExaminationsWorkTier
+              <div className="space-y-5">
+                <ModuleEntityIoToolbar
+                  canWrite={c.canWrite}
+                  viewingDeleted={c.showDeleted}
+                  onAdd={c.openCreateExam}
+                  addLabel={c.t('examinations.newExam')}
+                  addIcon={Plus}
+                />
+                <ExaminationsWorkTier
                 tabs={c.OPS_SUB_TABS}
                 activeSubTab={c.effectiveSubTab}
                 showDeleted={c.showDeleted}
@@ -110,6 +119,7 @@ export default function Examinations(): React.JSX.Element {
                   if (e) c.setActiveExam(e);
                 }}
               />
+              </div>
             )}
           </ModuleTierMotion>
         </AnimatePresence>

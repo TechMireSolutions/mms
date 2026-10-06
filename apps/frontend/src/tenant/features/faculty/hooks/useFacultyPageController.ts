@@ -67,7 +67,11 @@ export function useFacultyPageController() {
   );
 
   useEffect(() => {
-    if (rawActiveTab === 'work' || rawActiveTab === 'operations') {
+    if (
+      rawActiveTab === 'work'
+      || rawActiveTab === 'operations'
+      || rawActiveTab === 'departments'
+    ) {
       setActiveTab(migrateFacultyPageTab(rawActiveTab, legacyWorkSubTab));
     }
   }, [rawActiveTab, legacyWorkSubTab, setActiveTab]);

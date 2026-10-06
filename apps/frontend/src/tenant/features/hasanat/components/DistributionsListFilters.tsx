@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { WorkTaskToolbar } from "@/components/common/work";
@@ -77,17 +76,7 @@ export function DistributionsListFilters({
           onClearFilters={onClearStatuses}
         />
       }
-      primaryAction={
-        canWrite && !showDeleted ? (
-          <Button
-            type="button"
-            onClick={onOpenModal}
-            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            {t('hasanat.distributeCards')}
-          </Button>
-        ) : undefined
-      }
+      primaryAction={undefined}
       trashToggle={
         canDelete && onToggleDeleted
           ? {

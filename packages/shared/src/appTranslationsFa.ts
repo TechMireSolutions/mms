@@ -1306,6 +1306,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.edit": "ویرایش",
   "common.enterPlaceholder": "وارد کنید…",
   "common.export": "خروجی",
+  "common.import": "ورود",
   "common.filters": "فیلترها",
   "common.formPleaseFixErrors": "لطفاً خطاهای زیر را برطرف کنید",
   "common.formProgress": "پیشرفت",

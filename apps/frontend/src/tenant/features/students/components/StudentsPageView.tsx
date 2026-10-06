@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, UserPlus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { StudentsPageHeaderActions } from "@/tenant/features/students/components/StudentsPageHeaderActions";
@@ -67,7 +68,20 @@ export function StudentsPageView({
       >
         <AnimatePresence mode="wait">
           {activeTab === "work" ? (
-            <StudentsWorkTier {...tabPanelProps.workTierProps} />
+            <div className="space-y-5">
+              <ModuleEntityIoToolbar
+                canExport={canExport}
+                canWrite={canWrite}
+                viewingDeleted={viewingDeleted}
+                onExport={() => {
+                  void handleExportCSV();
+                }}
+                onAdd={openCreateForm}
+                addLabel={t("action.addStudent")}
+                addIcon={UserPlus}
+              />
+              <StudentsWorkTier {...tabPanelProps.workTierProps} />
+            </div>
           ) : activeTab === "reports" ? (
             <Suspense fallback={<RouteStatusFallback />}>
               <StudentsReportsTier />

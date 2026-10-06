@@ -1,6 +1,8 @@
 import React from "react";
 import { AnimatePresence } from "framer-motion";
+import { Plus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -40,6 +42,7 @@ export default function Accounting() {
     showDeleted,
     setShowDeleted,
     createJournalRequestKey,
+    createAccountRequestKey,
     accounts,
     journalEntries,
     aggregateEntries,
@@ -66,6 +69,7 @@ export default function Accounting() {
     handleBulkRestoreEntries,
     handleShortcutStateChange,
     openJournalCreate,
+    openAccountCreate,
   } = useAccountingPageController();
 
   return (
@@ -106,7 +110,24 @@ export default function Accounting() {
               )}
 
               {activeTab === "work" && (
-                <AccountingWorkTier
+                <div className="space-y-5">
+                  {activeSubTab === "journal" ? (
+                    <ModuleEntityIoToolbar
+                      canWrite={canWrite}
+                      viewingDeleted={showDeleted}
+                      onAdd={openJournalCreate}
+                      addLabel={t("accounting.journal.dashboard.newEntry")}
+                      addIcon={Plus}
+                    />
+                  ) : activeSubTab === "coa" ? (
+                    <ModuleEntityIoToolbar
+                      canWrite={canWrite}
+                      onAdd={openAccountCreate}
+                      addLabel={t("accounting.coa.addAccount")}
+                      addIcon={Plus}
+                    />
+                  ) : null}
+                  <AccountingWorkTier
                   accounts={accounts}
                   accountsLoaded={accountsResult.isSuccess}
                   entries={journalEntries}
@@ -129,6 +150,7 @@ export default function Accounting() {
                     onPageChange: journalList.setPage,
                   }}
                   createJournalRequestKey={createJournalRequestKey}
+                  createAccountRequestKey={createAccountRequestKey}
                   onSubTabChange={(next) => {
                     setActiveSubTab(next);
                     if (next !== "journal") setShowDeleted(false);
@@ -173,6 +195,7 @@ export default function Accounting() {
                   showDeletedLabel={t("accounting.trash.showDeleted")}
                   loadFailedTitle={t("accounting.loadFailed")}
                 />
+                </div>
               )}
 
               {activeTab === "setup" && (

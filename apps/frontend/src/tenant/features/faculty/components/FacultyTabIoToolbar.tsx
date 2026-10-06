@@ -1,6 +1,6 @@
-import { Award, Building2, Download, Upload, UserPlus } from "lucide-react";
-import { ActionButton } from "@/components/ui/ActionButton";
+import { Award, UserPlus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 export type { FacultyIoEntity };
@@ -15,7 +15,7 @@ export interface FacultyTabIoToolbarProps {
   onAdd: () => void;
 }
 
-/** Scoped Add / Import / Export for one Faculty entity tab. */
+/** Scoped Import / Export / Add for one Faculty entity tab. */
 export function FacultyTabIoToolbar({
   entity,
   canExport,
@@ -26,35 +26,22 @@ export function FacultyTabIoToolbar({
   onAdd,
 }: FacultyTabIoToolbarProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  if (viewingDeleted) return null;
-
   const addLabel =
-    entity === "faculties"
-      ? t("action.addFaculty")
-      : entity === "departments"
-        ? t("faculty.setup.addDepartment")
-        : t("faculty.designations.addDesignation");
-
-  const AddIcon =
-    entity === "faculties" ? UserPlus : entity === "departments" ? Building2 : Award;
+    entity === "faculties" ? t("action.addFaculty") : t("faculty.designations.addDesignation");
+  const AddIcon = entity === "faculties" ? UserPlus : Award;
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      {canExport ? (
-        <ActionButton variant="ghost" icon={Download} onClick={() => onExportEntity(entity)}>
-          {t("faculty.io.export")}
-        </ActionButton>
-      ) : null}
-      {canWrite ? (
-        <ActionButton variant="ghost" icon={Upload} onClick={() => onImportEntity(entity)}>
-          {t("faculty.io.import")}
-        </ActionButton>
-      ) : null}
-      {canWrite ? (
-        <ActionButton variant="primary" icon={AddIcon} onClick={onAdd}>
-          {addLabel}
-        </ActionButton>
-      ) : null}
-    </div>
+    <ModuleEntityIoToolbar
+      canExport={canExport}
+      canWrite={canWrite}
+      viewingDeleted={viewingDeleted}
+      onExport={() => onExportEntity(entity)}
+      onImport={() => onImportEntity(entity)}
+      onAdd={onAdd}
+      addLabel={addLabel}
+      addIcon={AddIcon}
+      exportLabel={t("faculty.io.export")}
+      importLabel={t("faculty.io.import")}
+    />
   );
 }
