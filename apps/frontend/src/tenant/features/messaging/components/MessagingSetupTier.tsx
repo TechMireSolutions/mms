@@ -47,6 +47,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
     errors,
     isFormDirty,
     saving,
+    saveDisabled,
     resetForm,
     openCreate,
     handleLabelChange,
@@ -118,6 +119,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     channelSelectOptions={channelSelectOptions}
                     errors={errors}
                     saving={saving}
+                    saveDisabled={saveDisabled}
                     onReset={resetForm}
                     onSave={() => void save()}
                     onLabelChange={handleLabelChange}

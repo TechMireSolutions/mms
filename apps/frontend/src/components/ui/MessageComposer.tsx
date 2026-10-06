@@ -28,7 +28,7 @@ export interface MessageComposerProps {
 export default function MessageComposer(props: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
   const model = useMessageComposerModel(props);
-  const { step, setStep, localRecipients, dispatch, isEmail, isSms, isBulk, Icon } = model;
+  const { step, setStep, dispatch, isEmail, isSms, isBulk, Icon } = model;
 
   const handleClose = () => {
     if (step === 'compose' && props.recipients.length === 0) {
@@ -58,23 +58,6 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
       onSave={model.handleSave}
       saveDisabled={model.saveDisabled}
     >
-      <div
-        id="debug-saveDisabled"
-        data-debug={JSON.stringify({
-          step,
-          localRecipientsCount: localRecipients.length,
-          pendingAudit: !!dispatch.pendingAudit,
-          isBusy: model.isBusy,
-          opening: dispatch.opening,
-          saving: dispatch.saving,
-          eligibleRecipientsCount: dispatch.eligibleRecipients.length,
-          messageEmpty: !model.message.trim(),
-          messageValue: model.message,
-          isEmail,
-          subjectEmpty: !model.subject.trim(),
-          saveDisabled: model.saveDisabled,
-        })}
-      />
       <div className="space-y-4">
         {step === 'compose' && (
           <>
@@ -101,6 +84,8 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
               templateId={model.templateId}
               subject={model.subject}
               message={model.message}
+              messageError={model.bodyError}
+              subjectError={model.subjectError}
               eligibleRecipients={dispatch.eligibleRecipients}
               previewIndex={model.previewIndex}
               personalizeOptions={dispatch.personalizeOptions}

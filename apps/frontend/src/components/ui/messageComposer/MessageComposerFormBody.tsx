@@ -6,8 +6,10 @@ import {
 } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Field } from '@/components/ui/FormPrimitives';
+import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ValidatedMessagingRecipient } from './useMessageComposerDispatch';
 import { MessageComposerLivePreview } from './MessageComposerLivePreview';
@@ -18,6 +20,8 @@ interface MessageComposerFormBodyProps {
   templateId: string;
   subject: string;
   message: string;
+  messageError?: string;
+  subjectError?: string;
   eligibleRecipients: ValidatedMessagingRecipient[];
   previewIndex: number;
   personalizeOptions: { madrasaName?: string };
@@ -33,6 +37,8 @@ export function MessageComposerFormBody({
   templateId,
   subject,
   message,
+  messageError,
+  subjectError,
   eligibleRecipients,
   previewIndex,
   personalizeOptions,
@@ -49,7 +55,7 @@ export function MessageComposerFormBody({
   return (
     <div className="space-y-3">
       {isEmail && (
-        <Field id="emailSubject" label={t('messaging.subject')} required>
+        <Field id="emailSubject" label={t('messaging.subject')} required error={subjectError}>
           <Input
             id="emailSubject"
             name="emailSubject"
@@ -57,6 +63,8 @@ export function MessageComposerFormBody({
             onChange={(event) => onSubjectChange(event.target.value)}
             placeholder={t('messaging.subjectPlaceholder')}
             required
+            aria-invalid={subjectError ? true : undefined}
+            className={cn(subjectError && FORM_INPUT_ERROR)}
           />
         </Field>
       )}
@@ -82,6 +90,7 @@ export function MessageComposerFormBody({
         onChange={onMessageChange}
         placeholder={t('messaging.templateBodyPlaceholder')}
         required
+        error={messageError}
         footer={(
           <>
             <div className="mt-1 flex flex-wrap items-center justify-end gap-2 font-mono text-xs text-muted-foreground">

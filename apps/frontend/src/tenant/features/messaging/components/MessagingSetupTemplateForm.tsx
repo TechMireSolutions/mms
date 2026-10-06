@@ -21,6 +21,7 @@ interface MessagingSetupTemplateFormProps {
   channelSelectOptions: Array<{ value: string; label: string }>;
   errors?: Record<string, string>;
   saving?: boolean;
+  saveDisabled?: boolean;
   onReset: () => void;
   onSave: () => void | Promise<void>;
   onLabelChange: (value: string) => void;
@@ -40,6 +41,7 @@ export function MessagingSetupTemplateForm({
   channelSelectOptions,
   errors = {},
   saving = false,
+  saveDisabled = false,
   onReset,
   onSave,
   onLabelChange,
@@ -60,6 +62,7 @@ export function MessagingSetupTemplateForm({
       saveLabel={editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
       onSave={onSave}
       saving={saving}
+      saveDisabled={saveDisabled}
       formId="messaging-setup-template-form"
     >
       <form

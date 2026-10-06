@@ -9,6 +9,10 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessagingMutations } from "./useMessaging";
 
+function formatUnknownTokensLabel(tokens: string[]): string {
+  return tokens.map((token) => `{${token}}`).join(", ");
+}
+
 export function useMessagingTemplateEditor() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -23,6 +27,9 @@ export function useMessagingTemplateEditor() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isFormDirty = Boolean(formOpen && (label.trim() || body.trim() || editingId));
+  const unknownBodyTokens = findUnknownPersonalizationTokens(body);
+  const saveDisabled =
+    !label.trim() || !body.trim() || unknownBodyTokens.length > 0 || saveTemplate.isPending;
 
   const resetForm = (): void => {
     setFormOpen(false);
@@ -57,13 +64,18 @@ export function useMessagingTemplateEditor() {
 
   const handleBodyChange = (value: string): void => {
     setBody(value);
-    if (errors.body) {
-      setErrors((prev) => {
-        const next = { ...prev };
+    const unknown = findUnknownPersonalizationTokens(value);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (unknown.length > 0) {
+        next.body = t("messaging.unknownTokens", {
+          tokens: formatUnknownTokensLabel(unknown),
+        });
+      } else if (next.body) {
         delete next.body;
-        return next;
-      });
-    }
+      }
+      return next;
+    });
   };
 
   const save = async (): Promise<void> => {
@@ -71,14 +83,19 @@ export function useMessagingTemplateEditor() {
     const newErrors: Record<string, string> = {};
     if (!label.trim()) newErrors.label = t("common.required");
     if (!body.trim()) newErrors.body = t("common.required");
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      notify.error(t("messaging.createPresetDesc"));
-      return;
-    }
     const unknownTokens = findUnknownPersonalizationTokens(body.trim());
     if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
+      newErrors.body = t("messaging.unknownTokens", {
+        tokens: formatUnknownTokensLabel(unknownTokens),
+      });
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (unknownTokens.length > 0) {
+        notify.error(newErrors.body);
+      } else {
+        notify.error(t("messaging.createPresetDesc"));
+      }
       return;
     }
     try {
@@ -106,7 +123,9 @@ export function useMessagingTemplateEditor() {
     if (!user) return;
     const unknownTokens = findUnknownPersonalizationTokens(template.body);
     if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
+      notify.error(
+        t("messaging.unknownTokens", { tokens: formatUnknownTokensLabel(unknownTokens) }),
+      );
       return;
     }
     try {
@@ -141,6 +160,7 @@ export function useMessagingTemplateEditor() {
     errors,
     isFormDirty,
     saving: saveTemplate.isPending,
+    saveDisabled,
     resetForm,
     openCreate,
     handleLabelChange,

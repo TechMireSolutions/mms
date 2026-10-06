@@ -583,6 +583,28 @@ describe('messaging REST routes', () => {
     await app.close();
   });
 
+  it('POST /api/messaging/templates rejects unknown personalization tokens', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/templates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+      },
+      payload: {
+        label: 'Bad tokens',
+        body: 'Hello {name} and {not_a_real_token}',
+        category: 'general',
+        channel: 'sms',
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('{not_a_real_token}');
+    expect(mockSaveMessageTemplate).not.toHaveBeenCalled();
+    await app.close();
+  });
+
   it('POST /api/messaging/logs denies accountant without messaging.write', async () => {
     const app = await buildApp();
     const res = await app.inject({
@@ -671,6 +693,25 @@ describe('messaging REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(400);
+    expect(mockRecordMessageLogs).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/messaging/logs rejects unknown personalization tokens', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/logs',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+      },
+      payload: {
+        logs: [{ contactId: 'c1', channel: 'sms', body: 'Hi {bogus_token}' }],
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('{bogus_token}');
     expect(mockRecordMessageLogs).not.toHaveBeenCalled();
     await app.close();
   });

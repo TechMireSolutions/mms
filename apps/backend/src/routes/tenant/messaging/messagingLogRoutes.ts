@@ -1,7 +1,5 @@
-import crypto, { randomUUID } from 'node:crypto';
-import { setTimeout as sleep } from 'node:timers/promises';
 import type { FastifyPluginAsync } from 'fastify';
-import type { Message, MessageLogCreateDto, User } from '@mms/shared';
+import type { User } from '@mms/shared';
 import {
   messagingLogsQuerySchema,
   messagingMetricsQuerySchema,
@@ -17,104 +15,9 @@ import { logger } from '../../../lib/logger.js';
 import {
   canClearMessagingLogs,
   canReadMessaging,
-  canWriteMessaging,
 } from '../../../services/rbacService.js';
-import {
-  authArtifactUserScopeKey,
-  authArtifactWorkspaceScopeKey,
-  deleteAuthArtifact,
-  findAuthArtifactByLookupKey,
-  tryClaimAuthArtifactByLookupKey,
-  updateAuthArtifactPayload,
-} from '../../../services/auth/authArtifactService.js';
 import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
-
-const MESSAGING_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
-const IDEMPOTENCY_PENDING_POLL_MS = 25;
-const IDEMPOTENCY_PENDING_POLL_ATTEMPTS = 8;
-
-/** `recorded: null` = in-flight claim; number = completed dispatch audit. */
-type MessagingIdempotencyPayload = { recorded: number | null; bodyDigest: string };
-
-function normalizeDispatchLogs(user: User, logs: MessageLogCreateDto[]): Message[] {
-  const sentAt = new Date().toISOString();
-  return logs.map((log) => ({
-    id: randomUUID(),
-    userId: user.id,
-    contactId: log.contactId,
-    channel: log.channel,
-    body: log.body,
-    sentAt,
-    status: log.status || 'sent',
-    subject: log.subject,
-    category: log.category || 'general',
-    errorMessage: log.errorMessage,
-  }));
-}
-
-function resolveIdempotencyKey(
-  bodyKey: string | undefined,
-  headerValue: string | string[] | undefined,
-): string | undefined {
-  const fromHeader = Array.isArray(headerValue) ? headerValue[0] : headerValue;
-  const raw = (bodyKey ?? fromHeader ?? '').trim();
-  return raw.length >= 8 ? raw.slice(0, 128) : undefined;
-}
-
-function messagingIdempotencyLookupKey(
-  workspaceSubdomain: string,
-  userId: string,
-  clientKey: string,
-): string {
-  const digest = crypto.hash('sha256', `${workspaceSubdomain}\0${userId}\0${clientKey}`, 'hex');
-  return `messaging_idem:${digest}`;
-}
-
-/** Digest of the dispatch logs body — bound to the idempotency key (`mms-api-interface` §6). */
-function messagingDispatchBodyDigest(logs: MessageLogCreateDto[]): string {
-  return crypto.hash('sha256', JSON.stringify(logs), 'hex');
-}
-
-function completedRecorded(payload: MessagingIdempotencyPayload): number | undefined {
-  return payload.recorded === null ? undefined : payload.recorded;
-}
-
-function idempotencyBodyMatches(
-  payload: MessagingIdempotencyPayload,
-  bodyDigest: string,
-): boolean {
-  return payload.bodyDigest === bodyDigest;
-}
-
-async function waitForCompletedIdempotency(
-  lookupKey: string,
-  bodyDigest: string,
-): Promise<{ recorded: number } | { mismatch: true } | undefined> {
-  for (let attempt = 0; attempt < IDEMPOTENCY_PENDING_POLL_ATTEMPTS; attempt += 1) {
-    const existing = await findAuthArtifactByLookupKey<MessagingIdempotencyPayload>(
-      'messaging_idempotency',
-      lookupKey,
-    );
-    if (existing) {
-      if (!idempotencyBodyMatches(existing.payload, bodyDigest)) {
-        return { mismatch: true };
-      }
-      const recorded = completedRecorded(existing.payload);
-      if (recorded !== undefined) return { recorded };
-    }
-    await sleep(IDEMPOTENCY_PENDING_POLL_MS);
-  }
-  return undefined;
-}
-
-function replyIdempotencyBodyMismatch(
-  reply: { status: (code: number) => { send: (body: unknown) => unknown } },
-) {
-  return reply.status(409).send({
-    type: 'conflict',
-    message: 'Idempotency key reused with a different request body',
-  });
-}
+import { handleRecordMessageLogs } from './messagingLogRecordHandler.js';
 
 /** Messaging log history, recording, clear, and metrics routes. */
 export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
@@ -142,82 +45,9 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
     scoped.addHook('preHandler', createStrictRateLimitGuard(scoped, MESSAGING_LOG_RATE_LIMIT));
 
     scoped.post('/logs', async (req, reply) => {
-      const user = req.user as User;
-      if (!canWriteMessaging(user)) return sendForbidden(reply);
       const parsed = parseRequest(recordMessageLogsSchema, req.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const tenantSubdomain = getRequestTenant();
-      if (!tenantSubdomain) {
-        return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
-      }
-
-      const idempotencyKey = resolveIdempotencyKey(
-        parsed.data.idempotencyKey,
-        req.headers['idempotency-key'],
-      );
-      const bodyDigest = messagingDispatchBodyDigest(parsed.data.logs);
-      const lookupKey = idempotencyKey
-        ? messagingIdempotencyLookupKey(tenantSubdomain, user.id, idempotencyKey)
-        : undefined;
-      const scopeKey = `${authArtifactWorkspaceScopeKey(tenantSubdomain)}:${authArtifactUserScopeKey(user.id)}`;
-
-      try {
-        if (lookupKey) {
-          const existing = await findAuthArtifactByLookupKey<MessagingIdempotencyPayload>(
-            'messaging_idempotency',
-            lookupKey,
-          );
-          if (existing) {
-            if (!idempotencyBodyMatches(existing.payload, bodyDigest)) {
-              return replyIdempotencyBodyMismatch(reply);
-            }
-            const recorded = completedRecorded(existing.payload);
-            if (recorded !== undefined) {
-              return reply.send({ recorded });
-            }
-            const waited = await waitForCompletedIdempotency(lookupKey, bodyDigest);
-            if (waited && 'mismatch' in waited) return replyIdempotencyBodyMismatch(reply);
-            if (waited && 'recorded' in waited) return reply.send({ recorded: waited.recorded });
-            return reply.status(409).send({
-              type: 'conflict',
-              message: 'Idempotent request still in progress',
-            });
-          }
-
-          const claim = await tryClaimAuthArtifactByLookupKey<MessagingIdempotencyPayload>(
-            'messaging_idempotency',
-            { recorded: null, bodyDigest },
-            MESSAGING_IDEMPOTENCY_TTL_MS,
-            { lookupKey, scopeKey },
-          );
-          if (!claim.claimed) {
-            const waited = await waitForCompletedIdempotency(lookupKey, bodyDigest);
-            if (waited && 'mismatch' in waited) return replyIdempotencyBodyMismatch(reply);
-            if (waited && 'recorded' in waited) return reply.send({ recorded: waited.recorded });
-            return reply.status(409).send({
-              type: 'conflict',
-              message: 'Idempotent request still in progress',
-            });
-          }
-
-          try {
-            const normalized = normalizeDispatchLogs(user, parsed.data.logs);
-            const recorded = await messagingUseCases.recordMessageLogs(tenantSubdomain, normalized);
-            const payload: MessagingIdempotencyPayload = { recorded: recorded.length, bodyDigest };
-            await updateAuthArtifactPayload(claim.id, payload);
-            return reply.send({ recorded: recorded.length });
-          } catch (err) {
-            await deleteAuthArtifact(claim.id).catch(() => undefined);
-            throw err;
-          }
-        }
-
-        const normalized = normalizeDispatchLogs(user, parsed.data.logs);
-        const recorded = await messagingUseCases.recordMessageLogs(tenantSubdomain, normalized);
-        return reply.send({ recorded: recorded.length });
-      } catch (err) {
-        return sendDatabaseError(reply, 'Failed to record message logs', err);
-      }
+      return handleRecordMessageLogs(req, reply, parsed.data);
     });
   });
 
@@ -226,8 +56,8 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canClearMessagingLogs(user)) return sendForbidden(reply);
     const tenantSubdomain = getRequestTenant();
     if (!tenantSubdomain) {
-        return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
-      }
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
       await messagingUseCases.clearAllMessageLogs(tenantSubdomain);
       void recordModernAuditEvent({
