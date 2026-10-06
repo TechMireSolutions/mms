@@ -99,7 +99,8 @@ jobs:
       - name: actionlint
         run: |
           docker run --rm -v "$PWD:/repo" --workdir /repo \
-            rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+            rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 \
+            -color # v1.7.7
 
       - name: zizmor
         uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
@@ -333,7 +334,9 @@ jobs:
   test-backend-db:
     name: Backend DB Integration Tests
     needs: [changes]
-    if: ${{ needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request' }}
+    if: >
+      !github.event.pull_request.draft &&
+      (needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -377,7 +380,9 @@ jobs:
 
   e2e:
     needs: [changes]
-    if: ${{ needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request' }}
+    if: >
+      !github.event.pull_request.draft &&
+      (needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -482,7 +487,7 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, dependency-review, workflow-lint, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
+    needs: [changes, dependency-review, workflow-lint, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e, merge-reports]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -497,6 +502,7 @@ jobs:
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
           echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
           echo "E2E Tests:              ${{ needs.e2e.result }}"
+          echo "E2E Merge Reports:      ${{ needs.merge-reports.result }}"
           echo "========================================================="
 
           failed=0
@@ -541,6 +547,11 @@ jobs:
             failed=1
           fi
 
+          if [ "${{ needs.merge-reports.result }}" != "success" ] && [ "${{ needs.merge-reports.result }}" != "skipped" ]; then
+            echo "::error::merge-reports failed or was cancelled (result: ${{ needs.merge-reports.result }})"
+            failed=1
+          fi
+
           if [ "$failed" -ne 0 ]; then
             STATUS_HEADER="❌ MMS CI Gate Status: Failed"
           else
@@ -560,6 +571,7 @@ jobs:
           | **Backend Unit Tests** | \`${{ needs.test-backend-unit.result }}\` | In-Memory Fast Unit + Coverage Gate |
           | **Backend DB Tests** | \`${{ needs.test-backend-db.result }}\` | Docker Postgres 16 (Healthchecked, tmpfs) |
           | **E2E Tests** | \`${{ needs.e2e.result }}\` | 4-Way Sharded Playwright Matrix |
+          | **E2E Report Merge** | \`${{ needs.merge-reports.result }}\` | Merged HTML Playwright Report |
           EOF
 
           if [ "$failed" -ne 0 ]; then

@@ -6,9 +6,8 @@ inputs:
     description: 'SSH private key for the production host'
     required: true
   known-hosts:
-    description: 'Pinned known_hosts line(s) for the production host (SSH_KNOWN_HOSTS secret)'
-    required: false
-    default: ''
+    description: 'Pinned known_hosts entries for the production host — get this by running: ssh-keyscan -H <SERVER_IP> (store as SSH_KNOWN_HOSTS secret)'
+    required: true
   host:
     description: 'Production host (only used for the trust-on-first-use fallback)'
     required: true
@@ -28,10 +27,20 @@ runs:
         set -euo pipefail
         umask 077
         mkdir -p ~/.ssh
+        # Write the deploy key with strict permissions
         printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/deploy_key
-        if [ -n "${SSH_KNOWN_HOSTS}" ]; then
-          printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
-        else
-          echo "::warning::SSH_KNOWN_HOSTS secret not set — falling back to unverified ssh-keyscan"
-          ssh-keyscan -p 22 -H "${SERVER_IP}" >> ~/.ssh/known_hosts
-        fi
+        chmod 600 ~/.ssh/deploy_key
+        # Use pinned known_hosts — trust-on-first-use keyscan is not allowed
+        # (it is vulnerable to MITM between the runner and the production host).
+        # Set SSH_KNOWN_HOSTS secret: ssh-keyscan -H <SERVER_IP>
+        printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+        chmod 600 ~/.ssh/known_hosts
+        # SSH client config so downstream steps don't need -i flags
+        cat >> ~/.ssh/config <<EOF
+        Host ${SERVER_IP}
+          IdentityFile ~/.ssh/deploy_key
+          StrictHostKeyChecking yes
+          BatchMode yes
+          ConnectTimeout 10
+        EOF
+        chmod 600 ~/.ssh/config

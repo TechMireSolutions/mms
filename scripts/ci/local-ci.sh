@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Path-aware local CI (mirrors high-signal jobs from .github/workflows/ci.yml).
 # Usage: bash scripts/ci/local-ci.sh [--full] [--with-db] [--with-e2e]
-# Bash 3.2 compatible (macOS /bin/bash). Pre-push escape: SKIP_LOCAL_CI=1
+# Bash 3.2 compatible (macOS /bin/bash).
+# Enforced by .githooks/pre-commit. Pre-push does not re-run this (blocks main only).
+# Escape: SKIP_LOCAL_CI=1
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
