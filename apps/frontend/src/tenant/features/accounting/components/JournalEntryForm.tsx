@@ -12,6 +12,8 @@ import {
 import { JournalEntryFormTagsSection } from "./JournalEntryFormTagsSection";
 import { useJournalEntryForm } from "./useJournalEntryForm";
 import { useAccountQuickCreate } from "./useAccountQuickCreate";
+import { useJournalLineAssist } from "./useJournalLineAssist";
+import { useJournalTemplates } from "@/tenant/features/accounting/hooks/useJournalTemplates";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 
 interface JournalEntryFormProps {
@@ -54,6 +56,8 @@ export function JournalEntryForm({
     flattenedAccountOptions,
     errorMessages,
   } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears });
+  const journalTemplates = useJournalTemplates(accounts);
+  const lineAssist = useJournalLineAssist({ form, setForm, updateLine, toggleTag, templates: journalTemplates.templates });
 
   const accountQuickCreate = useAccountQuickCreate({
     accounts,
@@ -98,7 +102,15 @@ export function JournalEntryForm({
             fiscalYears={fiscalYears}
           />
 
-          <JournalEntryFormTagsSection t={t} form={form} toggleTag={toggleTag} />
+          <JournalEntryFormTagsSection
+            t={t}
+            form={form}
+            toggleTag={lineAssist.toggleTemplateTag}
+            templates={journalTemplates.templates}
+            canSeedTemplates={journalTemplates.canSeed}
+            seedingTemplates={journalTemplates.seeding}
+            onSeedTemplates={journalTemplates.seedTemplates}
+          />
 
           <JournalEntryLinesEditor
             accounts={accounts}
@@ -111,7 +123,10 @@ export function JournalEntryForm({
             formatCurrency={formatCurrency}
             onAddLine={addLine}
             onRemoveLine={removeLine}
-            onUpdateLine={updateLine}
+            onUpdateLine={lineAssist.updateLineAssisted}
+            lockedSideFor={lineAssist.lockedSideFor}
+            lockTemplateName={lineAssist.lockTemplateName}
+            mirror={lineAssist.canMirror ? { checked: lineAssist.mirrorAmounts, onChange: lineAssist.setMirrorAmounts } : undefined}
             canAddAccount={accountQuickCreate.canAdd}
             onOpenAddAccount={(lineIndex) => accountQuickCreate.openCreate({ kind: 'line', lineIndex })}
           />

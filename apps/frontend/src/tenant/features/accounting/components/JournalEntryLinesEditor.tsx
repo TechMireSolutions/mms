@@ -2,6 +2,7 @@ import { AlertCircle, BookOpen, CheckCircle2 } from 'lucide-react';
 import {
   type Account,
 } from '@/lib/data/accountingData';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormCollectionShell } from '@/components/ui/FormPrimitives';
 import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
@@ -22,6 +23,7 @@ import { balanceToneClass } from '@/lib/semanticTone';
 import type { DraftLine } from './journalEntryFormTypes';
 import { JournalEntryLineRow } from './JournalEntryLineRow';
 import { JournalEntryLinesEditorMobile } from './JournalEntryLinesEditorMobile';
+import type { JournalAmountSide } from './useJournalLineAssist';
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 interface JournalEntryLinesEditorProps {
@@ -39,6 +41,11 @@ interface JournalEntryLinesEditorProps {
   canAddAccount?: boolean;
   onOpenAddAccount?: (lineIndex: number) => void;
   viewMode?: WorkDirectoryViewMode;
+  /** Side a template locked this line to; the other amount box is disabled. */
+  lockedSideFor?: (lineId: string) => JournalAmountSide | undefined;
+  lockTemplateName?: string | null;
+  /** Shown only with exactly two lines: mirror an amount onto the other line. */
+  mirror?: { checked: boolean; onChange: (checked: boolean) => void };
 }
 
 export function JournalEntryLinesEditor({
@@ -56,6 +63,9 @@ export function JournalEntryLinesEditor({
   canAddAccount = false,
   onOpenAddAccount,
   viewMode: propViewMode,
+  lockedSideFor,
+  lockTemplateName,
+  mirror,
 }: JournalEntryLinesEditorProps) {
   const { t } = useTranslation();
   const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
@@ -85,6 +95,8 @@ export function JournalEntryLinesEditor({
               onOpenAddAccount={onOpenAddAccount}
               onRemoveLine={onRemoveLine}
               onUpdateLine={onUpdateLine}
+              lockedSideFor={lockedSideFor}
+              lockTemplateName={lockTemplateName}
             />
           ) : (
             <Table>
@@ -114,6 +126,8 @@ export function JournalEntryLinesEditor({
                     }
                     onUpdateLine={onUpdateLine}
                     onRemoveLine={onRemoveLine}
+                    lockedSide={lockedSideFor?.(line.id)}
+                    lockTemplateName={lockTemplateName}
                   />
                 ))}
               </TableBody>
@@ -130,6 +144,19 @@ export function JournalEntryLinesEditor({
           )}
         </div>
       </FormCollectionShell>
+
+      {mirror && (
+        <div className="flex min-h-11 items-center gap-2 px-1 text-xs font-semibold text-foreground">
+          <Checkbox
+            id="journal-mirror-amount"
+            checked={mirror.checked}
+            onCheckedChange={(checked) => mirror.onChange(checked === true)}
+          />
+          <label htmlFor="journal-mirror-amount" className="cursor-pointer select-none">
+            {t("accounting.journal.form.mirrorAmount")}
+          </label>
+        </div>
+      )}
 
       <div className={cn("flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 shadow-sm", balanceToneClass(isBalanced))} role="status">
         {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}

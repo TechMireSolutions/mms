@@ -157,6 +157,7 @@ describe("useAccountingSetupPanelState", () => {
         "decimalSeparator",
         "defaultViewLayout",
         "fyStartMonth",
+        "journalTemplates",
         "organizationName",
         "requireNarration",
         "retainedEarningsAccount",

@@ -1,3 +1,4 @@
+import { quickActionLabel } from "./quickActionLabels";
 import { useMemo, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { CheckCircle2, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { WarningCallout } from "@/components/ui/WarningCallout";
@@ -86,7 +87,7 @@ export function StepReview({
             ];
 
     return [
-      { label: t("accounting.journal.dashboard.wizard.transactionType"), value: t(type.labelKey) },
+      { label: t("accounting.journal.dashboard.wizard.transactionType"), value: quickActionLabel(type, t) },
       { label: t("accounting.columns.journal.date"), value: formatDate(form.date) },
       form.fiscal_year ? { label: t("accounting.journal.form.financialYear"), value: form.fiscal_year } : null,
       { label: t("accounting.journal.dashboard.wizard.amountLabel"), value: amountLabel, editable: true },

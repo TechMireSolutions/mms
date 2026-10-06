@@ -1,7 +1,7 @@
 import { apiContract } from "@/lib/api";
 import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
 import type { AccountingModulePreferences, AccountingSettings } from "@mms/shared";
-import { normalizeAccountingModulePreferences } from "@mms/shared";
+import { normalizeAccountingModulePreferences, normalizeJournalTemplates } from "@mms/shared";
 
 /**
  * Exactly the keys `accountingPreferencesPutBodySchema` accepts — the same set
@@ -27,6 +27,7 @@ export const ACCOUNTING_PREFERENCES_KEYS = [
   "retainedEarningsAccount",
   "organizationName",
   "defaultViewLayout",
+  "journalTemplates",
 ] as const;
 
 /** Maps composed Accounting settings onto the strict preferences PUT body. */
@@ -51,6 +52,8 @@ export function toAccountingPreferencesPayload(
     ...(typeof settings.defaultViewLayout === "string"
       ? { defaultViewLayout: settings.defaultViewLayout }
       : {}),
+    // Drops blank/duplicate rows the Setup editor still shows a warning for.
+    journalTemplates: normalizeJournalTemplates(settings.journalTemplates),
   };
 }
 

@@ -7,8 +7,10 @@ import {
   resolveSimpleTransactionAccounts,
   TRANSACTION_GROUPS,
   type QuickActionType,
+  type TransactionGroup,
   type WizardFormState,
 } from "./simpleTransactionWizardTypes";
+import { quickActionDescription } from "./quickActionLabels";
 
 export const LAST_TYPE_SESSION_KEY = "mms-wizard-last-type-id";
 
@@ -20,6 +22,8 @@ export interface UseSimpleTransactionDraftParams {
   prefillAmount?: string;
   prefillDescription?: string;
   t: (key: AppTranslationKey) => string;
+  /** Type groups on offer (entry templates or the built-in set); restores the last-used type from these. */
+  transactionGroups?: readonly TransactionGroup[];
 }
 
 export function useSimpleTransactionDraft({
@@ -30,6 +34,7 @@ export function useSimpleTransactionDraft({
   prefillAmount,
   prefillDescription,
   t,
+  transactionGroups = TRANSACTION_GROUPS,
 }: UseSimpleTransactionDraftParams) {
   const activeFiscalYearLabel =
     (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
@@ -54,12 +59,14 @@ export function useSimpleTransactionDraft({
     accounts,
     fiscalYearLabel: activeFiscalYearLabel,
     translate: (key: AppTranslationKey) => t(key) as string,
+    transactionGroups,
   });
   useEffect(() => {
     resetContextRef.current = {
       accounts,
       fiscalYearLabel: activeFiscalYearLabel,
       translate: (key: AppTranslationKey) => t(key) as string,
+      transactionGroups,
     };
   });
 
@@ -80,7 +87,7 @@ export function useSimpleTransactionDraft({
 
   useEffect(() => {
     if (open && !wasOpenRef.current) {
-      const { accounts: liveAccounts, fiscalYearLabel, translate } = resetContextRef.current;
+      const { accounts: liveAccounts, fiscalYearLabel, translate, transactionGroups: liveGroups } = resetContextRef.current;
 
       const draft = draftRef.current;
       if (
@@ -115,7 +122,7 @@ export function useSimpleTransactionDraft({
         try {
           const lastId = sessionStorage.getItem(LAST_TYPE_SESSION_KEY);
           if (lastId) {
-            for (const group of TRANSACTION_GROUPS) {
+            for (const group of liveGroups) {
               const item = group.items.find((i) => i.id === lastId);
               if (item) {
                 lastType = { ...item, groupKey: group.groupKey, color: group.color };
@@ -157,7 +164,7 @@ export function useSimpleTransactionDraft({
     setForm((previousForm) => ({
       ...previousForm,
       ...resolveSimpleTransactionAccounts(type, accounts),
-      description: t(type.descriptionKey),
+      description: quickActionDescription(type, t),
       tags: type.tag ? [type.tag] : [],
     }));
     try {

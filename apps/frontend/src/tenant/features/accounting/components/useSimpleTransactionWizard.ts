@@ -5,6 +5,7 @@ import { isJournalEntryBalanced, journalEntryRecordSchema } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { validateWizardForm } from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
+import { quickActionDescription, quickActionLabel } from "./quickActionLabels";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import {
   useSimpleTransactionDraft,
@@ -29,6 +30,7 @@ export function useSimpleTransactionWizard({
   prefillType,
   prefillAmount,
   prefillDescription,
+  transactionGroups,
 }: UseSimpleTransactionWizardParams) {
   const { t } = useTranslation();
   const [submittingStatus, setSubmittingStatus] = useState<
@@ -55,12 +57,13 @@ export function useSimpleTransactionWizard({
     prefillAmount,
     prefillDescription,
     t,
+    transactionGroups,
   });
 
   const parsedAmount = useMemo(() => parseMoneyInput(form.amount), [form.amount]);
 
   const stepSubtitle = useMemo(() => {
-    if (step === 2 && selectedType) return t(selectedType.labelKey);
+    if (step === 2 && selectedType) return quickActionLabel(selectedType, t);
     if (step === 3) return t("accounting.journal.dashboard.wizard.reviewTitle");
     return t("accounting.journal.dashboard.subtitleSimple");
   }, [step, selectedType, t]);
@@ -97,7 +100,7 @@ export function useSimpleTransactionWizard({
     }
     setSubmittingStatus(recordAnother ? "posted_and_new" : status);
     try {
-      const description = form.description.trim() || t(selectedType.labelKey);
+      const description = form.description.trim() || quickActionLabel(selectedType, t);
       const candidateTags =
         form.tags && form.tags.length > 0 ? form.tags : selectedType.tag ? [selectedType.tag] : [];
       const candidate: JournalEntry = {
@@ -147,7 +150,7 @@ export function useSimpleTransactionWizard({
           ...prev,
           amount: "",
           ref: "",
-          description: t(selectedType.descriptionKey),
+          description: quickActionDescription(selectedType, t),
         }));
         setAmountTouched(false);
         setStep(2);

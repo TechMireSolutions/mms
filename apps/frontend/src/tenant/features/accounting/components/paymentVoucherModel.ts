@@ -1,6 +1,6 @@
 import { moneyToCents } from "@mms/shared";
 import type { Account, JournalEntry } from "@/lib/data/accountingData";
-import { resolveEntryDirection } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
+import { resolveCashAccountIds } from "@/tenant/features/accounting/components/cashbookViewShared";
 
 export interface SalaryVoucherRef {
   staffId: string;
@@ -41,12 +41,20 @@ function accountLabel(accountsById: Map<string, Account>, accountId: string): st
   return account ? `${account.code} — ${account.name}` : accountId;
 }
 
-/** Posted, live money-out entries (salary, expenses, any debit to an Expense account) can print a payment voucher. */
+/**
+ * Posted, live entries decided by their heads, never by tags: salary payments,
+ * anything charged to an Expense head, or money paid out of a cash/bank head to
+ * a non-cash head (supplier, payable, advance). Cash↔bank transfers and
+ * receipts do not qualify.
+ */
 export function isPaymentVoucherEligible(entry: JournalEntry, accounts: readonly Account[]): boolean {
   if (entry.status !== "posted" || entry.deletedAt) return false;
-  if (resolveEntryDirection(entry) === "out") return true;
+  if (entry.transaction_type === "salary") return true;
   const expenseIds = new Set(accounts.filter((account) => account.type === "Expense").map((account) => account.id));
-  return entry.lines.some((line) => line.debit > 0 && expenseIds.has(line.account_id));
+  if (entry.lines.some((line) => line.debit > 0 && expenseIds.has(line.account_id))) return true;
+  const cashIds = resolveCashAccountIds(accounts);
+  const paidFromCash = entry.lines.some((line) => line.credit > 0 && cashIds.has(line.account_id));
+  return paidFromCash && entry.lines.some((line) => line.debit > 0 && !cashIds.has(line.account_id));
 }
 
 export function buildPaymentVoucherModel(entry: JournalEntry, accounts: readonly Account[]): PaymentVoucherModel {

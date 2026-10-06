@@ -17,7 +17,7 @@ import {
   type EntryType,
 } from "@/tenant/features/accounting/components/cashbookViewShared";
 import { CashbookViewTable } from "@/tenant/features/accounting/components/CashbookViewTable";
-import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
+import { useCashbookColumns, type CashbookVoucherAction } from "@/tenant/features/accounting/components/useCashbookColumns";
 
 interface CashbookViewProps {
   entries: JournalEntry[];
@@ -28,15 +28,16 @@ interface CashbookViewProps {
    */
   configuredCashAccountId?: string | null;
   pageScopeLabel?: string;
+  voucher?: CashbookVoucherAction;
 }
 
-export function CashbookView({ entries, accounts, configuredCashAccountId, pageScopeLabel }: CashbookViewProps) {
+export function CashbookView({ entries, accounts, configuredCashAccountId, pageScopeLabel, voucher }: CashbookViewProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
-  const { columns } = useCashbookColumns(formatCurrency);
+  const { columns } = useCashbookColumns(formatCurrency, voucher);
   const tenantRegistry = useMemo(() => buildDataTableRegistry(columns), [columns]);
   const columnLayout = useModuleColumnLayout({ moduleId: "accounting.cashbook", tenantRegistry });
 
@@ -130,6 +131,7 @@ export function CashbookView({ entries, accounts, configuredCashAccountId, pageS
         formatCurrency={formatCurrency}
         viewMode={viewMode}
         columnLayout={columnLayout}
+        voucher={voucher}
       />
     </div>
   );

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
+import type { JournalAmountSide } from './useJournalLineAssist';
 
 interface JournalEntryLineRowProps {
   line: DraftLine;
@@ -24,6 +25,9 @@ interface JournalEntryLineRowProps {
   onOpenAddAccount?: () => void;
   onUpdateLine: (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => void;
   onRemoveLine: (lineIndex: number) => void;
+  /** Side a template locked this line to; the other amount box is disabled. */
+  lockedSide?: JournalAmountSide;
+  lockTemplateName?: string | null;
 }
 
 export function JournalEntryLineRow({
@@ -37,8 +41,11 @@ export function JournalEntryLineRow({
   onOpenAddAccount,
   onUpdateLine,
   onRemoveLine,
+  lockedSide,
+  lockTemplateName,
 }: JournalEntryLineRowProps) {
   const { t } = useTranslation();
+  const lockHint = lockedSide ? t("accounting.journal.form.amountLocked", { name: lockTemplateName ?? "" }) : undefined;
 
   return (
     <TableRow className="hover:bg-muted/10">
@@ -84,6 +91,8 @@ export function JournalEntryLineRow({
           value={line.debit}
           placeholder="0.00"
           onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
+          disabled={lockedSide === "credit"}
+          title={lockedSide === "credit" ? lockHint : undefined}
           className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
         />
       </TableCell>
@@ -97,6 +106,8 @@ export function JournalEntryLineRow({
           value={line.credit}
           placeholder="0.00"
           onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
+          disabled={lockedSide === "debit"}
+          title={lockedSide === "debit" ? lockHint : undefined}
           className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
         />
       </TableCell>

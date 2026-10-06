@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import { journalTemplatesSchema } from '../accountingJournalTemplates.js';
 import {
   accountingAccountsListQuerySchema,
   accountingEntriesListQuerySchema,
@@ -59,6 +60,7 @@ export const accountingPreferencesResponseSchema = z.object({
   fyStartMonth: z.string(), accountCodeLength: z.number(), requireNarration: z.boolean(),
   allowEditPosted: z.boolean(), autoPostDrafts: z.boolean(), retainedEarningsAccount: z.string(),
   organizationName: z.string().optional(), defaultViewLayout: z.string().optional(),
+  journalTemplates: journalTemplatesSchema.optional(),
 });
 
 /**

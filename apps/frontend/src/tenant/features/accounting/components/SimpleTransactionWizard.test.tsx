@@ -13,6 +13,12 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+const journalTemplatesMock = vi.hoisted(() => ({ templates: [] as import("@mms/shared").JournalTemplate[] }));
+
+vi.mock("@/tenant/features/accounting/hooks/useJournalTemplates", () => ({
+  useJournalTemplates: () => ({ templates: journalTemplatesMock.templates, canSeed: false, seeding: false, seedTemplates: vi.fn() }),
+}));
+
 vi.mock("@/tenant/features/accounting/hooks/useVoucherNumbering", () => ({
   useVoucherNumbering: () => ({ data: { autoGenerate: true, nextVoucherNumber: "JE-0001" } }),
 }));
@@ -444,6 +450,19 @@ describe("SimpleTransactionWizard", () => {
       typeBtn.click();
     });
     expect(sessionStorage.getItem("mms-wizard-last-type-id")).toBeTruthy();
+  });
+
+  it("given entry templates with cash heads, should offer them by name in place of the built-in types", async () => {
+    journalTemplatesMock.templates = [
+      { id: "fee", name: "Hostel Fee", debitAccountId: "a1000", creditAccountId: "a4000" },
+    ];
+    try {
+      await renderWizard(true);
+      const labels = [...container.querySelectorAll("button[aria-pressed]")].map((button) => button.textContent?.trim());
+      expect(labels).toEqual(["Hostel Fee"]);
+    } finally {
+      journalTemplatesMock.templates = [];
+    }
   });
 
   it("captures draft when closed mid-entry and offers restoration on next open", async () => {
