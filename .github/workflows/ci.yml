@@ -81,7 +81,6 @@ jobs:
 
       - name: Dependency Review
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
-        continue-on-error: true
         with:
           fail-on-severity: high
 
@@ -376,89 +375,6 @@ jobs:
       - name: Run Backend DB Integration Tests
         run: pnpm --filter mms-backend run test:db
 
-  ci-gate:
-    name: CI Gate (All Checks Passed)
-    if: always()
-    needs: [changes, workflow-lint, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Evaluate CI Gate & Publish Summary
-        run: |
-          echo "==================== CI Gate Summary ===================="
-          echo "Workflow Lint:          ${{ needs.workflow-lint.result }}"
-          echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
-          echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
-          echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
-          echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
-          echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
-          echo "E2E Tests:              ${{ needs.e2e.result }}"
-          echo "========================================================="
-
-          failed=0
-
-          if [ "${{ needs.workflow-lint.result }}" != "success" ]; then
-            echo "::error::workflow-lint failed or was cancelled (result: ${{ needs.workflow-lint.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
-            echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.test-frontend.result }}" != "success" ] && [ "${{ needs.test-frontend.result }}" != "skipped" ]; then
-            echo "::error::test-frontend failed or was cancelled (result: ${{ needs.test-frontend.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.test-frontend-coverage.result }}" != "success" ] && [ "${{ needs.test-frontend-coverage.result }}" != "skipped" ]; then
-            echo "::error::test-frontend-coverage failed or was cancelled (result: ${{ needs.test-frontend-coverage.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.test-backend-unit.result }}" != "success" ] && [ "${{ needs.test-backend-unit.result }}" != "skipped" ]; then
-            echo "::error::test-backend-unit failed or was cancelled (result: ${{ needs.test-backend-unit.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.test-backend-db.result }}" != "success" ] && [ "${{ needs.test-backend-db.result }}" != "skipped" ]; then
-            echo "::error::test-backend-db failed or was cancelled (result: ${{ needs.test-backend-db.result }})"
-            failed=1
-          fi
-
-          if [ "${{ needs.e2e.result }}" != "success" ] && [ "${{ needs.e2e.result }}" != "skipped" ]; then
-            echo "::error::e2e failed or was cancelled (result: ${{ needs.e2e.result }})"
-            failed=1
-          fi
-
-          if [ "$failed" -ne 0 ]; then
-            STATUS_HEADER="❌ MMS CI Gate Status: Failed"
-          else
-            STATUS_HEADER="🚀 MMS CI Gate Status: Passed"
-          fi
-
-          cat << EOF >> "$GITHUB_STEP_SUMMARY"
-          ### ${STATUS_HEADER}
-
-          | Quality Check | Status | Execution Mode |
-          |---|---|---|
-          | **Workflow Lint** | \`${{ needs.workflow-lint.result }}\` | actionlint + zizmor |
-          | **Lint & Typecheck** | \`${{ needs.lint-and-typecheck.result }}\` | Turbo Cache Concurrent |
-          | **Frontend Tests** | \`${{ needs.test-frontend.result }}\` | 2-Way Sharded Parallel Matrix |
-          | **Frontend Coverage** | \`${{ needs.test-frontend-coverage.result }}\` | Merged Blob Reports & Coverage Enforcement |
-          | **Backend Unit Tests** | \`${{ needs.test-backend-unit.result }}\` | In-Memory Fast Unit + Coverage Gate |
-          | **Backend DB Tests** | \`${{ needs.test-backend-db.result }}\` | Docker Postgres 16 (Healthchecked, tmpfs) |
-          | **E2E Tests** | \`${{ needs.e2e.result }}\` | 4-Way Sharded Playwright Matrix |
-          EOF
-
-          if [ "$failed" -ne 0 ]; then
-            echo "CI Gate failed: One or more required checks did not succeed."
-            exit 1
-          fi
-
-          echo "CI Gate passed: All required checks succeeded (or were safely bypassed via hermetic path filtering)."
-
   e2e:
     needs: [changes]
     if: ${{ needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request' }}
@@ -563,3 +479,92 @@ jobs:
           path: e2e/playwright-report
           retention-days: 7
 
+  ci-gate:
+    name: CI Gate (All Checks Passed)
+    if: always()
+    needs: [changes, dependency-review, workflow-lint, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate CI Gate & Publish Summary
+        run: |
+          echo "==================== CI Gate Summary ===================="
+          echo "Dependency Review:     ${{ needs.dependency-review.result }}"
+          echo "Workflow Lint:         ${{ needs.workflow-lint.result }}"
+          echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
+          echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
+          echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
+          echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
+          echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
+          echo "E2E Tests:              ${{ needs.e2e.result }}"
+          echo "========================================================="
+
+          failed=0
+
+          if [ "${{ needs.dependency-review.result }}" != "success" ] && [ "${{ needs.dependency-review.result }}" != "skipped" ]; then
+            echo "::error::dependency-review failed or was cancelled (result: ${{ needs.dependency-review.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.workflow-lint.result }}" != "success" ]; then
+            echo "::error::workflow-lint failed or was cancelled (result: ${{ needs.workflow-lint.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
+            echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-frontend.result }}" != "success" ] && [ "${{ needs.test-frontend.result }}" != "skipped" ]; then
+            echo "::error::test-frontend failed or was cancelled (result: ${{ needs.test-frontend.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-frontend-coverage.result }}" != "success" ] && [ "${{ needs.test-frontend-coverage.result }}" != "skipped" ]; then
+            echo "::error::test-frontend-coverage failed or was cancelled (result: ${{ needs.test-frontend-coverage.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-backend-unit.result }}" != "success" ] && [ "${{ needs.test-backend-unit.result }}" != "skipped" ]; then
+            echo "::error::test-backend-unit failed or was cancelled (result: ${{ needs.test-backend-unit.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-backend-db.result }}" != "success" ] && [ "${{ needs.test-backend-db.result }}" != "skipped" ]; then
+            echo "::error::test-backend-db failed or was cancelled (result: ${{ needs.test-backend-db.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.e2e.result }}" != "success" ] && [ "${{ needs.e2e.result }}" != "skipped" ]; then
+            echo "::error::e2e failed or was cancelled (result: ${{ needs.e2e.result }})"
+            failed=1
+          fi
+
+          if [ "$failed" -ne 0 ]; then
+            STATUS_HEADER="❌ MMS CI Gate Status: Failed"
+          else
+            STATUS_HEADER="🚀 MMS CI Gate Status: Passed"
+          fi
+
+          cat << EOF >> "$GITHUB_STEP_SUMMARY"
+          ### ${STATUS_HEADER}
+
+          | Quality Check | Status | Execution Mode |
+          |---|---|---|
+          | **Dependency Review** | \`${{ needs.dependency-review.result }}\` | High/Critical Advisory Check (PRs) |
+          | **Workflow Lint** | \`${{ needs.workflow-lint.result }}\` | actionlint + zizmor |
+          | **Lint & Typecheck** | \`${{ needs.lint-and-typecheck.result }}\` | Turbo Cache Concurrent |
+          | **Frontend Tests** | \`${{ needs.test-frontend.result }}\` | 2-Way Sharded Parallel Matrix |
+          | **Frontend Coverage** | \`${{ needs.test-frontend-coverage.result }}\` | Merged Blob Reports & Coverage Enforcement |
+          | **Backend Unit Tests** | \`${{ needs.test-backend-unit.result }}\` | In-Memory Fast Unit + Coverage Gate |
+          | **Backend DB Tests** | \`${{ needs.test-backend-db.result }}\` | Docker Postgres 16 (Healthchecked, tmpfs) |
+          | **E2E Tests** | \`${{ needs.e2e.result }}\` | 4-Way Sharded Playwright Matrix |
+          EOF
+
+          if [ "$failed" -ne 0 ]; then
+            echo "CI Gate failed: One or more required checks did not succeed."
+            exit 1
+          fi
+
+          echo "CI Gate passed: All required checks succeeded (or were safely bypassed via hermetic path filtering)."
