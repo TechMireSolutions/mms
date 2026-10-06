@@ -68,7 +68,7 @@ export function buildDemoFaculty(): FacultyMember[] {
       employeeId: `TCH-${demoPad(index, 4)}`,
       specialization: demoPick([...FACULTY_SPECIALIZATION_VALUES], index),
       status,
-      joinDate: demoJoinDate(index),
+      employmentStartDate: demoJoinDate(index),
       qualification: demoPick(DEMO_QUALIFICATIONS, index),
     });
   }

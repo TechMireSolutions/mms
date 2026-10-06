@@ -35,6 +35,11 @@ vi.mock('../db/schema.js', () => ({
     startDate: 'start_date',
     endDate: 'end_date',
   },
+  faculty: {
+    workspaceSubdomain: 'workspace_subdomain',
+    id: 'id',
+    deletedAt: 'deleted_at',
+  },
 }));
 
 import { saveFacultyAssignment } from '../db/repositories/facultyAssignmentWriteRepository.js';
@@ -47,6 +52,11 @@ describe('saveFacultyAssignment position-first writes', () => {
         insert: vi.fn(() => ({
           values: vi.fn(() => ({
             onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+          })),
+        })),
+        update: vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn().mockResolvedValue(undefined),
           })),
         })),
       };

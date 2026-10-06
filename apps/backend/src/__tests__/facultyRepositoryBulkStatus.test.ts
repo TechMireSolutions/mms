@@ -15,14 +15,22 @@ describe('bulkUpdateFacultyStatusSql', () => {
     vi.clearAllMocks();
   });
 
-  it('updates matching active ids in one transaction and returns row count', async () => {
-    const returning = vi.fn().mockResolvedValue([{ id: 't-1' }, { id: 't-2' }]);
+  it('updates matching employment status rows and returns row count', async () => {
+    const selectWhere = vi.fn().mockResolvedValue([
+      { employmentId: 'emp-1' },
+      { employmentId: 'emp-2' },
+    ]);
+    const selectFrom = vi.fn(() => ({ where: selectWhere }));
+    const select = vi.fn(() => ({ from: selectFrom }));
+    const returning = vi.fn().mockResolvedValue([{ id: 'emp-1' }, { id: 'emp-2' }]);
     const where = vi.fn(() => ({ returning }));
     const set = vi.fn(() => ({ where }));
     const update = vi.fn(() => ({ set }));
     mockWithTenantTransaction.mockImplementation(
-      async (_tenant: unknown, fn: (tx: { update: typeof update }) => Promise<unknown>) =>
-        fn({ update }),
+      async (
+        _tenant: unknown,
+        fn: (tx: { update: typeof update; select: typeof select }) => Promise<unknown>,
+      ) => fn({ update, select }),
     );
 
     const { bulkUpdateFacultyStatusSql } = await import(
@@ -31,6 +39,7 @@ describe('bulkUpdateFacultyStatusSql', () => {
     const succeeded = await bulkUpdateFacultyStatusSql('Demo', ['t-1', 't-2', 't-1'], 'inactive');
 
     expect(mockWithTenantTransaction).toHaveBeenCalledWith('demo', expect.any(Function));
+    // Contract: employment status only (no faculty.status mirror).
     expect(update).toHaveBeenCalledTimes(1);
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({

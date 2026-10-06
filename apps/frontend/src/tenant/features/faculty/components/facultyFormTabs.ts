@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Award,
   Briefcase,
-  FileText,
-  KeyRound,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -34,15 +32,19 @@ export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
   employeeId: "employment",
   status: "employment",
   joinDate: "employment",
+  employmentStartDate: "employment",
+  employmentEndDate: "employment",
   department: "designation",
   departmentId: "designation",
   specialization: "contact",
   qualification: "contact",
   designation: "designation",
-  customDesignation: "designation",
   designationId: "designation",
-  designationStartsOn: "designation",
-  designationEndsOn: "designation",
+  designationStartDate: "designation",
+  designationEndDate: "designation",
+  employDesignationStatus: "designation",
+  profileStatus: "designation",
+  parentDesignationId: "designation",
   reportingFacultyId: "designation",
   hierarchyRank: "designation",
   notes: "notes",
@@ -128,11 +130,6 @@ export function useFacultyFormTabs(input: {
         label: t("faculty.form.tab.designation"),
       });
     }
-    list.push({ key: "account", icon: KeyRound, label: t("faculty.form.tab.account") });
-    if (isFieldEnabled("notes")) {
-      list.push({ key: "notes", icon: FileText, label: t("faculty.form.tab.notes") });
-    }
-
     return list.map((item) => {
       const errCount = tabErrors[item.key];
       const hasErrors = Boolean(errCount && errCount > 0);

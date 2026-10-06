@@ -15,6 +15,7 @@
     "worker:start": "node dist/worker/index.js",
     "db:reset": "tsx src/scripts/resetDb.ts",
     "db:migrate": "node dist/scripts/migrateDb.js 2>/dev/null || tsx src/scripts/migrateDb.ts",
+    "db:check": "tsx src/scripts/checkMigrations.ts",
     "typecheck": "tsc --noEmit",
     "lint": "node -r ../../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js src --quiet",
     "test": "vitest run",

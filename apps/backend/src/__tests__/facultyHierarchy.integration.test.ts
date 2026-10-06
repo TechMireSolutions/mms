@@ -44,6 +44,19 @@ vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
   cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
 }));
 
+vi.mock('../db/repositories/facultyEmploymentRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployments: vi.fn().mockResolvedValue(0),
+  flattenFacultyEmploymentFields: (member: unknown) => member,
+  upsertFacultyEmploymentTx: vi.fn().mockResolvedValue('facemp-mock'),
+}));
+
+vi.mock('../db/repositories/facultyEmployDesignationRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  upsertFacultyEmployDesignationTx: vi.fn().mockResolvedValue('faced-mock'),
+}));
+
 vi.mock('../services/auth/authArtifactService.js', () => ({
   purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
   putAuthArtifact: vi.fn(),

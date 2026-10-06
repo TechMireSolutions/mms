@@ -5,7 +5,7 @@ import {
   type FacultyCustomField,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { formatDate } from "@mms/shared";
+import { formatDate, formatFacultyPerformanceRating } from "@mms/shared";
 
 type LinkedContactName = { name?: string | null } | null | undefined;
 
@@ -104,6 +104,12 @@ export function resolveFacultyFieldDisplayText(
   if (fieldKey === "status") {
     return faculty.status || undefined;
   }
+  if (fieldKey === "profileStatus") {
+    return faculty.profileStatus || undefined;
+  }
+  if (fieldKey === "employDesignationStatus") {
+    return faculty.employDesignationStatus || faculty.profileStatus || undefined;
+  }
   if (fieldKey === "contactId") {
     return displayName ?? resolveFacultyDisplayName(faculty, t);
   }
@@ -116,8 +122,25 @@ export function resolveFacultyFieldDisplayText(
   if (fieldKey === "qualification") {
     return faculty.qualification || missing();
   }
-  if (fieldKey === "joinDate") {
-    return faculty.joinDate ? formatDate(faculty.joinDate) : missing();
+  if (fieldKey === "joinDate" || fieldKey === "employmentStartDate") {
+    const start = faculty.employmentStartDate ?? faculty.joinDate;
+    return start ? formatDate(start) : missing();
+  }
+  if (fieldKey === "employmentEndDate") {
+    return faculty.employmentEndDate ? formatDate(faculty.employmentEndDate) : missing();
+  }
+  if (fieldKey === "designationStartDate") {
+    return faculty.designationStartDate ? formatDate(faculty.designationStartDate) : missing();
+  }
+  if (fieldKey === "designationEndDate") {
+    return faculty.designationEndDate ? formatDate(faculty.designationEndDate) : missing();
+  }
+  if (fieldKey === "performanceRating") {
+    return faculty.performanceRating != null ? formatFacultyPerformanceRating(faculty.performanceRating) : missing();
+  }
+  if (fieldKey === "parentDesignationId") {
+    const parent = (faculty as Record<string, unknown>).parentDesignationName;
+    return typeof parent === "string" && parent ? parent : missing();
   }
   if (fieldKey === "department" || fieldKey === "departmentId") {
     const dynamic = (faculty as Record<string, unknown>).departmentName;

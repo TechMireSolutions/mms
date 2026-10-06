@@ -27,7 +27,9 @@ describe('Faculty contact / employee-id SQL SSOT', () => {
       'utf8',
     );
     expect(contactListSrc).toContain('existsActiveFacultyLinkSql');
-    expect(contactListSrc).toContain('faculty.contactId');
+    expect(contactListSrc).toContain('facultyEmployments.contactId');
+    expect(contactListSrc).toContain('faculty.employmentId');
     expect(contactListSrc).not.toContain("faculty.customData}->>'contactId'");
+    expect(contactListSrc).not.toContain('faculty.contactId');
   });
 });

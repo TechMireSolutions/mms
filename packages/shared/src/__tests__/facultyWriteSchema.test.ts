@@ -89,21 +89,28 @@ describe('facultyWriteSchema and soft-delete helpers', () => {
     const parsed = schema.safeParse({
       contactId: 'c-1',
       employeeId: 'EMP-03',
+      designationId: 'des-1',
       designationAssignableRoles: ['faculty'],
-      designationEndsOn: null,
+      departmentId: 'dept-1',
+      parentDesignationId: 'des-0',
+      departmentName: 'Hifz',
+      designationName: 'Hafiz Teacher',
+      performanceRating: 4.2,
       contact: { name: 'Faculty Member' },
       subordinates: [],
-      designationStartsOn: '',
     });
 
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       const data = parsed.data as Record<string, unknown>;
       expect(data).not.toHaveProperty('designationAssignableRoles');
-      expect(data.designationEndsOn).toBeNull();
+      expect(data).not.toHaveProperty('departmentId');
+      expect(data).not.toHaveProperty('parentDesignationId');
+      expect(data).not.toHaveProperty('departmentName');
+      expect(data).not.toHaveProperty('designationName');
+      expect(data).not.toHaveProperty('performanceRating');
       expect(data).not.toHaveProperty('contact');
       expect(data).not.toHaveProperty('subordinates');
-      expect(data.designationStartsOn).toBeUndefined();
     }
   });
 
@@ -119,6 +126,7 @@ describe('facultyWriteSchema and soft-delete helpers', () => {
     const parsed = schema.safeParse({
       contactId: 'c-1',
       employeeId: 'EMP-03',
+      designationId: 'des-1',
       status: 'active',
       deletedAt: '2026-01-01T00:00:00.000Z',
       deletedBy: 'u-1',
@@ -147,6 +155,7 @@ describe('facultyWriteSchema and soft-delete helpers', () => {
 
     const parsed = schema.safeParse({
       contactId: 'c-1',
+      designationId: 'des-1',
       maliciousField: 'exploit',
     });
 

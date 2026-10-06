@@ -28,6 +28,7 @@ export {
   useFacultyLinkedContactIds,
   useFacultyNextEmployeeId,
   facultyCommandMetricsQueryOptions,
+  facultyWidgetAggregatesQueryOptions,
   useFacultyMetrics,
   useFacultyByIds,
   useFacultyWidgetAggregates,

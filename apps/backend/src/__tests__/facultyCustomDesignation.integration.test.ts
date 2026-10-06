@@ -17,6 +17,11 @@ vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
+vi.mock('../faculty/use-cases/facultyWriteGuards.js', () => ({
+  validateFacultyContactLink: vi.fn().mockResolvedValue({ userId: null }),
+  validateFacultyDesignationLink: vi.fn().mockResolvedValue({ departmentId: '' }),
+}));
+
 import { createFaculty, updateFacultyById } from '../faculty/use-cases/facultyWriteUseCases.js';
 import { prepareFacultyRecord } from '../faculty/use-cases/facultyNormalizeUseCases.js';
 
@@ -53,6 +58,7 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
       {
         contactId: 'c-200',
         name: 'Ustadh Bilal',
+        designationId: 'des-1',
         customDesignation: 'Head of Arabic Department',
         employeeId: 'FAC20250005',
       },
@@ -72,6 +78,7 @@ describe('facultyCustomDesignation - designation text mapping (catalog SSOT)', (
       name: 'Sheikh Khalid',
       status: 'active',
       designation: 'Instructor',
+      designationId: 'des-1',
       hierarchyRank: 4,
       createdAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',

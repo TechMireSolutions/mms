@@ -47,8 +47,13 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
       'reportingFacultyName',
       'specialization',
       'status',
+      'employDesignationStatus',
+      'profileStatus',
       'qualification',
-      'joinDate',
+      'employmentStartDate',
+      'designationStartDate',
+      'employmentEndDate',
+      'performanceRating',
     ]);
     expect(
       FACULTY_DIRECTORY_COLUMN_SURFACES.filter((surface) => surface.export).map((s) => s.key).sort(),
@@ -63,6 +68,7 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
     expect(facultyColumnLabelKey('specialization')).toBe('faculty.field.specialization');
     expect(facultyColumnLabelKey('qualification')).toBe('faculty.field.qualification');
     expect(facultyColumnLabelKey('joinDate')).toBe('faculty.field.joinDate');
+    expect(facultyColumnLabelKey('updatedAt')).toBe('faculty.field.updatedAt');
   });
 
   it('falls back to facultyFieldLabelKey when column key is not in surface table', () => {
@@ -81,9 +87,9 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
     expect(labels).toEqual({
       name: 'LABEL_NAME',
       designation: 'LABEL_DESIGNATION',
-      specialization: 'LABEL_SPECIALIZATION',
-      qualification: 'LABEL_QUALIFICATION',
-      joinDate: 'LABEL_JOINDATE',
+      department: 'LABEL_DEPARTMENT',
+      employmentStartDate: 'LABEL_EMPLOYMENTSTARTDATE',
+      performanceRating: 'LABEL_PERFORMANCERATING',
       status: 'LABEL_STATUS',
     });
   });

@@ -137,7 +137,7 @@ export function FacultyPageView({
               onImportEntity={onImportEntity}
               onAdd={openCreateDepartment}
             >
-              <FacultyDepartmentsSetupSection />
+              <FacultyDepartmentsSetupSection canWrite={canWrite} />
             </EntityTabPanel>
           ) : activeTab === "designations" ? (
             <EntityTabPanel
@@ -149,7 +149,7 @@ export function FacultyPageView({
               onImportEntity={onImportEntity}
               onAdd={openCreateDesignation}
             >
-              <FacultyDesignationsSetupSection />
+              <FacultyDesignationsSetupSection canWrite={canWrite} />
             </EntityTabPanel>
           ) : activeTab === "reports" ? (
             <Suspense fallback={<RouteStatusFallback />}>

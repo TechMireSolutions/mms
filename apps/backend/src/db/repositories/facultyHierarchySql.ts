@@ -83,16 +83,20 @@ export function assignmentHierarchySql(
       COALESCE(
         NULLIF(TRIM(c.name), ''),
         NULLIF(TRIM(CONCAT_WS(' ', c.first_name, c.last_name)), ''),
-        f.employee_id,
+        fe_emp.employee_id,
         tree.faculty_id
       ) AS "facultyName"
     FROM tree
     JOIN faculty f
       ON f.workspace_subdomain = tree.workspace_subdomain
       AND f.id = tree.faculty_id
+    LEFT JOIN faculty_employments fe_emp
+      ON fe_emp.workspace_subdomain = f.workspace_subdomain
+      AND fe_emp.id = f.employment_id
+      AND fe_emp.deleted_at IS NULL
     LEFT JOIN contacts c
-      ON c.workspace_subdomain = f.workspace_subdomain
-      AND c.id = f.contact_id
+      ON c.workspace_subdomain = fe_emp.workspace_subdomain
+      AND c.id = fe_emp.contact_id
       AND c.deleted_at IS NULL
     WHERE tree.depth > 0
     ORDER BY tree.depth, tree.path

@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { FACULTY_CATALOG_STATUS_VALUES, FACULTY_STATUS_VALUES } from '../facultyTypes.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
 export const FACULTY_IMPORT_MAX_BATCH = 500;
+const calendarDate = z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const importIdempotencyKeySchema = z
   .string()
@@ -17,9 +19,12 @@ const facultyImportRowSchema = z
     specialization: z.string().trim().max(200).optional(),
     department: z.string().trim().max(255).optional(),
     designation: z.string().trim().max(150).optional(),
-    status: z.string().trim().max(50).optional(),
+    status: z.enum(FACULTY_STATUS_VALUES).optional(),
     qualification: z.string().trim().max(200).optional(),
-    joinDate: z.string().trim().max(32).optional(),
+    employmentStartDate: calendarDate.optional(),
+    employmentEndDate: calendarDate.optional(),
+    /** @deprecated Legacy alias of `employmentStartDate`. */
+    joinDate: calendarDate.optional(),
   })
   .strict();
 
@@ -45,10 +50,9 @@ export interface FacultyImportJobPayload {
 
 const departmentImportRowSchema = z
   .object({
-    code: z.string().trim().min(1).max(32),
     name: z.string().trim().min(1).max(255),
-    parentCode: z.string().trim().max(32).optional(),
-    isActive: z.boolean().optional(),
+    description: z.string().trim().max(2000).optional(),
+    status: z.enum(FACULTY_CATALOG_STATUS_VALUES).optional(),
   })
   .strict();
 
@@ -67,11 +71,10 @@ export type FacultyDepartmentImportBody = z.infer<typeof facultyDepartmentImport
 
 const designationImportRowSchema = z
   .object({
-    code: z.string().trim().min(1).max(50),
+    department: z.string().trim().min(1).max(255),
     name: z.string().trim().min(1).max(150),
-    hierarchyRank: z.number().int().min(1).max(99).optional(),
-    isActive: z.boolean().optional(),
-    assignableRoles: z.array(z.string().trim().min(1).max(100)).max(100).optional(),
+    parentDesignation: z.string().trim().max(150).optional(),
+    status: z.enum(FACULTY_CATALOG_STATUS_VALUES).optional(),
   })
   .strict();
 

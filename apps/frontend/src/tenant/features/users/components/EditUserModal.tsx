@@ -36,10 +36,31 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
   const workspaceRoles = useWorkspaceRoles();
   const { customFields } = useUsersConfig();
   const canManageThisUser = canManageTargetUser(authUser?.role, user.role);
-  const assignableRoles = useMemo(
-    () => filterAssignableRoles(workspaceRoles, authUser?.role),
-    [workspaceRoles, authUser?.role],
-  );
+  const roleLockedByFaculty = user.roleSource === 'faculty_designations';
+  const assignableRoles = useMemo(() => {
+    const filtered = filterAssignableRoles(workspaceRoles, authUser?.role);
+    if (!roleLockedByFaculty) return filtered;
+    const current = workspaceRoles.find((r) => r.id === user.role);
+    if (current && !filtered.some((r) => r.id === current.id)) {
+      return [...filtered, current];
+    }
+    if (!current && user.role) {
+      return [
+        ...filtered,
+        {
+          id: user.role,
+          labelKey: 'users.role.custom' as const,
+          descriptionKey: 'users.role.customDesc' as const,
+          customLabel: user.role,
+          isSystem: false,
+          badgeVariant: 'primary' as const,
+          permissions: {},
+          managedBy: 'faculty_designations' as const,
+        },
+      ];
+    }
+    return filtered;
+  }, [workspaceRoles, authUser?.role, roleLockedByFaculty, user.role]);
   const initialContactId = user.contactId ?? '';
   const [submitting, setSubmitting] = useState(false);
 
@@ -131,6 +152,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
           form={form}
           user={user}
           canManageThisUser={canManageThisUser}
+          roleLockedByFaculty={roleLockedByFaculty}
           assignableRoles={assignableRoles}
           customFields={customFields}
           onSubmit={handleSave}

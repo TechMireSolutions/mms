@@ -32,15 +32,19 @@ describe('facultyRepositoryList Contacts SSOT', () => {
     expect(listQuerySqlSrc).toContain('joinedContactNameExpr');
     expect(listQuerySqlSrc).toContain('buildSearchSql');
     expect(primarySqlSrc).toContain('LEFT JOIN contacts fc');
-    expect(primarySqlSrc).toContain('faculty.contactId');
+    expect(primarySqlSrc).toContain('LEFT JOIN faculty_employments fe_emp');
+    expect(primarySqlSrc).toContain('fe_emp.contact_id');
     expect(listQuerySqlSrc).toContain('fc.first_name');
     expect(listQuerySqlSrc).not.toMatch(/faculty\.(name|gender)/);
   });
 
-  it('filters employeeId and specialization from typed faculty columns', () => {
-    expect(listQuerySqlSrc).toContain('COALESCE(${faculty.employeeId}');
+  it('filters employeeId and specialization preferring employment SSOT', () => {
+    expect(listQuerySqlSrc).toContain('COALESCE(fe_emp.employee_id, \'\'');
+    expect(listQuerySqlSrc).toContain('facultyListStatusExpr');
     expect(listQuerySqlSrc).toContain('specializationExpr');
+    expect(primarySqlSrc).toContain('fe_desig');
     expect(listOpsSrc).toContain('aggregateFacultyCommandMetrics');
+    expect(listOpsSrc).toContain("alias(facultyEmployments, 'fe_emp')");
     expect(listBarrelSrc).toContain('aggregateFacultyCommandMetrics');
   });
 
@@ -49,7 +53,7 @@ describe('facultyRepositoryList Contacts SSOT', () => {
     expect(primarySqlSrc).toContain('LEFT JOIN contacts fc');
     expect(primarySqlSrc).toContain('fc.gender');
     expect(listQuerySqlSrc).toContain('missingEmployeeId');
-    expect(listQuerySqlSrc).toContain('facultyStatusExpr()');
+    expect(listQuerySqlSrc).toContain('facultyListStatusExpr()');
     expect(listQuerySqlSrc).toContain('facultyQuickFilterStatusValue');
     expect(listQuerySqlSrc).toContain('query.gender');
   });
@@ -62,7 +66,7 @@ describe('facultyRepositoryList Contacts SSOT', () => {
 
   it('lists active faculty missing an employee id for backfill', () => {
     expect(listQueryOpsSrc).toContain('listActiveFacultyMissingEmployeeId');
-    expect(listQueryOpsSrc).toContain('NULLIF(trim(COALESCE(${faculty.employeeId}, \'\')), \'\') IS NULL');
+    expect(listQueryOpsSrc).toContain('NULLIF(trim(COALESCE(${facultyEmployments.employeeId}, \'\'))');
     expect(listBarrelSrc).toContain('listActiveFacultyMissingEmployeeId');
   });
 });

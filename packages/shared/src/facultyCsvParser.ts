@@ -8,7 +8,8 @@ export interface FacultyCsvImportRow {
   designation?: string;
   status?: string;
   qualification?: string;
-  joinDate?: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
 }
 
 const ALIASES: Record<string, keyof FacultyCsvImportRow | 'skip'> = {
@@ -21,8 +22,14 @@ const ALIASES: Record<string, keyof FacultyCsvImportRow | 'skip'> = {
   designation: 'designation',
   status: 'status',
   qualification: 'qualification',
-  joindate: 'joinDate',
-  join_date: 'joinDate',
+  employmentstartdate: 'employmentStartDate',
+  employment_start_date: 'employmentStartDate',
+  startdate: 'employmentStartDate',
+  joindate: 'employmentStartDate',
+  join_date: 'employmentStartDate',
+  employmentenddate: 'employmentEndDate',
+  employment_end_date: 'employmentEndDate',
+  enddate: 'employmentEndDate',
 };
 
 function normHeader(h: string): string {

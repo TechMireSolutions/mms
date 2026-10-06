@@ -7,7 +7,9 @@ import {
 } from '@mms/shared';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 import { facultyUseCases } from '../../../faculty/use-cases/facultyUseCases.js';
+import { previewNextEmployeeId } from '../../../faculty/use-cases/facultyEmployeeIdService.js';
 import { withTenant } from '../../../db/tenant-context.js';
+import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 
@@ -48,17 +50,32 @@ export async function handleNextEmployeeId({
   if (!canReadCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenant = getRequestTenant() ?? user.workspaceSubdomain;
+  if (!tenant) {
+    return { status: 500 as const, body: { type: 'server_error', message: 'Tenant context required' } };
+  }
   try {
-    const employeeId = await withTenant(String(request.tenant?.id), () =>
-      facultyUseCases.computeNextFacultyEmployeeIdForSettings({
-        idPrefix: query.prefix,
-        idTemplate: query.template,
-        idDigits: query.digits,
-        idStartSeq: query.startSeq,
-        idRestartAnnually: query.restartAnnually,
-      }), { readOnly: true });
+    const preview = await previewNextEmployeeId(tenant);
+    if (preview.nextEmployeeId) {
+      return { status: 200 as const, body: { employeeId: preview.nextEmployeeId } };
+    }
+  } catch (error) {
+    // Missing faculty_setup_config (or other preview errors): do not wrap the
+    // fallback in an outer withTenant — a failed nested SELECT would abort it.
+    request.log?.warn?.({ err: error, tenant }, 'faculty next-employee-id preview failed; using prefs fallback');
+  }
+  try {
+    // Repo helpers open their own withTenantRead transactions.
+    const employeeId = await facultyUseCases.computeNextFacultyEmployeeIdForSettings({
+      idPrefix: query.prefix,
+      idTemplate: query.template,
+      idDigits: query.digits,
+      idStartSeq: query.startSeq,
+      idRestartAnnually: query.restartAnnually,
+    });
     return { status: 200 as const, body: { employeeId } };
-  } catch {
+  } catch (error) {
+    request.log?.error?.({ err: error, tenant }, 'Failed to compute next employee ID');
     return { status: 500 as const, body: { type: 'server_error', message: 'Failed to compute next employee ID' } };
   }
 }

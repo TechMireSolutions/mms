@@ -14,7 +14,6 @@ import { FacultyDetailHeroCard } from "@/tenant/features/faculty/components/Facu
 import { DetailNotesBlock } from "@/components/ui/DetailNotesBlock";
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
-import { FacultyAssignmentsSection } from "@/tenant/features/faculty/components/FacultyAssignmentsSection";
 import {
   resolveFacultyDisplayName,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
@@ -152,8 +151,6 @@ export function FacultyDetail({
         loading={sessionsLoading}
         error={sessionsError}
       />
-
-      {!isArchived ? <FacultyAssignmentsSection faculty={effectiveFaculty} canEdit={Boolean(onEdit)} /> : null}
 
       {faculty.notes && isFieldEnabled("notes") ? (
         <DetailNotesBlock title={t("faculty.detail.notesSection")} notes={faculty.notes} />

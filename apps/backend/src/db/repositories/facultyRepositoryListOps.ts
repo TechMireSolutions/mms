@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   DEFAULT_FACULTY_STATUS,
   dedupeTrimmedIds,
@@ -6,9 +7,11 @@ import {
   resolveFacultyStatusRoles,
   type FacultyCommandMetricsSnapshot,
 } from '@mms/shared';
-import { faculty } from '../schema.js';
+import { faculty, facultyEmployments } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { facultyStatusExpr } from './facultyRepositoryListQuerySql.js';
+
+const feEmp = alias(facultyEmployments, 'fe_emp');
 
 /**
  * Set typed `status` for active faculty in one UPDATE.
@@ -25,20 +28,34 @@ export async function bulkUpdateFacultyStatusSql(
   const normalizedStatus = status.trim().toLowerCase() || DEFAULT_FACULTY_STATUS;
 
   return withTenant(subdomain, async (tx) => {
-    const updated = await tx
-      .update(faculty)
-      .set({
-        status: normalizedStatus,
-        updatedAt: new Date(),
-      })
+    const linked = await tx
+      .select({ employmentId: faculty.employmentId })
+      .from(faculty)
       .where(
         and(
           eq(faculty.workspaceSubdomain, subdomain),
           inArray(faculty.id, uniqueIds),
           isNull(faculty.deletedAt),
         ),
+      );
+    const employmentIds = linked
+      .map((row) => row.employmentId)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
+    if (employmentIds.length === 0) return 0;
+    const updated = await tx
+      .update(facultyEmployments)
+      .set({
+        status: normalizedStatus,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(facultyEmployments.workspaceSubdomain, subdomain),
+          inArray(facultyEmployments.id, employmentIds),
+          isNull(facultyEmployments.deletedAt),
+        ),
       )
-      .returning({ id: faculty.id });
+      .returning({ id: facultyEmployments.id });
     return updated.length;
   });
 }
@@ -84,7 +101,7 @@ export async function aggregateFacultyCommandMetrics(
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const joinDateExpr = sql`COALESCE(
-      CASE WHEN ${faculty.joinDate}::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN (${faculty.joinDate})::date ELSE NULL END,
+      ${feEmp.employmentStartDate},
       (${faculty.createdAt})::date
     )`;
     const status = facultyStatusExpr();
@@ -103,6 +120,14 @@ export async function aggregateFacultyCommandMetrics(
         )::int`,
       })
       .from(faculty)
+      .leftJoin(
+        feEmp,
+        and(
+          eq(feEmp.workspaceSubdomain, faculty.workspaceSubdomain),
+          eq(feEmp.id, faculty.employmentId),
+          isNull(feEmp.deletedAt),
+        ),
+      )
       .where(and(eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt)));
 
     const row = rows[0];

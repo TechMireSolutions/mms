@@ -13,9 +13,10 @@ describe("faculty seed / locked tab helpers", () => {
     expect(FACULTY_TAB_REGISTRY.every((tab) => isFacultySeedFormTab(tab.key))).toBe(true);
   });
 
-  it("locks only basic as always-enabled", () => {
+  it("locks basic, employment, and designation as always-enabled", () => {
     expect(isFacultyLockedEnabledTab("basic")).toBe(true);
     expect(isFacultyLockedEnabledTab("Basic")).toBe(true);
-    expect(isFacultyLockedEnabledTab("employment")).toBe(false);
+    expect(isFacultyLockedEnabledTab("employment")).toBe(true);
+    expect(isFacultyLockedEnabledTab("designation")).toBe(true);
   });
 });

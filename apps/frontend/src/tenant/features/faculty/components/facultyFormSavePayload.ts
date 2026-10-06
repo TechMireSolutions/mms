@@ -15,49 +15,25 @@ export interface FacultySavePayloadInput {
   nextEmployeeId?: string;
 }
 
-/** Persisted faculty row keys (not assignment read projections). */
+/** Persisted faculty row keys (Faculty Management model) — never the read projections. */
 const FACULTY_PERSIST_KEYS = [
   "contactId",
+  "employmentId",
+  "employDesignationId",
+  "employDesignations",
   "employeeId",
   "status",
+  "profileStatus",
+  "employDesignationStatus",
   "specialization",
   "qualification",
-  "joinDate",
+  "designationId",
+  "designationStartDate",
+  "designationEndDate",
+  "employmentStartDate",
+  "employmentEndDate",
   "notes",
 ] as const;
-
-/** Create-only bootstrap for primary appointment via backend saveDesignationOnCreate. */
-const FACULTY_CREATE_ROLE_KEYS = [
-  "designations",
-  "designationId",
-  "departmentId",
-  "positionId",
-  "designationStartsOn",
-  "designationEndsOn",
-  "customDesignation",
-] as const;
-
-const FACULTY_READ_PROJECTION_KEYS = new Set<string>([
-  "department",
-  "designation",
-  "hierarchyRank",
-  "reportingFacultyId",
-  "reportingFacultyName",
-  "reportingRole",
-  "reportingRoleId",
-  "reportingDesignationId",
-  "subordinateCount",
-  "designationAssignableRoles",
-  "contact",
-  "subordinates",
-  "avatar",
-  "id",
-  "userId",
-  "createdAt",
-  "updatedAt",
-  "createdBy",
-  "updatedBy",
-]);
 
 function pickDraftKeys(
   draft: Partial<FacultyMember>,
@@ -76,30 +52,22 @@ function pickDraftKeys(
 export function buildFacultySavePayload(input: FacultySavePayloadInput): Partial<FacultyMember> {
   const draft = input.facultyDraft ?? {};
   const entity = input.faculty;
-  const isUpdate = Boolean(entity?.id);
   const rawEmployeeId = extractEmployeeId(draft.employeeId);
   const rawNextEmployeeId = extractEmployeeId(input.nextEmployeeId);
   const resolvedEmployeeId = rawEmployeeId || (input.autoGenerateId && !entity?.id ? rawNextEmployeeId : undefined);
 
-  const roleKeys = isUpdate ? [] : FACULTY_CREATE_ROLE_KEYS;
-  const base = pickDraftKeys(draft, [...FACULTY_PERSIST_KEYS, ...roleKeys]);
+  const base = pickDraftKeys(draft, FACULTY_PERSIST_KEYS);
 
   const payload: Record<string, unknown> = {
     ...base,
     employeeId: resolvedEmployeeId,
     contactId: String(draft.contactId || ""),
+    designationId: draft.designationId ? String(draft.designationId) : null,
+    designationStartDate: draft.designationStartDate ? String(draft.designationStartDate) : undefined,
+    designationEndDate: draft.designationEndDate ? String(draft.designationEndDate) : null,
+    employmentEndDate: draft.employmentEndDate ? String(draft.employmentEndDate) : null,
     ...(entity?.id != null ? { id: entity.id } : {}),
   };
-
-  if (!isUpdate) {
-    for (const [key, value] of Object.entries(draft)) {
-      if (FACULTY_READ_PROJECTION_KEYS.has(key)) continue;
-      if (key in payload) continue;
-      if (FACULTY_CREATE_ROLE_KEYS.includes(key as (typeof FACULTY_CREATE_ROLE_KEYS)[number])) continue;
-      if (FACULTY_PERSIST_KEYS.includes(key as (typeof FACULTY_PERSIST_KEYS)[number])) continue;
-      payload[key] = value;
-    }
-  }
 
   return normalizeStoredFaculty(payload) as Partial<FacultyMember>;
 }

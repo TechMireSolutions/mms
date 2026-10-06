@@ -13,10 +13,12 @@ import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.
 import { loadContactsByIds } from '../../services/contactService.js';
 import { HttpDomainError } from '../../lib/httpErrors.js';
 import { findFacultyByContactId } from '../../db/repositories/facultyRepository.js';
+import { listFacultyDesignations } from '../../db/repositories/facultyDesignationRepository.js';
 import {
-  findCurrentFacultyDesignationAssignment,
-  listFacultyDesignations,
-} from '../../db/repositories/facultyDesignationRepository.js';
+  isFacultyDesignationRoleLocked,
+  resolveFacultyContactRoleAssignment,
+} from '../../faculty/use-cases/facultyUserRoleGuards.js';
+import { upsertFacultyManagedWorkspaceRole } from '../../faculty/use-cases/facultyManagedRolesPrefs.js';
 import {
   type WorkspaceUser,
   type UsersListQuery,
@@ -28,6 +30,8 @@ import {
   workspaceUserListSchema,
   canAssignRole,
   canManageTargetUser,
+  collectActiveTenureAssignableRoleIds,
+  isFacultyProfileStatus,
   getDisplayName,
   getPrimaryEmail,
   getPrimaryPhone,
@@ -36,6 +40,8 @@ import {
   createContactLookupMap,
   hydrateWorkspaceUserProfile,
   dedupeTrimmedIds,
+  buildFacultyManagedRoleId,
+  type FacultyEmployDesignationWriteRow,
 } from '@mms/shared';
 import {
   createUserActivityLogService,
@@ -99,15 +105,44 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     if (!contactId || !role) return;
     const faculty = await findFacultyByContactId(tenant, contactId);
     if (!faculty) return;
-    const definitions = await listFacultyDesignations(tenant);
-    if (!definitions.some((d) => d.isActive)) return;
-    const designation = await findCurrentFacultyDesignationAssignment(tenant, String(faculty.id));
-    if (!designation) {
+    const definitions = await listFacultyDesignations(tenant, { limit: null });
+    if (!definitions.some((d) => d.status === 'active')) return;
+
+    const tenures: FacultyEmployDesignationWriteRow[] =
+      Array.isArray(faculty.employDesignations) && faculty.employDesignations.length > 0
+        ? faculty.employDesignations
+        : faculty.designationId
+          ? [{
+              designationId: String(faculty.designationId),
+              designationStartDate: faculty.designationStartDate ?? null,
+              designationEndDate: faculty.designationEndDate ?? null,
+              employDesignationStatus: isFacultyProfileStatus(faculty.employDesignationStatus)
+                ? faculty.employDesignationStatus
+                : isFacultyProfileStatus(faculty.profileStatus)
+                  ? faculty.profileStatus
+                  : 'active',
+              employDesignationId: faculty.employDesignationId ?? null,
+            }]
+          : [];
+
+    const byId = new Map(definitions.map((d) => [d.id, d]));
+    const hasActiveTenure = tenures.some((row) => {
+      if (row.employDesignationStatus !== 'active') return false;
+      if (row.designationEndDate?.trim()) return false;
+      const def = byId.get(row.designationId.trim());
+      return Boolean(def && def.status === 'active');
+    });
+    if (!hasActiveTenure) {
       throw new HttpDomainError(400, 'faculty_designation_required', 'Assign an active faculty designation before creating a user account');
     }
-    if (!(designation.assignableRoles ?? []).includes(role)) {
-      throw new HttpDomainError(400, 'faculty_role_not_allowed', `Role "${role}" is not assignable to the current designation`);
-    }
+
+    const allowedRoles = collectActiveTenureAssignableRoleIds(tenures, byId);
+    // Empty union (all tenures have empty allow-lists) permits any workspace role.
+    if (allowedRoles.length === 0) return;
+    if (allowedRoles.includes(role)) return;
+    // Managed composite role for this contact is the union of allowed catalog roles.
+    if (role === buildFacultyManagedRoleId(contactId) && allowedRoles.length > 1) return;
+    throw new HttpDomainError(400, 'faculty_role_not_allowed', `Role "${role}" is not assignable to the current designation`);
   };
 
   const createWorkspaceUser = async (
@@ -119,14 +154,12 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
   ): Promise<{ user: WorkspaceUser; inviteEmailSent?: boolean; inviteEmailError?: string }> => {
     const tenant = requireTenant();
 
-    if (actorRole && !canAssignRole(actorRole, input.role)) {
-      throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
-    }
-
     let name = String(input.name || '').trim();
     let email = String(input.email || '').trim().toLowerCase();
     let phone = String(input.phone || '').trim();
     const contactId = input.contactId;
+    let effectiveRole = input.role;
+    let roleSource: 'faculty_designations' | 'manual' = 'manual';
 
     if (contactId != null && contactId !== '') {
       const contacts = await loadContactsByIds([String(contactId)]);
@@ -136,9 +169,25 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         email = email || (getPrimaryEmail(c) || '').toLowerCase();
         phone = phone || getPrimaryPhone(c) || '';
       }
+
+      const assignment = await resolveFacultyContactRoleAssignment(tenant, String(contactId));
+      if (assignment && assignment.kind !== 'none' && assignment.roleId) {
+        if (assignment.kind === 'composite' && assignment.composite) {
+          await upsertFacultyManagedWorkspaceRole(tenant, assignment.composite);
+        }
+        effectiveRole = assignment.roleId;
+        roleSource = 'faculty_designations';
+        if (actorRole && !canAssignRole(actorRole, effectiveRole)) {
+          throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
+        }
+      }
     }
 
-    await assertFacultyRoleAllowed(tenant, contactId != null ? String(contactId) : undefined, input.role);
+    if (actorRole && !canAssignRole(actorRole, effectiveRole)) {
+      throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
+    }
+
+    await assertFacultyRoleAllowed(tenant, contactId != null ? String(contactId) : undefined, effectiveRole);
 
     if (!email) {
       throw new HttpDomainError(400, 'validation_error', 'User email is required');
@@ -173,7 +222,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       email,
       loginEmail: email,
       phone,
-      role: input.role,
+      role: effectiveRole,
+      roleSource,
       status: setupMethod === 'invite' ? 'inactive' : (input.status ?? 'active'),
       twoFactorEnabled: input.twoFactorEnabled ?? false,
       lastLogin: '',
@@ -198,7 +248,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       tenant,
       actorId,
       'create',
-      `Created user ${name} (${email}) with role ${input.role}`,
+      `Created user ${name} (${email}) with role ${effectiveRole}`,
       ip,
     );
 
@@ -432,7 +482,21 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       const effectiveContactId = input.contactId !== undefined
         ? (input.contactId != null && input.contactId !== '' ? String(input.contactId) : undefined)
         : (existingRow.contactId ? String(existingRow.contactId) : undefined);
-      await assertFacultyRoleAllowed(tenant, effectiveContactId, input.role ?? existingRow.role);
+
+      const roleLocked = await isFacultyDesignationRoleLocked(tenant, effectiveContactId);
+      if (roleLocked && input.role !== undefined && input.role !== existingRow.role) {
+        throw new HttpDomainError(
+          403,
+          'faculty_role_locked',
+          'Role is managed by faculty designations and cannot be changed manually',
+        );
+      }
+
+      await assertFacultyRoleAllowed(
+        tenant,
+        effectiveContactId,
+        roleLocked ? existingRow.role : (input.role ?? existingRow.role),
+      );
 
       const rawUsers = await getRawUsers();
       const target = rawUsers.find((u) => String(u.id) === id);
@@ -443,12 +507,18 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       if (input.contactId !== undefined) {
         target.contactId = input.contactId != null && input.contactId !== '' ? String(input.contactId) : undefined;
       }
-      if (input.role !== undefined) target.role = input.role;
+      if (input.role !== undefined && !roleLocked) {
+        target.role = input.role;
+        (target as Record<string, unknown>).roleSource = 'manual';
+      }
+      if (roleLocked) {
+        (target as Record<string, unknown>).roleSource = 'faculty_designations';
+      }
       if (input.status !== undefined) target.status = input.status;
       if (input.twoFactorEnabled !== undefined) target.twoFactorEnabled = input.twoFactorEnabled;
 
       for (const [k, v] of Object.entries(input)) {
-        if (!['contactId', 'role', 'status', 'twoFactorEnabled'].includes(k)) {
+        if (!['contactId', 'role', 'status', 'twoFactorEnabled', 'roleSource'].includes(k)) {
           (target as Record<string, unknown>)[k] = v;
         }
       }

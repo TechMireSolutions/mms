@@ -8,7 +8,7 @@ import { sql } from 'drizzle-orm';
 import { withGlobalTenant } from '../../db/tenant-context.js';
 import {
   workspaces, contacts, faculty, facultyDepartments, facultyDesignations,
-  facultyAssignments, organizationPositions, tenantUsers,
+  facultyAssignments, facultyEmployments, organizationPositions, tenantUsers,
 } from '../../db/schema.js';
 
 export const orgTasksTenant = `orgtasks-${randomUUID().slice(0, 8)}`;
@@ -32,12 +32,19 @@ export async function seedOrganizationTasks(): Promise<void> {
       { id: 'u-off', workspaceSubdomain: tenant, loginEmail: `off@${tenant}.test`, name: 'Officer', passwordHash: 'x' },
       { id: 'u-fin', workspaceSubdomain: tenant, loginEmail: `fin@${tenant}.test`, name: 'Finance', passwordHash: 'x' },
     ]);
+    await tx.insert(facultyEmployments).values([
+      { id: 'emp-gm', workspaceSubdomain: tenant, contactId: 'c-gm', employeeId: 'E-GM', status: 'active' },
+      { id: 'emp-it', workspaceSubdomain: tenant, contactId: 'c-it', employeeId: 'E-IT', status: 'active' },
+      { id: 'emp-off', workspaceSubdomain: tenant, contactId: 'c-off', employeeId: 'E-OFF', status: 'active' },
+      { id: 'emp-fin', workspaceSubdomain: tenant, contactId: 'c-fin', employeeId: 'E-FIN', status: 'active' },
+      { id: 'emp-nologin', workspaceSubdomain: tenant, contactId: 'c-nologin', employeeId: 'E-NL', status: 'active' },
+    ]);
     await tx.insert(faculty).values([
-      { id: 'f-gm', workspaceSubdomain: tenant, contactId: 'c-gm', userId: 'u-gm', employeeId: 'E-GM', status: 'active' },
-      { id: 'f-it', workspaceSubdomain: tenant, contactId: 'c-it', userId: 'u-it', employeeId: 'E-IT', status: 'active' },
-      { id: 'f-off', workspaceSubdomain: tenant, contactId: 'c-off', userId: 'u-off', employeeId: 'E-OFF', status: 'active' },
-      { id: 'f-fin', workspaceSubdomain: tenant, contactId: 'c-fin', userId: 'u-fin', employeeId: 'E-FIN', status: 'active' },
-      { id: 'f-nologin', workspaceSubdomain: tenant, contactId: 'c-nologin', employeeId: 'E-NL', status: 'active' },
+      { id: 'f-gm', workspaceSubdomain: tenant, employmentId: 'emp-gm', userId: 'u-gm' },
+      { id: 'f-it', workspaceSubdomain: tenant, employmentId: 'emp-it', userId: 'u-it' },
+      { id: 'f-off', workspaceSubdomain: tenant, employmentId: 'emp-off', userId: 'u-off' },
+      { id: 'f-fin', workspaceSubdomain: tenant, employmentId: 'emp-fin', userId: 'u-fin' },
+      { id: 'f-nologin', workspaceSubdomain: tenant, employmentId: 'emp-nologin' },
     ]);
     await tx.insert(facultyDepartments).values({
       id: 'd-it', workspaceSubdomain: tenant, name: 'IT', code: 'IT',
@@ -100,6 +107,7 @@ export async function cleanupOrganizationTasks(): Promise<void> {
     await tx.execute(sql`DELETE FROM faculty_assignments WHERE workspace_subdomain = ${tenant}`);
     await tx.execute(sql`DELETE FROM organization_positions WHERE workspace_subdomain = ${tenant}`);
     await tx.execute(sql`DELETE FROM faculty WHERE workspace_subdomain = ${tenant}`);
+    await tx.execute(sql`DELETE FROM faculty_employments WHERE workspace_subdomain = ${tenant}`);
     await tx.execute(sql`DELETE FROM tenant_users WHERE workspace_subdomain = ${tenant}`);
     await tx.execute(sql`DELETE FROM faculty_designations WHERE workspace_subdomain = ${tenant}`);
     await tx.execute(sql`DELETE FROM faculty_departments WHERE workspace_subdomain = ${tenant}`);

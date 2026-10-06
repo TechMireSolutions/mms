@@ -26,18 +26,20 @@ export interface FacultyContactSectionProps {
   onDraftChange: (patch: Partial<FacultyMember>) => void;
 }
 
+/** Contacts card: contact dropdown (+ read-only contact pills after link). */
 export function FacultyContactSection(props: FacultyContactSectionProps): React.JSX.Element | null {
   const {
     facultyDraft = {},
-    linkedFacultyContactIds = [],
     errors,
     fields,
     linkedContact,
+    linkedFacultyContactIds = [],
+    isFieldEnabled,
+    isFieldRequired,
     onDraftChange,
   } = props;
   const { t } = useTranslation();
-
-  const contactLabel = resolveFacultyFieldLabel(fields, "basic", "contactId", t);
+  const showContact = isFieldEnabled("contactId");
   const primaryPhone = linkedContact ? getPrimaryPhone(linkedContact) : null;
   const primaryEmail = linkedContact ? getPrimaryEmail(linkedContact) : null;
   const contactQualification = linkedContact ? getContactQualification(linkedContact) : "";
@@ -49,23 +51,27 @@ export function FacultyContactSection(props: FacultyContactSectionProps): React.
       Boolean(contactQualification) ||
       Boolean(contactSpecialization));
 
+  if (!showContact && !hasProfilePills && !linkedContact) return null;
+
   return (
-    <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-sticky">
+    <SectionCard title={t("faculty.form.tab.contact")} icon={User} accentColor="primary" className="z-sticky">
       <div className="space-y-3">
-        <ContactPicker
-          id="contactId"
-          name="contactId"
-          label={contactLabel}
-          value={facultyDraft.contactId ? String(facultyDraft.contactId) : null}
-          onChange={(contactId) => onDraftChange({ contactId: contactId ? String(contactId) : "" })}
-          excludeIds={linkedFacultyContactIds.map(String)}
-          searchPlaceholder={t("faculty.form.searchContact")}
-          emptyTitle={t("faculty.form.noContacts")}
-          emptyHint={t("faculty.form.noContactsHint")}
-          required
-          error={!!errors.contactId}
-          errorMessage={errors.contactId}
-        />
+        {showContact && (
+          <ContactPicker
+            id="contactId"
+            name="contactId"
+            label={resolveFacultyFieldLabel(fields, "basic", "contactId", t)}
+            value={facultyDraft.contactId ? String(facultyDraft.contactId) : null}
+            onChange={(contactId) => onDraftChange({ contactId: contactId ? String(contactId) : "" })}
+            excludeIds={linkedFacultyContactIds.map(String)}
+            searchPlaceholder={t("faculty.form.searchContact")}
+            emptyTitle={t("faculty.form.noContacts")}
+            emptyHint={t("faculty.form.noContactsHint")}
+            required={isFieldRequired("contactId")}
+            error={!!errors.contactId}
+            errorMessage={errors.contactId}
+          />
+        )}
         {hasProfilePills && (
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/40">
             {primaryPhone && (
@@ -107,4 +113,3 @@ export function FacultyContactSection(props: FacultyContactSectionProps): React.
     </SectionCard>
   );
 }
-

@@ -1,37 +1,30 @@
-/** Active employment status for a faculty member. */
-export const FACULTY_STATUS_VALUES = ['active', 'inactive', 'on_leave'] as const;
-export type FacultyStatus = (typeof FACULTY_STATUS_VALUES)[number];
+export {
+  FACULTY_EMPLOYMENT_STATUS_VALUES,
+  FACULTY_STATUS_VALUES,
+  FACULTY_PROFILE_STATUS_VALUES,
+  FACULTY_CATALOG_STATUS_VALUES,
+  FACULTY_ENDED_STATUSES,
+  DEFAULT_FACULTY_STATUS,
+  DEFAULT_FACULTY_PROFILE_STATUS,
+  isFacultyStatus,
+  isFacultyProfileStatus,
+  resolveFacultyStatusRoles,
+  resolveFacultyStatuses,
+  resolveFacultyStatus,
+  resolveFacultyProfileStatus,
+  type FacultyEmploymentStatus,
+  type FacultyStatus,
+  type FacultyProfileStatus,
+  type FacultyCatalogStatus,
+  type FacultyStatusRoles,
+} from './facultyStatusTypes.js';
 
-export type FacultyStatusRoles = { active: string; inactive: string; onLeave: string };
-
-/** Named roles for the default faculty status values (SSOT for active/inactive/on-leave). */
-export function resolveFacultyStatusRoles(): FacultyStatusRoles {
-  const [active, inactive, onLeave] = FACULTY_STATUS_VALUES;
-  return { active, inactive, onLeave };
-}
-
-/** Default status when unset (first of {@link FACULTY_STATUS_VALUES}). */
-export const DEFAULT_FACULTY_STATUS: FacultyStatus = FACULTY_STATUS_VALUES[0];
-
-/** Prefer configured status options; fall back to the shared default list. */
-export function resolveFacultyStatuses(statuses?: readonly string[] | null): readonly string[] {
-  return statuses && statuses.length > 0 ? statuses : FACULTY_STATUS_VALUES;
-}
-
-/** Resolve the effective status for a faculty member, falling back to {@link DEFAULT_FACULTY_STATUS}. */
-export function resolveFacultyStatus(status?: string | null): string {
-  return status || DEFAULT_FACULTY_STATUS;
-}
+import type { FacultyEmployDesignationWriteRow } from './facultyEmployDesignationTypes.js';
+import type { FacultyEmploymentStatus, FacultyProfileStatus } from './facultyStatusTypes.js';
 
 /** Teaching specialization options for madrasa faculty. */
 export const FACULTY_SPECIALIZATION_VALUES = [
-  'Hifz',
-  'Qaidah',
-  'Tajweed',
-  'Islamic Studies',
-  'Arabic',
-  'General',
-  'Other',
+  'Hifz', 'Qaidah', 'Tajweed', 'Islamic Studies', 'Arabic', 'General', 'Other',
 ] as const;
 export type FacultySpecialization = (typeof FACULTY_SPECIALIZATION_VALUES)[number];
 
@@ -46,12 +39,8 @@ export function resolveFacultySpecializations(
 
 /** Academic / institutional designations for faculty members. */
 export const FACULTY_DESIGNATION_VALUES = [
-  'Instructor',
-  'Senior Instructor',
-  'Assistant Instructor',
-  'Head of Department',
-  'Qari',
-  'Administrator',
+  'Instructor', 'Senior Instructor', 'Assistant Instructor',
+  'Head of Department', 'Qari', 'Administrator',
 ] as const;
 export type FacultyDesignation = (typeof FACULTY_DESIGNATION_VALUES)[number];
 
@@ -71,13 +60,7 @@ export const DEFAULT_FACULTY_SPECIALIZATION: FacultySpecialization =
 
 /** Academic and administrative departments for madrasa faculty. */
 export const FACULTY_DEPARTMENT_VALUES = [
-  'Hifz',
-  'Nazira',
-  'Tajweed',
-  'Islamic Studies',
-  'Arabic',
-  'Academics',
-  'Administration',
+  'Hifz', 'Nazira', 'Tajweed', 'Islamic Studies', 'Arabic', 'Academics', 'Administration',
 ] as const;
 export type FacultyDepartment = (typeof FACULTY_DEPARTMENT_VALUES)[number];
 
@@ -121,7 +104,6 @@ export interface FacultyHierarchyNode {
   employeeId?: string;
   department?: string;
   designation?: string;
-  /** Server-projected designation effective today. */
   designationId?: string;
   designationStartsOn?: string;
   designationEndsOn?: string | null;
@@ -133,61 +115,67 @@ export interface FacultyHierarchyNode {
   subordinates: FacultyHierarchyNode[];
 }
 
+/** Nested employment record (owns contact + employee code). */
+export interface FacultyEmploymentFields {
+  id?: string;
+  contactId?: string | number | null;
+  employeeId?: string | null;
+  status?: FacultyEmploymentStatus | string;
+  employmentStartDate?: string | null;
+  employmentEndDate?: string | null;
+}
+
 /**
- * Faculty profile in the `faculty` collection.
- * Identity fields (`name`, `phone`, `email`, `gender`) live on the linked Contact and are hydrated for display.
- * `status` is a free-form lookup value (defaults from {@link FACULTY_STATUS_VALUES}).
+ * Faculty profile linked to an Employment Record + Employ Designation tenure.
+ * `employmentId` → employment (required). Flat `contactId` / `status` / employee code /
+ * employment dates / `designationId` are API projections / write-through to employment
+ * + employ-designation SSOT (not faculty table columns after contract).
+ * `status` is employment lifecycle; `employDesignationStatus` is Active|Inactive tenure.
  */
 export interface FacultyMember {
   id: string;
+  /** API projection / write-through of employment.contact_id. */
   contactId: string | number;
-  /** Hydrated from Contact — not persisted when `contactId` is set. */
+  /** FK to faculty_employments. */
+  employmentId?: string | null;
+  /** FK to faculty_employ_designations (current tenure). */
+  employDesignationId?: string | null;
+  /** Employ-designation tenures for this employment (form + write when multiple cards). */
+  employDesignations?: FacultyEmployDesignationWriteRow[];
   name?: string;
+  /** Employee Code — API projection / write-through of employment.employee_id. */
   employeeId?: string;
   phone?: string;
   email?: string;
   gender?: 'male' | 'female';
-  /** Hydrated from the linked Contact — never persisted when `contactId` is set. */
   avatar?: string | null;
-  /** Hydrated from the linked Contact's education or skills — canonical data lives on Contact. */
   specialization?: string;
   department?: string;
-  /** Server-projected primary department from faculty_assignments; writes select catalog by id. */
   departmentId?: string;
   designation?: string;
-  /** Server-projected primary designation effective today; writes select a definition by id. */
-  designationId?: string;
-  designationStartsOn?: string;
-  designationEndsOn?: string | null;
+  designationId?: string | null;
+  designationStartDate?: string | null;
+  designationEndDate?: string | null;
+  /** Employ Designation Active|Inactive (tenure SSOT; may mirror profileStatus on write). */
+  employDesignationStatus?: FacultyProfileStatus | string;
+  parentDesignationId?: string | null;
+  employmentStartDate?: string | null;
+  employmentEndDate?: string | null;
+  employment?: FacultyEmploymentFields | null;
+  performanceRating?: number | null;
   designationAssignableRoles?: string[];
-  /**
-   * All current designation holdings (create/hydrate).
-   * When present on write, wins over singular designationId.
-   */
-  designations?: Array<{
-    designationId: string;
-    departmentId?: string;
-    status: 'active' | 'inactive';
-    startsOn?: string;
-    endsOn?: string | null;
-    isPrimary?: boolean;
-    designationName?: string;
-    departmentName?: string;
-    assignableRoles?: string[];
-  }>;
-  customDesignation?: string;
   reportingFacultyId?: string | null;
   reportingRole?: string | null;
   reportingRoleId?: string | null;
   reportingDesignationId?: string | null;
-  /** Numeric hierarchy rank (1 is highest authority, e.g. Dean; higher numbers denote subordinate tiers). */
   hierarchyRank?: number;
-  /** Hydrated supervisory metadata */
   reportingFacultyName?: string;
   subordinateCount?: number;
   status: string;
+  /** Profile Active|Inactive on the faculty row. Prefer employDesignationStatus for tenure. */
+  profileStatus?: FacultyProfileStatus | string;
+  /** @deprecated Read alias of employmentStartDate from list hydrate. */
   joinDate?: string;
-  /** Hydrated from the linked Contact's education degrees — canonical data lives on Contact. */
   qualification?: string;
   notes?: string;
   userId?: string | null;
@@ -201,7 +189,6 @@ export interface FacultyMember {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
-  /** Custom Setup fields and other extension keys. */
   [key: string]: unknown;
 }
 

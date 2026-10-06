@@ -16,7 +16,7 @@ export interface FacultyEmploymentEmployeeIdFieldProps {
   idPrefix: string;
   autoGenerateId: boolean;
   isExistingFaculty: boolean;
-  hasNextEmployeeId: boolean;
+  nextEmployeeId?: string;
   isFetchingNextEmployeeId?: boolean;
   onDraftChange: (patch: { employeeId: string }) => void;
   onRegenerateEmployeeId?: () => void;
@@ -31,14 +31,26 @@ export function FacultyEmploymentEmployeeIdField({
   idPrefix,
   autoGenerateId,
   isExistingFaculty,
-  hasNextEmployeeId,
+  nextEmployeeId,
   isFetchingNextEmployeeId,
   onDraftChange,
   onRegenerateEmployeeId,
   t,
 }: FacultyEmploymentEmployeeIdFieldProps): React.JSX.Element {
+  const previewId = extractEmployeeId(nextEmployeeId);
+  const lockGenerated = autoGenerateId && !isExistingFaculty;
   return (
-    <Field label={label} id="employeeId" required={required} error={error}>
+    <Field
+      label={label}
+      id="employeeId"
+      required={required}
+      error={error}
+      hint={
+        isExistingFaculty
+          ? undefined
+          : t(autoGenerateId ? "faculty.form.employeeIdSetupHint" : "faculty.form.employeeIdManualHint")
+      }
+    >
       <div className="flex items-center gap-2">
         <div className="flex-1">
           <LeadingIconInput
@@ -47,12 +59,12 @@ export function FacultyEmploymentEmployeeIdField({
             icon={Hash}
             value={extractEmployeeId(employeeId)}
             onChange={(event) => onDraftChange({ employeeId: event.target.value })}
-            placeholder={t("faculty.form.employeeIdPlaceholder", { prefix: idPrefix })}
-            disabled={autoGenerateId && !isExistingFaculty && hasNextEmployeeId}
+            placeholder={previewId || t("faculty.form.employeeIdPlaceholder", { prefix: idPrefix })}
+            disabled={lockGenerated}
             className={error ? FORM_INPUT_ERROR : undefined}
           />
         </div>
-        {!isExistingFaculty && onRegenerateEmployeeId && (
+        {lockGenerated && onRegenerateEmployeeId && (
           <Button
             type="button"
             variant="outline"

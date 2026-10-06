@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  excludeFacultyManagedRoles,
   filterRbacModulesForSettings,
   workspaceRoleLabel,
   type WorkspaceRole,
@@ -30,12 +31,15 @@ export function useRolesPermissionsController() {
 
   useEffect(() => {
     if (!editing) {
-      setRoles(loadedRoles);
+      setRoles(excludeFacultyManagedRoles(loadedRoles));
     }
   }, [loadedRoles, editing]);
 
   const displayRole = selected ?? roles[0] ?? null;
-  const canManageDisplayRole = canManageRole(displayRole?.id);
+  const canManageDisplayRole =
+    Boolean(displayRole) &&
+    canManageRole(displayRole?.id) &&
+    displayRole?.managedBy !== 'faculty_designations';
 
   const {
     permDraft,
@@ -47,6 +51,10 @@ export function useRolesPermissionsController() {
   } = useRolesPermissionDraft(displayRole);
 
   const commitRole = async (role: WorkspaceRole, toastKey: 'role' | 'permissions'): Promise<void> => {
+    if (role.managedBy === 'faculty_designations') {
+      notify.error(t('users.roleLockedByFaculty'));
+      return;
+    }
     if (!canManageRole(role.id)) {
       notify.error(t('users.errors.cannotModifySuperAdmin'));
       return;
@@ -57,7 +65,7 @@ export function useRolesPermissionsController() {
       : [...roles, role];
     try {
       await updateSettingsAsync({ ...settings, workspaceRoles: updatedRoles });
-      setRoles(updatedRoles);
+      setRoles(excludeFacultyManagedRoles(updatedRoles));
       setEdit(null);
       setSel(role);
       if (toastKey === 'permissions') {

@@ -1,82 +1,105 @@
-import React from 'react';
-import { workspaceRoleLabel, type WorkspaceRole } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState } from 'react';
+import { FACULTY_DESIGNATION_NAME_MAX } from '@mms/shared';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT } from '@/components/ui/formStyles';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { FormSelect, type FormSelectOption } from '@/components/ui/FormSelect';
+import { FormSelectWithQuickCreate } from '@/components/ui/FormSelectWithQuickCreate';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FacultyDesignationRolesField } from '@/tenant/features/faculty/components/FacultyDesignationRolesField';
+import {
+  RoleFormModal,
+  useCreateWorkspaceRole,
+} from '@/tenant/hooks/collections/users';
 
 export interface FacultyDesignationFormFieldsProps {
+  departmentId: string;
   name: string;
-  code: string;
   parentDesignationId: string;
-  isActive: boolean;
+  status: string;
   assignableRoles: string[];
-  parentOptions: { value: string; label: string }[];
-  statusOptions: { value: string; label: string }[];
-  workspaceRoles: readonly WorkspaceRole[];
+  departmentOptions: FormSelectOption[];
+  parentOptions: FormSelectOption[];
+  statusOptions: FormSelectOption[];
   isPending: boolean;
+  nameError?: string;
+  onDepartmentChange: (value: string) => void;
   onNameChange: (value: string) => void;
-  onCodeChange: (value: string) => void;
   onParentChange: (value: string) => void;
-  onActiveChange: (isActive: boolean) => void;
-  onAssignableRolesChange: (roles: string[]) => void;
+  onStatusChange: (value: string) => void;
+  onAssignableRolesChange: (roleIds: string[]) => void;
+  /** When provided, a Plus control opens department quick-create. */
+  onOpenCreateDepartment?: () => void;
 }
 
+/** Faculty Management model — Designation: department, name, parent, status, role. */
 export function FacultyDesignationFormFields({
+  departmentId,
   name,
-  code,
   parentDesignationId,
-  isActive,
+  status,
   assignableRoles,
+  departmentOptions,
   parentOptions,
   statusOptions,
-  workspaceRoles,
   isPending,
+  nameError,
+  onDepartmentChange,
   onNameChange,
-  onCodeChange,
   onParentChange,
-  onActiveChange,
+  onStatusChange,
   onAssignableRolesChange,
+  onOpenCreateDepartment,
 }: FacultyDesignationFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [createRoleOpen, setCreateRoleOpen] = useState(false);
+  const { canCreate, visibleModules, createRole } = useCreateWorkspaceRole();
 
   return (
     <div className="space-y-4 py-1 text-start">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field label={t('faculty.designations.name')} id="modal-designation-name" required>
+        <Field label={t('faculty.designations.department')} id="modal-designation-department" required>
+          <FormSelectWithQuickCreate
+            id="modal-designation-department"
+            name="departmentId"
+            value={departmentId}
+            onChange={onDepartmentChange}
+            options={departmentOptions}
+            placeholder={t('faculty.designations.departmentRequired')}
+            disabled={isPending}
+            canAdd={Boolean(onOpenCreateDepartment)}
+            onOpenAdd={onOpenCreateDepartment}
+            addAriaLabel={t('faculty.setup.addDepartment')}
+          />
+        </Field>
+
+        <Field label={t('faculty.designations.name')} id="modal-designation-name" required error={nameError}>
           <Input
             id="modal-designation-name"
             name="name"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
+            placeholder={t('faculty.designations.namePlaceholder')}
             className={FORM_INPUT}
+            maxLength={FACULTY_DESIGNATION_NAME_MAX}
             disabled={isPending}
+            aria-invalid={nameError ? true : undefined}
             autoFocus
           />
         </Field>
 
-        <Field label={t('faculty.designations.code')} id="modal-designation-code" required>
-          <Input
-            id="modal-designation-code"
-            name="code"
-            value={code}
-            onChange={(e) => onCodeChange(e.target.value)}
-            className={FORM_INPUT}
-            maxLength={32}
-            disabled={isPending}
-          />
-        </Field>
-
-        <Field label={t('faculty.designations.parentDesignation')} id="modal-designation-parent">
+        <Field
+          label={t('faculty.designations.parentDesignation')}
+          id="modal-designation-parent"
+          hint={!departmentId ? t('faculty.designations.selectDepartmentFirst') : undefined}
+        >
           <FormSelect
             id="modal-designation-parent"
             name="parentDesignationId"
             value={parentDesignationId}
             onChange={onParentChange}
             options={parentOptions}
-            disabled={isPending}
+            disabled={isPending || !departmentId}
           />
         </Field>
 
@@ -84,40 +107,36 @@ export function FacultyDesignationFormFields({
           <FormSelect
             id="modal-designation-status"
             name="status"
-            value={isActive ? 'active' : 'inactive'}
-            onChange={(val) => onActiveChange(val === 'active')}
+            value={status}
+            onChange={onStatusChange}
             options={statusOptions}
             disabled={isPending}
           />
         </Field>
       </div>
 
-      <Field label={t('faculty.designations.roles')} id="modal-designation-roles">
-        <div id="modal-designation-roles" className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
-          {workspaceRoles.map((role) => {
-            const checked = assignableRoles.includes(role.id);
-            return (
-              <div key={role.id} className="flex min-h-11 items-center gap-2">
-                <Checkbox
-                  id={`modal-role-${role.id}`}
-                  checked={checked}
-                  disabled={isPending}
-                  onCheckedChange={(next) =>
-                    onAssignableRolesChange(
-                      next === true
-                        ? [...new Set([...assignableRoles, role.id])]
-                        : assignableRoles.filter((id) => id !== role.id),
-                    )
-                  }
-                />
-                <label htmlFor={`modal-role-${role.id}`} className="cursor-pointer text-sm select-none">
-                  {workspaceRoleLabel(role, t)}
-                </label>
-              </div>
-            );
-          })}
-        </div>
-      </Field>
+      <FacultyDesignationRolesField
+        selectedRoleId={assignableRoles[0] ?? ""}
+        disabled={isPending}
+        canCreateRole={canCreate}
+        onChange={(roleId) => onAssignableRolesChange(roleId ? [roleId] : [])}
+        onOpenCreateRole={canCreate ? () => setCreateRoleOpen(true) : undefined}
+      />
+      <RoleFormModal
+        open={createRoleOpen}
+        title={t('faculty.designations.addRole')}
+        role={null}
+        visibleModules={visibleModules}
+        onSave={(role) => {
+          void (async () => {
+            const created = await createRole(role);
+            if (!created) return;
+            setCreateRoleOpen(false);
+            onAssignableRolesChange([created.id]);
+          })();
+        }}
+        onClose={() => setCreateRoleOpen(false)}
+      />
     </div>
   );
 }

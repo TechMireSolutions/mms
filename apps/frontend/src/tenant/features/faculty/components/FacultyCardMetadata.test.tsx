@@ -34,7 +34,6 @@ describe("FacultyCardMetadata Component", () => {
       />,
     );
 
-    expect(html).toContain("Tajweed");
     expect(html).toContain("Active");
   });
 

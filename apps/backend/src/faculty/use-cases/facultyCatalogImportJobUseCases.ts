@@ -21,7 +21,15 @@ export interface CatalogImportJobResult {
   total: number;
 }
 
-/** Upsert departments by code; resolve parentCode after all rows exist. */
+const norm = (value: string | null | undefined): string => (value ?? '').trim().toLowerCase();
+
+async function reportProgress(context: CatalogImportJobContext, index: number, total: number): Promise<void> {
+  if ((index + 1) % 10 === 0 || index + 1 === total) {
+    await context.updateProgress(index + 1, total);
+  }
+}
+
+/** Upsert departments by name (case-insensitive). */
 export async function runFacultyDepartmentsImportJob(
   payload: { rows: FacultyDepartmentImportBody['rows'] },
   context: CatalogImportJobContext,
@@ -31,78 +39,36 @@ export async function runFacultyDepartmentsImportJob(
   let imported = 0;
   await context.updateProgress(0, total);
 
-  const existing = await listFacultyDepartments(context.tenant);
-  type DeptRef = { id: string; code: string; name: string; parentId: string | null; isActive: boolean };
-  const byCode = new Map<string, DeptRef>(
-    existing.map((d) => [
-      d.code.trim().toLowerCase(),
-      {
-        id: d.id,
-        code: d.code,
-        name: d.name,
-        parentId: d.parentId ?? null,
-        isActive: d.isActive ?? true,
-      },
-    ]),
-  );
+  const existing = await listFacultyDepartments(context.tenant, { limit: null });
+  const idByName = new Map(existing.map((d) => [norm(d.name), d.id]));
 
-  // First pass: upsert without parent links.
   for (let i = 0; i < total; i += 1) {
     const row = rows[i];
     try {
-      const key = row.code.trim().toLowerCase();
-      const prior = byCode.get(key);
-      const id = prior?.id ?? randomUUID();
+      const key = norm(row.name);
+      const id = idByName.get(key) ?? randomUUID();
       await saveFacultyDepartment(context.tenant, {
         id,
-        workspaceSubdomain: context.tenant,
         name: row.name,
-        code: row.code.trim(),
-        parentId: prior?.parentId ?? null,
-        isActive: row.isActive ?? true,
+        description: row.description ?? null,
+        status: row.status ?? 'active',
         updatedBy: context.userId,
       });
-      byCode.set(key, {
-        id,
-        name: row.name,
-        code: row.code.trim(),
-        isActive: row.isActive ?? true,
-        parentId: prior?.parentId ?? null,
-      });
+      idByName.set(key, id);
       imported += 1;
     } catch {
       // Continue batch
     }
-    if ((i + 1) % 10 === 0 || i + 1 === total) {
-      await context.updateProgress(i + 1, total);
-    }
-  }
-
-  // Second pass: apply parentCode links.
-  for (const row of rows) {
-    if (!row.parentCode?.trim()) continue;
-    const child = byCode.get(row.code.trim().toLowerCase());
-    const parent = byCode.get(row.parentCode.trim().toLowerCase());
-    if (!child || !parent || child.id === parent.id) continue;
-    try {
-      await saveFacultyDepartment(context.tenant, {
-        id: child.id,
-        workspaceSubdomain: context.tenant,
-        name: child.name,
-        code: child.code,
-        parentId: parent.id,
-        isActive: child.isActive,
-        updatedBy: context.userId,
-      });
-    } catch {
-      // ignore parent-link failures
-    }
+    await reportProgress(context, i, total);
   }
 
   return { imported, failed: total - imported, total };
 }
 
-/** Upsert designations by code. */
+/**
+ * Upsert designations by (department name, designation name). Parents are linked
+ * in a second pass so forward references inside the same file resolve.
+ */
 export async function runFacultyDesignationsImportJob(
   payload: { rows: FacultyDesignationImportBody['rows'] },
   context: CatalogImportJobContext,
@@ -112,29 +78,57 @@ export async function runFacultyDesignationsImportJob(
   let imported = 0;
   await context.updateProgress(0, total);
 
-  const existing = await listFacultyDesignations(context.tenant);
-  const byCode = new Map(existing.map((d) => [d.code.trim().toLowerCase(), d]));
+  const departments = await listFacultyDepartments(context.tenant, { limit: null });
+  const deptIdByName = new Map(departments.map((d) => [norm(d.name), d.id]));
+  const existing = await listFacultyDesignations(context.tenant, { limit: null });
+  const keyOf = (departmentId: string, name: string) => `${departmentId}::${norm(name)}`;
+  const idByKey = new Map(existing.map((d) => [keyOf(d.departmentId, d.name), d.id]));
+  const parentIdByKey = new Map(existing.map((d) => [keyOf(d.departmentId, d.name), d.parentDesignationId ?? null]));
 
+  // First pass: upsert rows without parents (keeps existing parent when already linked).
+  const saved: Array<{ id: string; departmentId: string; row: (typeof rows)[number] }> = [];
   for (let i = 0; i < total; i += 1) {
     const row = rows[i];
     try {
-      const key = row.code.trim().toLowerCase();
-      const prior = byCode.get(key);
-      const id = prior?.id ?? randomUUID();
+      const departmentId = deptIdByName.get(norm(row.department));
+      if (!departmentId) throw new Error(`Unknown department "${row.department}"`);
+      const key = keyOf(departmentId, row.name);
+      const id = idByKey.get(key) ?? randomUUID();
       await saveFacultyDesignation(context.tenant, {
         id,
-        code: row.code.trim(),
+        departmentId,
         name: row.name,
-        hierarchyRank: row.hierarchyRank ?? prior?.hierarchyRank ?? 10,
-        isActive: row.isActive ?? true,
-        assignableRoles: row.assignableRoles ?? prior?.assignableRoles ?? [],
+        parentDesignationId: parentIdByKey.get(key) ?? null,
+        status: row.status ?? 'active',
+        updatedBy: context.userId,
       });
+      idByKey.set(key, id);
+      saved.push({ id, departmentId, row });
       imported += 1;
     } catch {
       // Continue batch
     }
-    if ((i + 1) % 10 === 0 || i + 1 === total) {
-      await context.updateProgress(i + 1, total);
+    await reportProgress(context, i, total);
+  }
+
+  // Second pass: resolve parent designation names (same department first, then any department).
+  for (const entry of saved) {
+    const parentName = entry.row.parentDesignation?.trim();
+    if (!parentName) continue;
+    const parentId = idByKey.get(keyOf(entry.departmentId, parentName))
+      ?? [...idByKey.entries()].find(([key]) => key.endsWith(`::${norm(parentName)}`))?.[1];
+    if (!parentId || parentId === entry.id) continue;
+    try {
+      await saveFacultyDesignation(context.tenant, {
+        id: entry.id,
+        departmentId: entry.departmentId,
+        name: entry.row.name,
+        parentDesignationId: parentId,
+        status: entry.row.status ?? 'active',
+        updatedBy: context.userId,
+      });
+    } catch {
+      // ignore parent-link failures (cycle / depth guards)
     }
   }
 

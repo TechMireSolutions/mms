@@ -1,8 +1,25 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 import { normalizeStoredFaculty, stripFacultyWriteNoise } from './facultyUtils.js';
+import { facultyEmployDesignationsWriteSchema } from './facultyEmployDesignationTypes.js';
+import { FACULTY_EMPLOYMENT_STATUS_VALUES, FACULTY_PROFILE_STATUS_VALUES } from './facultyTypes.js';
+import {
+  FACULTY_PERFORMANCE_RATING_MAX,
+  FACULTY_PERFORMANCE_RATING_MIN,
+} from './facultyPerformanceRating.js';
 /** Faculty status write bound — matches lookup item max length. */
 export const FACULTY_STATUS_WRITE_MAX = 200;
+
+const isoCalendarDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+const facultyEmploymentWireSchema = z.object({
+  id: z.string().optional(),
+  contactId: z.union([z.string().min(1), z.number()]).optional(),
+  employeeId: z.string().optional(),
+  status: z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES).optional(),
+  employmentStartDate: isoCalendarDate.nullable().optional(),
+  employmentEndDate: isoCalendarDate.nullable().optional(),
+}).optional().nullable();
 
 /**
  * Wire core keys aligned with faculty seed + audit surface.
@@ -18,21 +35,46 @@ export const facultyCoreSchema = z.object({
   contactId: z.union([z.string().min(1), z.number()]).nullish().transform((value) =>
     value === null ? undefined : value,
   ),
+  employmentId: z.string().min(1).max(100).nullable().optional(),
   employeeId: z.string().optional(),
   specialization: z.string().optional(),
-  /** Read projection from primary assignment — not persisted on faculty. */
+  /** Direct FK to the designation catalog (Department + Designation dropdown). */
+  designationId: z.string().min(1).max(100).nullable().optional(),
+  designationStartDate: isoCalendarDate.nullable().optional(),
+  designationEndDate: isoCalendarDate.nullable().optional(),
+  /** Read projection of the designation's department — not persisted on faculty. */
+  departmentId: z.string().optional(),
+  /** Read projection — not persisted on faculty. */
   department: z.string().optional(),
-  /** Read projection from primary assignment — not persisted on faculty. */
+  /** Read projection — not persisted on faculty. */
   designation: z.string().optional(),
-  /** Create-only bootstrap: custom designation label before catalog id exists. */
-  customDesignation: z.string().trim().optional(),
+  parentDesignationId: z.string().nullable().optional(),
   /** Read projection via organization_positions parent — not persisted on faculty. */
   reportingFacultyId: z.string().nullable().optional(),
-  /** Read projection from designation catalog via primary assignment. */
+  /** Read projection: designation depth in the parent chain. */
   hierarchyRank: z.coerce.number().int().min(1).max(99).optional(),
   reportingFacultyName: z.string().optional(),
   subordinateCount: z.coerce.number().int().min(0).optional(),
-  status: z.string().min(1).max(FACULTY_STATUS_WRITE_MAX).optional(),
+  /** Employment lifecycle status (Work / bulk-status). */
+  status: z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES).optional(),
+  /** @deprecated Prefer employDesignationStatus. */
+  profileStatus: z.enum(FACULTY_PROFILE_STATUS_VALUES).optional(),
+  /** Employ Designation Active|Inactive. */
+  employDesignationStatus: z.enum(FACULTY_PROFILE_STATUS_VALUES).optional(),
+  employDesignationId: z.string().nullable().optional(),
+  employDesignations: facultyEmployDesignationsWriteSchema.optional(),
+  employmentStartDate: isoCalendarDate.nullable().optional(),
+  employmentEndDate: isoCalendarDate.nullable().optional(),
+  /** Nested employment satellite (optional; flat fields remain dual-write mirrors). */
+  employment: facultyEmploymentWireSchema,
+  /** Server-computed from evaluation ratings; client writes are ignored. */
+  performanceRating: z.coerce
+    .number()
+    .min(FACULTY_PERFORMANCE_RATING_MIN)
+    .max(FACULTY_PERFORMANCE_RATING_MAX)
+    .nullable()
+    .optional(),
+  /** @deprecated Legacy join date; `employmentStartDate` is authoritative. */
   joinDate: z.string().optional(),
   qualification: z.string().optional(),
   notes: z.string().optional(),
@@ -52,10 +94,10 @@ export const facultyRecordSchema = z.preprocess(
   facultyCoreSchema.transform((record) => normalizeStoredFaculty(record)),
 );
 
-/** POST /api/faculty/bulk-status body. */
+/** POST /api/faculty/bulk-status body — targets employment lifecycle status. */
 export const facultyBulkStatusSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  status: z.string().min(1).max(FACULTY_STATUS_WRITE_MAX),
+  status: z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES),
 });
 
 /** POST /api/faculty/bulk-specialization body. */

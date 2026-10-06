@@ -147,9 +147,12 @@ export function FacultyIdCardModal({
                       </div>
                     )}
 
-                    {faculty.joinDate && (
+                    {(faculty.employmentStartDate ?? faculty.joinDate) && (
                       <div className="text-2xs text-muted-foreground truncate">
-                        <span>{t(facultyFieldLabelKey("joinDate"))}: {faculty.joinDate}</span>
+                        <span>
+                          {t(facultyFieldLabelKey("employmentStartDate"))}:{" "}
+                          {faculty.employmentStartDate ?? faculty.joinDate}
+                        </span>
                       </div>
                     )}
                   </div>

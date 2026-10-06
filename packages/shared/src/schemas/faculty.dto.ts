@@ -8,9 +8,10 @@ import {
   listEnabledCustomFacultyFormFields,
   listFacultySystemFormFieldKeys,
 } from '../facultyFormCustomFields.js';
+import { facultyEmployDesignationsWriteSchema } from '../facultyEmployDesignationTypes.js';
 import type { FacultySettings } from '../facultyModuleSettings.js';
-import { FACULTY_STATUS_WRITE_MAX, facultyCoreSchema } from '../facultyModuleManifest.js';
-import { facultyDesignationHoldingsSchema } from '../facultyDesignationTypes.js';
+import { facultyCoreSchema } from '../facultyModuleManifest.js';
+import { FACULTY_EMPLOYMENT_STATUS_VALUES, FACULTY_PROFILE_STATUS_VALUES } from '../facultyTypes.js';
 import { stripFacultyWriteNoise } from '../facultyUtils.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
@@ -21,19 +22,20 @@ const FACULTY_WRITE_AUDIT_META_KEYS = ['id', 'userId', 'createdAt', 'updatedAt',
  * Top-level keys accepted on faculty form drafts / writes (no Contacts profile dual-write keys).
  */
 export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
-  /** Create-only appointment bootstrap (+ shell fields from form seed). No person-level reporting. */
-  const extra = [
-    'customDesignation',
-    'designationId',
-    'designationStartsOn',
-    'designationEndsOn',
-    'designations',
-    'departmentId',
-    'positionId',
-  ];
+  /** Legacy `joinDate` + employment write-through keys not in form field seed. */
+  const extra = ['joinDate', 'employmentId', 'employDesignations'];
   const keys = new Set<string>([...FACULTY_WRITE_AUDIT_META_KEYS, ...listFacultySystemFormFieldKeys(), ...extra]);
   return [...keys].sort((left, right) => left.localeCompare(right));
 })();
+
+const isoCalendarDate = /^\d{4}-\d{2}-\d{2}$/;
+const optionalCalendarDate = z
+  .union([z.string().regex(isoCalendarDate), z.literal('')])
+  .nullish()
+  .transform((value) => (value === '' ? null : value ?? null));
+
+/** Server-computed keys silently dropped from client writes. */
+const FACULTY_WRITE_SERVER_OWNED_KEYS = ['performanceRating'] as const;
 
 const FACULTY_WRITE_SYSTEM_KEY_SET = new Set<string>(FACULTY_WRITE_SYSTEM_KEYS);
 
@@ -68,17 +70,20 @@ export function buildDynamicFacultySchema(
   const schemaObject: Record<string, z.ZodTypeAny> = {
     id: z.union([z.string(), z.number()]).optional(),
     contactId: z.union([z.string(), z.number()]).nullish(),
+    employmentId: z.string().nullish(),
     employeeId: z.string().nullish(),
     specialization: z.string().nullish(),
     designationId: z.string().nullish(),
-    designationStartsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullish().transform((v) => (v === '' ? undefined : v)),
-    designationEndsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullable().nullish().transform((v) => (v === '' ? null : v)),
-    designations: facultyDesignationHoldingsSchema.optional(),
-    departmentId: z.string().nullish(),
-    positionId: z.string().nullish(),
-    customDesignation: z.string().trim().optional(),
-    status: z.string().max(FACULTY_STATUS_WRITE_MAX).nullish(),
-    joinDate: z.string().nullish(),
+    designationStartDate: optionalCalendarDate,
+    designationEndDate: optionalCalendarDate,
+    status: z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES, { message: requiredMsg }).nullish(),
+    profileStatus: z.enum(FACULTY_PROFILE_STATUS_VALUES).nullish(),
+    employDesignationStatus: z.enum(FACULTY_PROFILE_STATUS_VALUES).nullish(),
+    employDesignationId: z.string().nullish(),
+    employDesignations: facultyEmployDesignationsWriteSchema.optional(),
+    employmentStartDate: optionalCalendarDate,
+    employmentEndDate: optionalCalendarDate,
+    joinDate: optionalCalendarDate,
     qualification: z.string().nullish(),
     notes: z.string().nullish(),
     userId: z.string().nullable().nullish(),
@@ -88,15 +93,15 @@ export function buildDynamicFacultySchema(
     updatedBy: z.string().nullish(),
   };
 
-  const applyRequiredString = (key: string, required: boolean, max?: number) => {
-    if (required) {
-      let schema = z.string({ message: requiredMsg });
-      if (max != null) schema = schema.max(max);
-      schemaObject[key] = schema.min(1, requiredMsg);
-      return;
-    }
-    schemaObject[key] =
-      max != null ? z.string().max(max).nullish() : z.string().nullish();
+  const applyRequiredString = (key: string, required: boolean) => {
+    schemaObject[key] = required
+      ? z.string({ message: requiredMsg }).min(1, requiredMsg)
+      : z.string().nullish();
+  };
+  const applyRequiredDate = (key: string, required: boolean) => {
+    schemaObject[key] = required
+      ? z.string({ message: requiredMsg }).regex(isoCalendarDate, requiredMsg)
+      : optionalCalendarDate;
   };
 
   Object.entries(fields).forEach(([tabId, tabFields]) => {
@@ -105,22 +110,30 @@ export function buildDynamicFacultySchema(
     for (const field of tabFields) {
       if (!field.enabled) continue;
 
-      if (field.key === 'contactId') continue; // product-compulsory; ignore Setup flags
+      if (field.key === 'contactId' || field.key === 'designationId' || field.key === 'performanceRating') continue;
       if (systemKeys.has(field.key)) {
+        const required = Boolean(field.required);
         if (field.key === 'status') {
-          applyRequiredString('status', Boolean(field.required), FACULTY_STATUS_WRITE_MAX);
-          continue;
-        }
-        if (field.key === 'specialization' || field.key === 'qualification') {
-          applyRequiredString(field.key, false); // contact-derived
-          continue;
-        }
-        if (
-          field.key === 'employeeId'
-          || field.key === 'joinDate'
-          || field.key === 'notes'
+          schemaObject.status = required
+            ? z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES, { message: requiredMsg })
+            : z.enum(FACULTY_EMPLOYMENT_STATUS_VALUES).nullish();
+        } else if (field.key === 'employDesignationStatus' || field.key === 'profileStatus') {
+          const statusSchema = required
+            ? z.enum(FACULTY_PROFILE_STATUS_VALUES, { message: requiredMsg })
+            : z.enum(FACULTY_PROFILE_STATUS_VALUES).nullish();
+          schemaObject.employDesignationStatus = statusSchema;
+          schemaObject.profileStatus = statusSchema;
+        } else if (
+          field.key === 'employmentStartDate'
+          || field.key === 'employmentEndDate'
+          || field.key === 'designationStartDate'
+          || field.key === 'designationEndDate'
         ) {
-          applyRequiredString(field.key, Boolean(field.required));
+          applyRequiredDate(field.key, required);
+        } else if (field.key === 'specialization' || field.key === 'qualification') {
+          applyRequiredString(field.key, false); // contact-derived
+        } else if (field.key === 'employeeId' || field.key === 'notes') {
+          applyRequiredString(field.key, required);
         }
         continue;
       }
@@ -139,54 +152,26 @@ export function buildDynamicFacultySchema(
       (value) => value !== null && value !== undefined && value !== '',
       { message: contactRequiredMsg },
     );
+  schemaObject.designationId = z.string({ message: requiredMsg }).min(1, requiredMsg);
 
   const objectSchema = z.object(schemaObject).strict().superRefine((data, ctx) => {
     const record = data as Record<string, unknown>;
-    const holdings = Array.isArray(record.designations) ? record.designations : null;
-    const filledHoldings = (holdings ?? []).filter((row): row is Record<string, unknown> => {
-      if (!row || typeof row !== 'object') return false;
-      const id = (row as { designationId?: unknown }).designationId;
-      return typeof id === 'string' && id.trim().length > 0;
-    });
-    const hasHolding = filledHoldings.length > 0;
-    const designationId = record.designationId;
-    const hasLegacyDesignation =
-      (typeof designationId === 'string' && designationId.trim().length > 0)
-      || (typeof designationId === 'number');
-    const hasDesignation = hasHolding || hasLegacyDesignation;
-    const topStartsOn = record.designationStartsOn;
-    const topStartsOk = typeof topStartsOn === 'string' && topStartsOn.trim().length > 0;
-    if (!hasDesignation) return;
-    if (hasHolding) {
-      filledHoldings.forEach((row, index) => {
-        const starts = row.startsOn;
-        const rowStartsOk = typeof starts === 'string' && starts.trim().length > 0;
-        if (!rowStartsOk && !topStartsOk) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['designations', index, 'startsOn'],
-            message: requiredMsg,
-          });
-        }
-        const departmentId = row.departmentId;
-        const rowDeptOk = typeof departmentId === 'string' && departmentId.trim().length > 0;
-        const topDept = record.departmentId;
-        const topDeptOk = typeof topDept === 'string' && topDept.trim().length > 0;
-        if (!rowDeptOk && !topDeptOk) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['designations', index, 'departmentId'],
-            message: requiredMsg,
-          });
-        }
-      });
-      return;
-    }
-    if (!topStartsOk) {
+    const start = record.employmentStartDate ?? record.joinDate;
+    const end = record.employmentEndDate;
+    if (typeof start === 'string' && typeof end === 'string' && end < start) {
       ctx.addIssue({
         code: 'custom',
-        path: ['designationStartsOn'],
-        message: requiredMsg,
+        path: ['employmentEndDate'],
+        message: translateApp('faculty.errorEmploymentEndBeforeStart' as AppTranslationKey, language),
+      });
+    }
+    const desigStart = record.designationStartDate;
+    const desigEnd = record.designationEndDate;
+    if (typeof desigStart === 'string' && typeof desigEnd === 'string' && desigEnd < desigStart) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['designationEndDate'],
+        message: translateApp('faculty.errorDesignationEndBeforeStart' as AppTranslationKey, language),
       });
     }
   });
@@ -194,6 +179,7 @@ export function buildDynamicFacultySchema(
   return z.preprocess((raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
     const stripped = stripFacultyWriteNoise(raw as Record<string, unknown>);
+    for (const key of FACULTY_WRITE_SERVER_OWNED_KEYS) delete stripped[key];
     return deepSanitizeStrings(stripped);
   }, objectSchema);
 }
@@ -214,7 +200,9 @@ export const facultyDuplicateCheckBodySchema: z.ZodType<FacultyDuplicateCheckBod
 /** Person-level reporting / denorm role keys — never persist on faculty writes. */
 const FACULTY_WRITE_STRIP_KEYS = [
   'department',
+  'departmentId',
   'designation',
+  'parentDesignationId',
   'reportingFacultyId',
   'reportingFacultyName',
   'reportingRole',
@@ -222,6 +210,7 @@ const FACULTY_WRITE_STRIP_KEYS = [
   'reportingDesignationId',
   'hierarchyRank',
   'subordinateCount',
+  ...FACULTY_WRITE_SERVER_OWNED_KEYS,
 ] as const;
 
 export const facultyWriteSchema = z.preprocess((raw) => {

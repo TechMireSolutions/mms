@@ -17,6 +17,7 @@ type ListRow = typeof faculty.$inferSelect & {
   designationId?: string | null;
   departmentName?: string | null;
   designationName?: string | null;
+  parentDesignationId?: string | null;
   hierarchyRank?: number | null;
 };
 
@@ -65,13 +66,21 @@ export async function listFacultyPage(
       SELECT
         ${faculty.id} AS id,
         ${faculty.workspaceSubdomain} AS "workspaceSubdomain",
-        ${faculty.contactId} AS "contactId",
+        fe_emp.contact_id AS "contactId",
+        ${faculty.employmentId} AS "employmentId",
         ${faculty.userId} AS "userId",
-        ${faculty.employeeId} AS "employeeId",
-        ${faculty.status} AS status,
+        fe_emp.employee_id AS "employeeId",
+        fe_desig.designation_id AS "designationId",
+        fe_desig.start_date AS "designationStartDate",
+        fe_desig.end_date AS "designationEndDate",
+        ${faculty.profileStatus} AS "profileStatus",
+        COALESCE(fe_emp.status, 'active') AS status,
         ${faculty.specialization} AS specialization,
         ${faculty.qualification} AS qualification,
-        ${faculty.joinDate} AS "joinDate",
+        fe_emp.employment_start_date AS "employmentStartDate",
+        fe_emp.employment_end_date AS "employmentEndDate",
+        ${faculty.performanceRating} AS "performanceRating",
+        fe_emp.employment_start_date AS "joinDate",
         ${faculty.notes} AS notes,
         ${faculty.customData} AS "customData",
         ${faculty.deletedAt} AS "deletedAt",
@@ -84,10 +93,10 @@ export async function listFacultyPage(
         ${faculty.updatedAt} AS "updatedAt",
         ${faculty.createdBy} AS "createdBy",
         ${faculty.updatedBy} AS "updatedBy",
-        pa.department_id AS "departmentId",
-        pa.designation_id AS "designationId",
+        pa_desig.department_id AS "departmentId",
         pa_dept.name AS "departmentName",
         pa_desig.name AS "designationName",
+        pa_desig.parent_designation_id AS "parentDesignationId",
         pa_desig.hierarchy_rank AS "hierarchyRank"
       ${fromSql}
       WHERE ${pageWhere}
@@ -101,7 +110,7 @@ export async function listFacultyPage(
       return {
         ...base,
         ...(row.departmentId ? { departmentId: row.departmentId } : {}),
-        ...(row.designationId ? { designationId: row.designationId } : {}),
+        ...(row.parentDesignationId ? { parentDesignationId: row.parentDesignationId } : {}),
         ...(row.departmentName ? { department: row.departmentName } : {}),
         ...(row.designationName ? { designation: row.designationName } : {}),
         ...(row.hierarchyRank != null ? { hierarchyRank: Number(row.hierarchyRank) } : {}),

@@ -16,11 +16,18 @@ export function activeWorkspaceWhere(subdomain: string): SQL {
 /** Field exprs assuming LATERAL primary-appointment FROM (pa_dept / pa_desig / fc). */
 export function resolveFacultyFieldExpr(field: string): SQL {
   const f = field.trim();
-  if (f === 'status') return sql`COALESCE(${faculty.status}, 'active')`;
-  if (f === 'employeeId' || f === 'employee_id') return sql`COALESCE(${faculty.employeeId}, '')`;
+  // Employment SSOT via fe_emp (facultyWithPrimaryAppointmentFromSql).
+  if (f === 'status') return sql`COALESCE(fe_emp.status, 'active')`;
+  if (f === 'employeeId' || f === 'employee_id') return sql`COALESCE(fe_emp.employee_id, '')`;
   if (f === 'specialization') return sql`COALESCE(${faculty.specialization}, '')`;
   if (f === 'qualification') return sql`COALESCE(${faculty.qualification}, '')`;
-  if (f === 'joinDate' || f === 'join_date') return sql`COALESCE(${faculty.joinDate}, '')`;
+  if (f === 'joinDate' || f === 'join_date' || f === 'employmentStartDate' || f === 'employment_start_date') {
+    return sql`COALESCE(fe_emp.employment_start_date::text, '')`;
+  }
+  if (f === 'employmentEndDate' || f === 'employment_end_date') {
+    return sql`COALESCE(fe_emp.employment_end_date::text, '')`;
+  }
+  if (f === 'performanceRating' || f === 'performance_rating') return sql`COALESCE(${faculty.performanceRating}::text, '')`;
   if (f === 'notes') return sql`COALESCE(${faculty.notes}, '')`;
   if (f === 'department') return joinedPrimaryDepartmentNameExpr();
   if (f === 'designation') return joinedPrimaryDesignationNameExpr();

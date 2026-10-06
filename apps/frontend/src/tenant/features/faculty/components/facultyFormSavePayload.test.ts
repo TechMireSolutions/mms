@@ -70,7 +70,7 @@ describe("facultyFormSavePayload", () => {
       expect((payload as Record<string, unknown>).subordinates).toBeUndefined();
     });
 
-    it("keeps create bootstrap designation fields", () => {
+    it("strips unknown draft keys on create (allowlist only)", () => {
       const payload = buildFacultySavePayload({
         facultyDraft: {
           contactId: "cnt-1",
@@ -80,7 +80,7 @@ describe("facultyFormSavePayload", () => {
         autoGenerateId: false,
       });
 
-      expect(payload.designationEndsOn).toBe("2026-12-31");
+      expect(payload.designationEndsOn).toBeUndefined();
       expect(payload.designationId).toBe("des-1");
     });
   });

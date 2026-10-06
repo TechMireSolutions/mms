@@ -81,7 +81,7 @@ export function useFacultyDraftState({
   } = useFacultyNextEmployeeId({
     prefix: idPrefix,
     template: settings.idTemplate,
-    digits: settings.idDigits,
+    digits: settings.employeeIdSequenceDigits ?? settings.idDigits,
     startSeq: settings.idStartSeq,
     restartAnnually: settings.idRestartAnnually,
     enabled: !faculty?.id && autoGenerateId,

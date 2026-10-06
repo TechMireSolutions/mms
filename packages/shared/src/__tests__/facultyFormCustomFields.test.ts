@@ -49,7 +49,8 @@ describe('listEnabledCustomFacultyFormFields', () => {
     expect(listFacultySystemFormFieldKeys().has('status')).toBe(true);
     expect(listFacultySystemFormFieldKeys().has('contactId')).toBe(true);
     expect(isFacultySystemFormField('basic', 'specialization')).toBe(true);
-    expect(isFacultySystemFormField('employment', 'joinDate')).toBe(true);
+    expect(isFacultySystemFormField('employment', 'employmentStartDate')).toBe(true);
+    expect(isFacultySystemFormField('designation', 'designationId')).toBe(true);
   });
 
   it('aggregates all tabs when tabId is omitted', () => {
@@ -78,9 +79,9 @@ describe('findFacultySeedField', () => {
 });
 
 describe('resolveFacultyFieldsMapForColumnSync product locks', () => {
-  it('forces contact required and retires specialization/hierarchy fields', () => {
+  it('forces contact required on Contacts card and retires specialization/hierarchy fields', () => {
     const fields = resolveFacultyFieldsMapForColumnSync({
-      basic: [
+      employment: [
         field({ key: 'contactId', enabled: false, required: false }),
         field({ key: 'specialization', enabled: true, required: true }),
       ],
@@ -90,6 +91,11 @@ describe('resolveFacultyFieldsMapForColumnSync product locks', () => {
       ],
     });
     expect(fields.basic.find((f) => f.key === 'contactId')).toMatchObject({
+      enabled: true,
+      required: true,
+    });
+    expect(fields.employment.find((f) => f.key === 'contactId')).toBeUndefined();
+    expect(fields.designation.find((f) => f.key === 'employDesignationStatus')).toMatchObject({
       enabled: true,
       required: true,
     });
@@ -103,14 +109,55 @@ describe('resolveFacultyFieldsMapForColumnSync product locks', () => {
     });
   });
 
-  it('promotes alias designationId required onto designation', () => {
-    const fields = resolveFacultyFieldsMapForColumnSync({
+  it('given a legacy stored config, should drop department/designation aliases and lock designationId on', () => {
+    const stored = {
       designation: [
         field({ key: 'designation', enabled: true, required: false }),
-        field({ key: 'designationId', enabled: false, required: true }),
+        field({ key: 'department', enabled: true, required: true }),
+        field({ key: 'designationId', enabled: false, required: false }),
+        field({ key: 'departmentId', enabled: false, required: false }),
       ],
+    };
+
+    const fields = resolveFacultyFieldsMapForColumnSync(stored);
+
+    expect(fields.designation.map((f) => f.key)).toEqual([
+      'designationId',
+      'designationStartDate',
+      'designationEndDate',
+      'employDesignationStatus',
+    ]);
+    expect(fields.designation[0]).toMatchObject({ enabled: true, required: true });
+    expect(listEnabledCustomFacultyFormFields(fields)).toEqual([]);
+  });
+
+  it('given a legacy joinDate flag, should remap it onto employmentStartDate and backfill new seed fields', () => {
+    const stored = {
+      employment: [
+        field({ key: 'employeeId', enabled: false, required: false }),
+        field({ key: 'joinDate', enabled: false, required: false, order: 7 }),
+      ],
+    };
+
+    const fields = resolveFacultyFieldsMapForColumnSync(stored);
+    const keys = fields.employment.map((f) => f.key);
+
+    expect(keys).not.toContain('joinDate');
+    expect(fields.employment.find((f) => f.key === 'employmentStartDate')).toMatchObject({
+      enabled: false,
+      required: false,
+      order: 7,
+      labelKey: 'faculty.field.employmentStartDate',
     });
-    expect(fields.designation.find((f) => f.key === 'designation')?.required).toBe(true);
-    expect(fields.designation.find((f) => f.key === 'designationId')?.required).toBe(false);
+    expect(keys).toEqual(expect.arrayContaining(['employmentEndDate', 'status', 'employeeId']));
+    expect(keys).not.toContain('contactId');
+    expect(fields.basic.find((f) => f.key === 'contactId')).toMatchObject({
+      enabled: true,
+      required: true,
+    });
+    expect(fields.designation.find((f) => f.key === 'employDesignationStatus')).toMatchObject({
+      enabled: true,
+      required: true,
+    });
   });
 });

@@ -69,8 +69,8 @@ export function OrganizationPositionCatalogOverlays({
     <>
       {children({
         childOpen,
-        openAddDepartment: () => catalogCreate.openCreateDepartment(null),
-        openAddDesignation: () => catalogCreate.openCreateDesignation(null),
+        openAddDepartment: () => catalogCreate.openCreateDepartment(),
+        openAddDesignation: () => catalogCreate.openCreateDesignation(),
         openAddLocation: () => {
           setLocationDraft(EMPTY_LOCATION);
           setLocationOpen(true);
@@ -83,14 +83,10 @@ export function OrganizationPositionCatalogOverlays({
         createDesignationOpen={catalogCreate.createDesignationOpen}
         onCloseDesignation={catalogCreate.closeDesignation}
         onDepartmentCreated={(department) => {
-          catalogCreate.applyDepartmentCreated(department, (_rowKey, patch) => {
-            onSelectDepartment(patch.departmentId);
-          });
+          onSelectDepartment(department.id);
         }}
         onDesignationCreated={(designation) => {
-          catalogCreate.applyDesignationCreated(designation, (_rowKey, patch) => {
-            onSelectDesignation(patch.designationId);
-          });
+          onSelectDesignation(designation.id);
         }}
       />
 

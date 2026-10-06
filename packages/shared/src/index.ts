@@ -205,6 +205,7 @@ export {
 // 7. Faculty Feature Module
 // ---------------------------------------------------------------------------
 export * from './facultyTypes.js';
+export * from './facultyStatusTypes.js';
 export * from './facultyModuleManifest.js';
 export {
   facultyListPageResponseSchema,
@@ -235,6 +236,7 @@ export * from './demoSeedFaculty.js';
 export * from './demoFaculty.js';
 export { facultyCsvExportBodySchema } from './schemas/csvExport.dto.js';
 export * from './facultyDepartmentTypes.js';
+export * from './facultyPerformanceRating.js';
 export * from './moduleFieldSetupFaculty.js';
 
 // ---------------------------------------------------------------------------
@@ -291,6 +293,7 @@ export * from './financeModuleSettings.js';
 export * from './financeReportAggregates.js';
 export * from './financeSetupConfigTypes.js';
 export * from './facultyDesignationTypes.js';
+export * from './facultyEmployDesignationTypes.js';
 export * from './obligationsModuleManifest.js';
 export * from './obligationsReportAggregates.js';
 
@@ -336,6 +339,7 @@ export * from './userRbacModuleRegistry.js';
 export * from './userRbacPermissionNav.js';
 export * from './userRbacRegistry.js';
 export * from './userRoleUtils.js';
+export * from './userRolePrivilege.js';
 export * from './userSetupConfigTypes.js';
 export * from './usersExportUtils.js';
 export * from './usersListQuery.js';

@@ -1072,6 +1072,62 @@
       "when": 1791101800000,
       "tag": "0152_platform_notification_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1791101900000,
+      "tag": "0153_faculty_management_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1791102000000,
+      "tag": "0154_faculty_employments",
+      "breakpoints": true
+    },
+    {
+      "idx": 155,
+      "version": "7",
+      "when": 1791102100000,
+      "tag": "0155_faculty_employ_designations",
+      "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1791102200000,
+      "tag": "0156_faculty_employ_desig_concurrent",
+      "breakpoints": true
+    },
+    {
+      "idx": 157,
+      "version": "7",
+      "when": 1791102300000,
+      "tag": "0157_faculty_index_prune",
+      "breakpoints": true
+    },
+    {
+      "idx": 158,
+      "version": "7",
+      "when": 1791102400000,
+      "tag": "0158_faculty_employment_id_not_null",
+      "breakpoints": true
+    },
+    {
+      "idx": 159,
+      "version": "7",
+      "when": 1791102500000,
+      "tag": "0159_faculty_drop_join_date",
+      "breakpoints": true
+    },
+    {
+      "idx": 160,
+      "version": "7",
+      "when": 1791102600000,
+      "tag": "0160_faculty_drop_employment_mirrors",
+      "breakpoints": true
     }
   ]
 }

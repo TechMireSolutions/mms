@@ -12,18 +12,17 @@ describe('syncFacultyColumnRegistryWithFields', () => {
     const synced = syncFacultyColumnRegistryWithFields(
       DEFAULT_FACULTY_COLUMN_REGISTRY,
       {
-        basic: [
-          { key: 'specialization', label: 'Specialization', type: 'select', enabled: true, order: 0 },
-          { key: 'qualification', label: 'Qualification', type: 'text', enabled: true, order: 1 },
+        designation: [
+          { key: 'designationId', label: 'Designation', type: 'select', enabled: true, order: 0 },
         ],
         employment: [
-          { key: 'joinDate', label: 'Join', type: 'date', enabled: true, order: 0 },
+          { key: 'employmentStartDate', label: 'Start', type: 'date', enabled: true, order: 0 },
           { key: 'status', label: 'Status', type: 'select', enabled: true, order: 1 },
         ],
       },
-      ['basic', 'employment'],
+      ['designation', 'employment'],
     );
-    expect(synced.some((col) => col.key === 'specialization' && col.enabled !== false)).toBe(true);
+    expect(synced.some((col) => col.key === 'designation' && col.enabled !== false)).toBe(true);
     expect(synced.some((col) => col.key === 'status' && col.enabled !== false)).toBe(true);
   });
 
@@ -31,19 +30,18 @@ describe('syncFacultyColumnRegistryWithFields', () => {
     const synced = syncFacultyColumnRegistryWithFields(
       DEFAULT_FACULTY_COLUMN_REGISTRY,
       {
-        basic: [
-          { key: 'specialization', label: 'Specialization', type: 'select', enabled: false, order: 0 },
-          { key: 'qualification', label: 'Qualification', type: 'text', enabled: true, order: 1 },
+        designation: [
+          { key: 'designationId', label: 'Designation', type: 'select', enabled: true, order: 0 },
         ],
         employment: [
-          { key: 'joinDate', label: 'Join', type: 'date', enabled: true, order: 0 },
-          { key: 'status', label: 'Status', type: 'select', enabled: true, order: 1 },
+          { key: 'employmentStartDate', label: 'Start', type: 'date', enabled: true, order: 0 },
+          { key: 'status', label: 'Status', type: 'select', enabled: false, order: 1 },
         ],
       },
-      ['basic', 'employment'],
+      ['designation', 'employment'],
     );
-    expect(synced.find((col) => col.key === 'specialization')?.enabled).toBe(false);
-    expect(synced.find((col) => col.key === 'qualification')?.enabled).not.toBe(false);
+    expect(synced.find((col) => col.key === 'status')?.enabled).toBe(false);
+    expect(synced.find((col) => col.key === 'designation')?.enabled).not.toBe(false);
   });
 
   it('adds custom Work columns for enabled non-seed fields', () => {
@@ -101,20 +99,19 @@ describe('buildFacultyWorkColumnRegistry', () => {
       {
         ...DEFAULT_FACULTY_SETTINGS,
         fields: {
-          basic: [
-            { key: 'specialization', label: 'Specialization', type: 'select', enabled: false, order: 0 },
-            { key: 'qualification', label: 'Qualification', type: 'text', enabled: true, order: 1 },
+          designation: [
+            { key: 'designationId', label: 'Designation', type: 'select', enabled: true, order: 0 },
           ],
           employment: [
-            { key: 'joinDate', label: 'Join', type: 'date', enabled: true, order: 0 },
-            { key: 'status', label: 'Status', type: 'select', enabled: true, order: 1 },
+            { key: 'employmentStartDate', label: 'Start', type: 'date', enabled: true, order: 0 },
+            { key: 'status', label: 'Status', type: 'select', enabled: false, order: 1 },
           ],
         },
-        enabledTabs: ['basic', 'employment'],
+        enabledTabs: ['basic', 'employment', 'designation'],
       },
       FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
     );
-    expect(registry.find((col) => col.key === 'specialization')?.enabled).toBe(false);
+    expect(registry.find((col) => col.key === 'status')?.enabled).toBe(false);
   });
 
   it('includes custom columns from the tabbed Fields map', () => {

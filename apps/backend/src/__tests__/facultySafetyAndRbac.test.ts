@@ -34,6 +34,19 @@ vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
   cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
 }));
 
+vi.mock('../db/repositories/facultyEmploymentRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployments: vi.fn().mockResolvedValue(0),
+  flattenFacultyEmploymentFields: (member: unknown) => member,
+  upsertFacultyEmploymentTx: vi.fn().mockResolvedValue('facemp-mock'),
+}));
+
+vi.mock('../db/repositories/facultyEmployDesignationRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  upsertFacultyEmployDesignationTx: vi.fn().mockResolvedValue('faced-mock'),
+}));
+
 vi.mock('../services/auditTrailService.js', () => ({
   recordModernAuditEvent: (...args: unknown[]) => mockRecordModernAuditEvent(...args),
   mapActionStringToAuditType: () => 'UPDATE',
@@ -119,11 +132,10 @@ describe('Faculty Designation RBAC and Outbox Audit', () => {
       params: { id: 'des-new' },
       body: {
         id: 'des-new',
-        code: 'HOD',
+        departmentId: 'dept-1',
         name: 'Head of Department',
-        hierarchyRank: 2,
-        isActive: true,
-        assignableRoles: ['teacher'],
+        parentDesignationId: null,
+        status: 'active',
       },
       query: undefined as never,
       headers: {} as never,
@@ -149,22 +161,22 @@ describe('Faculty Designation RBAC and Outbox Audit', () => {
 
     mockSaveFacultyDesignation.mockResolvedValueOnce({
       id: 'des-hod',
-      code: 'HOD',
+      departmentId: 'dept-1',
       name: 'Head of Department',
-      hierarchyRank: 2,
-      isActive: true,
-      assignableRoles: ['teacher'],
+      parentDesignationId: null,
+      status: 'active',
+      hierarchyRank: 1,
+      assignableRoles: [],
     });
 
     const response = await handleSaveDesignation({
       params: { id: 'des-hod' },
       body: {
         id: 'des-hod',
-        code: 'HOD',
+        departmentId: 'dept-1',
         name: 'Head of Department',
-        hierarchyRank: 2,
-        isActive: true,
-        assignableRoles: ['teacher'],
+        parentDesignationId: null,
+        status: 'active',
       },
       query: undefined as never,
       headers: {} as never,

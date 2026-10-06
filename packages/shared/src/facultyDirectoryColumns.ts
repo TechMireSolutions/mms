@@ -4,9 +4,9 @@ import type { ColumnRegistryEntry } from './contactFieldSchemaTypes.js';
 export interface FacultyWorkColumnLabels {
   name: string;
   designation: string;
-  specialization: string;
-  qualification: string;
-  joinDate: string;
+  department: string;
+  employmentStartDate: string;
+  performanceRating: string;
   status: string;
 }
 
@@ -31,15 +31,15 @@ export const FACULTY_DIRECTORY_COLUMN_SURFACES = [
     key: 'designation', work: true, sort: true, export: true, fixed: false,
     workOrder: 1, sortOrder: 2, exportOrder: 2,
     label: 'Designation', labelKey: 'faculty.field.designation' as AppTranslationKey,
-    exportLabel: 'Designation', width: 140, sortable: true,
-    mapping: { tabId: 'employment', fieldId: 'designation' },
+    exportLabel: 'Designation', width: 160, sortable: true,
+    mapping: { tabId: 'designation', fieldId: 'designationId' },
   },
   {
-    key: 'department', work: false, sort: true, export: true, fixed: false,
-    workOrder: -1, sortOrder: 2, exportOrder: 2,
+    key: 'department', work: true, sort: true, export: true, fixed: false,
+    workOrder: 2, sortOrder: 2, exportOrder: 2,
     label: 'Department', labelKey: 'faculty.field.department' as AppTranslationKey,
     exportLabel: 'Department', width: 140, sortable: true,
-    mapping: { tabId: 'employment', fieldId: 'department' },
+    mapping: { tabId: 'designation', fieldId: 'designationId' },
   },
   {
     key: 'reportingFacultyName', work: false, sort: false, export: true, fixed: false,
@@ -48,37 +48,69 @@ export const FACULTY_DIRECTORY_COLUMN_SURFACES = [
     exportLabel: 'Supervisor', width: 140, sortable: false,
   },
   {
-    key: 'specialization', work: true, sort: true, export: true, fixed: false,
-    workOrder: 2, sortOrder: 3, exportOrder: 3,
+    key: 'specialization', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 3, exportOrder: 3,
     label: 'Specialization', labelKey: 'faculty.field.specialization' as AppTranslationKey,
     exportLabel: 'Specialization', width: 140, sortable: true,
-    mapping: { tabId: 'basic', fieldId: 'specialization' },
   },
   {
-    key: 'qualification', work: true, sort: true, export: true, fixed: false,
-    workOrder: 3, sortOrder: 4, exportOrder: 5,
+    key: 'qualification', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 4, exportOrder: 5,
     label: 'Qualification', labelKey: 'faculty.field.qualification' as AppTranslationKey,
     exportLabel: 'Qualification', width: 140, sortable: true,
-    mapping: { tabId: 'basic', fieldId: 'qualification' },
   },
   {
-    key: 'joinDate', work: true, sort: true, export: true, fixed: false,
-    workOrder: 4, sortOrder: 6, exportOrder: 6,
-    label: 'Join Date', labelKey: 'faculty.field.joinDate' as AppTranslationKey,
-    exportLabel: 'Join date', width: 120, sortable: true,
-    mapping: { tabId: 'employment', fieldId: 'joinDate' },
+    key: 'employmentStartDate', work: true, sort: true, export: true, fixed: false,
+    workOrder: 3, sortOrder: 6, exportOrder: 6,
+    label: 'Employment Start', labelKey: 'faculty.field.employmentStartDate' as AppTranslationKey,
+    exportLabel: 'Employment start date', width: 130, sortable: true,
+    mapping: { tabId: 'employment', fieldId: 'employmentStartDate' },
+  },
+  {
+    key: 'employmentEndDate', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 8, exportOrder: 7,
+    label: 'Employment End', labelKey: 'faculty.field.employmentEndDate' as AppTranslationKey,
+    exportLabel: 'Employment end date', width: 130, sortable: true,
+  },
+  {
+    key: 'performanceRating', work: true, sort: true, export: true, fixed: false,
+    workOrder: 4, sortOrder: 9, exportOrder: 8,
+    label: 'Performance Rating', labelKey: 'faculty.field.performanceRating' as AppTranslationKey,
+    exportLabel: 'Performance rating', width: 120, sortable: true,
+    mapping: { tabId: 'designation', fieldId: 'performanceRating' },
   },
   {
     key: 'status', work: true, sort: true, export: true, fixed: false,
     workOrder: 5, sortOrder: 5, exportOrder: 4,
     label: 'Status', labelKey: 'faculty.field.status' as AppTranslationKey,
-    exportLabel: 'Status', width: 100, sortable: true,
+    exportLabel: 'Employment status', width: 100, sortable: true,
     mapping: { tabId: 'employment', fieldId: 'status' },
+  },
+  {
+    key: 'employDesignationStatus', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 5, exportOrder: 4,
+    label: 'Employ Designation Status', labelKey: 'faculty.field.employDesignationStatus' as AppTranslationKey,
+    exportLabel: 'Employ designation status', width: 120, sortable: true,
+    mapping: { tabId: 'designation', fieldId: 'employDesignationStatus' },
+  },
+  {
+    key: 'profileStatus', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 5, exportOrder: 4,
+    label: 'Profile Status', labelKey: 'faculty.field.profileStatus' as AppTranslationKey,
+    exportLabel: 'Profile status', width: 100, sortable: true,
+    mapping: { tabId: 'designation', fieldId: 'employDesignationStatus' },
+  },
+  {
+    key: 'designationStartDate', work: false, sort: true, export: true, fixed: false,
+    workOrder: -1, sortOrder: 6, exportOrder: 6,
+    label: 'Designation Start', labelKey: 'faculty.field.designationStartDate' as AppTranslationKey,
+    exportLabel: 'Designation start date', width: 130, sortable: true,
+    mapping: { tabId: 'designation', fieldId: 'designationStartDate' },
   },
   {
     key: 'updatedAt', work: false, sort: true, export: false, fixed: false,
     workOrder: -1, sortOrder: 7, exportOrder: -1,
-    label: 'Updated', labelKey: undefined,
+    label: 'Updated', labelKey: 'faculty.field.updatedAt' as AppTranslationKey,
     exportLabel: 'Updated', width: undefined, sortable: true,
   },
 ] as const;
@@ -86,20 +118,13 @@ export const FACULTY_DIRECTORY_COLUMN_SURFACES = [
 export type FacultyDirectoryColumnKey =
   (typeof FACULTY_DIRECTORY_COLUMN_SURFACES)[number]['key'];
 
-/** Work-directory column keys (excluding fixed `name`). */
 export const FACULTY_WORK_COLUMN_KEYS = [
-  'designation',
-  'specialization',
-  'qualification',
-  'joinDate',
-  'status',
+  'designation', 'department', 'employmentStartDate', 'performanceRating', 'status',
 ] as const;
 
 export type FacultyWorkColumnKey = (typeof FACULTY_WORK_COLUMN_KEYS)[number];
 
-/**
- * Builds the 6-key Work column labels map (`name` + {@link FACULTY_WORK_COLUMN_KEYS}).
- */
+/** Builds Work column labels (`name` + {@link FACULTY_WORK_COLUMN_KEYS}). */
 export function facultyWorkColumnLabelsFrom(
   resolveLabel: (key: string) => string,
 ): FacultyWorkColumnLabels {
@@ -160,7 +185,11 @@ export const FACULTY_SORT_FIELDS = [
   'specialization',
   'qualification',
   'status',
-  'joinDate',
+  'profileStatus',
+  'employmentStartDate',
+  'employmentEndDate',
+  'designationStartDate',
+  'performanceRating',
   'updatedAt',
 ] as const;
 

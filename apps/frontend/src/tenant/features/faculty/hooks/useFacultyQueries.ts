@@ -8,6 +8,7 @@ import {
 } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import { apiContract } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +41,7 @@ export function facultyCommandMetricsQueryOptions() {
 export async function fetchAllFacultyForQuery(
   params: Omit<FacultyPaginatedParams, 'page' | 'enabled'>,
   onProgress?: (fetched: number, total: number) => void,
+  messages?: { exportLimitExceeded: string },
 ): Promise<FacultyRecord[]> {
   const limit = FACULTY_MODULE_MANIFEST.maxPageSize;
   const all: FacultyRecord[] = [];
@@ -48,7 +50,7 @@ export async function fetchAllFacultyForQuery(
 
   for (;;) {
     const response = await apiContract.faculty.list({
-      query: { ...(params), page, limit }
+      query: { ...(params), page, limit },
     });
     const facultyPage = response.body as FacultyListPageResult;
     const items = (facultyPage.faculty ?? []) as FacultyRecord[];
@@ -57,7 +59,10 @@ export async function fetchAllFacultyForQuery(
     onProgress?.(all.length, total);
     if (!facultyPage.hasMore) break;
     if (page >= 200) {
-      throw new Error('Faculty export exceeds the 100,000-record safety limit; narrow the filters.');
+      throw new Error(
+        messages?.exportLimitExceeded ??
+          'Faculty export exceeds the 100,000-record safety limit; narrow the filters.',
+      );
     }
     page += 1;
   }
@@ -67,7 +72,8 @@ export async function fetchAllFacultyForQuery(
 
 export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
   const { isAuthenticated } = useAuth();
-  
+  const { t } = useTranslation();
+
   return useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'linked-contact-ids', excludeId ?? ''] as const,
     queryFn: async ({ signal }) => {
@@ -76,7 +82,7 @@ export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
         fetchOptions: { signal },
       });
       if (res.status !== 200) {
-        throw new Error('Failed to fetch linked contact IDs');
+        throw new Error(t('faculty.errors.loadLinkedContactIds'));
       }
       const body = res.body as { contactIds?: Array<string | number> } | undefined;
       return body?.contactIds ?? [];
@@ -89,7 +95,7 @@ export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
 export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
   const normalized = (() => uniqueRegistryIds(ids))();
-  
+
   const query = useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'resolve', normalized.join(',')] as const,
     queryFn: async ({ signal }) => {
@@ -103,12 +109,13 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
   });
-  
+
   return { ...query, data: query.data };
 }
 
 export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {}) {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const enabled = params.enabled ?? true;
 
   return useQuery({
@@ -125,7 +132,7 @@ export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {
         fetchOptions: { signal },
       });
       if (res.status !== 200) {
-        throw new Error('Failed to fetch next employee ID');
+        throw new Error(t('faculty.errors.loadNextEmployeeId'));
       }
       const body = res.body as { employeeId?: string } | undefined;
       return typeof body?.employeeId === 'string' ? body.employeeId : '';
@@ -138,9 +145,12 @@ export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {
 /** Server-authoritative active duplicate probe (contact / employeeId) before save. */
 export async function checkFacultyRegistrationDuplicate(
   input: FacultyDuplicateCheckInput,
+  messages?: { duplicateCheckFailed: string },
 ): Promise<FacultyDuplicateReason | null> {
   const res = await apiContract.faculty.duplicateCheck({ body: input });
-  if (res.status !== 200) throw new Error("Duplicate check failed");
+  if (res.status !== 200) {
+    throw new Error(messages?.duplicateCheckFailed ?? 'Duplicate check failed');
+  }
   return (res.body as { reason?: FacultyDuplicateReason | null } | null)?.reason ?? null;
 }
 
@@ -153,12 +163,17 @@ export function useFacultyMetrics(options?: { enabled?: boolean }) {
 }
 
 export {
+  facultyWidgetAggregatesQueryOptions,
   useFacultyWidgetAggregates,
 } from '@/tenant/features/faculty/hooks/useFacultyWidgetAggregates';
 
 /** One-shot employee-id backfill for active faculty missing one (Setup writers). */
-export async function migrateFacultyEmployeeIds(): Promise<{ updated: number }> {
+export async function migrateFacultyEmployeeIds(
+  messages?: { migrationFailed: string },
+): Promise<{ updated: number }> {
   const res = await apiContract.faculty.migrateEmployeeIds({ body: {} });
-  if (res.status !== 200) throw new Error("Migration failed");
+  if (res.status !== 200) {
+    throw new Error(messages?.migrationFailed ?? 'Migration failed');
+  }
   return { updated: (res.body as { updated?: number } | null)?.updated ?? 0 };
 }

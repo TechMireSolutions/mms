@@ -1,27 +1,41 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, primaryKey, foreignKey, varchar, date, check, jsonb } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { workspaces } from "./platform.js";
-import { contacts, tenantUsers } from "./contacts.js";
-import { softDeleteColumns } from "./softDeleteSchema.js";
+/**
+ * @file faculty.ts
+ * @description Faculty profile schema (employment/designation live on SSOT tables).
+ */
+import {
+  pgTable, text, timestamp, uniqueIndex, index, integer, numeric,
+  primaryKey, foreignKey, varchar, check, jsonb,
+} from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { workspaces } from './platform.js';
+import { tenantUsers } from './contacts.js';
+import { softDeleteColumns } from './softDeleteSchema.js';
 
-export * from "./facultyDesignationTables.js";
-export * from "./facultyDepartmentTables.js";
-export * from "./facultyAssignmentTables.js";
+export * from './facultyDesignationTables.js';
+export * from './facultyDepartmentTables.js';
+export * from './facultyAssignmentTables.js';
+export * from './facultyEmploymentTables.js';
+export * from './facultyEmployDesignationTables.js';
+
+import { facultyEmployments } from './facultyEmploymentTables.js';
 
 /**
- * Faculty profile; personal identifiers are owned by contacts.
- * Department/designation/rank come from primary faculty_assignments (not stored here).
+ * Faculty profile linked to an Employment Record.
+ *
+ * Profile-only columns live here. Contact, employee code, lifecycle status,
+ * employment dates, and designation tenure live on faculty_employments /
+ * faculty_employ_designations (contract phase — no dual-write mirrors).
  */
 export const faculty = pgTable('faculty', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  contactId: text('contact_id').notNull(),
+  employmentId: text('employment_id').notNull(),
   userId: text('user_id'),
-  employeeId: varchar('employee_id', { length: 100 }),
-  status: varchar('status', { length: 50 }).notNull().default('active'),
+  /** Profile Active|Inactive — separate from employment lifecycle status. */
+  profileStatus: varchar('profile_status', { length: 20 }).notNull().default('active'),
   specialization: varchar('specialization', { length: 150 }),
   qualification: varchar('qualification', { length: 255 }),
-  joinDate: date('join_date', { mode: 'string' }),
+  performanceRating: numeric('performance_rating', { precision: 2, scale: 1 }),
   notes: text('notes'),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull().default({}),
   ...softDeleteColumns,
@@ -31,8 +45,9 @@ export const faculty = pgTable('faculty', {
   updatedBy: text('updated_by'),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('faculty_workspace_status_idx').on(table.workspaceSubdomain, table.status),
-  index('faculty_workspace_specialization_idx').on(table.workspaceSubdomain, table.specialization),
+  index('faculty_workspace_profile_status_active_idx')
+    .on(table.workspaceSubdomain, table.profileStatus)
+    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('faculty_workspace_active_idx')
     .on(table.workspaceSubdomain)
@@ -40,41 +55,34 @@ export const faculty = pgTable('faculty', {
   index('faculty_workspace_id_active_idx')
     .on(table.workspaceSubdomain, table.id)
     .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_status_id_active_idx')
-    .on(table.workspaceSubdomain, table.status, table.id)
-    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_created_at_active_idx')
     .on(table.workspaceSubdomain, table.createdAt)
     .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_updated_at_active_idx')
     .on(table.workspaceSubdomain, table.updatedAt)
     .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_status_updated_at_active_idx')
-    .on(table.workspaceSubdomain, table.status, table.updatedAt)
-    .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_status_expr_updated_at_active_idx')
-    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.updatedAt)
-    .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_status_expr_id_active_idx')
-    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.id)
-    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_specialization_active_idx')
     .on(table.workspaceSubdomain, table.specialization)
     .where(sql`${table.deletedAt} is null`),
-  uniqueIndex('faculty_workspace_employee_id_active_uidx')
-    .on(table.workspaceSubdomain, table.employeeId)
-    .where(sql`${table.deletedAt} is null and ${table.employeeId} is not null`),
   index('faculty_workspace_deleted_records_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
-  uniqueIndex('faculty_workspace_contact_active_uidx')
-    .on(table.workspaceSubdomain, table.contactId)
+  uniqueIndex('faculty_workspace_employment_active_uidx')
+    .on(table.workspaceSubdomain, table.employmentId)
     .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
-  check('faculty_status_check', sql`lower(btrim(${table.status})) in ('active', 'inactive', 'on_leave')`),
+  check(
+    'faculty_profile_status_check',
+    sql`lower(btrim(${table.profileStatus})) in ('active', 'inactive')`,
+  ),
+  check(
+    'faculty_performance_rating_range_check',
+    sql`${table.performanceRating} is null or (${table.performanceRating} >= 1.0 and ${table.performanceRating} <= 5.0)`,
+  ),
   foreignKey({
-    columns: [table.workspaceSubdomain, table.contactId],
-    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+    name: 'faculty_employment_fk',
+    columns: [table.workspaceSubdomain, table.employmentId],
+    foreignColumns: [facultyEmployments.workspaceSubdomain, facultyEmployments.id],
   }).onDelete('restrict'),
   foreignKey({
     columns: [table.workspaceSubdomain, table.userId],

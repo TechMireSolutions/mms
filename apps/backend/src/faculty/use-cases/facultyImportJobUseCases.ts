@@ -30,20 +30,25 @@ export async function runFacultyMembersImportJob(
   let imported = 0;
   await context.updateProgress(0, total);
 
-  const departments = await listFacultyDepartments(context.tenant);
-  const designations = await listFacultyDesignations(context.tenant);
-  const deptByCode = new Map(departments.map((d) => [d.code.trim().toLowerCase(), d]));
-  const desigByCode = new Map(designations.map((d) => [d.code.trim().toLowerCase(), d]));
+  const departments = await listFacultyDepartments(context.tenant, { limit: null });
+  const designations = await listFacultyDesignations(context.tenant, { limit: null });
+  const norm = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
+  const deptByKey = new Map<string, (typeof departments)[number]>();
+  for (const d of departments) {
+    deptByKey.set(norm(d.name), d);
+    if (d.code) deptByKey.set(norm(d.code), d);
+  }
+  const resolveDesignation = (raw: string, deptId: string | undefined) => {
+    const key = norm(raw);
+    const matches = designations.filter((d) => norm(d.name) === key || (d.code != null && norm(d.code) === key));
+    return matches.find((d) => deptId && d.departmentId === deptId) ?? matches[0];
+  };
 
   for (let i = 0; i < total; i += 1) {
     const row = rows[i];
     try {
-      const deptName = row.department
-        ? (deptByCode.get(row.department.trim().toLowerCase())?.name ?? row.department)
-        : undefined;
-      const desig = row.designation
-        ? desigByCode.get(row.designation.trim().toLowerCase())
-        : undefined;
+      const dept = row.department ? deptByKey.get(norm(row.department)) : undefined;
+      const desig = row.designation ? resolveDesignation(row.designation, dept?.id) : undefined;
 
       let existingId: string | undefined;
       if (row.employeeId?.trim()) {
@@ -64,16 +69,12 @@ export async function runFacultyMembersImportJob(
       const patch: Record<string, unknown> = {};
       if (row.employeeId) patch.employeeId = row.employeeId.trim();
       if (row.specialization) patch.specialization = row.specialization;
-      if (deptName) patch.department = deptName;
-      if (desig) {
-        patch.designation = desig.name;
-        patch.designationId = desig.id;
-      } else if (row.designation) {
-        patch.designation = row.designation;
-      }
+      if (desig) patch.designationId = desig.id;
       if (row.status) patch.status = row.status;
       if (row.qualification) patch.qualification = row.qualification;
-      if (row.joinDate) patch.joinDate = row.joinDate;
+      const employmentStartDate = row.employmentStartDate ?? row.joinDate;
+      if (employmentStartDate) patch.employmentStartDate = employmentStartDate;
+      if (row.employmentEndDate) patch.employmentEndDate = row.employmentEndDate;
 
       if (existingId) {
         await updateFacultyById(existingId, patch);

@@ -1,32 +1,33 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
-import { Award } from "lucide-react";
-import { FormCollectionShell } from "@/components/ui/FormPrimitives";
-import { WarningCallout } from "@/components/ui/WarningCallout";
+import { useCallback, useMemo } from "react";
+import {
+  FormCollectionShell,
+  FormListFieldCard,
+} from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
-import {
-  type FacultyDepartmentEntity,
-  type FacultyDesignationDefinition,
-  type FacultyMember,
+import type {
+  FacultyDepartmentEntity,
+  FacultyDesignationDefinition,
+  FacultyEmployDesignationFormRow,
+  FacultyMember,
+  FieldDefinition,
 } from "@mms/shared";
-import { useOrganizationPositions } from "@/tenant/hooks/collections/organization";
-import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
-import { FacultyFormDesignationOverlays } from "./FacultyFormDesignationOverlays";
-import { FacultyFormDesignationRoles } from "./FacultyFormDesignationRoles";
-import { FacultyFormDesignationRows } from "./FacultyFormDesignationRows";
-import { FacultyFormDesignationSummary } from "./FacultyFormDesignationSummary";
-import { useFacultyFormCatalogQuickCreate } from "../hooks/useFacultyFormCatalogQuickCreate";
+import { FacultyCatalogCreateOverlays } from "./FacultyCatalogCreateOverlays";
+import { FacultyFormDesignationCard } from "./FacultyFormDesignationCard";
+import { buildDesignationDraftPatch } from "./facultyFormDesignationDraft";
 import {
-  createEmptyDesignationRow,
-  getInitialDesignationRows,
-  syncPrimaryDesignationPatch,
-  type FacultyDesignationDraftRow,
-} from "./facultyFormDesignationDraft";
+  employDesignationRowsFromFaculty,
+  flatDraftPatchFromEmployDesignationRows,
+  newEmployDesignationFormRow,
+  pickPrimaryEmployDesignationRow,
+} from "./facultyEmployDesignationFormDraft";
+import { useFacultyFormCatalogQuickCreate } from "../hooks/useFacultyFormCatalogQuickCreate";
 
 export interface FacultyFormDesignationSectionProps {
   faculty?: FacultyMember;
   facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
+  fields?: Record<string, FieldDefinition[]>;
   designationOptions?: FacultyDesignationDefinition[];
   departmentOptions?: string[];
   departmentEntities?: FacultyDepartmentEntity[];
@@ -36,163 +37,137 @@ export interface FacultyFormDesignationSectionProps {
   onDraftChange: (patch: Partial<FacultyMember>) => void;
 }
 
+function resolveFormRows(draft: Partial<FacultyMember>): FacultyEmployDesignationFormRow[] {
+  const rows = employDesignationRowsFromFaculty(draft);
+  return rows.length > 0 ? rows : [newEmployDesignationFormRow()];
+}
+
+/** Employ Designation collection — one card per tenure row for this contact's employment. */
 export function FacultyFormDesignationSection(props: FacultyFormDesignationSectionProps): React.JSX.Element | null {
   const {
-    faculty,
     facultyDraft = {},
     errors,
+    fields = {},
     designationOptions = [],
-    departmentOptions,
-    departmentEntities,
-    showCollectionTitle = false,
+    departmentEntities = [],
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
   } = props;
   const { t } = useTranslation();
-  const isExisting = Boolean(faculty?.id);
   const catalogCreate = useFacultyFormCatalogQuickCreate();
-  const { data: positions = [] } = useOrganizationPositions();
-  const [createPositionOpen, setCreatePositionOpen] = useState(false);
-  const [positionRowKey, setPositionRowKey] = useState<string | null>(null);
 
-  const showDesignation = isFieldEnabled("designation") || isFieldEnabled("designationId");
-  const showDepartment = isFieldEnabled("department") || isFieldEnabled("departmentId");
-  const [rows, setRows] = useState<FacultyDesignationDraftRow[]>(() =>
-    getInitialDesignationRows(faculty ?? facultyDraft),
+  const showAny = isFieldEnabled("designation") || isFieldEnabled("designationId")
+    || isFieldEnabled("designationStartDate") || isFieldEnabled("designationEndDate")
+    || isFieldEnabled("employDesignationStatus") || isFieldEnabled("profileStatus");
+
+  const rows = useMemo(
+    () => (showAny ? resolveFormRows(facultyDraft) : []),
+    [
+      showAny,
+      facultyDraft.designationId,
+      facultyDraft.employDesignations,
+      facultyDraft.employDesignationId,
+      facultyDraft.designationStartDate,
+      facultyDraft.designationEndDate,
+      facultyDraft.employDesignationStatus,
+    ],
   );
+  const primaryClientId = pickPrimaryEmployDesignationRow(rows)?.clientId;
 
-  useEffect(() => {
-    setRows(getInitialDesignationRows(faculty ?? facultyDraft));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- draft identity changes every keystroke
-  }, [faculty?.id]);
+  const commitRows = useCallback((nextRows: FacultyEmployDesignationFormRow[]) => {
+    const primary = pickPrimaryEmployDesignationRow(nextRows);
+    const designation = primary?.designationId
+      ? designationOptions.find((d) => d.id === primary.designationId)
+      : undefined;
+    onDraftChange({
+      ...flatDraftPatchFromEmployDesignationRows(nextRows),
+      ...(designation ? buildDesignationDraftPatch(designation, departmentEntities) : {}),
+    });
+  }, [departmentEntities, designationOptions, onDraftChange]);
 
-  const positionOptions = useMemo(() => {
-    const deptId = rows[0]?.departmentId;
-    const desigId = rows[0]?.designationId;
-    return positions
-      .filter((p) => p.isActive !== false)
-      .filter((p) => !deptId || !p.departmentId || p.departmentId === deptId)
-      .filter((p) => !desigId || !p.designationId || p.designationId === desigId)
-      .map((p) => ({ value: p.id, label: `${p.name} (${p.code})` }));
-  }, [positions, rows]);
-  const requiresPosition = !isExisting && positions.some((p) => p.isActive !== false);
+  if (!showAny) return null;
 
-  if (!showDesignation && !showDepartment) return null;
-
-  if (isExisting && showDesignation) {
-    return (
-      <FacultyFormDesignationSummary
-        facultyDraft={facultyDraft}
-        designationOptions={designationOptions}
-        showCollectionTitle={showCollectionTitle}
-      />
-    );
-  }
-
-  const commitRows = (nextRows: FacultyDesignationDraftRow[]) => {
-    setRows(nextRows);
-    onDraftChange(syncPrimaryDesignationPatch(nextRows, { designationOptions, departmentEntities }));
+  const handleRowChange = (clientId: string, patch: Partial<FacultyEmployDesignationFormRow>) => {
+    commitRows(rows.map((row) => (row.clientId === clientId ? { ...row, ...patch } : row)));
   };
-  const patchRowByKey = (rowKey: string | null, patch: Partial<FacultyDesignationDraftRow>) => {
-    if (!rowKey) {
-      if (!rows[0]) return;
-      commitRows(rows.map((row, i) => (i === 0 ? { ...row, ...patch } : row)));
+
+  const handleDesignationCatalogChange = (clientId: string, designationId: string) => {
+    const designation = designationOptions.find((d) => d.id === designationId);
+    const nextRows = rows.map((row) => (
+      row.clientId === clientId ? { ...row, designationId } : row
+    ));
+    const catalogPatch = clientId === primaryClientId && designation
+      ? buildDesignationDraftPatch(designation, departmentEntities)
+      : {};
+    onDraftChange({
+      ...flatDraftPatchFromEmployDesignationRows(nextRows),
+      ...catalogPatch,
+    });
+  };
+
+  const handleAdd = () => commitRows([...rows, newEmployDesignationFormRow()]);
+  const handleRemove = (clientId: string) => {
+    const next = rows.filter((row) => row.clientId !== clientId);
+    commitRows(next.length > 0 ? next : [newEmployDesignationFormRow()]);
+  };
+
+  const applyDesignation = (designation: FacultyDesignationDefinition | undefined) => {
+    if (!designation || !primaryClientId) {
+      onDraftChange(buildDesignationDraftPatch(designation, departmentEntities));
       return;
     }
-    commitRows(rows.map((row) => (row.key === rowKey ? { ...row, ...patch } : row)));
+    handleDesignationCatalogChange(primaryClientId, designation.id);
   };
-
-  const assignableRoles = [...new Set(
-    rows.flatMap((row) => {
-      if (row.status !== "active" || !row.designationId) return [];
-      return designationOptions.find((item) => item.id === row.designationId)?.assignableRoles ?? [];
-    }),
-  )];
-
-  const overlays = (
-    <FacultyFormDesignationOverlays
-      catalogCreate={catalogCreate}
-      showDesignation={showDesignation}
-      createPositionOpen={createPositionOpen}
-      positionRowKey={positionRowKey}
-      onClosePosition={() => setCreatePositionOpen(false)}
-      onDraftChange={onDraftChange}
-      patchRowByKey={patchRowByKey}
-    />
-  );
-
-  if (!showDesignation) {
-    return (
-      <>
-        <div className="space-y-3 text-start">
-          {showCollectionTitle ? (
-            <div className="flex items-center gap-2">
-              <Award className="size-4 text-primary" aria-hidden />
-              <h3 className="text-sm font-semibold text-foreground">{t("faculty.form.tab.designation")}</h3>
-            </div>
-          ) : null}
-          {isExisting ? (
-            <WarningCallout tone="info" density="compact" description={t("faculty.form.primaryRoleAssignmentsHint")} />
-          ) : null}
-          <FacultyDepartmentSelectField
-            value={facultyDraft.department ?? ""}
-            departmentId={typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined}
-            error={errors.department || errors.departmentId}
-            required={isFieldRequired("department") || isFieldRequired("departmentId")}
-            disabled={isExisting}
-            departmentOptions={departmentOptions}
-            departmentEntities={departmentEntities}
-            canAdd={!isExisting}
-            onOpenAdd={() => catalogCreate.openCreateDepartment(null)}
-            onChange={onDraftChange}
-          />
-        </div>
-        {overlays}
-      </>
-    );
-  }
 
   return (
     <>
-      <div className="space-y-4 text-start">
+      <div className="space-y-4 pb-2 text-start">
         <FormCollectionShell
-          title={showCollectionTitle ? t("faculty.form.tab.designation") : undefined}
-          icon={showCollectionTitle ? Award : undefined}
-          addLabel={t("faculty.designations.addDesignation")}
-          onAdd={() => commitRows([...rows, createEmptyDesignationRow()])}
-          allowAdd
-          listKey="faculty-des-new"
+          isEmpty={false}
+          addLabel={t("faculty.form.designations.addTenure")}
+          onAdd={handleAdd}
+          listKey="faculty-employ-designations"
         >
-          <FacultyFormDesignationRows
-            rows={rows}
-            designationOptions={designationOptions}
-            departmentOptions={departmentOptions}
-            departmentEntities={departmentEntities}
-            legacyDesignationName={facultyDraft.designation}
-            errors={errors}
-            requiredFirst={isFieldRequired("designation") || isFieldRequired("designationId")}
-            showDepartment={showDepartment}
-            departmentRequired={isFieldRequired("department") || isFieldRequired("departmentId")}
-            disabled={false}
-            positionOptions={positionOptions}
-            requiresPosition={requiresPosition}
-            canAddCatalog
-            onOpenAddDepartment={catalogCreate.openCreateDepartment}
-            onOpenAddDesignation={catalogCreate.openCreateDesignation}
-            onOpenAddPosition={(rowKey) => {
-              setPositionRowKey(rowKey);
-              setCreatePositionOpen(true);
-            }}
-            onChangeRows={commitRows}
-          />
+          {rows.map((row, index) => (
+            <FormListFieldCard
+              key={row.clientId}
+              id={row.clientId}
+              index={index}
+              label={t("faculty.form.designationCard")}
+              removeLabel={t("faculty.form.designations.removeTenure")}
+              canRemove={rows.length > 1}
+              onRemove={() => handleRemove(row.clientId)}
+            >
+              <FacultyFormDesignationCard
+                row={row}
+                rowIndex={index}
+                errors={errors}
+                fields={fields}
+                designationOptions={designationOptions}
+                departmentEntities={departmentEntities}
+                isFieldEnabled={isFieldEnabled}
+                isFieldRequired={isFieldRequired}
+                t={t}
+                onRowChange={handleRowChange}
+                onDesignationCatalogChange={handleDesignationCatalogChange}
+                onOpenCreateDesignation={catalogCreate.openCreateDesignation}
+              />
+            </FormListFieldCard>
+          ))}
         </FormCollectionShell>
-        <FacultyFormDesignationRoles
-          assignableRoles={assignableRoles}
-          hasDesignation={rows.some((row) => row.designationId)}
-        />
       </div>
-      {overlays}
+      <FacultyCatalogCreateOverlays
+        createDepartmentOpen={catalogCreate.createDepartmentOpen}
+        onCloseDepartment={catalogCreate.closeDepartment}
+        createDesignationOpen={catalogCreate.createDesignationOpen}
+        onCloseDesignation={catalogCreate.closeDesignation}
+        designationDefaultDepartmentId={
+          typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined
+        }
+        onDepartmentCreated={(department) => onDraftChange({ department: department.name, departmentId: department.id })}
+        onDesignationCreated={applyDesignation}
+      />
     </>
   );
 }

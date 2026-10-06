@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FacultyDesignationsSetupSection } from './FacultyDesignationsSetupSection';
+import type { FacultyDesignationDefinition } from '@mms/shared';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
@@ -18,24 +19,31 @@ const mockSaveMutateAsync = vi.fn().mockResolvedValue({
 });
 const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined);
 
-let mockDesignationsData = [
+let mockDesignationsData: FacultyDesignationDefinition[] = [
   {
     id: 'des-1',
+    departmentId: 'dept-1',
+    departmentName: 'Hifz',
     name: 'Head of Faculty',
-    code: 'head-fac',
-    hierarchyRank: 1,
-    isActive: true,
+    status: 'active',
     assignableRoles: ['academic_head'],
   },
   {
     id: 'des-2',
+    departmentId: 'dept-1',
+    departmentName: 'Hifz',
     name: 'Senior Scholar',
-    code: 'snr-schol',
-    hierarchyRank: 2,
-    isActive: true,
+    status: 'active',
     assignableRoles: ['instructor'],
   },
 ];
+
+vi.mock('../hooks/useFacultyDepartments', () => ({
+  useFacultyDepartments: () => ({
+    data: [{ id: 'dept-1', name: 'Hifz', status: 'active' }],
+    isLoading: false,
+  }),
+}));
 
 vi.mock('../hooks/useFacultyDesignations', () => ({
   useFacultyDesignations: () => ({
@@ -59,6 +67,15 @@ vi.mock('@/tenant/hooks/useWorkspaceRoles', () => ({
     { id: 'instructor', name: 'Instructor' },
     { id: 'academic_head', name: 'Academic Head' },
   ],
+}));
+
+vi.mock('@/tenant/hooks/collections/users', () => ({
+  RoleFormModal: () => null,
+  useCreateWorkspaceRole: () => ({
+    canCreate: false,
+    visibleModules: [],
+    createRole: vi.fn(),
+  }),
 }));
 
 vi.mock('@/hooks/useTranslation', () => ({
@@ -87,18 +104,18 @@ describe('FacultyDesignationsSetupSection', () => {
     mockDesignationsData = [
       {
         id: 'des-1',
+        departmentId: 'dept-1',
+        departmentName: 'Hifz',
         name: 'Head of Faculty',
-        code: 'head-fac',
-        hierarchyRank: 1,
-        isActive: true,
+        status: 'active',
         assignableRoles: ['academic_head'],
       },
       {
         id: 'des-2',
+        departmentId: 'dept-1',
+        departmentName: 'Hifz',
         name: 'Senior Scholar',
-        code: 'snr-schol',
-        hierarchyRank: 2,
-        isActive: true,
+        status: 'active',
         assignableRoles: ['instructor'],
       },
     ];

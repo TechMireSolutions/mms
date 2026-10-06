@@ -1,4 +1,5 @@
 import { DEFAULT_FACULTY_SETTINGS, type FacultySettings } from './facultyModuleSettings.js';
+import { buildSequenceFormulaTemplate } from './sequenceNumberingUtils.js';
 
 export type FacultyModulePreferences = Pick<
   FacultySettings,
@@ -41,7 +42,7 @@ export function normalizeFacultyModulePreferences(
 ): FacultyModulePreferences {
   const defaults: FacultyModulePreferences = {
     idPrefix: DEFAULT_FACULTY_SETTINGS.idPrefix,
-    idTemplate: DEFAULT_FACULTY_SETTINGS.idTemplate ?? '{PREFIX}-{SEQ}',
+    idTemplate: DEFAULT_FACULTY_SETTINGS.idTemplate ?? '{PREFIX}{YYYY}{SEQ}',
     idDigits: DEFAULT_FACULTY_SETTINGS.idDigits ?? 4,
     idStartSeq: DEFAULT_FACULTY_SETTINGS.idStartSeq ?? 1,
     idRestartAnnually: DEFAULT_FACULTY_SETTINGS.idRestartAnnually ?? false,
@@ -70,14 +71,20 @@ export function normalizeFacultyModulePreferences(
   const parsedStartSeq = Number(partial.idStartSeq);
   const parsedCurrentSeq = Number(partial.employeeIdCurrentSequence);
   const parsedLastYear = Number(partial.employeeIdLastYear);
+  const yearFormat = String(partial.employeeIdYearFormat ?? '').toUpperCase() === 'YY' ? 'YY' : 'YYYY';
+  const delimiter =
+    typeof partial.employeeIdDelimiter === 'string'
+      ? partial.employeeIdDelimiter
+      : defaults.employeeIdDelimiter;
 
   return {
     idPrefix: effectivePrefix,
     employeeIdPrefix: effectivePrefix,
-    idTemplate:
-      typeof partial.idTemplate === 'string' && partial.idTemplate.trim()
-        ? partial.idTemplate.trim()
-        : defaults.idTemplate,
+    idTemplate: buildSequenceFormulaTemplate({
+      prefix: effectivePrefix,
+      yearFormat,
+      delimiter,
+    }),
     idDigits: effectiveDigits,
     employeeIdSequenceDigits: effectiveDigits,
     idStartSeq:
@@ -88,11 +95,8 @@ export function normalizeFacultyModulePreferences(
       typeof partial.idRestartAnnually === 'boolean'
         ? partial.idRestartAnnually
         : defaults.idRestartAnnually,
-    employeeIdYearFormat: String(partial.employeeIdYearFormat ?? '').toUpperCase() === 'YY' ? 'YY' : 'YYYY',
-    employeeIdDelimiter:
-      typeof partial.employeeIdDelimiter === 'string'
-        ? partial.employeeIdDelimiter
-        : defaults.employeeIdDelimiter,
+    employeeIdYearFormat: yearFormat,
+    employeeIdDelimiter: delimiter,
     employeeIdLastYear: Number.isFinite(parsedLastYear) ? Math.floor(parsedLastYear) : defaults.employeeIdLastYear,
     employeeIdCurrentSequence:
       Number.isFinite(parsedCurrentSeq) && parsedCurrentSeq >= 0

@@ -7,8 +7,9 @@ import {
 
 describe('formatFacultyEmployeeId', () => {
   it('formats with default template and prefix', () => {
-    expect(formatFacultyEmployeeId(1, { idPrefix: 'TCH' })).toBe('TCH-0001');
-    expect(formatFacultyEmployeeId(42, { idPrefix: 'EMP' })).toBe('EMP-0042');
+    const fixedDate = new Date('2026-09-17T12:00:00Z');
+    expect(formatFacultyEmployeeId(1, { idPrefix: 'TCH' }, fixedDate)).toBe('TCH20260001');
+    expect(formatFacultyEmployeeId(42, { idPrefix: 'EMP' }, fixedDate)).toBe('EMP20260042');
   });
 
   it('formats with custom template with {PREFIX}, {YYYY}, {SEQ}', () => {
@@ -40,27 +41,30 @@ describe('formatFacultyEmployeeId', () => {
   });
 
   it('clamps digits between 1 and 8', () => {
-    expect(formatFacultyEmployeeId(1, { idPrefix: 'T', idDigits: 1 })).toBe('T-1');
-    expect(formatFacultyEmployeeId(1, { idPrefix: 'T', idDigits: 6 })).toBe('T-000001');
+    const fixedDate = new Date('2026-09-17T12:00:00Z');
+    expect(formatFacultyEmployeeId(1, { idPrefix: 'T', idDigits: 1 }, fixedDate)).toBe('T20261');
+    expect(formatFacultyEmployeeId(1, { idPrefix: 'T', idDigits: 6 }, fixedDate)).toBe('T2026000001');
   });
 });
 
 describe('computeNextFacultyEmployeeIdFromCount', () => {
+  const fixedDate = new Date('2026-09-17T12:00:00Z');
+
   it('pads sequence from count', () => {
-    expect(computeNextFacultyEmployeeIdFromCount(0, { idPrefix: 'TCH' })).toBe('TCH-0001');
-    expect(computeNextFacultyEmployeeIdFromCount(3, { idPrefix: 'FAC' })).toBe('FAC-0004');
+    expect(computeNextFacultyEmployeeIdFromCount(0, { idPrefix: 'TCH' }, fixedDate)).toBe('TCH20260001');
+    expect(computeNextFacultyEmployeeIdFromCount(3, { idPrefix: 'FAC' }, fixedDate)).toBe('FAC20260004');
   });
 
   it('respects idStartSeq when count is lower', () => {
     expect(
-      computeNextFacultyEmployeeIdFromCount(0, { idPrefix: 'EMP', idStartSeq: 100 }),
-    ).toBe('EMP-0100');
+      computeNextFacultyEmployeeIdFromCount(0, { idPrefix: 'EMP', idStartSeq: 100 }, fixedDate),
+    ).toBe('EMP20260100');
     expect(
-      computeNextFacultyEmployeeIdFromCount(5, { idPrefix: 'EMP', idStartSeq: 100 }),
-    ).toBe('EMP-0100');
+      computeNextFacultyEmployeeIdFromCount(5, { idPrefix: 'EMP', idStartSeq: 100 }, fixedDate),
+    ).toBe('EMP20260100');
     expect(
-      computeNextFacultyEmployeeIdFromCount(120, { idPrefix: 'EMP', idStartSeq: 100 }),
-    ).toBe('EMP-0121');
+      computeNextFacultyEmployeeIdFromCount(120, { idPrefix: 'EMP', idStartSeq: 100 }, fixedDate),
+    ).toBe('EMP20260121');
   });
 });
 

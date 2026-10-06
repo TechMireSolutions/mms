@@ -36,9 +36,28 @@ vi.mock('../services/outboxEventService.js', () => ({
   emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Link guards are DB-backed (contacts / designations); the DI composition root is under test here.
+vi.mock('../faculty/use-cases/facultyWriteGuards.js', () => ({
+  validateFacultyContactLink: vi.fn().mockResolvedValue({ userId: null }),
+  validateFacultyDesignationLink: vi.fn().mockResolvedValue({ departmentId: '' }),
+}));
+
 vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
   cascadeSoftDeleteFacultyAssignments: vi.fn().mockResolvedValue(0),
   cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
+}));
+
+vi.mock('../db/repositories/facultyEmploymentRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployments: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployments: vi.fn().mockResolvedValue(0),
+  upsertFacultyEmploymentTx: vi.fn().mockResolvedValue(undefined),
+  flattenFacultyEmploymentFields: (member: unknown) => member,
+}));
+
+vi.mock('../db/repositories/facultyEmployDesignationRepository.js', () => ({
+  cascadeSoftDeleteFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  cascadeRestoreFacultyEmployDesignations: vi.fn().mockResolvedValue(0),
+  upsertFacultyEmployDesignationTx: vi.fn().mockResolvedValue('faced-mock'),
 }));
 
 import { createFacultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
@@ -49,6 +68,7 @@ function fakeFaculty(id: string, overrides: Partial<Faculty> = {}): Faculty {
     contactId: `c-${id}`,
     name: `Faculty ${id}`,
     status: 'active',
+    designationId: 'des-1',
     ...overrides,
   };
 }
@@ -177,6 +197,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
     const { record, restored } = await useCases.createFaculty({
       contactId: 'c-new',
       status: 'active',
+      designationId: 'des-1',
       specialization: 'Qaidah',
     });
 
@@ -194,6 +215,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
     const { record } = await useCases.createFaculty({
       contactId: 'c-new',
       status: 'active',
+      designationId: 'des-1',
       name: 'Should Strip',
       phone: '+923001234567',
       email: 'a@b.com',
@@ -222,6 +244,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
     const { record, restored } = await useCases.createFaculty({
       contactId: 'c-archived',
       status: 'active',
+      designationId: 'des-1',
       specialization: 'Tajweed',
     });
 
@@ -445,6 +468,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
 
     const employeeId = await useCases.computeNextFacultyEmployeeIdForSettings({
       idPrefix: 'T',
+      idTemplate: '{PREFIX}-{SEQ}',
     });
 
     expect(employeeId).toBe('T-0006');

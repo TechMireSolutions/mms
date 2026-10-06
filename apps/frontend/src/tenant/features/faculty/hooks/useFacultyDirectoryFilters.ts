@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useDirectoryTrashState } from '@/hooks/useDirectoryTrashState';
-import {
-  toggleIdInSelection,
-  togglePageIdsInSelection,
-} from '@/lib/directorySelection';
-import {
-  FACULTY_WORK_DRILLDOWN_EVENT,
-  consumeFacultyWorkDrillDown,
-  type FacultyWorkDrillDown,
-} from '@/tenant/features/faculty/hooks/facultyWorkDrillDown';
+import { getDirectoryPageSelection } from '@/lib/directorySelection';
+import { useWorkSelection } from '@/hooks/useWorkSelection';
+import { useFacultyDirectoryDrillDown } from '@/tenant/features/faculty/hooks/useFacultyDirectoryDrillDown';
 import type { FacultySortField } from '@/tenant/features/faculty/components/facultyListTypes';
 
 /** Directory filters, sort, trash, and selection SSOT for Faculty Work. */
@@ -35,7 +29,8 @@ export function useFacultyDirectoryFilters({
   const [filterDesignation, setFilterDesignation] = useState('');
   const [filterReportingFacultyId, setFilterReportingFacultyId] = useState('');
   const [quickFilter, setQuickFilter] = useState<FacultyQuickFilter>('all');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { selectedIds, toggleSelected, toggleSelectAll, clearSelection } =
+    useWorkSelection<string>();
 
   useEffect(() => {
     setListPage(1);
@@ -54,7 +49,7 @@ export function useFacultyDirectoryFilters({
   ]);
 
   useEffect(() => {
-    setSelectedIds([]);
+    clearSelection();
   }, [
     listPage,
     debouncedSearch,
@@ -68,52 +63,30 @@ export function useFacultyDirectoryFilters({
     showDeleted,
     sortField,
     sortDir,
+    clearSelection,
   ]);
 
+  useFacultyDirectoryDrillDown({
+    setActiveTab,
+    setQuickFilter,
+    setFilterStatus,
+    setFilterDepartment,
+    setFilterDesignation,
+    setFilterReportingFacultyId,
+  });
+
   const toggleStatus = useCallback((status: string) => {
-    // Manual status selection supersedes any quick-filter preset.
     setQuickFilter('all');
     setFilterStatus((selectedStatuses) => {
       const nextSet = new Set(selectedStatuses);
-      if (nextSet.has(status)) {
-        nextSet.delete(status);
-      } else {
-        nextSet.add(status);
-      }
+      if (nextSet.has(status)) nextSet.delete(status);
+      else nextSet.add(status);
       return [...nextSet];
     });
   }, []);
 
-  const applyDrillDown = useCallback(
-    (filter: FacultyWorkDrillDown) => {
-      setQuickFilter('all');
-      setFilterStatus([]);
-      if (filter.quickFilter && isFacultyQuickFilter(filter.quickFilter)) {
-        setQuickFilter(filter.quickFilter);
-      }
-      if (filter.department) setFilterDepartment(filter.department);
-      if (filter.designation) setFilterDesignation(filter.designation);
-      if (filter.reportingFacultyId) setFilterReportingFacultyId(filter.reportingFacultyId);
-      setActiveTab('faculties');
-    },
-    [setActiveTab],
-  );
-
-  useEffect(() => {
-    const pending = consumeFacultyWorkDrillDown();
-    if (pending) applyDrillDown(pending);
-
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent<FacultyWorkDrillDown>).detail;
-      if (detail) applyDrillDown(detail);
-    };
-    window.addEventListener(FACULTY_WORK_DRILLDOWN_EVENT, handler);
-    return () => window.removeEventListener(FACULTY_WORK_DRILLDOWN_EVENT, handler);
-  }, [applyDrillDown]);
-
   const changeQuickFilter = useCallback((preset: string) => {
     if (!isFacultyQuickFilter(preset)) return;
-    // Status presets express status via the preset; clear the overlapping status filter.
     setFilterStatus([]);
     setQuickFilter(preset);
   }, []);
@@ -127,10 +100,6 @@ export function useFacultyDirectoryFilters({
     setFilterDesignation('');
     setFilterReportingFacultyId('');
     setQuickFilter('all');
-  }, []);
-
-  const clearSelection = useCallback(() => {
-    setSelectedIds([]);
   }, []);
 
   const hasActiveFilters =
@@ -153,13 +122,20 @@ export function useFacultyDirectoryFilters({
     (search.trim() ? 1 : 0) +
     (quickFilter !== 'all' ? 1 : 0);
 
-  const handleSelectOne = useCallback((id: string) => {
-    setSelectedIds((current) => toggleIdInSelection(current, id));
-  }, []);
+  const handleSelectOne = useCallback(
+    (id: string) => {
+      toggleSelected(id, !selectedIds.includes(id));
+    },
+    [selectedIds, toggleSelected],
+  );
 
-  const handleSelectAll = useCallback((pageIds: string[]) => {
-    setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
-  }, []);
+  const handleSelectAll = useCallback(
+    (pageIds: string[]) => {
+      const { allSelected } = getDirectoryPageSelection(pageIds, selectedIds);
+      toggleSelectAll(!allSelected, pageIds);
+    },
+    [selectedIds, toggleSelectAll],
+  );
 
   return {
     listPage,

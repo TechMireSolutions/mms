@@ -1,20 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: vi.fn().mockResolvedValue({
+    hashPrevious: '', hashCurrent: '', canonicalPayload: '',
+  }),
+}));
+
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { persistFacultyTx } from '../db/repositories/facultyRepositoryColumns.js';
 
 describe('persistFacultyTx employment profile writes', () => {
+  const selectLimit = vi.fn().mockResolvedValue([]);
+  const selectWhere = vi.fn(() => ({ limit: selectLimit }));
+  const selectFrom = vi.fn(() => ({ where: selectWhere }));
+  const insertOnConflict = vi.fn().mockResolvedValue(undefined);
+  const insertValues = vi.fn(() => ({ onConflictDoUpdate: insertOnConflict }));
   const tx = {
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
-      })),
-    })),
+    select: vi.fn(() => ({ from: selectFrom })),
+    insert: vi.fn(() => ({ values: insertValues })),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    selectLimit.mockResolvedValue([]);
   });
 
-  it('persists core employment fields without legacy denormalized columns', async () => {
+  it('persists profile columns without employment/designation mirrors', async () => {
     await persistFacultyTx(tx as never, 'demo', {
       id: 'f1',
       contactId: 'c1',
@@ -23,18 +37,25 @@ describe('persistFacultyTx employment profile writes', () => {
       department: 'Legacy Dept',
       designation: 'Legacy Title',
       hierarchyRank: 3,
+      specialization: 'Fiqh',
     } as never);
 
     expect(tx.insert).toHaveBeenCalled();
-    const valuesArg = tx.insert.mock.results[0]?.value.values.mock.calls[0]?.[0];
-    expect(valuesArg).toMatchObject({
+    const valueCalls = insertValues.mock.calls as unknown as Array<[Record<string, unknown>]>;
+    // Faculty insert is last (employment + employ-designation upserts precede it).
+    const facultyValues = valueCalls[valueCalls.length - 1]?.[0] ?? valueCalls[0]?.[0];
+    expect(facultyValues).toMatchObject({
       id: 'f1',
-      contactId: 'c1',
-      status: 'active',
+      specialization: 'Fiqh',
     });
-    expect(valuesArg).not.toHaveProperty('department');
-    expect(valuesArg).not.toHaveProperty('designation');
-    expect(valuesArg).not.toHaveProperty('reportingFacultyId');
-    expect(valuesArg).not.toHaveProperty('hierarchyRank');
+    expect(facultyValues).toHaveProperty('employmentId');
+    expect(facultyValues).not.toHaveProperty('contactId');
+    expect(facultyValues).not.toHaveProperty('status');
+    expect(facultyValues).not.toHaveProperty('employeeId');
+    expect(facultyValues).not.toHaveProperty('designationId');
+    expect(facultyValues).not.toHaveProperty('department');
+    expect(facultyValues).not.toHaveProperty('designation');
+    expect(facultyValues).not.toHaveProperty('reportingFacultyId');
+    expect(facultyValues).not.toHaveProperty('hierarchyRank');
   });
 });

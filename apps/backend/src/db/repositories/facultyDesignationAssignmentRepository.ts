@@ -1,10 +1,6 @@
-import { and, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import type { FacultyDesignationAssignment } from '@mms/shared';
-import {
-  facultyAssignments,
-  facultyDesignationRoles,
-  facultyDesignations,
-} from '../schema.js';
+import { facultyAssignments, facultyDesignations } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { listFacultyDesignations } from './facultyDesignationRepository.js';
 
@@ -80,7 +76,7 @@ export async function listFacultyDesignationAssignments(
         isNull(facultyAssignments.deletedAt),
       ))
       .orderBy(desc(facultyAssignments.startDate));
-    const definitions = await listFacultyDesignations(workspaceSubdomain);
+    const definitions = await listFacultyDesignations(workspaceSubdomain, { limit: null });
     const rolesByDesignation = new Map(definitions.map((d) => [d.id, d.assignableRoles]));
     return rows.map((row) => mapAssignmentRow(row, rolesByDesignation));
   });
@@ -110,46 +106,8 @@ export async function findCurrentFacultyDesignationAssignment(
       ))
       .limit(1);
     if (!rows[0]) return null;
-    const definitions = await listFacultyDesignations(workspaceSubdomain);
+    const definitions = await listFacultyDesignations(workspaceSubdomain, { limit: null });
     const rolesByDesignation = new Map(definitions.map((d) => [d.id, d.assignableRoles]));
     return mapAssignmentRow(rows[0], rolesByDesignation);
   });
 }
-
-/** Batch-loads the effective primary appointment for directory and hierarchy projections. */
-export async function listCurrentFacultyDesignationAssignments(
-  tenant: string,
-  facultyIds: string[],
-  onDate = new Date().toISOString().slice(0, 10),
-): Promise<Map<string, FacultyDesignationAssignment>> {
-  if (facultyIds.length === 0) return new Map();
-  const workspaceSubdomain = tenant.trim().toLowerCase();
-  return withTenantRead(workspaceSubdomain, async (tx) => {
-    const [rows, roles] = await Promise.all([
-      tx.select(FA_PROJECTION_COLUMNS).from(facultyAssignments)
-        .innerJoin(facultyDesignations, and(
-          eq(facultyDesignations.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
-          eq(facultyDesignations.id, facultyAssignments.designationId),
-        ))
-        .where(and(
-          eq(facultyAssignments.workspaceSubdomain, workspaceSubdomain),
-          inArray(facultyAssignments.facultyId, facultyIds),
-          eq(facultyAssignments.isPrimary, true),
-          eq(facultyAssignments.status, 'active'),
-          isNull(facultyAssignments.deletedAt),
-          lte(facultyAssignments.startDate, onDate),
-          or(isNull(facultyAssignments.endDate), gte(facultyAssignments.endDate, onDate)),
-        )),
-      tx.select({ designationId: facultyDesignationRoles.designationId, roleKey: facultyDesignationRoles.roleKey })
-        .from(facultyDesignationRoles)
-        .where(eq(facultyDesignationRoles.workspaceSubdomain, workspaceSubdomain)),
-    ]);
-    const rolesByDesignation = new Map<string, string[]>();
-    for (const role of roles) {
-      rolesByDesignation.set(role.designationId, [...(rolesByDesignation.get(role.designationId) ?? []), role.roleKey]);
-    }
-    return new Map(rows.map((row) => [row.facultyId, mapAssignmentRow(row, rolesByDesignation)]));
-  });
-}
-
-export { listCurrentFacultyDesignationHoldings } from './facultyDesignationHoldingsRepository.js';

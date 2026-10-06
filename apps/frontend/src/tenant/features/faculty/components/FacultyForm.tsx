@@ -40,9 +40,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     departmentEntities,
     linkedContact,
     linkedFacultyContactIds,
-    linkedUser,
-    userAccountDraft,
-    setUserAccountDraft,
     idPrefix,
     nextEmployeeId,
     handleRegenerateEmployeeId,
@@ -68,8 +65,8 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     formInstanceId,
   });
 
-  const onSaveWithTabFocus = async (options?: { keepOpen?: boolean }): Promise<void> => {
-    await handleSave(options);
+  const onSaveWithTabFocus = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
+    return await handleSave(options);
   };
 
   return (
@@ -88,6 +85,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        saveOnTabChange={false}
         cancelLabel={t("common.cancel")}
         saveLabel={saving ? t("faculty.form.saving") : faculty ? t("faculty.form.saveUpdate") : t("faculty.form.saveCreate")}
         onSave={onSaveWithTabFocus}
@@ -134,8 +132,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             departmentOptions={departmentOptions}
             departmentEntities={departmentEntities}
             designationOptions={designationOptions}
-            userAccountDraft={userAccountDraft}
-            onUserAccountDraftChange={setUserAccountDraft}
             autoGenerateId={autoGenerateId}
             idPrefix={idPrefix}
             nextEmployeeId={nextEmployeeId}
@@ -147,7 +143,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             getFieldError={getFieldError}
             onDraftChange={updateDraft}
             linkedContact={linkedContact}
-            linkedUser={linkedUser}
           />
         </form>
       </FormModal>

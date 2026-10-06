@@ -7,10 +7,6 @@ vi.mock("@/components/contactLink/ContactPicker", () => ({
   default: () => <div data-testid="contact-picker">contact-picker</div>,
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyUserAccountSection", () => ({
-  FacultyUserAccountSection: () => <div data-testid="faculty-user-account-section">user-account-section</div>,
-}));
-
 vi.mock("./FacultyCatalogCreateOverlays", () => ({
   FacultyCatalogCreateOverlays: () => null,
 }));
@@ -33,7 +29,6 @@ const defaultProps = {
   formInstanceId: "inst-fac-1",
   facultyDraft: {
     employeeId: "EMP-001",
-    notes: "Faculty notes sample",
   },
   errors: {},
   fields: {},
@@ -48,7 +43,7 @@ const defaultProps = {
 };
 
 describe("FacultyFormTabContent Component", () => {
-  it("renders unified vertical layout with contact, employment, notes, and user account sections without details tab", () => {
+  it("renders contact, employment, and designation without notes or user account", () => {
     const html = renderToStaticMarkup(
       <FacultyFormTabContent
         {...defaultProps}
@@ -63,25 +58,18 @@ describe("FacultyFormTabContent Component", () => {
       />
     );
 
-    // Contact link / section
     expect(html).toContain("contact-picker");
     expect(html).toContain("3001234567");
     expect(html).toContain("umar@example.com");
     expect(html).toContain("M.A. Islamic Studies");
     expect(html).toContain("Tajweed");
 
-    // Details tab / section is retired
     expect(html).not.toContain("faculty.form.sectionDetails");
-
-    // Employment section
     expect(html).toContain("faculty.form.sectionEmployment");
+    expect(html).toContain("faculty.form.employeeIdManualHint");
 
-    // Notes section
-    expect(html).toContain("faculty.form.notesSection");
-    expect(html).toContain("Faculty notes sample");
-
-    // System User Account & RBAC section
-    expect(html).toContain("user-account-section");
+    expect(html).not.toContain("faculty.form.notesSection");
+    expect(html).not.toContain("user-account-section");
+    expect(html).not.toContain("faculty.form.sectionUserAccount");
   });
 });
-

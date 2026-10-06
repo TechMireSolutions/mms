@@ -14,22 +14,62 @@ describe('buildDynamicFacultySchema', () => {
     ...DEFAULT_FACULTY_SETTINGS,
     requireContactLink: true,
   };
-  const enabledTabs = new Set(['basic', 'employment']);
+  const enabledTabs = new Set(['basic', 'employment', 'designation']);
   const fields: Record<string, FieldDefinition[]> = {
     basic: INITIAL_FACULTY_FIELD_SEED.basic.map((field) => ({ ...field })),
     employment: INITIAL_FACULTY_FIELD_SEED.employment.map((field) => ({ ...field })),
+    designation: INITIAL_FACULTY_FIELD_SEED.designation.map((field) => ({ ...field })),
+  };
+  const validPayload = {
+    contactId: 'c-1',
+    specialization: 'Hifz',
+    status: 'active',
+    employDesignationStatus: 'active',
+    profileStatus: 'active',
+    employeeId: 'FAC-1',
+    designationId: 'des-1',
+    designationStartDate: '2024-01-15',
+    employmentStartDate: '2024-01-15',
   };
 
   it('accepts a valid faculty write payload', () => {
     const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
-    const result = schema.safeParse({
-      contactId: 'c-1',
-      specialization: 'Hifz',
-      status: 'active',
-      employeeId: 'FAC-1',
-      joinDate: '2024-01-15',
-    });
+    const result = schema.safeParse(validPayload);
     expect(result.success).toBe(true);
+  });
+
+  it('given an unknown status, should reject with the status enum', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({ ...validPayload, status: 'sabbatical' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === 'status')).toBe(true);
+    }
+  });
+
+  it('given every lifecycle status, should accept retired and terminated', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    for (const status of ['active', 'on_leave', 'inactive', 'retired', 'terminated']) {
+      expect(schema.safeParse({ ...validPayload, status }).success).toBe(true);
+    }
+  });
+
+  it('given an employment end date before the start date, should reject on employmentEndDate', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({ ...validPayload, employmentEndDate: '2023-12-31' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === 'employmentEndDate')).toBe(true);
+    }
+  });
+
+  it('given a client-supplied performanceRating, should strip it (server-computed)', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({ ...validPayload, performanceRating: 4.9 });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect((result.data as Record<string, unknown>).performanceRating).toBeUndefined();
+    }
   });
 
   it('requires contactId (contact link is compulsory)', () => {
@@ -57,7 +97,8 @@ describe('buildDynamicFacultySchema', () => {
     const result = schema.safeParse({
       status: 'active',
       employeeId: 'FAC-1',
-      joinDate: '2024-01-15',
+      designationId: 'des-1',
+      employmentStartDate: '2024-01-15',
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -66,39 +107,21 @@ describe('buildDynamicFacultySchema', () => {
     }
   });
 
-  it('requires designationStartsOn when designationId is set', () => {
+  it('requires designationId when the designation tab is enabled', () => {
     const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
-    const result = schema.safeParse({
-      contactId: 'c-1',
-      status: 'active',
-      employeeId: 'FAC-1',
-      joinDate: '2024-01-15',
-      designationId: 'des-1',
-      designationStartsOn: '',
-    });
+    const result = schema.safeParse({ ...validPayload, designationId: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((issue) => issue.path[0] === 'designationStartsOn')).toBe(true);
+      expect(result.error.issues.some((issue) => issue.path[0] === 'designationId')).toBe(true);
     }
   });
 
-  it('requires per-holding startsOn and departmentId when designations[] is set', () => {
+  it('requires employmentStartDate when the seed marks it required', () => {
     const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
-    const result = schema.safeParse({
-      contactId: 'c-1',
-      status: 'active',
-      employeeId: 'FAC-1',
-      joinDate: '2024-01-15',
-      designations: [{ designationId: 'des-1', status: 'active' }],
-    });
+    const result = schema.safeParse({ ...validPayload, employmentStartDate: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((issue) =>
-        issue.path[0] === 'designations' && issue.path[2] === 'startsOn',
-      )).toBe(true);
-      expect(result.error.issues.some((issue) =>
-        issue.path[0] === 'designations' && issue.path[2] === 'departmentId',
-      )).toBe(true);
+      expect(result.error.issues.some((issue) => issue.path[0] === 'employmentStartDate')).toBe(true);
     }
   });
 
@@ -118,19 +141,42 @@ describe('buildDynamicFacultySchema', () => {
       ],
     };
     const schema = buildDynamicFacultySchema(settings, enabledTabs, withCustom);
-    const result = schema.safeParse({
-      contactId: 'c-1',
-      specialization: 'Hifz',
-      status: 'active',
-      joinDate: '2024-01-15',
-      employeeId: 'FAC-1',
-    });
+    const result = schema.safeParse(validPayload);
     expect(result.success).toBe(false);
     if (!result.success) {
       const formatted = formatFacultyZodIssues(result.error, {}, withCustom);
       expect(formatted.some((err) => err.fieldId === 'badgeColor' && err.tabId === 'employment')).toBe(
         true,
       );
+    }
+  });
+
+  it('accepts employDesignations write-through rows and employmentId', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({
+      ...validPayload,
+      employmentId: 'emp-1',
+      employDesignations: [
+        {
+          designationId: 'des-1',
+          designationStartDate: '2024-01-15',
+          employDesignationStatus: 'active',
+        },
+        {
+          employDesignationId: 'fed-2',
+          designationId: 'des-2',
+          designationStartDate: '2025-01-01',
+          designationEndDate: null,
+          employDesignationStatus: 'inactive',
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const data = result.data as Record<string, unknown>;
+      expect(data.employmentId).toBe('emp-1');
+      expect(Array.isArray(data.employDesignations)).toBe(true);
+      expect((data.employDesignations as unknown[]).length).toBe(2);
     }
   });
 
@@ -148,11 +194,7 @@ describe('buildDynamicFacultySchema', () => {
   it('strips contact profile dual-write keys before validation', () => {
     const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
-      contactId: 'c-1',
-      specialization: 'Hifz',
-      status: 'active',
-      joinDate: '2024-01-15',
-      employeeId: 'FAC-1',
+      ...validPayload,
       name: 'Should Strip',
       phone: '+10000000000',
       email: 'a@b.c',
@@ -175,6 +217,9 @@ describe('FACULTY_WRITE_SYSTEM_KEYS', () => {
       expect(FACULTY_WRITE_SYSTEM_KEYS).toContain(key);
     }
     for (const key of ['id', 'userId', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy']) {
+      expect(FACULTY_WRITE_SYSTEM_KEYS).toContain(key);
+    }
+    for (const key of ['joinDate', 'employmentId', 'employDesignations']) {
       expect(FACULTY_WRITE_SYSTEM_KEYS).toContain(key);
     }
   });

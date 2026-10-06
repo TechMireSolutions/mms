@@ -12,14 +12,6 @@ import {
   type FacultyStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { EntityNotesFormSection } from "@/components/ui/EntityNotesFormSection";
-import { useTranslation } from "@/hooks/useTranslation";
-import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
-import {
-  FacultyUserAccountSection,
-  type FacultyUserAccountDraft,
-  type LinkedUserInfo,
-} from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
 export interface FacultyFormAllSectionsProps {
   faculty?: FacultyMember;
@@ -40,13 +32,9 @@ export interface FacultyFormAllSectionsProps {
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<FacultyMember>) => void;
   linkedContact?: Contact | null;
-  linkedUser?: LinkedUserInfo | null;
-  userAccountDraft: FacultyUserAccountDraft;
-  onUserAccountDraftChange: (draft: FacultyUserAccountDraft) => void;
 }
 
 export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): React.JSX.Element {
-  const { t } = useTranslation();
   const {
     faculty,
     facultyDraft = {},
@@ -66,9 +54,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
     isFieldRequired,
     onDraftChange,
     linkedContact,
-    linkedUser,
-    userAccountDraft,
-    onUserAccountDraftChange,
   } = props;
 
   return (
@@ -95,6 +80,8 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         onRegenerateEmployeeId={onRegenerateEmployeeId}
         isFetchingNextEmployeeId={isFetchingNextEmployeeId}
         statusOptions={statusOptions}
+        linkedFacultyContactIds={linkedFacultyContactIds}
+        linkedContact={linkedContact}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
@@ -104,6 +91,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         faculty={faculty}
         facultyDraft={facultyDraft}
         errors={errors}
+        fields={fields}
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
         departmentEntities={departmentEntities}
@@ -111,28 +99,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
-      />
-
-      {isFieldEnabled("notes") ? (
-        <EntityNotesFormSection
-          title={t("faculty.form.notesSection")}
-          subtitle={t("faculty.form.notesSectionDesc")}
-          label={resolveFacultyFieldLabel(fields, "employment", "notes", t)}
-          placeholder={t("faculty.form.notesPlaceholder")}
-          value={facultyDraft.notes}
-          required={isFieldRequired("notes")}
-          error={errors.notes}
-          onChange={(next) => onDraftChange({ notes: next })}
-        />
-      ) : null}
-
-      <FacultyUserAccountSection
-        facultyDraft={facultyDraft}
-        linkedContact={linkedContact}
-        linkedUser={linkedUser}
-        userAccountDraft={userAccountDraft}
-        onUserAccountDraftChange={onUserAccountDraftChange}
-        errors={errors}
       />
     </div>
   );

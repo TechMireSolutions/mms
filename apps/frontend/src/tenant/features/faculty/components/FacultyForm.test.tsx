@@ -55,14 +55,20 @@ vi.mock("@/components/ui/FormModal", () => ({
     footerStart,
     tabs,
     activeTab,
+    saveOnTabChange,
   }: {
     title: string;
     children: React.ReactNode;
     footerStart: React.ReactNode;
     tabs?: Array<{ key: string; label: string; badge?: number; tone?: string }>;
     activeTab?: string;
+    saveOnTabChange?: boolean;
   }) => (
-    <div data-testid="form-modal" data-active-tab={activeTab}>
+    <div
+      data-testid="form-modal"
+      data-active-tab={activeTab}
+      data-save-on-tab-change={String(saveOnTabChange)}
+    >
       <h1>{title}</h1>
       <div data-testid="modal-tabs">
         {tabs?.map((t) => (
@@ -95,11 +101,12 @@ describe("FacultyForm Component", () => {
     );
 
     expect(html).toContain("faculty.form.addTitle");
+    expect(html).toContain('data-save-on-tab-change="false"');
     expect(html).toContain("Ustadh Umar");
     expect(html).toContain("Faculty Tab Content: contact");
   });
 
-  it("provides tabs for contact, employment, designation, account, and notes", () => {
+  it("provides tabs for contact, employment, and designation", () => {
     mockControllerState.errors = {};
     mockControllerState.isFieldEnabled = () => true;
 
@@ -111,14 +118,14 @@ describe("FacultyForm Component", () => {
     expect(html).toContain('data-tab-key="employment"');
     expect(html).toContain('data-tab-key="designation"');
     expect(html).not.toContain('data-tab-key="hierarchy"');
-    expect(html).toContain('data-tab-key="account"');
-    expect(html).toContain('data-tab-key="notes"');
+    expect(html).not.toContain('data-tab-key="account"');
+    expect(html).not.toContain('data-tab-key="notes"');
   });
 
   it("calculates tab error counts and displays error badges on affected tabs", () => {
     mockControllerState.errors = {
       employeeId: "Employee ID required",
-      designationStartsOn: "Start date required",
+      designationId: "Designation required",
     };
     mockControllerState.isFieldEnabled = () => true;
 
@@ -132,10 +139,8 @@ describe("FacultyForm Component", () => {
     expect(html).not.toContain('data-tab-key="contact" data-badge');
   });
 
-  it("maps user.* and designation errors to their respective tabs", () => {
+  it("maps designation errors to the designation tab", () => {
     mockControllerState.errors = {
-      "user.password": "Password too short",
-      "user.role": "Invalid role",
       designation: "Designation required",
     };
     mockControllerState.isFieldEnabled = () => true;
@@ -144,7 +149,7 @@ describe("FacultyForm Component", () => {
       <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,
     );
 
-    expect(html).toContain('data-tab-key="account" data-badge="2"');
     expect(html).toContain('data-tab-key="designation" data-badge="1"');
+    expect(html).not.toContain('data-tab-key="account"');
   });
 });

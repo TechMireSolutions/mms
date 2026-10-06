@@ -4,33 +4,27 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
-import { notify } from '@/lib/notify';
 import { FacultyDepartmentsTable } from './FacultyDepartmentsTable';
 import { FacultyDepartmentFormModal } from './FacultyDepartmentFormModal';
 import { useFacultyDepartmentsController } from '../hooks/useFacultyDepartmentsController';
-import {
-  useFacultyDepartments,
-  useSaveFacultyDepartment,
-} from '../hooks/useFacultyDepartments';
+import { useFacultyDepartments } from '../hooks/useFacultyDepartments';
 
 /** Departments work surface — same directory chrome as Faculties (toolbar + table/cards). */
-export function FacultyDepartmentsSetupSection(): React.JSX.Element {
-  const {
-    t,
-    departments,
-    orderedDepartments,
-    parentOptions,
-    isPending,
-    handleDelete,
-  } = useFacultyDepartmentsController();
+export function FacultyDepartmentsSetupSection({
+  canWrite = true,
+}: {
+  canWrite?: boolean;
+}): React.JSX.Element {
+  const { t, departments, orderedDepartments, isPending, isSaving, saveDepartment, handleDelete } =
+    useFacultyDepartmentsController();
   const query = useFacultyDepartments();
-  const saveMutation = useSaveFacultyDepartment();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<FacultyDepartmentEntity | null>(null);
   const [deptToDelete, setDeptToDelete] = useState<FacultyDepartmentEntity | null>(null);
 
   const handleStartEdit = (dept: FacultyDepartmentEntity) => {
+    if (!canWrite) return;
     setEditingDepartment(dept);
     setModalOpen(true);
   };
@@ -40,30 +34,10 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
     setEditingDepartment(null);
   };
 
-  const handleSave = async (payload: {
-    id?: string;
-    name: string;
-    code: string;
-    parentId: string | null;
-    isActive: boolean;
-  }) => {
-    try {
-      await saveMutation.mutateAsync({
-        id: payload.id || crypto.randomUUID(),
-        name: payload.name,
-        code: payload.code,
-        parentId: payload.parentId,
-        isActive: payload.isActive,
-      });
-      notify.success(t('faculty.setup.departmentSaved'));
-    } catch {
-      notify.error(t('faculty.setup.lookupsSaveFailed'));
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (!deptToDelete) return;
-    await handleDelete(deptToDelete);
+    const deleted = await handleDelete(deptToDelete);
+    if (deleted && editingDepartment?.id === deptToDelete.id) handleCloseModal();
     setDeptToDelete(null);
   };
 
@@ -78,25 +52,29 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
           />
         ) : (
           <FacultyDepartmentsTable
-            departments={departments}
-            orderedDepartments={orderedDepartments}
+            departments={orderedDepartments}
             editingDepartmentId={editingDepartment?.id}
-            isPending={isPending || saveMutation.isPending}
+            isPending={isPending}
             isLoading={query.isLoading}
+            canWrite={canWrite}
             onEdit={handleStartEdit}
-            onDelete={(d) => setDeptToDelete(d)}
+            onDelete={(d) => {
+              if (!canWrite) return;
+              setDeptToDelete(d);
+            }}
           />
         )}
 
-        <FacultyDepartmentFormModal
-          open={modalOpen}
-          onClose={handleCloseModal}
-          department={editingDepartment}
-          parentOptions={parentOptions}
-          existingDepartments={departments}
-          isPending={saveMutation.isPending}
-          onSave={handleSave}
-        />
+        {canWrite ? (
+          <FacultyDepartmentFormModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            department={editingDepartment}
+            existingDepartments={departments}
+            isPending={isSaving}
+            onSave={async (payload) => (await saveDepartment(payload)) !== null}
+          />
+        ) : null}
 
         <ConfirmAlertDialog
           open={Boolean(deptToDelete)}

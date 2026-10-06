@@ -96,6 +96,30 @@ export function mergePermissionMaps(
   return result;
 }
 
+/**
+ * Additive union of permission maps: per module, union of actions
+ * in {@link PERMISSION_ACTIONS} order.
+ */
+export function unionPermissionMaps(
+  maps: readonly (PermissionMap | ReadonlyPermissionMap | null | undefined)[],
+): PermissionMap {
+  const result: PermissionMap = {};
+  for (const map of maps) {
+    if (!map) continue;
+    for (const [module, actions] of Object.entries(map)) {
+      if (!Array.isArray(actions) || actions.length === 0) continue;
+      const set = new Set<PermissionAction>([
+        ...(result[module] ?? []),
+        ...(actions.filter((a): a is PermissionAction =>
+          (PERMISSION_ACTIONS as readonly string[]).includes(a),
+        )),
+      ]);
+      result[module] = PERMISSION_ACTIONS.filter((a) => set.has(a));
+    }
+  }
+  return result;
+}
+
 /** Returns the total count of granted actions across all modules in a permission map. */
 export function countGrantedActions(map?: PermissionMap | ReadonlyPermissionMap | null): number {
   if (!map) return 0;

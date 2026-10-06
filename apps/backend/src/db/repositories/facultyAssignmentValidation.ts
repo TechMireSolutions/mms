@@ -31,11 +31,11 @@ export async function validateFacultyAssignment(
   `);
   const department = await tx.execute(sql`
     SELECT id FROM faculty_departments WHERE workspace_subdomain = ${tenant}
-      AND id = ${input.departmentId} AND deleted_at IS NULL AND is_active FOR SHARE
+      AND id = ${input.departmentId} AND deleted_at IS NULL AND status = 'active' FOR SHARE
   `);
   const designation = await tx.execute(sql`
     SELECT id FROM faculty_designations WHERE workspace_subdomain = ${tenant}
-      AND id = ${input.designationId} AND deleted_at IS NULL AND is_active FOR SHARE
+      AND id = ${input.designationId} AND deleted_at IS NULL AND status = 'active' FOR SHARE
   `);
   if (!member.rows.length || !department.rows.length || !designation.rows.length) {
     throw new Error('Faculty, department and designation must be active in this workspace');

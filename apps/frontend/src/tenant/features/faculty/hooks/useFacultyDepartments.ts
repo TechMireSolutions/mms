@@ -1,35 +1,42 @@
 import { useContext } from 'react';
-import { QueryClient, QueryClientContext, useMutation, useQuery } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientContext,
+  queryOptions,
+  useMutation,
+  useQuery,
+} from '@tanstack/react-query';
 import {
   facultyDepartmentSchema,
   type FacultyDepartmentEntity,
   type FacultyDepartmentWrite,
 } from '@mms/shared';
 import { apiContract } from '@/lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 import { FACULTY_QUERY_KEY } from './facultyQueryKeys';
 
 export const FACULTY_DEPARTMENTS_QUERY_KEY = [...FACULTY_QUERY_KEY, 'departments'] as const;
 
 const fallbackQueryClient = new QueryClient();
 
-/**
- * Server-authoritative list of faculty departments.
- * Falls back to an empty array on parse failure so the UI never hard-crashes.
- */
-export function useFacultyDepartments(options: { includeDeleted?: boolean } = {}) {
-  const includeDeleted = Boolean(options.includeDeleted);
-  return useQuery({
+export function facultyDepartmentsQueryOptions(input: {
+  includeDeleted?: boolean;
+  loadFailed: string;
+  invalidResponse: string;
+}) {
+  const includeDeleted = Boolean(input.includeDeleted);
+  return queryOptions({
     queryKey: [...FACULTY_DEPARTMENTS_QUERY_KEY, { includeDeleted }] as const,
     queryFn: async ({ signal }) => {
       const response = await apiContract.faculty.listDepartments({
         query: includeDeleted ? { includeDeleted: true } : undefined,
         fetchOptions: { signal },
       });
-      if (response.status !== 200) throw new Error('Failed to load faculty departments');
+      if (response.status !== 200) throw new Error(input.loadFailed);
       const parsed = facultyDepartmentSchema
         .array()
         .safeParse((response.body as { departments?: unknown }).departments);
-      if (!parsed.success) throw new Error('Invalid faculty departments response');
+      if (!parsed.success) throw new Error(input.invalidResponse);
       return parsed.data;
     },
     staleTime: 60_000,
@@ -37,8 +44,24 @@ export function useFacultyDepartments(options: { includeDeleted?: boolean } = {}
   });
 }
 
+/**
+ * Server-authoritative list of faculty departments.
+ * Falls back to an empty array on parse failure so the UI never hard-crashes.
+ */
+export function useFacultyDepartments(options: { includeDeleted?: boolean } = {}) {
+  const { t } = useTranslation();
+  return useQuery(
+    facultyDepartmentsQueryOptions({
+      includeDeleted: options.includeDeleted,
+      loadFailed: t('faculty.errors.loadDepartments'),
+      invalidResponse: t('faculty.errors.invalidDepartmentsResponse'),
+    }),
+  );
+}
+
 /** Saves a department (create or update) and invalidates the departments list. */
 export function useSaveFacultyDepartment(customClient?: QueryClient) {
+  const { t } = useTranslation();
   const contextClient = useContext(QueryClientContext);
   const client = customClient ?? contextClient ?? fallbackQueryClient;
   return useMutation(
@@ -52,7 +75,7 @@ export function useSaveFacultyDepartment(customClient?: QueryClient) {
           const message =
             typeof response.body === 'object' && response.body && 'message' in response.body
               ? String(response.body.message)
-              : 'Failed to save faculty department';
+              : t('faculty.errors.saveDepartment');
           throw new Error(message);
         }
         return facultyDepartmentSchema.parse(
@@ -66,8 +89,9 @@ export function useSaveFacultyDepartment(customClient?: QueryClient) {
   );
 }
 
-/** Soft-deletes a department. Rejects (409) when active assignments reference it. */
+/** Soft-deletes a department. Rejects (409) when active appointments reference it. */
 export function useDeleteFacultyDepartment(customClient?: QueryClient) {
+  const { t } = useTranslation();
   const contextClient = useContext(QueryClientContext);
   const client = customClient ?? contextClient ?? fallbackQueryClient;
   return useMutation(
@@ -81,7 +105,7 @@ export function useDeleteFacultyDepartment(customClient?: QueryClient) {
           const message =
             typeof response.body === 'object' && response.body && 'message' in response.body
               ? String(response.body.message)
-              : 'Failed to delete faculty department';
+              : t('faculty.errors.deleteDepartment');
           throw new Error(message);
         }
       },
@@ -94,6 +118,7 @@ export function useDeleteFacultyDepartment(customClient?: QueryClient) {
 
 /** Restores a soft-deleted department. */
 export function useRestoreFacultyDepartment(customClient?: QueryClient) {
+  const { t } = useTranslation();
   const contextClient = useContext(QueryClientContext);
   const client = customClient ?? contextClient ?? fallbackQueryClient;
   return useMutation(
@@ -107,7 +132,7 @@ export function useRestoreFacultyDepartment(customClient?: QueryClient) {
           const message =
             typeof response.body === 'object' && response.body && 'message' in response.body
               ? String(response.body.message)
-              : 'Failed to restore faculty department';
+              : t('faculty.errors.restoreDepartment');
           throw new Error(message);
         }
         return facultyDepartmentSchema.parse(

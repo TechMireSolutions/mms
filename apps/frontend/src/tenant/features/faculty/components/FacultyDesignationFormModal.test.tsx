@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FacultyDepartmentEntity, FacultyDesignationDefinition } from '@mms/shared';
 import { FacultyDesignationFormModal } from './FacultyDesignationFormModal';
 
 declare global {
@@ -9,16 +10,77 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock('@/hooks/useTranslation', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('@/tenant/hooks/useWorkspaceRoles', () => ({
+  useWorkspaceRoles: () => [
+    { id: 'staff', labelKey: 'users.role.staff', permissions: {}, isSystem: true },
+    { id: 'admin', labelKey: 'users.role.admin', permissions: {}, isSystem: true },
+  ],
+}));
+
+vi.mock('@/tenant/hooks/collections/users', () => ({
+  RoleFormModal: () => null,
+  useCreateWorkspaceRole: () => ({
+    canCreate: false,
+    visibleModules: [],
+    createRole: vi.fn(),
   }),
 }));
+
+const departments: FacultyDepartmentEntity[] = [
+  { id: 'dept-1', name: 'Hadith', status: 'active' },
+  { id: 'dept-2', name: 'Fiqh', status: 'active' },
+  { id: 'dept-off', name: 'Closed', status: 'inactive' },
+];
+
+const designation = (overrides: Partial<FacultyDesignationDefinition>): FacultyDesignationDefinition => ({
+  id: 'des', departmentId: 'dept-1', name: 'Lecturer', parentDesignationId: null, status: 'active', assignableRoles: [], ...overrides,
+});
+
+const dean = designation({ id: 'des-dean', name: 'Dean', hierarchyRank: 1 });
+const hod = designation({ id: 'des-hod', name: 'Head of Department', parentDesignationId: 'des-dean', hierarchyRank: 2 });
+const lecturer = designation({ id: 'des-lect', name: 'Lecturer', parentDesignationId: 'des-hod', hierarchyRank: 3 });
+const fiqhMufti = designation({ id: 'des-mufti', name: 'Mufti', departmentId: 'dept-2' });
+
+const selectOptionValues = (id: string) =>
+  Array.from(document.querySelectorAll<HTMLOptionElement>(`${id} option`)).map((o) => o.value);
+
+function setInputValue(el: HTMLInputElement, value: string) {
+  Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set?.call(el, value);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function setSelectValue(el: HTMLSelectElement, value: string) {
+  Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set?.call(el, value);
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+const saveButton = (label: string) =>
+  Array.from(document.querySelectorAll('button')).find((b) => b.textContent?.includes(label));
 
 describe('FacultyDesignationFormModal', () => {
   let container: HTMLDivElement;
   let root: Root;
   const onClose = vi.fn();
-  const onSave = vi.fn();
+  const onSave = vi.fn().mockResolvedValue(true);
+
+  const render = (current: FacultyDesignationDefinition | null, options: FacultyDesignationDefinition[], defaultDepartmentId?: string) =>
+    act(async () => {
+      root.render(
+        <FacultyDesignationFormModal
+          open
+          onClose={onClose}
+          designation={current}
+          departments={departments}
+          designationOptions={options}
+          isPending={false}
+          defaultDepartmentId={defaultDepartmentId}
+          onSave={onSave}
+        />,
+      );
+    });
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -26,6 +88,7 @@ describe('FacultyDesignationFormModal', () => {
     root = createRoot(container);
     onClose.mockClear();
     onSave.mockClear();
+    onSave.mockResolvedValue(true);
   });
 
   afterEach(async () => {
@@ -35,144 +98,101 @@ describe('FacultyDesignationFormModal', () => {
     container.remove();
   });
 
-  it('renders add designation modal with name, code, parent, and status fields', async () => {
-    await act(async () => {
-      root.render(
-        <FacultyDesignationFormModal
-          open={true}
-          onClose={onClose}
-          designation={null}
-          workspaceRoles={[]}
-          isPending={false}
-          designationOptions={[
-            {
-              id: 'des-dean',
-              name: 'Dean',
-              code: 'dean',
-              hierarchyRank: 1,
-              isActive: true,
-              assignableRoles: [],
-            },
-          ]}
-          onSave={onSave}
-        />,
-      );
-    });
+  it('given a new designation, should render department, name, parent and status (no code / rank / roles)', async () => {
+    // Act
+    await render(null, [dean]);
 
+    // Assert
+    expect(document.querySelector('#modal-designation-department')).not.toBeNull();
     expect(document.querySelector('#modal-designation-name')).not.toBeNull();
-    expect(document.querySelector('#modal-designation-code')).not.toBeNull();
     expect(document.querySelector('#modal-designation-parent')).not.toBeNull();
     expect(document.querySelector('#modal-designation-status')).not.toBeNull();
+    expect(document.querySelector('#modal-designation-code')).toBeNull();
     expect(document.querySelector('#modal-designation-rank')).toBeNull();
-    expect(document.body.textContent).toContain('faculty.designations.parentDesignation');
-    expect(document.body.textContent).not.toContain('faculty.form.hierarchyRank');
-    expect(document.body.textContent).toContain('faculty.designations.addDesignation');
+    expect(document.querySelector('#modal-designation-roles')).toBeNull();
+    // Only live departments are offered.
+    expect(selectOptionValues('#modal-designation-department')).toEqual(['', 'dept-1', 'dept-2']);
   });
 
-  it('populates fields and submits updated data on save', async () => {
-    const existingDes = {
-      id: 'des-1',
-      name: 'Lecturer',
-      code: 'lecturer',
-      hierarchyRank: 3,
-      isActive: true,
-      assignableRoles: ['instructor'],
-    };
+  it('given a department is chosen, should offer only that department\'s designations as parents', async () => {
+    // Arrange
+    await render(null, [dean, hod, fiqhMufti]);
+    const departmentSelect = document.querySelector<HTMLSelectElement>('#modal-designation-department')!;
+    expect(departmentSelect.disabled).toBe(false);
+    expect(document.querySelector<HTMLSelectElement>('#modal-designation-parent')?.disabled).toBe(true);
 
+    // Act
     await act(async () => {
-      root.render(
-        <FacultyDesignationFormModal
-          open={true}
-          onClose={onClose}
-          designation={existingDes}
-          workspaceRoles={[]}
-          isPending={false}
-          onSave={onSave}
-        />,
-      );
+      setSelectValue(departmentSelect, 'dept-1');
     });
 
-    const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
-    const codeInput = document.querySelector<HTMLInputElement>('#modal-designation-code')!;
-    expect(nameInput.value).toBe('Lecturer');
-    expect(codeInput.value).toBe('lecturer');
+    // Assert
+    expect(selectOptionValues('#modal-designation-parent')).toEqual(['', 'des-dean', 'des-hod']);
+  });
 
-    const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('common.save'),
-    );
-    expect(saveBtn).toBeDefined();
+  it('given an existing designation, should pre-populate and submit the Faculty Management payload', async () => {
+    // Arrange
+    await render(hod, [dean, hod, lecturer]);
+    expect(document.querySelector<HTMLSelectElement>('#modal-designation-department')?.value).toBe('dept-1');
+    expect(document.querySelector<HTMLInputElement>('#modal-designation-name')?.value).toBe('Head of Department');
+    expect(document.querySelector<HTMLSelectElement>('#modal-designation-parent')?.value).toBe('des-dean');
 
+    // Act
     await act(async () => {
-      saveBtn!.click();
+      saveButton('common.save')?.click();
     });
 
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'des-1',
-        name: 'Lecturer',
-        code: 'lecturer',
-        hierarchyRank: 3,
-        isActive: true,
-      }),
-    );
+    // Assert
+    expect(onSave).toHaveBeenCalledWith({
+      id: 'des-hod', departmentId: 'dept-1', name: 'Head of Department', parentDesignationId: 'des-dean', status: 'active',
+      assignableRoles: [],
+    });
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('derives hierarchy rank from selected parent designation without showing rank field', async () => {
-    const designations = [
-      {
-        id: 'des-dean',
-        name: 'Dean of Faculty',
-        code: 'dean',
-        hierarchyRank: 1,
-        isActive: true,
-        assignableRoles: [],
-      },
-    ];
+  it('given an existing designation, should exclude itself and its descendants from the parent options', async () => {
+    // Act
+    await render(hod, [dean, hod, lecturer]);
 
-    await act(async () => {
-      root.render(
-        <FacultyDesignationFormModal
-          open={true}
-          onClose={onClose}
-          designation={null}
-          workspaceRoles={[]}
-          isPending={false}
-          designationOptions={designations}
-          onSave={onSave}
-        />,
-      );
-    });
+    // Assert — Dean is allowed; HOD (self) and Lecturer (child) are not.
+    expect(selectOptionValues('#modal-designation-parent')).toEqual(['', 'des-dean']);
+  });
 
+  it('given a default department and a new name, should submit with a null parent and active status', async () => {
+    // Arrange
+    await render(null, [dean], 'dept-2');
     const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
-    const parentSelect = document.querySelector<HTMLSelectElement>('#modal-designation-parent')!;
 
+    // Act
     await act(async () => {
-      const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-      nativeInputSetter?.call(nameInput, 'Head of Department');
-      nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-      const nativeSelectSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
-      nativeSelectSetter?.call(parentSelect, 'des-dean');
-      parentSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      setInputValue(nameInput, 'Senior Mufti');
+    });
+    await act(async () => {
+      saveButton('faculty.designations.addDesignation')?.click();
     });
 
-    const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('faculty.designations.addDesignation'),
-    );
-    expect(saveBtn).toBeDefined();
+    // Assert
+    expect(onSave).toHaveBeenCalledWith({
+      id: undefined, departmentId: 'dept-2', name: 'Senior Mufti', parentDesignationId: null, status: 'active',
+      assignableRoles: [],
+    });
+  });
 
+  it('given a duplicate name within the same department, should block the save and show the error', async () => {
+    // Arrange
+    await render(null, [dean, fiqhMufti], 'dept-1');
+    const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
+
+    // Act
     await act(async () => {
-      saveBtn!.click();
+      setInputValue(nameInput, ' dean ');
+    });
+    await act(async () => {
+      saveButton('faculty.designations.addDesignation')?.click();
     });
 
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Head of Department',
-        code: 'head-of-department',
-        hierarchyRank: 2,
-        isActive: true,
-      }),
-    );
+    // Assert
+    expect(onSave).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('faculty.designations.nameDuplicate');
   });
 });

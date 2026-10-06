@@ -39,11 +39,10 @@ export async function startServerFacultyDesignationsImport(options: {
     path: '/api/faculty/designations/import',
     body: {
       rows: options.rows.map((r) => ({
-        code: r.code,
+        department: r.department,
         name: r.name,
-        hierarchyRank: r.hierarchyRank,
-        isActive: r.isActive,
-        assignableRoles: r.assignableRoles,
+        parentDesignation: r.parentDesignation,
+        status: r.status,
       })),
       label: options.label,
     },

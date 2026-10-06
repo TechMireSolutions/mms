@@ -1,16 +1,45 @@
+/**
+ * @file facultyPrimaryAppointmentSql.ts
+ * @description Faculty Work list FROM: employment SSOT + primary employ-designation + position LATERAL.
+ *
+ * Ownership: designation display from employ-designations (HR tenure) → catalog;
+ * reports-to / position from faculty_assignments only.
+ */
 import { sql, type SQL } from 'drizzle-orm';
 import { faculty } from '../schema.js';
 import { primaryAssignmentEffectiveOnDateSql } from './facultyPrimaryAppointmentEffective.js';
 
 /**
- * FROM clause: faculty + LATERAL primary appointment + catalog + contact joins.
- * List/widget queries that filter/sort/group by dept/designation/rank/contact MUST use this.
+ * FROM clause: faculty + employment + LATERAL primary open employ-designation
+ * + designation/department catalog + LATERAL primary appointment (position) + contact.
  */
 export function facultyWithPrimaryAppointmentFromSql(): SQL {
   return sql`
     FROM ${faculty}
+    LEFT JOIN faculty_employments fe_emp
+      ON fe_emp.workspace_subdomain = ${faculty.workspaceSubdomain}
+      AND fe_emp.id = ${faculty.employmentId}
+      AND fe_emp.deleted_at IS NULL
     LEFT JOIN LATERAL (
-      SELECT a.department_id, a.designation_id, a.position_id
+      SELECT ed.designation_id, ed.id AS employ_designation_id,
+             ed.start_date, ed.end_date, ed.status
+      FROM faculty_employ_designations ed
+      WHERE ed.workspace_subdomain = ${faculty.workspaceSubdomain}
+        AND ed.employment_id = ${faculty.employmentId}
+        AND ed.deleted_at IS NULL
+        AND lower(btrim(ed.status)) = 'active'
+        AND ed.end_date IS NULL
+      ORDER BY ed.start_date DESC NULLS LAST, ed.updated_at DESC, ed.id DESC
+      LIMIT 1
+    ) fe_desig ON true
+    LEFT JOIN faculty_designations pa_desig
+      ON pa_desig.workspace_subdomain = ${faculty.workspaceSubdomain}
+      AND pa_desig.id = fe_desig.designation_id
+    LEFT JOIN faculty_departments pa_dept
+      ON pa_dept.workspace_subdomain = ${faculty.workspaceSubdomain}
+      AND pa_dept.id = pa_desig.department_id
+    LEFT JOIN LATERAL (
+      SELECT a.position_id
       FROM faculty_assignments a
       WHERE a.workspace_subdomain = ${faculty.workspaceSubdomain}
         AND a.faculty_id = ${faculty.id}
@@ -21,15 +50,9 @@ export function facultyWithPrimaryAppointmentFromSql(): SQL {
       ORDER BY a.start_date DESC
       LIMIT 1
     ) pa ON true
-    LEFT JOIN faculty_departments pa_dept
-      ON pa_dept.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND pa_dept.id = pa.department_id
-    LEFT JOIN faculty_designations pa_desig
-      ON pa_desig.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND pa_desig.id = pa.designation_id
     LEFT JOIN contacts fc
       ON fc.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND fc.id = ${faculty.contactId}
+      AND fc.id = fe_emp.contact_id
   `;
 }
 

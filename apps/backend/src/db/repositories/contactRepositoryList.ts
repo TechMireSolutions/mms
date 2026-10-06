@@ -1,6 +1,6 @@
 import { sql, type SQL } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ContactsListPageResult, type ContactsListQuery } from '@mms/shared';
-import { contacts, students, faculty, tenantUsers } from '../schema.js';
+import { contacts, students, faculty, facultyEmployments, tenantUsers } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { hydrateContactsSummaryList } from './contactRepositoryCore.js';
@@ -20,9 +20,13 @@ export function existsActiveStudentLinkSql(subdomain: string): SQL {
 export function existsActiveFacultyLinkSql(subdomain: string): SQL {
   return sql`EXISTS (
     SELECT 1 FROM ${faculty}
+    INNER JOIN ${facultyEmployments}
+      ON ${facultyEmployments.workspaceSubdomain} = ${faculty.workspaceSubdomain}
+      AND ${facultyEmployments.id} = ${faculty.employmentId}
+      AND ${facultyEmployments.deletedAt} IS NULL
     WHERE ${faculty.workspaceSubdomain} = ${subdomain}
       AND ${faculty.deletedAt} IS NULL
-      AND NULLIF(trim(${faculty.contactId}), '') = ${contacts.id}
+      AND NULLIF(trim(${facultyEmployments.contactId}), '') = ${contacts.id}
   )`;
 }
 

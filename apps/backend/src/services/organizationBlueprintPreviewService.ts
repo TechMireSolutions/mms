@@ -41,7 +41,7 @@ export async function previewOrganizationBlueprint(
             ),
           )
       : [];
-    const existingDeptCodeSet = new Set(existingDepts.map((d) => d.code));
+    const existingDeptCodeSet = new Set(existingDepts.map((d) => d.code ?? ''));
     const toCreateDepts = blueprint.departments.filter((d) => !existingDeptCodeSet.has(d.code));
 
     // 2. Designations diff
@@ -58,7 +58,7 @@ export async function previewOrganizationBlueprint(
             ),
           )
       : [];
-    const existingDesigCodeSet = new Set(existingDesigs.map((d) => d.code));
+    const existingDesigCodeSet = new Set(existingDesigs.map((d) => d.code ?? ''));
     const toCreateDesigs = blueprint.designations.filter((d) => !existingDesigCodeSet.has(d.code));
 
     // 3. Locations diff
@@ -104,11 +104,11 @@ export async function previewOrganizationBlueprint(
       blueprintId: blueprint.id,
       industryType: blueprint.industryType,
       departments: {
-        existing: existingDepts,
+        existing: existingDepts.map((d) => ({ code: d.code ?? '', name: d.name })),
         toCreate: toCreateDepts.map((d) => ({ code: d.code, name: d.name })),
       },
       designations: {
-        existing: existingDesigs,
+        existing: existingDesigs.map((d) => ({ code: d.code ?? '', name: d.name })),
         toCreate: toCreateDesigs.map((d) => ({ code: d.code, name: d.name })),
       },
       locations: {

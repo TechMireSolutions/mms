@@ -1,71 +1,61 @@
 import { parseCsvRows } from './csvParserCore.js';
+import { parseFacultyCatalogStatus } from './facultyDepartmentCsvParser.js';
+import type { FacultyCatalogStatus } from './facultyTypes.js';
 
 export interface FacultyDesignationCsvRow {
-  code: string;
+  /** Department name (matched case-insensitively against the department catalog). */
+  department: string;
   name: string;
-  hierarchyRank: number;
-  isActive: boolean;
-  assignableRoles: string[];
+  /** Parent designation name inside the same import/catalog (optional). */
+  parentDesignation?: string;
+  status: FacultyCatalogStatus;
 }
 
 const ALIASES: Record<string, keyof FacultyDesignationCsvRow | 'skip'> = {
-  code: 'code',
+  department: 'department',
+  departmentname: 'department',
+  department_name: 'department',
   name: 'name',
-  hierarchyrank: 'hierarchyRank',
-  hierarchy_rank: 'hierarchyRank',
-  rank: 'hierarchyRank',
-  isactive: 'isActive',
-  is_active: 'isActive',
-  active: 'isActive',
-  assignableroles: 'assignableRoles',
-  assignable_roles: 'assignableRoles',
-  roles: 'assignableRoles',
+  designation: 'name',
+  designationname: 'name',
+  parentdesignation: 'parentDesignation',
+  parent_designation: 'parentDesignation',
+  parent: 'parentDesignation',
+  status: 'status',
+  isactive: 'status',
+  is_active: 'status',
+  active: 'status',
 };
 
-function normHeader(h: string): string {
-  return h.trim().toLowerCase().replace(/\s+/g, '');
+function normHeader(header: string): string {
+  return header.trim().toLowerCase().replace(/\s+/g, '');
 }
 
-function parseBool(raw: string): boolean {
-  const v = raw.trim().toLowerCase();
-  if (v === '' || v === '1' || v === 'true' || v === 'yes' || v === 'y') return true;
-  if (v === '0' || v === 'false' || v === 'no' || v === 'n') return false;
-  return true;
-}
-
-/** Parse designations CSV into write-ready rows (match/upsert by code). */
+/** Parse designations CSV into write-ready rows (match/upsert by department + name). */
 export function parseFacultyDesignationsCsv(csvText: string): FacultyDesignationCsvRow[] {
   const grid = parseCsvRows(csvText);
   if (grid.length < 2) return [];
   const headers = grid[0].map(normHeader);
-  const indexes = headers.map((h) => ALIASES[h] ?? 'skip');
+  const indexes = headers.map((header) => ALIASES[header] ?? 'skip');
   const out: FacultyDesignationCsvRow[] = [];
 
-  for (let r = 1; r < grid.length; r += 1) {
-    const cells = grid[r];
-    if (!cells.some((c) => c.trim())) continue;
-    let code = '';
+  for (let rowIndex = 1; rowIndex < grid.length; rowIndex += 1) {
+    const cells = grid[rowIndex];
+    if (!cells.some((cell) => cell.trim())) continue;
+    let department = '';
     let name = '';
-    let hierarchyRank = 10;
-    let isActive = true;
-    let assignableRoles: string[] = [];
-    for (let c = 0; c < indexes.length; c += 1) {
-      const key = indexes[c];
-      const val = (cells[c] ?? '').trim();
-      if (key === 'code') code = val;
-      else if (key === 'name') name = val;
-      else if (key === 'hierarchyRank') {
-        const n = Number(val);
-        if (Number.isFinite(n)) hierarchyRank = Math.min(99, Math.max(1, Math.floor(n)));
-      } else if (key === 'isActive') isActive = parseBool(val);
-      else if (key === 'assignableRoles') {
-        assignableRoles = val
-          ? val.split(/[|;]/).map((s) => s.trim()).filter(Boolean)
-          : [];
-      }
+    let parentDesignation: string | undefined;
+    let status: FacultyCatalogStatus = 'active';
+    for (let column = 0; column < indexes.length; column += 1) {
+      const key = indexes[column];
+      const value = (cells[column] ?? '').trim();
+      if (key === 'department') department = value;
+      else if (key === 'name') name = value;
+      else if (key === 'parentDesignation') parentDesignation = value || undefined;
+      else if (key === 'status') status = parseFacultyCatalogStatus(value);
     }
-    if (!code || !name) continue;
-    out.push({ code, name, hierarchyRank, isActive, assignableRoles });
+    if (!department || !name) continue;
+    out.push({ department, name, parentDesignation, status });
   }
   return out;
 }

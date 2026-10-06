@@ -70,7 +70,7 @@ export function FacultyDetailFieldsSection({
           <FacultyDetailAttributeRow
             variant="inset"
             icon={Award}
-            label={t('faculty.designations.roles')}
+            label={t('faculty.designations.role')}
             value={
               <div className="flex flex-wrap gap-1">
                 {assignableRoles.map((role) => (

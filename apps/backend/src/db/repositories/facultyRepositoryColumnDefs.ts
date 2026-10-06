@@ -1,0 +1,41 @@
+/**
+ * @file facultyRepositoryColumnDefs.ts
+ * @description Faculty row projection + known persist keys (profile-only after contract).
+ */
+import { faculty } from '../schema.js';
+
+export const FACULTY_PROJECTION_COLUMNS = {
+  id: faculty.id,
+  workspaceSubdomain: faculty.workspaceSubdomain,
+  employmentId: faculty.employmentId,
+  userId: faculty.userId,
+  profileStatus: faculty.profileStatus,
+  specialization: faculty.specialization,
+  qualification: faculty.qualification,
+  performanceRating: faculty.performanceRating,
+  notes: faculty.notes,
+  customData: faculty.customData,
+  deletedAt: faculty.deletedAt,
+  deletedBy: faculty.deletedBy,
+  deletionReason: faculty.deletionReason,
+  restoredAt: faculty.restoredAt,
+  restoredBy: faculty.restoredBy,
+  deletedWithCascade: faculty.deletedWithCascade,
+  createdAt: faculty.createdAt,
+  updatedAt: faculty.updatedAt,
+  createdBy: faculty.createdBy,
+  updatedBy: faculty.updatedBy,
+} as const;
+
+export const KNOWN_FACULTY_KEYS = new Set([
+  'id', 'contactId', 'employmentId', 'userId', 'employeeId', 'status', 'profileStatus',
+  'employDesignationId', 'employDesignationStatus',
+  'specialization', 'department', 'designation', 'designationId', 'designationStartDate',
+  'designationEndDate', 'departmentId', 'parentDesignationId', 'departmentName',
+  'designationName', 'designationAssignableRoles', 'reportingFacultyId', 'reportingFacultyName',
+  'subordinateCount', 'subordinates', 'hierarchyRank', 'qualification',
+  'employmentStartDate', 'employmentEndDate', 'employment', 'performanceRating', 'joinDate',
+  'notes', 'name', 'phone', 'email', 'gender', 'avatar', 'contact',
+  'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'deletedAt',
+  'deletedBy', 'deletionReason', 'restoredAt', 'restoredBy', 'deletedWithCascade',
+]);

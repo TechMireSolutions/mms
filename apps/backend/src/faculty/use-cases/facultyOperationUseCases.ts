@@ -70,10 +70,16 @@ export async function computeNextFacultyEmployeeIdForSettings(
     : DEFAULT_FACULTY_SETTINGS;
 
   const settings: FacultyEmployeeIdSettings = {
+    ...savedPrefs,
     idPrefix:
       settingsInput?.idPrefix?.trim() ||
       savedPrefs.idPrefix ||
       DEFAULT_FACULTY_SETTINGS.idPrefix,
+    employeeIdPrefix:
+      settingsInput?.employeeIdPrefix?.trim() ||
+      settingsInput?.idPrefix?.trim() ||
+      savedPrefs.employeeIdPrefix ||
+      savedPrefs.idPrefix,
     idTemplate:
       settingsInput?.idTemplate?.trim() ||
       savedPrefs.idTemplate ||
@@ -82,6 +88,13 @@ export async function computeNextFacultyEmployeeIdForSettings(
       settingsInput?.idDigits ??
       savedPrefs.idDigits ??
       DEFAULT_FACULTY_SETTINGS.idDigits,
+    employeeIdSequenceDigits:
+      settingsInput?.employeeIdSequenceDigits ??
+      settingsInput?.idDigits ??
+      savedPrefs.employeeIdSequenceDigits ??
+      savedPrefs.idDigits,
+    employeeIdYearFormat: settingsInput?.employeeIdYearFormat ?? savedPrefs.employeeIdYearFormat,
+    employeeIdDelimiter: settingsInput?.employeeIdDelimiter ?? savedPrefs.employeeIdDelimiter,
     idStartSeq:
       settingsInput?.idStartSeq ??
       savedPrefs.idStartSeq ??

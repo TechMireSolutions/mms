@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import type { FacultyDepartmentEntity } from "@mms/shared";
-import { FACULTY_DEPARTMENT_VALUES } from "@mms/shared";
+import { isFacultyCatalogRowActive, type FacultyDepartmentEntity } from "@mms/shared";
 import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -36,17 +35,17 @@ export function FacultyDepartmentSelectField({
   const deptOptions = useMemo(() => {
     if (departmentEntities?.length) {
       const activeOrCurrent = departmentEntities.filter(
-        (d) => d.isActive !== false || d.id === departmentId || d.name === value,
+        (d) => isFacultyCatalogRowActive(d) || d.id === departmentId || d.name === value,
       );
-      const list = activeOrCurrent.map((d) => ({ value: d.name, label: `${d.name} (${d.code})` }));
+      const list = activeOrCurrent.map((d) => ({ value: d.name, label: d.name }));
       if (value && !activeOrCurrent.some((d) => d.name === value)) {
         list.unshift({ value, label: value });
       }
       return list;
     }
-    const raw: readonly string[] = departmentOptions?.length ? departmentOptions : FACULTY_DEPARTMENT_VALUES;
+    const raw: readonly string[] = departmentOptions ?? [];
     const exists = value ? raw.some((val) => val === value) : true;
-    const list = value && !exists ? [value, ...raw] : raw;
+    const list = value && !exists ? [value, ...raw] : [...raw];
     return list.map((opt) => ({ value: opt, label: opt }));
   }, [departmentEntities, departmentId, departmentOptions, value]);
 

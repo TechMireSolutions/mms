@@ -1,50 +1,24 @@
+/**
+ * @file facultySoftDeleteUseCases.ts
+ * @description Soft-delete faculty members (single + bulk) with subordinate guards.
+ */
 import { dedupeTrimmedIds, type Faculty } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import type { FacultyRepository } from '../repository/facultyRepository.js';
 import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
-import { ConflictError } from '../../lib/httpErrors.js';
 import { nowIso } from '../../lib/softDeleteHelpers.js';
-import { emitOutboxEvent } from '../../services/outboxEventService.js';
-import { revokeFacultySessions } from './facultySoftDeleteSessions.js';
 import { restoreFacultyById, bulkRestoreFaculty } from './facultyRestoreUseCases.js';
-import { cascadeSoftDeleteFacultyAssignments } from '../../db/repositories/facultyAssignmentCascade.js';
+import { cascadeFacultySoftDeleteSideEffects } from './facultySoftDeleteCascade.js';
+import {
+  guardBulkSubordinatesOnDelete,
+  guardSubordinatesOnDelete,
+  SubordinateReassignmentError,
+} from './facultySoftDeleteGuards.js';
 
 export { restoreFacultyById, bulkRestoreFaculty };
-
-export class SubordinateReassignmentError extends ConflictError {
-  constructor(message = 'Cannot delete faculty member with active subordinates. Please reassign subordinates before deletion.') {
-    super(message);
-    this.name = 'SubordinateReassignmentError';
-  }
-}
-
-async function guardSubordinatesOnDelete(
-  tenant: string,
-  id: string,
-  reassignSubordinatesTo: string | undefined,
-  repo: FacultyRepository,
-): Promise<void> {
-  const subordinateCount = repo.countSubordinates ? await repo.countSubordinates(tenant, id) : 0;
-  if (subordinateCount === 0) return;
-
-  if (reassignSubordinatesTo && reassignSubordinatesTo.trim()) {
-    const targetId = reassignSubordinatesTo.trim();
-    if (targetId === id) {
-      throw new ConflictError('Cannot reassign subordinates to the faculty member being deleted');
-    }
-    const targetSupervisor = await repo.findById(tenant, targetId);
-    if (!targetSupervisor || targetSupervisor.deletedAt) {
-      throw new ConflictError('Target supervisor for reassignment does not exist or has been deleted');
-    }
-    await repo.reassignSubordinates(tenant, id, targetId);
-  } else {
-    throw new SubordinateReassignmentError(
-      `Cannot delete faculty member with ${subordinateCount} active subordinate(s). Please reassign subordinates before deletion.`,
-    );
-  }
-}
+export { SubordinateReassignmentError };
 
 export async function softDeleteFacultyById(
   id: string,
@@ -62,10 +36,9 @@ export async function softDeleteFacultyById(
 
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
-    const toSave: Faculty[] = [];
-
     const existingFaculty = await repo.findByIds(tenant, [id]);
     const existing = existingFaculty[0];
+    const toSave: Faculty[] = [];
     if (existing && !existing.deletedAt) {
       toSave.push({
         ...existing,
@@ -75,35 +48,13 @@ export async function softDeleteFacultyById(
       });
     }
 
-    if (toSave.length > 0) {
-      await repo.bulkSave(tenant, toSave);
-      await cascadeSoftDeleteFacultyAssignments(
-        tenant,
-        toSave.map((f) => String(f.id)),
-        deletedBy,
-        trimmedReason,
-      );
-      for (const f of toSave) {
-        await emitOutboxEvent('entity.soft_deleted', {
-          entityType: 'faculty',
-          entityId: String(f.id),
-          tenantId: tenant,
-          deletedAt: f.deletedAt ?? now,
-          deletedBy,
-          deletionReason: f.deletionReason,
-          version: Date.now(),
-          snapshot: f,
-        });
-      }
-      await revokeFacultySessions(tenant, toSave);
-      return { succeeded: 1, failed: 0 };
-    }
-    return { succeeded: 0, failed: 1 };
+    if (toSave.length === 0) return { succeeded: 0, failed: 1 };
+    await repo.bulkSave(tenant, toSave);
+    await cascadeFacultySoftDeleteSideEffects(tenant, toSave, deletedBy, trimmedReason, now);
+    return { succeeded: 1, failed: 0 };
   });
 
-  if (result.succeeded > 0) {
-    await broadcastCollection('faculty');
-  }
+  if (result.succeeded > 0) await broadcastCollection('faculty');
   return result.succeeded === 1;
 }
 
@@ -121,34 +72,13 @@ export async function bulkSoftDeleteFaculty(
     if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
 
     await repo.guardAssignmentDependents(tenant, uniqueIds);
-    if (repo.countSubordinatesBatch) {
-      const subCounts = await repo.countSubordinatesBatch(tenant, uniqueIds);
-      const getCount = (id: string): number => {
-        if (!subCounts) return 0;
-        if (subCounts instanceof Map) return subCounts.get(id) ?? 0;
-        return (subCounts as Record<string, number>)[id] ?? 0;
-      };
-      const supervisorIdsWithSubs = uniqueIds.filter((id) => getCount(id) > 0);
-      if (supervisorIdsWithSubs.length > 0) {
-        const deletedIdSet = new Set(uniqueIds);
-        for (const supId of supervisorIdsWithSubs) {
-          const subs = repo.findSubordinates ? await repo.findSubordinates(tenant, supId) : [];
-          const activeOrphaned = subs.filter((sub) => !sub.deletedAt && !deletedIdSet.has(String(sub.id)));
-          if (activeOrphaned.length > 0) {
-            throw new SubordinateReassignmentError(
-              `Cannot delete faculty member (${supId}) with ${activeOrphaned.length} active subordinate(s). Please reassign subordinates before deletion.`,
-            );
-          }
-        }
-      }
-    }
+    await guardBulkSubordinatesOnDelete(tenant, uniqueIds, repo);
 
     let succeeded = 0;
     let failed = 0;
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
     const toSave: Faculty[] = [];
-
     const existingFaculty = await repo.findByIds(tenant, uniqueIds);
     const existingMap = new Map(existingFaculty.map((f) => [String(f.id), f]));
 
@@ -169,31 +99,11 @@ export async function bulkSoftDeleteFaculty(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
-      await cascadeSoftDeleteFacultyAssignments(
-        tenant,
-        toSave.map((f) => String(f.id)),
-        deletedBy,
-        trimmedReason,
-      );
-      for (const f of toSave) {
-        await emitOutboxEvent('entity.soft_deleted', {
-          entityType: 'faculty',
-          entityId: String(f.id),
-          tenantId: tenant,
-          deletedAt: f.deletedAt ?? now,
-          deletedBy,
-          deletionReason: f.deletionReason,
-          version: Date.now(),
-          snapshot: f,
-        });
-      }
-      await revokeFacultySessions(tenant, toSave);
+      await cascadeFacultySoftDeleteSideEffects(tenant, toSave, deletedBy, trimmedReason, now);
     }
     return { succeeded, failed };
   });
 
-  if (result.succeeded > 0) {
-    await broadcastCollection('faculty');
-  }
+  if (result.succeeded > 0) await broadcastCollection('faculty');
   return result;
 }

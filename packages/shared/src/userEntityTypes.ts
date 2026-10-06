@@ -38,6 +38,10 @@ export interface WorkspaceRole {
   isSystem: boolean;
   badgeVariant: UserBadgeVariant;
   permissions: PermissionMap;
+  /** Server-owned role derived from faculty employ-designation assignable roles. */
+  managedBy?: 'faculty_designations';
+  /** Sorted unique catalog role ids whose permissions were unioned into this role. */
+  sourceRoleIds?: string[];
 }
 
 /** Local workspace user record (display layer; auth JWT uses singular `role`). */
@@ -54,6 +58,11 @@ export interface WorkspaceUser {
   temporaryPassword?: string;
   phone: string;
   role: string;
+  /**
+   * How `role` is governed. `faculty_designations` means admins cannot change it
+   * manually — it is synced from active employ-designation assignable roles.
+   */
+  roleSource?: 'faculty_designations' | 'manual';
   status: UserStatus;
   twoFactorEnabled: boolean;
   lastLogin: string;

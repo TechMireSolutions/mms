@@ -21,7 +21,7 @@ export async function buildFacultyDepartmentsCsvExport(
   tenant?: string,
 ): Promise<{ csv: string; filename: string; count: number }> {
   const subdomain = resolveTenant(tenant);
-  const rows = await listFacultyDepartments(subdomain);
+  const rows = await listFacultyDepartments(subdomain, { limit: null });
   const departments = rows as unknown as FacultyDepartmentEntity[];
   const csv = facultyDepartmentsToCsv(departments);
   const filename = buildTenantExportFilename(
@@ -38,7 +38,7 @@ export async function buildFacultyDesignationsCsvExport(
   tenant?: string,
 ): Promise<{ csv: string; filename: string; count: number }> {
   const subdomain = resolveTenant(tenant);
-  const designations = await listFacultyDesignations(subdomain);
+  const designations = await listFacultyDesignations(subdomain, { limit: null });
   const csv = facultyDesignationsToCsv(designations);
   const filename = buildTenantExportFilename(
     subdomain,

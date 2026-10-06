@@ -1,10 +1,9 @@
 import type { TabDefinition, FieldDefinition } from "./contactTypes.js";
-import { FACULTY_DEPARTMENT_VALUES } from "./facultyTypes.js";
 
 // ─── Default Faculty Field Setup Constants ────────────────────────────────────
 
-/** Form tabs Setup cannot disable; the form always treats them as on. */
-export const FACULTY_LOCKED_ENABLED_TABS = ["basic"] as const;
+/** Form tabs Setup cannot disable: Contacts, Employment, Employ Designation. */
+export const FACULTY_LOCKED_ENABLED_TABS = ["basic", "employment", "designation"] as const;
 
 /** True when `tabKey` is a locked always-on Faculty form tab. */
 export function isFacultyLockedEnabledTab(tabKey: string): boolean {
@@ -13,8 +12,8 @@ export function isFacultyLockedEnabledTab(tabKey: string): boolean {
 }
 
 export const FACULTY_TAB_REGISTRY: TabDefinition[] = [
-  { key: "basic", label: "Profile", labelKey: "faculty.form.tab.basic", enabled: true, order: 0, isSystem: true },
-  { key: "employment", label: "Employment Details", labelKey: "faculty.form.tab.employment", enabled: true, order: 1, isSystem: true },
+  { key: "basic", label: "Contacts", labelKey: "faculty.form.tab.contact", enabled: true, order: 0, isSystem: true },
+  { key: "employment", label: "Employment", labelKey: "faculty.form.tab.employment", enabled: true, order: 1, isSystem: true },
   { key: "designation", label: "Designation", labelKey: "faculty.form.tab.designation", enabled: true, order: 2, isSystem: true },
   // Retired person-level hierarchy UI — kept for Setup migration overlays only.
   { key: "hierarchy", label: "Hierarchy", labelKey: "faculty.form.tab.hierarchy", enabled: false, order: 3, isSystem: true },
@@ -40,7 +39,7 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
     {
       key: "contactId", label: "Contact", labelKey: "faculty.field.contact",
       type: "text", enabled: true, order: 0, required: true,
-      description: "Contact picker — links the canonical person record for this faculty member.",
+      description: "Contact from the Contacts module (unique email / user registration).",
       descriptionKey: "faculty.fields.contactIdDesc",
     },
     {
@@ -55,26 +54,6 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
       description: "Derived from the linked contact profile (not edited on the faculty form).",
       descriptionKey: "faculty.fields.qualificationDesc",
     },
-  ],
-  employment: [
-    {
-      key: "employeeId", label: "Employee ID", labelKey: "faculty.field.employeeId",
-      type: "text", enabled: true, order: 0, required: true,
-      description: "Staff employee ID — auto-assigned from Setup Preferences when enabled.",
-      descriptionKey: "faculty.fields.employeeIdDesc",
-    },
-    {
-      key: "status", label: "Status", labelKey: "faculty.field.status",
-      type: "select", enabled: true, order: 1, required: true,
-      description: "Employment status for this faculty member (options from faculty status lookups).",
-      descriptionKey: "faculty.fields.statusDesc",
-    },
-    {
-      key: "joinDate", label: "Joining Date", labelKey: "faculty.field.joinDate",
-      type: "date", enabled: true, order: 2, required: true,
-      description: "Date the faculty member joined the madrasa.",
-      descriptionKey: "faculty.fields.joinDateDesc",
-    },
     {
       key: "notes", label: "Notes", labelKey: "faculty.field.notes",
       type: "textarea", enabled: true, order: 3, required: false,
@@ -82,30 +61,57 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
       descriptionKey: "faculty.fields.notesDesc",
     },
   ],
+  employment: [
+    {
+      key: "employeeId", label: "Employee Code", labelKey: "faculty.field.employeeId",
+      type: "text", enabled: true, order: 0, required: true,
+      description: "Employee Code from Setup → Employee ID Configuration (prefix, year, sequence).",
+      descriptionKey: "faculty.fields.employeeIdDesc",
+    },
+    {
+      key: "status", label: "Employment Status", labelKey: "faculty.field.status",
+      type: "select", enabled: true, order: 1, required: true,
+      description: "Employment lifecycle status (Active, On Leave, Inactive, Retired, Terminated).",
+      descriptionKey: "faculty.fields.statusDesc",
+    },
+    {
+      key: "employmentStartDate", label: "Employment Start Date", labelKey: "faculty.field.employmentStartDate",
+      type: "date", enabled: true, order: 2, required: true,
+      description: "Date the faculty member's employment began.",
+      descriptionKey: "faculty.fields.employmentStartDateDesc",
+    },
+    {
+      key: "employmentEndDate", label: "Employment End Date", labelKey: "faculty.field.employmentEndDate",
+      type: "date", enabled: true, order: 3, required: false,
+      description: "Optional date the employment ended (retired, terminated, or left).",
+      descriptionKey: "faculty.fields.employmentEndDateDesc",
+    },
+  ],
   designation: [
     {
-      key: "designation", label: "Designation / Role", labelKey: "faculty.field.designation",
-      type: "select", enabled: true, order: 0, required: false,
-      description: "Faculty role or academic designation.",
+      key: "designationId", label: "Designation", labelKey: "faculty.field.designation",
+      type: "select", enabled: true, order: 0, required: true,
+      description: "Department + designation from the faculty designation catalog.",
       descriptionKey: "faculty.fields.designationDesc",
     },
     {
-      key: "department", label: "Department", labelKey: "faculty.field.department",
-      type: "select", options: [...FACULTY_DEPARTMENT_VALUES], enabled: true, order: 1, required: false,
-      description: "Academic or administrative department.",
-      descriptionKey: "faculty.fields.departmentDesc",
+      key: "designationStartDate", label: "Designation Start Date", labelKey: "faculty.field.designationStartDate",
+      type: "date", enabled: true, order: 1, required: true,
+      description: "Date this employ-designation tenure began (defaults to today).",
+      descriptionKey: "faculty.fields.designationStartDateDesc",
     },
     {
-      key: "designationId", label: "Designation (Catalog)", labelKey: "faculty.field.designationCatalog",
-      type: "select", enabled: false, order: 2, required: false,
-      description: "Alias of designation — controlled by the Designation / Role field.",
-      descriptionKey: "faculty.fields.designationCatalogDesc",
+      key: "designationEndDate", label: "Designation End Date", labelKey: "faculty.field.designationEndDate",
+      type: "date", enabled: true, order: 2, required: false,
+      description: "Optional date this employ-designation tenure ends.",
+      descriptionKey: "faculty.fields.designationEndDateDesc",
     },
     {
-      key: "departmentId", label: "Department (Catalog)", labelKey: "faculty.field.departmentCatalog",
-      type: "select", enabled: false, order: 3, required: false,
-      description: "Alias of department — controlled by the Department field.",
-      descriptionKey: "faculty.fields.departmentCatalogDesc",
+      key: "employDesignationStatus", label: "Employ Designation Status",
+      labelKey: "faculty.field.employDesignationStatus",
+      type: "select", enabled: true, order: 3, required: true,
+      description: "Active or Inactive for this employment's designation tenure.",
+      descriptionKey: "faculty.fields.employDesignationStatusDesc",
     },
   ],
   hierarchy: [

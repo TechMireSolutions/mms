@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   resolveFacultyStatus,
+  type Contact,
   type FieldDefinition,
   type FacultyMember,
 } from "@mms/shared";
@@ -35,8 +36,13 @@ export interface FacultyEmploymentSectionProps extends FacultySectionBaseProps {
   isFetchingNextEmployeeId?: boolean;
   statusOptions: FacultyStatusOption[];
   faculty?: FacultyMember;
+  linkedFacultyContactIds?: Array<string | number>;
+  linkedContact?: Contact | null;
 }
 
+/**
+ * Employment card: Employee Code, lifecycle status, employment start/end dates.
+ */
 export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): React.JSX.Element | null {
   const {
     autoGenerateId,
@@ -56,11 +62,15 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
   const { t } = useTranslation();
   const showEmployeeId = isFieldEnabled("employeeId");
   const showStatus = isFieldEnabled("status");
-  const showJoinDate = isFieldEnabled("joinDate");
-  const hasVisibleFields = showEmployeeId || showStatus || showJoinDate;
-  if (!hasVisibleFields) return null;
+  const showStartDate = isFieldEnabled("employmentStartDate") || isFieldEnabled("joinDate");
+  const showEndDate = isFieldEnabled("employmentEndDate");
+  if (!showEmployeeId && !showStatus && !showStartDate && !showEndDate) {
+    return null;
+  }
 
   const lbl = (field: string) => resolveFacultyFieldLabel(fields, "employment", field, t);
+  const startDate = facultyDraft.employmentStartDate ?? facultyDraft.joinDate ?? undefined;
+  const endDate = facultyDraft.employmentEndDate ?? undefined;
 
   return (
     <div className="space-y-4 text-start">
@@ -75,7 +85,7 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
               idPrefix={idPrefix}
               autoGenerateId={autoGenerateId}
               isExistingFaculty={Boolean(faculty?.id)}
-              hasNextEmployeeId={Boolean(nextEmployeeId)}
+              nextEmployeeId={nextEmployeeId}
               isFetchingNextEmployeeId={isFetchingNextEmployeeId}
               onDraftChange={onDraftChange}
               onRegenerateEmployeeId={onRegenerateEmployeeId}
@@ -84,7 +94,7 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
           )}
 
           {showStatus && (
-            <Field label={lbl("status")} id="status" required={isFieldRequired("status")}>
+            <Field label={lbl("status")} id="status" required={isFieldRequired("status")} error={errors.status}>
               <FormSelect
                 id="status"
                 name="status"
@@ -95,17 +105,38 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
             </Field>
           )}
 
-          {showJoinDate && (
-            <div className="md:col-span-2">
-              <Field label={lbl("joinDate")} id="faculty-join-date" required={isFieldRequired("joinDate")} error={errors.joinDate}>
-                <DatePicker
-                  id="faculty-join-date"
-                  name="joinDate"
-                  value={facultyDraft.joinDate || undefined}
-                  onChange={(dateStr) => onDraftChange({ joinDate: dateStr })}
-                />
-              </Field>
-            </div>
+          {showStartDate && (
+            <Field
+              label={lbl("employmentStartDate")}
+              id="faculty-employment-start-date"
+              required={isFieldRequired("employmentStartDate") || isFieldRequired("joinDate")}
+              error={errors.employmentStartDate || errors.joinDate}
+            >
+              <DatePicker
+                id="faculty-employment-start-date"
+                name="employmentStartDate"
+                value={startDate || undefined}
+                max={endDate}
+                onChange={(dateStr) => onDraftChange({ employmentStartDate: dateStr })}
+              />
+            </Field>
+          )}
+
+          {showEndDate && (
+            <Field
+              label={lbl("employmentEndDate")}
+              id="faculty-employment-end-date"
+              required={isFieldRequired("employmentEndDate")}
+              error={errors.employmentEndDate}
+            >
+              <DatePicker
+                id="faculty-employment-end-date"
+                name="employmentEndDate"
+                value={endDate || undefined}
+                min={startDate}
+                onChange={(dateStr) => onDraftChange({ employmentEndDate: dateStr || null })}
+              />
+            </Field>
           )}
         </div>
       </SectionCard>

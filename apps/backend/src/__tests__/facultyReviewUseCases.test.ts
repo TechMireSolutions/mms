@@ -8,6 +8,10 @@ import { ConflictError } from '../lib/httpErrors.js';
 vi.mock('../lib/tenantContext.js', () => ({ getRequestTenant: () => 'demo' }));
 vi.mock('../db/database.js', () => ({ runInTransaction: (work: () => Promise<unknown>) => work() }));
 vi.mock('../lib/livePush.js', () => ({ broadcastCollection: vi.fn() }));
+vi.mock('../faculty/use-cases/facultyWriteGuards.js', () => ({
+  validateFacultyContactLink: vi.fn().mockResolvedValue({ userId: null }),
+  validateFacultyDesignationLink: vi.fn().mockResolvedValue({ departmentId: '' }),
+}));
 vi.mock('../db/repositories/facultyAssignmentCascade.js', () => ({
   cascadeSoftDeleteFacultyAssignments: vi.fn().mockResolvedValue(0),
   cascadeRestoreFacultyAssignments: vi.fn().mockResolvedValue(0),
@@ -35,7 +39,7 @@ describe('Faculty review regressions', () => {
     const repo = facultyRepositoryFixture();
     vi.mocked(repo.findById).mockResolvedValue({ id: 'existing', contactId: 'old-contact', status: 'active', deletedAt });
     // Act / Assert
-    await expect(createFaculty({ id: 'existing', contactId: 'different-contact', employeeId: 'EMP' }, repo,
+    await expect(createFaculty({ id: 'existing', contactId: 'different-contact', employeeId: 'EMP', designationId: 'des-1' }, repo,
       { canRestore: false })).rejects.toThrow(ConflictError);
     expect(repo.save).not.toHaveBeenCalled();
   });
@@ -44,7 +48,7 @@ describe('Faculty review regressions', () => {
     // Arrange
     const repo = facultyRepositoryFixture();
     // Act
-    await createFaculty({ id: 'new', contactId: 'contact', employeeId: 'EMP' }, repo);
+    await createFaculty({ id: 'new', contactId: 'contact', employeeId: 'EMP', designationId: 'des-1' }, repo);
     // Assert
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'new' }), { createOnly: true });
   });

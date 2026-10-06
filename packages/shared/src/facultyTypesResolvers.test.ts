@@ -48,8 +48,8 @@ describe('resolveFacultyStatus', () => {
 
 describe('resolveFacultyStatusRoles', () => {
   it('maps FACULTY_STATUS_VALUES to named roles in order', () => {
-    const [active, inactive, onLeave] = FACULTY_STATUS_VALUES;
-    expect(resolveFacultyStatusRoles()).toEqual({ active, inactive, onLeave });
+    const [active, onLeave, inactive, retired, terminated] = FACULTY_STATUS_VALUES;
+    expect(resolveFacultyStatusRoles()).toEqual({ active, onLeave, inactive, retired, terminated });
   });
 });
 

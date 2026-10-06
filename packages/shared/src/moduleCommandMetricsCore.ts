@@ -51,7 +51,12 @@ export interface UsersCommandMetricsSnapshot {
 
 type StatusRecord = { status?: string };
 type RegisteredRecord = StatusRecord & { registeredDate?: string; createdAt?: string };
-type JoinDateRecord = StatusRecord & { joinDate?: string; createdAt?: string };
+type JoinDateRecord = StatusRecord & {
+  employmentStartDate?: string | null;
+  /** @deprecated legacy alias of `employmentStartDate` */
+  joinDate?: string;
+  createdAt?: string;
+};
 type WorkspaceUserMetricRecord = StatusRecord & { role?: string; twoFactorEnabled?: boolean; activeSessions?: number };
 
 export function countRecordsWithStatus<T>(
@@ -149,7 +154,7 @@ export function computeFacultyCommandMetrics(
       other++;
     }
 
-    const raw = member.joinDate ?? member.createdAt;
+    const raw = member.employmentStartDate ?? member.joinDate ?? member.createdAt;
     if (raw) {
       const time = new Date(raw).getTime();
       if (!Number.isNaN(time) && time >= cutoffTime) {

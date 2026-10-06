@@ -17,6 +17,7 @@ import {
   getRbacModuleDef,
   USER_STATUS_MAP,
 } from './userRbacRegistry.js';
+import { excludeFacultyManagedRoles, isFacultyManagedRoleId } from './userRolePrivilege.js';
 
 /** Computes uppercase 1-2 letter initials from a user's display name or email. */
 export function computeUserInitials(name?: string | null, fallback = 'U'): string {
@@ -63,6 +64,12 @@ export function normalizeWorkspaceUser(
     phone: data.phone ?? '',
     role,
     status: data.status ?? 'active',
+    roleSource:
+      data.roleSource === 'faculty_designations' || isFacultyManagedRoleId(role)
+        ? 'faculty_designations'
+        : data.roleSource === 'manual'
+          ? 'manual'
+          : undefined,
     twoFactorEnabled: data.twoFactorEnabled ?? false,
     lastLogin: data.lastLogin ?? '',
     createdDate: created.includes('T') ? created.split('T')[0] : created,
@@ -231,7 +238,8 @@ export function filterAssignableRoles(
   actorRole: string | undefined,
 ): WorkspaceRole[] {
   if (!canAccessRolesAndPermissions(actorRole)) return [];
-  if (isSuperAdminRole(actorRole)) return [...roles];
-  return roles.filter((r) => !isSuperAdminRole(r.id));
+  const visible = excludeFacultyManagedRoles(roles);
+  if (isSuperAdminRole(actorRole)) return [...visible];
+  return visible.filter((r) => !isSuperAdminRole(r.id));
 }
 

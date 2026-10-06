@@ -203,6 +203,34 @@ export async function findTenantUserRowById(
 }
 
 /**
+ * Active (non-deleted) tenant user linked to a contact in one workspace.
+ * Returns the first match when multiple rows share a contact id.
+ */
+export async function findTenantUserRowByContactId(
+  workspaceSubdomain: string,
+  contactId: string,
+): Promise<TenantUserRow | null> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const cleanContactId = contactId?.trim();
+  if (!subdomain || !cleanContactId) return null;
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select(tenantUserColumns)
+      .from(tenantUsers)
+      .where(
+        and(
+          eq(tenantUsers.workspaceSubdomain, subdomain),
+          eq(tenantUsers.contactId, cleanContactId),
+          isNull(tenantUsers.deletedAt),
+        ),
+      )
+      .limit(1);
+    const row = rows[0];
+    return row ? rowToTenantUser(row) : null;
+  });
+}
+
+/**
  * Platform/global variant of {@link findTenantUserRowById}: intentionally
  * resolves a user regardless of workspace. Only call from platform-admin
  * routes, auth bootstrap, or migrations — never from a tenant-scoped route.

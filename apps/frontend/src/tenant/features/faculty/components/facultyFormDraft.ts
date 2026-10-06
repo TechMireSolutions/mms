@@ -1,10 +1,15 @@
 import {
   DEFAULT_FACULTY_USER_ROLE,
+  resolveFacultyProfileStatus,
   resolveFacultyStatus,
   type FacultyMember,
   todayISO,
 } from "@mms/shared";
 import { createModuleFormDraft } from "@/lib/forms/createModuleFormDraft";
+import {
+  employDesignationRowsFromFaculty,
+  employDesignationRowsToWritePayload,
+} from "@/tenant/features/faculty/components/facultyEmployDesignationFormDraft";
 
 export interface FacultyFormControllerOptions {
   faculty?: FacultyMember;
@@ -45,19 +50,23 @@ const { getInitialDraft, draftSnapshot } = createModuleFormDraft<FacultyMember>(
     specialization: faculty?.specialization ?? (defaultSpecialization as string),
     designation: faculty?.designation ?? "",
     designationId: faculty?.designationId ?? "",
-    designationStartsOn: faculty?.designationStartsOn ?? todayISO(),
-    designationEndsOn: faculty?.designationEndsOn ?? null,
+    designationStartDate: faculty?.designationStartDate ?? todayISO(),
+    designationEndDate: faculty?.designationEndDate ?? null,
+    parentDesignationId: faculty?.parentDesignationId ?? null,
     designationAssignableRoles: faculty?.designationAssignableRoles ?? [],
-    designations: faculty?.designations ?? (
-      faculty?.designationId
-        ? [{ designationId: faculty.designationId, status: "active" as const, isPrimary: true }]
-        : []
-    ),
     department: faculty?.department ?? "",
-    departmentId: (faculty as { departmentId?: string } | undefined)?.departmentId ?? "",
-    positionId: (faculty as { positionId?: string } | undefined)?.positionId ?? "",
+    departmentId: faculty?.departmentId ?? "",
     status: resolveFacultyStatus(faculty?.status),
-    joinDate: faculty?.joinDate ?? todayISO(),
+    profileStatus: resolveFacultyProfileStatus(
+      faculty?.employDesignationStatus ?? faculty?.profileStatus,
+    ),
+    employDesignationStatus: resolveFacultyProfileStatus(
+      faculty?.employDesignationStatus ?? faculty?.profileStatus,
+    ),
+    employDesignationId: faculty?.employDesignationId ?? null,
+    employDesignations: employDesignationRowsToWritePayload(employDesignationRowsFromFaculty(faculty)),
+    employmentStartDate: faculty?.employmentStartDate ?? faculty?.joinDate ?? todayISO(),
+    employmentEndDate: faculty?.employmentEndDate ?? null,
     qualification: faculty?.qualification ?? "",
     notes: faculty?.notes ?? "",
     userId: faculty?.userId ?? null,

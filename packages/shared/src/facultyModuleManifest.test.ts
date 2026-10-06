@@ -6,9 +6,11 @@ import {
 } from './facultyModuleManifest.js';
 
 describe('facultyCoreSchema status (lookup SSOT)', () => {
-  it('accepts default and custom lookup statuses', () => {
+  it('accepts every lifecycle status and rejects unknown ones', () => {
     expect(facultyCoreSchema.parse({ contactId: 'c1', status: 'active' }).status).toBe('active');
-    expect(facultyCoreSchema.parse({ contactId: 'c1', status: 'sabbatical' }).status).toBe('sabbatical');
+    expect(facultyCoreSchema.parse({ contactId: 'c1', status: 'retired' }).status).toBe('retired');
+    expect(facultyCoreSchema.parse({ contactId: 'c1', status: 'terminated' }).status).toBe('terminated');
+    expect(() => facultyCoreSchema.parse({ contactId: 'c1', status: 'sabbatical' })).toThrow();
   });
 
   it('rejects empty or oversized status', () => {

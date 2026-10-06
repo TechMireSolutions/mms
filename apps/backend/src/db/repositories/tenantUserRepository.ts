@@ -7,6 +7,7 @@ export {
   listTenantUsersByWorkspace,
   listAllTenantUsersByWorkspace,
   findTenantUserRowById,
+  findTenantUserRowByContactId,
   findTenantUserRowByIdGlobal,
 } from './tenantUserRepositoryHydrate.js';
 export {

@@ -26,6 +26,8 @@ export interface EditUserModalFieldsProps {
   form: UseFormReturn<EditWorkspaceUserInput & Record<string, unknown>>;
   user: SystemUser;
   canManageThisUser: boolean;
+  /** Role is synced from faculty designations — picker is read-only. */
+  roleLockedByFaculty?: boolean;
   assignableRoles: WorkspaceRole[];
   customFields: ModuleCustomField[];
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
@@ -36,12 +38,14 @@ export function EditUserModalFields({
   form,
   user,
   canManageThisUser,
+  roleLockedByFaculty = false,
   assignableRoles,
   customFields,
   onSubmit,
   formId = 'edit-user-form',
 }: EditUserModalFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const roleDisabled = !canManageThisUser || roleLockedByFaculty;
 
   return (
     <form id={formId} noValidate className="space-y-4" onSubmit={onSubmit}>
@@ -78,13 +82,16 @@ export function EditUserModalFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>{t('users.fieldRole')}</FormLabel>
+            {roleLockedByFaculty ? (
+              <p className="mt-1 text-xs text-muted-foreground">{t('users.roleLockedByFaculty')}</p>
+            ) : null}
             <div role="group" aria-label={t('users.fieldRole')} className="mt-1.5 flex flex-wrap gap-2">
               {assignableRoles.map((workspaceRole) => (
                 <Button
                   key={workspaceRole.id}
                   type="button"
                   size="sm"
-                  disabled={!canManageThisUser}
+                  disabled={roleDisabled}
                   aria-pressed={field.value === workspaceRole.id}
                   variant={field.value === workspaceRole.id ? 'default' : 'outline'}
                   onClick={() => field.onChange(workspaceRole.id)}

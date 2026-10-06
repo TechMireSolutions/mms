@@ -7,6 +7,7 @@ import {
   GraduationCap,
   Hash,
   Network,
+  Star,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +24,9 @@ export const SYSTEM_FIELD_ICONS: Record<string, LucideIcon> = {
   specialization: Briefcase,
   qualification: GraduationCap,
   joinDate: Calendar,
+  employmentStartDate: Calendar,
+  employmentEndDate: Calendar,
+  performanceRating: Star,
   status: Briefcase,
   department: Building,
   designation: Award,

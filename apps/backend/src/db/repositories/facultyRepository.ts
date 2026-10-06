@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type Faculty, type RepositoryListOptions } from '@mms/shared';
-import { faculty } from '../schema.js';
+import { faculty, facultyEmployments } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import {
@@ -25,6 +25,10 @@ export {
 
 export type ListFacultyOptions = RepositoryListOptions;
 
+/**
+ * Backup / snapshot dump of faculty for a workspace (soft-delete aware).
+ * Cap: max 5000. Work directory UI must use `listFacultyPage` (paginated), never this.
+ */
 export async function listFacultyByWorkspace(
   tenant: string,
   options?: ListFacultyOptions,
@@ -70,9 +74,17 @@ export async function findFacultyByContactId(tenant: string, contactId: string):
     const rows = await tx
       .select(FACULTY_PROJECTION_COLUMNS)
       .from(faculty)
+      .innerJoin(
+        facultyEmployments,
+        and(
+          eq(faculty.workspaceSubdomain, facultyEmployments.workspaceSubdomain),
+          eq(faculty.employmentId, facultyEmployments.id),
+          isNull(facultyEmployments.deletedAt),
+        ),
+      )
       .where(and(
         eq(faculty.workspaceSubdomain, subdomain),
-        eq(faculty.contactId, contactId),
+        eq(facultyEmployments.contactId, contactId),
         isNull(faculty.deletedAt),
       ))
       .limit(1);
@@ -96,50 +108,38 @@ export async function findFacultyByIds(tenant: string, ids: string[]): Promise<F
 
 export async function saveFaculty(tenant: string, member: Faculty, options?: { createOnly?: boolean }): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await persistFacultyTx(tx, subdomain, member, options);
   });
+  const { syncFacultyLinkedUserRole } = await import(
+    '../../faculty/use-cases/facultyLinkedUserRoleSync.js'
+  );
+  await syncFacultyLinkedUserRole(subdomain, member);
 }
 
 export async function bulkSaveFaculty(tenant: string, items: Faculty[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   if (items.length === 0) return;
-  return withTenant(subdomain, async (tx) => {
-    await tx
-      .insert(faculty)
-      .values(items.map((item) => facultyWriteValues(subdomain, item)))
-      .onConflictDoUpdate({
-        target: [faculty.workspaceSubdomain, faculty.id],
-        set: {
-          contactId: sql`excluded.contact_id`,
-          userId: sql`excluded.user_id`,
-          employeeId: sql`excluded.employee_id`,
-          status: sql`excluded.status`,
-          specialization: sql`excluded.specialization`,
-          qualification: sql`excluded.qualification`,
-          joinDate: sql`excluded.join_date`,
-          notes: sql`excluded.notes`,
-          customData: sql`excluded.custom_data`,
-          deletedAt: sql`excluded.deleted_at`,
-          deletedBy: sql`excluded.deleted_by`,
-          deletionReason: sql`excluded.deletion_reason`,
-          restoredAt: sql`excluded.restored_at`,
-          restoredBy: sql`excluded.restored_by`,
-          updatedAt: new Date(),
-          updatedBy: sql`excluded.updated_by`,
-        },
-      });
+  await withTenant(subdomain, async (tx) => {
+    for (const item of items) {
+      await persistFacultyTx(tx, subdomain, item);
+    }
   });
+  const { syncFacultyLinkedUserRole } = await import(
+    '../../faculty/use-cases/facultyLinkedUserRoleSync.js'
+  );
+  for (const item of items) {
+    await syncFacultyLinkedUserRole(subdomain, item);
+  }
 }
 
 export async function replaceFacultyForWorkspace(tenant: string, items: Faculty[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  // Role sync intentionally omitted: full workspace replace is a rare admin wipe path.
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(faculty).where(eq(faculty.workspaceSubdomain, subdomain));
-    if (items.length > 0) {
-      await tx.insert(faculty).values(
-        items.map((item) => facultyWriteValues(subdomain, item)),
-      );
+    for (const item of items) {
+      await persistFacultyTx(tx, subdomain, item, { createOnly: true });
     }
   });
 }

@@ -14,8 +14,14 @@ import { scrollAndFocusFirstError } from "@/lib/forms/formAutoScroll";
 /** Focus the first invalid faculty form field with smooth auto-scroll. */
 export function focusFacultyValidationField(formInstanceId: string, fieldId: string): void {
   const fieldAliases: Record<string, string[]> = {
-    joinDate: ["faculty-join-date", "joinDate"],
+    joinDate: ["faculty-employment-start-date", "employmentStartDate"],
+    employmentStartDate: ["faculty-employment-start-date", "joinDate"],
+    employmentEndDate: ["faculty-employment-end-date"],
+    designationStartDate: ["faculty-designation-start-date"],
+    designationEndDate: ["faculty-designation-end-date"],
     designation: ["designationId", "designation"],
+    designationId: ["designationId", "designation"],
+    profileStatus: ["profileStatus"],
     "user.role": ["faculty-user-role", "linked-user-role"],
     "user.password": ["faculty-user-password"],
     "user.email": ["contactId"],

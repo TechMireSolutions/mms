@@ -35,20 +35,24 @@ export async function findEligibleTaskRecipientRows(
         SELECT (CURRENT_TIMESTAMP AT TIME ZONE COALESCE(NULLIF(timezone, ''), 'UTC'))::date AS today
         FROM workspaces WHERE subdomain = ${subdomain}
       ), occupants AS MATERIALIZED (
-        SELECT f.id AS faculty_id, f.employee_id, u.id AS user_id, a.id AS assignment_id,
+        SELECT f.id AS faculty_id, fe.employee_id, u.id AS user_id, a.id AS assignment_id,
           p.id AS position_id, p.name AS position_name, p.parent_position_id,
           d.name AS department_name, concat_ws(' ', c.first_name, c.last_name) AS name
         FROM faculty_assignments a
         JOIN faculty f ON f.workspace_subdomain = a.workspace_subdomain AND f.id = a.faculty_id
+        JOIN faculty_employments fe
+          ON fe.workspace_subdomain = f.workspace_subdomain
+         AND fe.id = f.employment_id
+         AND fe.deleted_at IS NULL
         JOIN tenant_users u ON u.workspace_subdomain = f.workspace_subdomain AND u.id = f.user_id
-        JOIN contacts c ON c.workspace_subdomain = f.workspace_subdomain AND c.id = f.contact_id
+        JOIN contacts c ON c.workspace_subdomain = fe.workspace_subdomain AND c.id = fe.contact_id
         JOIN organization_positions p ON p.workspace_subdomain = a.workspace_subdomain AND p.id = a.position_id
         LEFT JOIN faculty_departments d ON d.workspace_subdomain = p.workspace_subdomain
           AND d.id = p.department_id AND d.deleted_at IS NULL
         CROSS JOIN business_day b
         WHERE a.workspace_subdomain = ${subdomain} AND a.deleted_at IS NULL
           AND a.start_date <= b.today AND (a.end_date IS NULL OR a.end_date >= b.today)
-          AND f.deleted_at IS NULL AND f.status = 'active' AND c.deleted_at IS NULL
+          AND f.deleted_at IS NULL AND fe.status = 'active' AND c.deleted_at IS NULL
           AND u.deleted_at IS NULL AND COALESCE(u.profile_json->>'status', 'active') = 'active'
           AND p.deleted_at IS NULL AND p.is_active
       ), authority AS (

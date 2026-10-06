@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateFacultyAssignment } from '../db/repositories/facultyAssignmentValidation.js';
-import { validateFacultyDepartment } from '../db/repositories/facultyDepartmentValidation.js';
+import { FacultyCatalogConflictError, validateFacultyDepartment } from '../db/repositories/facultyDepartmentValidation.js';
+import { validateFacultyDesignation } from '../db/repositories/facultyDesignationValidation.js';
 import { validateHierarchyDepth } from '../db/repositories/facultyHierarchySql.js';
 
 const tx = { execute: vi.fn() };
@@ -77,7 +78,7 @@ describe('Faculty assignment production validation', () => {
       .mockResolvedValueOnce({ rows: [] }) // tenant lock
       .mockResolvedValueOnce({ rows: [] }) // existing assignment
       .mockResolvedValueOnce({ rows: [{ id: 'f' }] })
-      .mockResolvedValueOnce({ rows: [] }) // inactive / missing department (is_active filter)
+      .mockResolvedValueOnce({ rows: [] }) // inactive / missing department (status filter)
       .mockResolvedValueOnce({ rows: [{ id: 'g' }] });
     await expect(
       validateFacultyAssignment(tx, 'tenant', { ...input, positionId: 'pos-1' }),
@@ -120,12 +121,51 @@ describe('Faculty assignment production validation', () => {
 });
 
 describe('Faculty department production validation', () => {
-  it('rejects parent chains that return to the child', async () => {
+  it('given another live department with the same name (case-insensitive), should raise a catalog conflict', async () => {
+    // Arrange — lock, existing-row probe, duplicate probe
     tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ id: 'd', parent_id: null, depth: 2, cycle: false }] });
-    await expect(validateFacultyDepartment(tx, 'tenant', {
-      id: 'd', workspaceSubdomain: 'tenant', parentId: 'child', name: 'Dept', code: 'D',
+      .mockResolvedValueOnce({ rows: [{ id: 'other' }] });
+
+    // Act + Assert
+    await expect(validateFacultyDepartment(tx, 'tenant', { id: 'd', name: 'Hadith Sciences' }))
+      .rejects.toBeInstanceOf(FacultyCatalogConflictError);
+  });
+
+  it('given an archived department id, should refuse the overwrite', async () => {
+    // Arrange
+    tx.execute.mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ deleted_at: new Date('2026-01-01') }] });
+
+    // Act + Assert
+    await expect(validateFacultyDepartment(tx, 'tenant', { id: 'd', name: 'Hadith' }))
+      .rejects.toThrow('archived');
+  });
+
+  it('given a parent chain that returns to the designation, should reject the cycle', async () => {
+    // Arrange — lock, existing row, live department, no duplicate, ancestor chain containing self
+    tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'dept' }] }).mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'child', depth: 1, cycle: false }, { id: 'g', depth: 2, cycle: false }] });
+
+    // Act + Assert
+    await expect(validateFacultyDesignation(tx, 'tenant', {
+      id: 'g', departmentId: 'dept', name: 'Lecturer', parentDesignationId: 'child',
     })).rejects.toThrow('Circular');
+  });
+
+  it('given a live parent two levels deep, should derive rank parent+1', async () => {
+    // Arrange
+    tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'dept' }] }).mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'p', depth: 1, cycle: false }, { id: 'root', depth: 2, cycle: false }] });
+
+    // Act
+    const result = await validateFacultyDesignation(tx, 'tenant', {
+      id: 'g', departmentId: 'dept', name: 'Lecturer', parentDesignationId: 'p',
+    });
+
+    // Assert
+    expect(result).toEqual({ hierarchyRank: 3 });
   });
 
   it.each([0, -1, 21, NaN, Infinity, 1.1])('rejects unsafe depth %s', (depth) => {

@@ -32,6 +32,12 @@ export function stripFacultyWriteNoise(
   delete next.contact;
   delete next.designationAssignableRoles;
   delete next.subordinates;
+  // Denormalised read-model fields derived from `designationId` on the server.
+  delete next.departmentId;
+  delete next.departmentName;
+  delete next.designationName;
+  delete next.parentDesignationId;
+  delete next.parentDesignationName;
   return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
 }
 

@@ -8,6 +8,7 @@ export {
   FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
   fetchAllFacultyForQuery,
   facultyCommandMetricsQueryOptions,
+  facultyWidgetAggregatesQueryOptions,
   useFacultyMutations,
   useFacultyByIds,
   useFacultyMetrics,
@@ -51,6 +52,7 @@ export {
 
 export {
   FACULTY_DEPARTMENTS_QUERY_KEY,
+  facultyDepartmentsQueryOptions,
   useFacultyDepartments,
   useSaveFacultyDepartment,
   useDeleteFacultyDepartment,
@@ -59,17 +61,6 @@ export {
 
 export {
   FACULTY_DESIGNATIONS_QUERY_KEY,
+  facultyDesignationsQueryOptions,
   useFacultyDesignations,
 } from '@/tenant/features/faculty/hooks/useFacultyDesignations';
-
-export {
-  FACULTY_ASSIGNMENTS_QUERY_KEY,
-  ASSIGNMENT_SUBORDINATES_QUERY_KEY,
-  ASSIGNMENT_MANAGERS_QUERY_KEY,
-  useFacultyAssignments,
-  useSaveFacultyAssignment,
-  useCloseFacultyAssignment,
-  useDeleteFacultyAssignment,
-  useAssignmentSubordinates,
-  useAssignmentManagerChain,
-} from '@/tenant/features/faculty/hooks/useFacultyAssignments';

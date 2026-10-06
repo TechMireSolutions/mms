@@ -1,142 +1,88 @@
 import { describe, expect, it } from "vitest";
-import {
-  getInitialDesignationRows,
-  syncPrimaryDesignationPatch,
-  toDesignationHoldings,
-} from "./facultyFormDesignationDraft";
+import type { FacultyDesignationDefinition } from "@mms/shared";
+import { buildDesignationDraftPatch, selectableDesignationOptions } from "./facultyFormDesignationDraft";
 
-describe("facultyFormDesignationDraft", () => {
-  it("seeds one active row from legacy designationId and department", () => {
-    const rows = getInitialDesignationRows({
-      designationId: "des-1",
-      department: "Hadith",
-      departmentId: "dept-1",
-      designationStartsOn: "2026-01-01",
+const designation = (overrides: Partial<FacultyDesignationDefinition>): FacultyDesignationDefinition => ({
+  id: "des-1",
+  departmentId: "dept-1",
+  name: "Lecturer",
+  parentDesignationId: null,
+  status: "active",
+  assignableRoles: [],
+  ...overrides,
+});
+
+describe("buildDesignationDraftPatch", () => {
+  it("given a designation with a hydrated department name, should project designation, department, parent and roles", () => {
+    // Arrange
+    const def = designation({
+      id: "hod", name: "Head of Department", departmentName: "Hadith", parentDesignationId: "dean",
+      assignableRoles: ["teacher", "department_manager"],
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.designationId).toBe("des-1");
-    expect(rows[0]?.departmentId).toBe("dept-1");
-    expect(rows[0]?.department).toBe("Hadith");
-    expect(rows[0]?.status).toBe("active");
-    expect(rows[0]?.startsOn).toBe("2026-01-01");
+
+    // Act
+    const patch = buildDesignationDraftPatch(def);
+
+    // Assert
+    expect(patch).toEqual({
+      designationId: "hod",
+      designation: "Head of Department",
+      designationAssignableRoles: ["teacher", "department_manager"],
+      parentDesignationId: "dean",
+      departmentId: "dept-1",
+      department: "Hadith",
+    });
   });
 
-  it("maps multiple rows and marks the first active holding as primary", () => {
-    const holdings = toDesignationHoldings([
-      {
-        key: "a",
-        department: "A",
-        departmentId: "dept-a",
-        designationId: "des-1",
-        positionId: "",
-        status: "inactive",
-        startsOn: "2026-01-01",
-        endsOn: "",
-      },
-      {
-        key: "b",
-        department: "B",
-        departmentId: "dept-b",
-        designationId: "des-2",
-        positionId: "pos-2",
-        status: "active",
-        startsOn: "2026-02-01",
-        endsOn: "",
-      },
-      {
-        key: "c",
-        department: "C",
-        departmentId: "dept-c",
-        designationId: "des-3",
-        positionId: "",
-        status: "active",
-        startsOn: "2026-03-01",
-        endsOn: "2026-12-31",
-      },
-    ]);
-    expect(holdings).toEqual([
-      {
-        designationId: "des-1",
-        departmentId: "dept-a",
-        status: "inactive",
-        startsOn: "2026-01-01",
-        endsOn: null,
-        isPrimary: false,
-      },
-      {
-        designationId: "des-2",
-        departmentId: "dept-b",
-        positionId: "pos-2",
-        status: "active",
-        startsOn: "2026-02-01",
-        endsOn: null,
-        isPrimary: true,
-      },
-      {
-        designationId: "des-3",
-        departmentId: "dept-c",
-        status: "active",
-        startsOn: "2026-03-01",
-        endsOn: "2026-12-31",
-        isPrimary: false,
-      },
-    ]);
-  });
+  it("given no hydrated department name, should resolve it from the department entities", () => {
+    // Act
+    const patch = buildDesignationDraftPatch(designation({}), [{ id: "dept-1", name: "Fiqh" }]);
 
-  it("syncs singular designation fields from the primary active row", () => {
-    const patch = syncPrimaryDesignationPatch(
-      [
-        {
-          key: "a",
-          department: "Fiqh",
-          departmentId: "dept-1",
-          designationId: "des-1",
-          positionId: "pos-1",
-          status: "active",
-          startsOn: "2026-01-01",
-          endsOn: "",
-        },
-        {
-          key: "b",
-          department: "Hadith",
-          departmentId: "dept-2",
-          designationId: "des-2",
-          positionId: "",
-          status: "inactive",
-          startsOn: "2026-02-01",
-          endsOn: "",
-        },
-      ],
-      {
-        designationOptions: [
-          { id: "des-1", name: "Principal", assignableRoles: ["admin"] },
-          { id: "des-2", name: "Lecturer", assignableRoles: ["instructor"] },
-        ],
-      },
-    );
-    expect(patch.designationId).toBe("des-1");
-    expect(patch.designation).toBe("Principal");
-    expect(patch.departmentId).toBe("dept-1");
+    // Assert
     expect(patch.department).toBe("Fiqh");
-    expect(patch.positionId).toBe("pos-1");
-    expect(patch.designationAssignableRoles).toEqual(["admin"]);
-    expect(patch.designations).toHaveLength(2);
   });
 
-  it("skips rows missing departmentId or designationId", () => {
-    expect(
-      toDesignationHoldings([
-        {
-          key: "a",
-          department: "",
-          departmentId: "",
-          designationId: "des-1",
-          positionId: "",
-          status: "active",
-          startsOn: "2026-01-01",
-          endsOn: "",
-        },
-      ]),
-    ).toEqual([]);
+  it("given no designation, should clear every designation-derived field", () => {
+    // Act
+    const patch = buildDesignationDraftPatch(undefined);
+
+    // Assert
+    expect(patch).toEqual({
+      designationId: "", designation: "", designationAssignableRoles: [], parentDesignationId: null, departmentId: "", department: "",
+    });
+  });
+});
+
+describe("selectableDesignationOptions", () => {
+  it("given inactive and archived rows, should keep only active ones plus the currently held designation", () => {
+    // Arrange
+    const options = [
+      designation({ id: "active", name: "Active" }),
+      designation({ id: "inactive", name: "Inactive", status: "inactive" }),
+      designation({ id: "held", name: "Held", status: "inactive" }),
+      designation({ id: "archived", name: "Archived", deletedAt: "2026-01-01T00:00:00Z" }),
+    ];
+
+    // Act
+    const result = selectableDesignationOptions(options, "held").map((d) => d.id);
+
+    // Assert
+    expect(result).toEqual(["active", "held"]);
+  });
+
+  it("given mixed departments and ranks, should order by department, then seniority, then name", () => {
+    // Arrange
+    const options = [
+      designation({ id: "b2", name: "Zeta", departmentName: "B", hierarchyRank: 2 }),
+      designation({ id: "a2", name: "Beta", departmentName: "A", hierarchyRank: 2 }),
+      designation({ id: "a1", name: "Alpha", departmentName: "A", hierarchyRank: 1 }),
+      designation({ id: "a2b", name: "Alpha2", departmentName: "A", hierarchyRank: 2 }),
+    ];
+
+    // Act
+    const result = selectableDesignationOptions(options).map((d) => d.id);
+
+    // Assert
+    expect(result).toEqual(["a1", "a2b", "a2", "b2"]);
   });
 });

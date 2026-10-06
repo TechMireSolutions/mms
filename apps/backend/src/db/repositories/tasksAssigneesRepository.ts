@@ -5,7 +5,9 @@
 
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { TaskAssigneeRecord } from '@mms/shared';
-import { contacts, faculty, organizationPositions, taskAssignees, tenantUsers } from '../schema.js';
+import {
+  contacts, faculty, facultyEmployments, organizationPositions, taskAssignees, tenantUsers,
+} from '../schema.js';
 import type { TenantTransaction } from '../tenant-context.js';
 
 export async function fetchAssigneesByTaskIds(
@@ -32,7 +34,12 @@ export async function fetchAssigneesByTaskIds(
     .from(taskAssignees)
     .leftJoin(faculty, and(eq(taskAssignees.facultyId, faculty.id),
       eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt)))
-    .leftJoin(contacts, and(eq(faculty.contactId, contacts.id),
+    .leftJoin(facultyEmployments, and(
+      eq(faculty.workspaceSubdomain, facultyEmployments.workspaceSubdomain),
+      eq(faculty.employmentId, facultyEmployments.id),
+      isNull(facultyEmployments.deletedAt),
+    ))
+    .leftJoin(contacts, and(eq(facultyEmployments.contactId, contacts.id),
       eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt)))
     .leftJoin(organizationPositions, and(eq(taskAssignees.positionId, organizationPositions.id),
       eq(organizationPositions.workspaceSubdomain, subdomain), isNull(organizationPositions.deletedAt)))

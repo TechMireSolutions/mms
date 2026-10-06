@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { Award, Pencil, Trash2 } from 'lucide-react';
 import type { FacultyDesignationDefinition } from '@mms/shared';
-import { resolveRoleDisplayName, type WorkspaceRole } from '@mms/shared';
-import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import {
   DataTable,
   DataTableRowActions,
@@ -14,77 +14,75 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export interface FacultyDesignationsTableProps {
   designations: FacultyDesignationDefinition[];
-  roles?: readonly WorkspaceRole[];
   editingDesignationId?: string;
   isPending: boolean;
   isLoading?: boolean;
+  canWrite?: boolean;
   onEdit: (designation: FacultyDesignationDefinition) => void;
   onDelete: (designation: FacultyDesignationDefinition) => void;
   primaryAction?: React.ReactNode;
 }
 
+const Dash = () => <span className="text-muted-foreground/50">—</span>;
+
+/** Designations directory — Faculty Management model: department, name, parent, status. */
 export function FacultyDesignationsTable({
   designations,
-  roles = [],
   editingDesignationId,
   isPending,
   isLoading = false,
+  canWrite = true,
   onEdit,
   onDelete,
   primaryAction,
 }: FacultyDesignationsTableProps): React.JSX.Element {
   const { t } = useTranslation();
-
-  const roleName = (roleId: string) => resolveRoleDisplayName(roleId, roles, t);
-  const statusLabel = (d: FacultyDesignationDefinition) =>
-    d.isActive ? t('faculty.status.active') : t('faculty.status.inactive');
+  const statusLabel = (d: FacultyDesignationDefinition) => t(`faculty.status.${d.status}`);
+  const statusConfig: Record<string, StatusBadgeConfigItem> = {
+    active: { label: t('faculty.status.active'), cls: SEMANTIC_BADGE.success },
+    inactive: { label: t('faculty.status.inactive'), cls: SEMANTIC_BADGE.muted },
+  };
 
   const columns: DataTableColumn<FacultyDesignationDefinition>[] = [
-    { id: 'name', label: t('faculty.designations.name'), fixed: true, render: (d) => <span className="font-medium">{d.name}</span> },
     {
-      id: 'code',
-      label: t('faculty.designations.code'),
-      width: 140,
+      id: 'name',
+      label: t('faculty.designations.name'),
+      fixed: true,
       render: (d) => (
-        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">{d.code}</code>
+        <span className="font-medium" style={{ paddingInlineStart: `${Math.max(0, (d.hierarchyRank ?? 1) - 1) * 0.75}rem` }}>
+          {d.name}
+        </span>
       ),
+    },
+    {
+      id: 'department',
+      label: t('faculty.designations.department'),
+      searchValue: (d) => d.departmentName ?? '',
+      render: (d) => <span className="text-xs text-muted-foreground">{d.departmentName ?? <Dash />}</span>,
+    },
+    {
+      id: 'parent',
+      label: t('faculty.designations.parentDesignation'),
+      searchValue: (d) => d.parentDesignationName ?? '',
+      render: (d) => <span className="text-xs text-muted-foreground">{d.parentDesignationName ?? <Dash />}</span>,
     },
     {
       id: 'status',
       label: t('common.status'),
       width: 120,
       searchValue: statusLabel,
-      render: (d) => (
-        <Badge variant={d.isActive ? 'default' : 'secondary'} className="text-xs">{statusLabel(d)}</Badge>
-      ),
-    },
-    {
-      id: 'roles',
-      label: t('faculty.designations.roles'),
-      searchValue: (d) => d.assignableRoles.map(roleName),
-      render: (d) =>
-        d.assignableRoles.length ? (
-          <div className="flex flex-wrap gap-1">
-            {d.assignableRoles.map((roleId) => (
-              <Badge key={roleId} variant="secondary" className="text-2xs font-normal">{roleName(roleId)}</Badge>
-            ))}
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
+      render: (d) => <StatusBadge status={d.status} config={statusConfig} size="sm" />,
     },
   ];
 
-  const roleOptions = useMemo(
-    () =>
-      [...new Set(designations.flatMap((d) => d.assignableRoles))].map((roleId) => ({
-        value: roleId,
-        label: resolveRoleDisplayName(roleId, roles, t),
-      })),
-    [designations, roles, t],
-  );
+  const departmentOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const d of designations) if (d.departmentId && !seen.has(d.departmentId)) seen.set(d.departmentId, d.departmentName ?? d.departmentId);
+    return [...seen].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [designations]);
 
   const filters: DataTableFilter<FacultyDesignationDefinition>[] = [
+    { id: 'department', label: t('faculty.designations.department'), options: departmentOptions, getValue: (d) => d.departmentId },
     {
       id: 'status',
       label: t('common.status'),
@@ -92,9 +90,8 @@ export function FacultyDesignationsTable({
         { value: 'active', label: t('faculty.status.active') },
         { value: 'inactive', label: t('faculty.status.inactive') },
       ],
-      getValue: (d) => (d.isActive ? 'active' : 'inactive'),
+      getValue: (d) => d.status,
     },
-    { id: 'roles', label: t('faculty.designations.roles'), options: roleOptions, getValue: (d) => d.assignableRoles },
   ];
 
   return (
@@ -107,29 +104,39 @@ export function FacultyDesignationsTable({
       isLoading={isLoading}
       searchPlaceholder={t('faculty.designations.searchPlaceholder')}
       primaryAction={primaryAction}
-      card={{ title: (d) => d.name }}
+      card={{ title: (d) => d.name, badge: (d) => <StatusBadge status={d.status} config={statusConfig} size="sm" /> }}
       rowClassName={(d) =>
         d.id === editingDesignationId
           ? 'bg-primary/10 ring-1 ring-inset ring-primary/40'
-          : d.isActive
+          : d.status === 'active'
             ? undefined
             : 'opacity-70'
       }
-      renderRowActions={(d) => (
-        <DataTableRowActions
-          actions={[
-            { id: 'edit', label: `${t('common.edit')} ${d.name}`, icon: Pencil, onClick: () => onEdit(d), disabled: isPending },
-            {
-              id: 'delete',
-              label: `${t('common.delete')} ${d.name}`,
-              icon: Trash2,
-              tone: 'destructive',
-              onClick: () => onDelete(d),
-              disabled: isPending,
-            },
-          ]}
-        />
-      )}
+      renderRowActions={
+        canWrite
+          ? (d) => (
+              <DataTableRowActions
+                actions={[
+                  {
+                    id: 'edit',
+                    label: `${t('common.edit')} ${d.name}`,
+                    icon: Pencil,
+                    onClick: () => onEdit(d),
+                    disabled: isPending,
+                  },
+                  {
+                    id: 'delete',
+                    label: `${t('common.delete')} ${d.name}`,
+                    icon: Trash2,
+                    tone: 'destructive',
+                    onClick: () => onDelete(d),
+                    disabled: isPending,
+                  },
+                ]}
+              />
+            )
+          : undefined
+      }
       emptyState={
         <EmptyState
           icon={Award}

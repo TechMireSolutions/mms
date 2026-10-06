@@ -82,43 +82,56 @@ describe('Faculty appointment integrity', () => {
 });
 
 describe('Faculty department integrity', () => {
-  it('serializes reciprocal parent changes so concurrent edits cannot create a cycle', async () => {
-    const left = { id: 'left', workspaceSubdomain: tenant, name: 'Left', code: 'L' };
-    const right = { id: 'right', workspaceSubdomain: tenant, name: 'Right', code: 'R' };
-    await saveFacultyDepartment(tenant, left);
-    await saveFacultyDepartment(tenant, right);
+  it('serializes concurrent saves so two live departments cannot share a name', async () => {
     const results = await Promise.allSettled([
-      saveFacultyDepartment(tenant, { ...left, parentId: 'right' }),
-      saveFacultyDepartment(tenant, { ...right, parentId: 'left' }),
+      saveFacultyDepartment(tenant, { id: 'left', name: 'Shared Name' }),
+      saveFacultyDepartment(tenant, { id: 'right', name: 'shared name' }),
     ]);
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
   });
-  it('validates parent cycles and active dependent deletion', async () => {
-    await saveFacultyDepartment(tenant, { id: 'child', workspaceSubdomain: tenant, parentId: 'd', name: 'Child', code: 'C' });
-    await expect(saveFacultyDepartment(tenant, {
-      id: 'd', workspaceSubdomain: tenant, parentId: 'child', name: 'Department', code: 'D',
-    })).rejects.toThrow('Circular');
-    await expect(softDeleteFacultyDepartment(tenant, 'd', 'actor')).rejects.toThrow('active children');
+  it('derives a code from the name, keeps it stable on rename, and blocks dependent deletion', async () => {
+    const saved = await saveFacultyDepartment(tenant, { id: 'child', name: 'Child Dept', description: 'x', status: 'inactive' });
+    expect(saved).toMatchObject({ id: 'child', name: 'Child Dept', description: 'x', status: 'inactive', code: 'child-dept' });
+    const renamed = await saveFacultyDepartment(tenant, { id: 'child', name: 'Renamed Child' });
+    expect(renamed.code).toBe('child-dept');
+    await expect(saveFacultyDepartment(tenant, { id: 'dup', name: 'Department' })).rejects.toThrow('already exists');
+    await expect(softDeleteFacultyDepartment(tenant, 'd', 'actor')).rejects.toThrow('active designations');
   });
 
-  it('orders designations by seniority and excludes soft-deleted definitions', async () => {
+  it('derives designation hierarchy rank from the parent chain and rejects cycles', async () => {
+    await saveFacultyDesignation(tenant, { id: 'junior', departmentId: 'd', name: 'Junior', parentDesignationId: 'g', status: 'active' });
+    await saveFacultyDesignation(tenant, { id: 'intern', departmentId: 'd', name: 'Intern', parentDesignationId: 'junior', status: 'active' });
+    const byId = new Map((await listFacultyDesignations(tenant)).map((d) => [d.id, d]));
+    expect(byId.get('junior')).toMatchObject({ hierarchyRank: 2, departmentName: 'Department', parentDesignationName: 'Professor' });
+    expect(byId.get('intern')?.hierarchyRank).toBe(3);
+    await expect(saveFacultyDesignation(tenant, {
+      id: 'g', departmentId: 'd', name: 'Professor', parentDesignationId: 'intern', status: 'active',
+    })).rejects.toThrow('Circular');
+    await expect(saveFacultyDesignation(tenant, {
+      id: 'dup', departmentId: 'd', name: 'junior', parentDesignationId: null, status: 'active',
+    })).rejects.toThrow('already exists');
+  });
+
+  it('orders designations by department, seniority and name, excluding soft-deleted definitions', async () => {
     await withTenant(tenant, async (tx) => {
-      await tx.execute(sql`INSERT INTO faculty_designations (workspace_subdomain, id, code, name, hierarchy_rank)
-        VALUES (${tenant}, 'junior', 'J', 'Junior', 20), (${tenant}, 'archived', 'A', 'Archived', 10)`);
+      await tx.execute(sql`INSERT INTO faculty_designations (workspace_subdomain, id, department_id, code, name, hierarchy_rank)
+        VALUES (${tenant}, 'archived', 'd', 'A', 'Archived', 10)`);
       await tx.execute(sql`UPDATE faculty_designations SET deleted_at = now() WHERE workspace_subdomain = ${tenant} AND id = 'archived'`);
     });
-    expect((await listFacultyDesignations(tenant)).map((d) => d.id)).toEqual(['g', 'junior']);
+    expect((await listFacultyDesignations(tenant)).map((d) => d.id)).toEqual(['g', 'junior', 'intern']);
   });
 
-  it('archives unused designations with an outbox event and permits code reuse', async () => {
+  it('archives unused designations with an outbox event and permits name reuse', async () => {
     await expect(softDeleteFacultyDesignation(tenant, 'g', 'actor')).rejects.toThrow('dependent');
+    await expect(softDeleteFacultyDesignation(tenant, 'junior', 'actor')).rejects.toThrow('dependent');
+    await softDeleteFacultyDesignation(tenant, 'intern', 'actor');
     await softDeleteFacultyDesignation(tenant, 'junior', 'actor');
     await expect(saveFacultyDesignation(tenant, {
-      id: 'junior', code: 'J', name: 'Junior', hierarchyRank: 20, isActive: true, assignableRoles: [],
+      id: 'junior', departmentId: 'd', name: 'Junior', parentDesignationId: null, status: 'active',
     })).rejects.toThrow('archived');
     await saveFacultyDesignation(tenant, {
-      id: 'replacement', code: 'J', name: 'Replacement', hierarchyRank: 20, isActive: true, assignableRoles: [],
+      id: 'replacement', departmentId: 'd', name: 'Junior', parentDesignationId: null, status: 'active',
     });
     await withTenant(tenant, async (tx) => {
       const events = await tx.execute(sql`SELECT id FROM outbox_events WHERE workspace_subdomain = ${tenant}

@@ -50,10 +50,6 @@ vi.mock("@/components/ui/Drawer", () => ({
   ),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyAssignmentsSection", () => ({
-  FacultyAssignmentsSection: () => <div>faculty.assignments.title</div>,
-}));
-
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
@@ -92,6 +88,5 @@ describe("FacultyDetail Component", () => {
     expect(html).toContain("ID: EMP-77");
     expect(html).toContain("Senior instructor note");
     expect(html).toContain("faculty.detail.printIdCard");
-    expect(html).toContain("faculty.assignments.title");
   });
 });

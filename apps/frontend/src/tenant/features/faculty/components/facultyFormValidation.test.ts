@@ -77,12 +77,11 @@ describe("facultyFormValidation", () => {
     it("validates valid draft returning null for errors", () => {
       const result = validateFacultyDraft(
         {
-          name: "Ustadh Umar",
           contactId: "cnt-1",
           employeeId: "EMP-001",
-          joinDate: "2024-01-01",
+          designationId: "des-1",
+          employmentStartDate: "2024-01-01",
           status: "active",
-          specialization: "Tajweed",
         },
         {
           settings: {

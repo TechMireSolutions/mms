@@ -66,9 +66,9 @@ export function buildFacultyWorkColumnRegistry(
   const labelByKey: Record<string, string> = {
     name: labels.name,
     designation: labels.designation,
-    specialization: labels.specialization,
-    qualification: labels.qualification,
-    joinDate: labels.joinDate,
+    department: labels.department,
+    employmentStartDate: labels.employmentStartDate,
+    performanceRating: labels.performanceRating,
     status: labels.status,
   };
 

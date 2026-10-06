@@ -79,7 +79,7 @@ function facultyFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean
 /** Authoritative default values for FacultySettings (tabbed Fields SSOT). */
 export const DEFAULT_FACULTY_SETTINGS: FacultySettings = {
   idPrefix: "FAC",
-  idTemplate: "{PREFIX}-{SEQ}",
+  idTemplate: "{PREFIX}{YYYY}{SEQ}",
   idDigits: 4,
   idStartSeq: 1,
   idRestartAnnually: false,

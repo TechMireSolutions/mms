@@ -45,7 +45,7 @@ export function useFacultyFormController({
   const departmentOptions = departmentEntitiesToNames(departmentEntities);
 
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
-  const idPrefix = settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
+  const idPrefix = settings.employeeIdPrefix || settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = true;
   const fieldsMap = resolveFacultyFieldsMapForColumnSync(settings.fields);

@@ -1,61 +1,59 @@
-import { and, eq, inArray, desc } from 'drizzle-orm';
-import { primaryAssignmentEffectiveTodayWhere } from './facultyPrimaryAppointmentEffective.js';
+import { and, eq, inArray } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { FacultyMember } from '@mms/shared';
-import {
-  facultyAssignments,
-  facultyDepartments,
-  facultyDesignations,
-} from '../schema.js';
+import { facultyDepartments, facultyDesignations } from '../schema.js';
 import type { AppDb } from '../tenant-context.js';
 
+const parentDesignations = alias(facultyDesignations, 'parent_designation');
+
+/**
+ * Attaches department / designation display fields from `faculty.designation_id`
+ * (Faculty Management model). Department is derived through the designation.
+ */
 export async function attachPrimaryAppointmentFields(
   tx: AppDb,
   subdomain: string,
   rows: FacultyMember[],
 ): Promise<FacultyMember[]> {
-  if (rows.length === 0) return rows;
-  const facultyIds = rows.map((row) => String(row.id));
-  const appointmentRows = await tx
+  const designationIds = [...new Set(
+    rows.map((row) => row.designationId).filter((id): id is string => typeof id === 'string' && id.length > 0),
+  )];
+  if (designationIds.length === 0) return rows;
+  const designationRows = await tx
     .select({
-      facultyId: facultyAssignments.facultyId,
-      departmentId: facultyAssignments.departmentId,
-      designationId: facultyAssignments.designationId,
+      id: facultyDesignations.id,
+      name: facultyDesignations.name,
+      departmentId: facultyDesignations.departmentId,
       departmentName: facultyDepartments.name,
-      designationName: facultyDesignations.name,
+      parentDesignationId: facultyDesignations.parentDesignationId,
+      parentDesignationName: parentDesignations.name,
       hierarchyRank: facultyDesignations.hierarchyRank,
-      startDate: facultyAssignments.startDate,
     })
-    .from(facultyAssignments)
-    .innerJoin(facultyDepartments, and(
-      eq(facultyDepartments.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
-      eq(facultyDepartments.id, facultyAssignments.departmentId),
+    .from(facultyDesignations)
+    .leftJoin(facultyDepartments, and(
+      eq(facultyDepartments.workspaceSubdomain, facultyDesignations.workspaceSubdomain),
+      eq(facultyDepartments.id, facultyDesignations.departmentId),
     ))
-    .innerJoin(facultyDesignations, and(
-      eq(facultyDesignations.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
-      eq(facultyDesignations.id, facultyAssignments.designationId),
+    .leftJoin(parentDesignations, and(
+      eq(parentDesignations.workspaceSubdomain, facultyDesignations.workspaceSubdomain),
+      eq(parentDesignations.id, facultyDesignations.parentDesignationId),
     ))
     .where(and(
-      eq(facultyAssignments.workspaceSubdomain, subdomain),
-      inArray(facultyAssignments.facultyId, facultyIds),
-      primaryAssignmentEffectiveTodayWhere(),
-    ))
-    .orderBy(desc(facultyAssignments.startDate));
+      eq(facultyDesignations.workspaceSubdomain, subdomain),
+      inArray(facultyDesignations.id, designationIds),
+    ));
 
-  const byFaculty = new Map<string, typeof appointmentRows[number]>();
-  for (const row of appointmentRows) {
-    if (!byFaculty.has(row.facultyId)) byFaculty.set(row.facultyId, row);
-  }
-
+  const byId = new Map(designationRows.map((row) => [row.id, row]));
   return rows.map((row) => {
-    const primary = byFaculty.get(String(row.id));
-    if (!primary) return row;
+    const designation = row.designationId ? byId.get(row.designationId) : undefined;
+    if (!designation) return row;
     return {
       ...row,
-      departmentId: primary.departmentId,
-      designationId: primary.designationId,
-      department: primary.departmentName,
-      designation: primary.designationName,
-      hierarchyRank: primary.hierarchyRank,
+      designation: designation.name,
+      departmentId: designation.departmentId ?? undefined,
+      department: designation.departmentName ?? undefined,
+      parentDesignationId: designation.parentDesignationId,
+      hierarchyRank: designation.hierarchyRank,
     };
   });
 }

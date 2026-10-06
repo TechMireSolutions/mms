@@ -4,27 +4,13 @@ import {
   FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { EntityNotesFormSection } from "@/components/ui/EntityNotesFormSection";
-import { useTranslation } from "@/hooks/useTranslation";
-import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
-import {
-  FacultyUserAccountSection,
-  type FacultyUserAccountDraft,
-} from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 import { FacultyCustomFieldsSection } from "./FacultyCustomFieldsSection";
 import { FacultyFormAllSections } from "./FacultyFormAllSections";
 import {
   type FacultyFormTabContentProps,
 } from "./facultyFormTabs";
-import { DEFAULT_FACULTY_USER_ROLE } from "@mms/shared";
 
 export type { FacultyFormTabContentProps };
-
-const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
-  enabled: false,
-  role: DEFAULT_FACULTY_USER_ROLE,
-  setupMethod: "password",
-};
 
 export const FacultyFormTabContent = (function FacultyFormTabContent(props: FacultyFormTabContentProps): React.JSX.Element {
   const {
@@ -47,12 +33,8 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     isFieldRequired,
     onDraftChange,
     linkedContact,
-    linkedUser,
-    userAccountDraft = DEFAULT_USER_ACCOUNT_DRAFT,
-    onUserAccountDraftChange = () => {},
   } = props;
 
-  const { t } = useTranslation();
   const effectiveFaculty = faculty;
   const effectiveDraft = facultyDraftProp ?? {};
   const effectiveContactIds = linkedFacultyContactIds ?? [];
@@ -86,6 +68,8 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
           onRegenerateEmployeeId={onRegenerateEmployeeId}
           isFetchingNextEmployeeId={isFetchingNextEmployeeId}
           statusOptions={statusOptions}
+          linkedFacultyContactIds={effectiveContactIds}
+          linkedContact={linkedContact}
           isFieldEnabled={isFieldEnabled}
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
@@ -99,36 +83,13 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         faculty={effectiveFaculty}
         facultyDraft={effectiveDraft}
         errors={errors}
+        fields={fields}
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
         departmentEntities={departmentEntities}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
-      />
-    );
-  } else if (activeTab === "account") {
-    tabBody = (
-      <FacultyUserAccountSection
-        facultyDraft={effectiveDraft}
-        linkedContact={linkedContact}
-        linkedUser={linkedUser}
-        userAccountDraft={userAccountDraft}
-        onUserAccountDraftChange={onUserAccountDraftChange}
-        errors={errors}
-      />
-    );
-  } else if (activeTab === "notes" && isFieldEnabled("notes")) {
-    tabBody = (
-      <EntityNotesFormSection
-        title={t("faculty.form.notesSection")}
-        subtitle={t("faculty.form.notesSectionDesc")}
-        label={resolveFacultyFieldLabel(fields, "employment", "notes", t)}
-        placeholder={t("faculty.form.notesPlaceholder")}
-        value={effectiveDraft.notes}
-        required={isFieldRequired("notes")}
-        error={errors.notes}
-        onChange={(next) => onDraftChange({ notes: next })}
       />
     );
   }
@@ -157,9 +118,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
       isFieldRequired={isFieldRequired}
       onDraftChange={onDraftChange}
       linkedContact={linkedContact}
-      linkedUser={linkedUser}
-      userAccountDraft={userAccountDraft}
-      onUserAccountDraftChange={onUserAccountDraftChange}
     />
   );
 });

@@ -22,6 +22,18 @@ vi.mock("./FacultyCatalogCreateOverlays", () => ({
   FacultyCatalogCreateOverlays: () => null,
 }));
 
+vi.mock("@/tenant/hooks/useWorkspaceRoles", () => ({
+  useWorkspaceRoles: () => [
+    {
+      id: "faculty_member",
+      labelKey: "users.role.faculty_member",
+      customLabel: "Faculty Member",
+      permissions: {},
+      isSystem: true,
+    },
+  ],
+}));
+
 vi.mock("@/tenant/hooks/collections/organization", () => ({
   useOrganizationPositions: () => ({ data: [] }),
 }));
@@ -31,7 +43,7 @@ vi.mock("@/tenant/components/organization/OrganizationPositionFormModal", () => 
 }));
 
 describe("FacultyFormSections Components", () => {
-  it("renders FacultyContactSection with contact picker, phone, email, qualification, and specialization pills", () => {
+  it("renders FacultyContactSection with contact picker and contact pills", () => {
     const html = renderToStaticMarkup(
       <FacultyContactSection
         facultyDraft={{ contactId: "cnt-1" }}
@@ -92,7 +104,30 @@ describe("FacultyFormSections Components", () => {
     );
 
     expect(html).toContain("faculty.form.sectionEmployment");
+    expect(html).not.toContain("contact-picker");
+    expect(html).toContain("faculty.form.employeeIdManualHint");
     expect(html).toContain("FAC-001");
+  });
+
+  it("locks auto-generated employee IDs to Setup configuration", () => {
+    const html = renderToStaticMarkup(
+      <FacultyEmploymentSection
+        autoGenerateId
+        errors={{}}
+        fields={{}}
+        idPrefix="FAC"
+        nextEmployeeId="FAC20260001"
+        statusOptions={[{ value: "active", label: "Active" }]}
+        facultyDraft={{ employeeId: "FAC20260001", status: "active" }}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("faculty.form.employeeIdSetupHint");
+    expect(html).toContain("FAC20260001");
+    expect(html).toContain('disabled=""');
   });
 
   it("renders accessible error attributes on employeeId when errors are present", () => {
@@ -116,46 +151,36 @@ describe("FacultyFormSections Components", () => {
     expect(empHtml).toContain("border-destructive");
   });
 
-  it("renders designation holding card with department, designation, and dates", () => {
+  it("renders Designation · Role in the designation dropdown option labels", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         errors={{}}
         facultyDraft={{
           designationId: "senior-faculty",
-          designationStartsOn: "2026-01-01",
           department: "Islamic Jurisprudence",
           departmentId: "dept-1",
-          designations: [{
-            designationId: "senior-faculty",
-            departmentId: "dept-1",
-            departmentName: "Islamic Jurisprudence",
-            status: "active",
-            startsOn: "2026-01-01",
-            isPrimary: true,
-          }],
         }}
         designationOptions={[{
           id: "senior-faculty",
-          code: "SENIOR",
+          departmentId: "dept-1",
+          departmentName: "Islamic Jurisprudence",
           name: "Senior Faculty",
+          status: "active",
           hierarchyRank: 3,
-          isActive: true,
           assignableRoles: ["faculty_member"],
         }]}
-        departmentOptions={["Islamic Jurisprudence", "Hifz"]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
       />,
     );
 
-    expect(html).toContain("faculty.field.department");
-    expect(html).toContain("faculty.designations.startsOn");
-    expect(html).toContain("faculty.designations.holdingStatus");
-    expect(html).not.toContain('type="date"');
-    expect(html).toContain('value="Islamic Jurisprudence"');
+    expect(html).toContain("Islamic Jurisprudence · Senior Faculty · Faculty Member");
     expect(html).toContain("faculty.designations.addDesignation");
-    expect(html).not.toContain("faculty.form.tab.designation");
+    expect(html).toContain("faculty.form.designationCard");
+    expect(html).toContain("faculty.form.designations.addTenure");
+    expect(html).toContain("employDesignationStatus");
+    expect(html).not.toContain('id="department"');
   });
 
   it("omits department, specialization, and qualification from employment section", () => {

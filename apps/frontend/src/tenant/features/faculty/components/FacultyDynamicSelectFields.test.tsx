@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { FacultyDepartmentEntity, FacultyDesignationDefinition } from "@mms/shared";
 import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
 import { FacultyDesignationSelectField } from "./FacultyDesignationSelectField";
 
@@ -10,29 +11,33 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+const dept = (overrides: Partial<FacultyDepartmentEntity> = {}): FacultyDepartmentEntity => ({
+  id: "dept-1",
+  workspaceSubdomain: "demo",
+  name: "Hifz",
+  status: "active",
+  createdAt: "2026-01-01T00:00:00Z",
+  updatedAt: "2026-01-01T00:00:00Z",
+  ...overrides,
+});
+
+const desig = (overrides: Partial<FacultyDesignationDefinition> = {}): FacultyDesignationDefinition => ({
+  id: "des-1",
+  departmentId: "dept-1",
+  name: "Principal",
+  status: "active",
+  assignableRoles: [],
+  ...overrides,
+});
+
 describe("FacultyDynamicSelectFields", () => {
   it("renders dynamic department dropdown without Plus when canAdd is omitted", () => {
     const html = renderToStaticMarkup(
-      <FacultyDepartmentSelectField
-        value=""
-        departmentEntities={[
-          {
-            id: "dept-1",
-            workspaceSubdomain: "demo",
-            name: "Hifz",
-            code: "HIFZ",
-            parentId: null,
-            isActive: true,
-            createdAt: "2026-01-01T00:00:00Z",
-            updatedAt: "2026-01-01T00:00:00Z",
-          },
-        ]}
-        onChange={vi.fn()}
-      />,
+      <FacultyDepartmentSelectField value="" departmentEntities={[dept()]} onChange={vi.fn()} />,
     );
 
     expect(html).toContain('id="department"');
-    expect(html).toContain("Hifz (HIFZ)");
+    expect(html).toContain("Hifz");
     expect(html).not.toContain('aria-label="faculty.setup.addDepartment"');
     expect(html).not.toContain("faculty.setup.addDepartmentSubtitle");
   });
@@ -43,18 +48,7 @@ describe("FacultyDynamicSelectFields", () => {
         value=""
         canAdd
         onOpenAdd={vi.fn()}
-        departmentEntities={[
-          {
-            id: "dept-1",
-            workspaceSubdomain: "demo",
-            name: "Hifz",
-            code: "HIFZ",
-            parentId: null,
-            isActive: true,
-            createdAt: "2026-01-01T00:00:00Z",
-            updatedAt: "2026-01-01T00:00:00Z",
-          },
-        ]}
+        departmentEntities={[dept()]}
         onChange={vi.fn()}
       />,
     );
@@ -67,31 +61,13 @@ describe("FacultyDynamicSelectFields", () => {
         value="Hifz"
         departmentId="dept-1"
         departmentEntities={[
-          {
-            id: "dept-1",
-            workspaceSubdomain: "demo",
-            name: "Hifz",
-            code: "HIFZ",
-            parentId: null,
-            isActive: true,
-            createdAt: "2026-01-01T00:00:00Z",
-            updatedAt: "2026-01-01T00:00:00Z",
-          },
-          {
-            id: "dept-2",
-            workspaceSubdomain: "demo",
-            name: "Archived Dept",
-            code: "ARCH",
-            parentId: null,
-            isActive: false,
-            createdAt: "2026-01-01T00:00:00Z",
-            updatedAt: "2026-01-01T00:00:00Z",
-          },
+          dept(),
+          dept({ id: "dept-2", name: "Archived Dept", status: "inactive" }),
         ]}
         onChange={vi.fn()}
       />,
     );
-    expect(html).toContain("Hifz (HIFZ)");
+    expect(html).toContain("Hifz");
     expect(html).not.toContain("Archived Dept");
   });
 
@@ -100,18 +76,7 @@ describe("FacultyDynamicSelectFields", () => {
       <FacultyDepartmentSelectField
         value="Hifz"
         departmentId="dept-1"
-        departmentEntities={[
-          {
-            id: "dept-1",
-            workspaceSubdomain: "demo",
-            name: "Hifz",
-            code: "HIFZ",
-            parentId: null,
-            isActive: true,
-            createdAt: "2026-01-01T00:00:00Z",
-            updatedAt: "2026-01-01T00:00:00Z",
-          },
-        ]}
+        departmentEntities={[dept()]}
         onChange={vi.fn()}
       />,
     );
@@ -124,30 +89,9 @@ describe("FacultyDynamicSelectFields", () => {
     const html = renderToStaticMarkup(
       <FacultyDesignationSelectField
         designationOptions={[
-          {
-            id: "des-1",
-            code: "PRIN",
-            name: "Principal",
-            hierarchyRank: 1,
-            isActive: true,
-            assignableRoles: ["admin"],
-          },
-          {
-            id: "des-2",
-            code: "LECT",
-            name: "Lecturer",
-            hierarchyRank: 4,
-            isActive: true,
-            assignableRoles: ["instructor"],
-          },
-          {
-            id: "des-3",
-            code: "ARCH",
-            name: "Archived Title",
-            hierarchyRank: 5,
-            isActive: false,
-            assignableRoles: [],
-          },
+          desig({ id: "des-1", name: "Principal", assignableRoles: ["admin"] }),
+          desig({ id: "des-2", name: "Lecturer", assignableRoles: ["instructor"] }),
+          desig({ id: "des-3", name: "Archived Title", status: "inactive" }),
         ]}
         onChange={vi.fn()}
       />,
@@ -167,16 +111,7 @@ describe("FacultyDynamicSelectFields", () => {
       <FacultyDesignationSelectField
         canAdd
         onOpenAdd={vi.fn()}
-        designationOptions={[
-          {
-            id: "des-1",
-            code: "PRIN",
-            name: "Principal",
-            hierarchyRank: 1,
-            isActive: true,
-            assignableRoles: ["admin"],
-          },
-        ]}
+        designationOptions={[desig({ assignableRoles: ["admin"] })]}
         onChange={vi.fn()}
       />,
     );
@@ -187,16 +122,7 @@ describe("FacultyDynamicSelectFields", () => {
     const html = renderToStaticMarkup(
       <FacultyDesignationSelectField
         designationId="des-3"
-        designationOptions={[
-          {
-            id: "des-3",
-            code: "ARCH",
-            name: "Archived Title",
-            hierarchyRank: 5,
-            isActive: false,
-            assignableRoles: [],
-          },
-        ]}
+        designationOptions={[desig({ id: "des-3", name: "Archived Title", status: "inactive" })]}
         onChange={vi.fn()}
       />,
     );

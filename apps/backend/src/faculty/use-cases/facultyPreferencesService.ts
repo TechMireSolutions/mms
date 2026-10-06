@@ -1,4 +1,5 @@
 import {
+  buildSequenceFormulaTemplate,
   normalizeFacultyModulePreferences,
   type FacultyModulePreferences,
 } from '@mms/shared';
@@ -27,14 +28,22 @@ export const loadFacultyModulePreferences = async (): Promise<FacultyModulePrefe
   if (tenant) {
     try {
       const config = await getFacultySetupConfig(tenant);
+      const yearFormat = config.yearFormat === 'YY' ? 'YY' : 'YYYY';
       return {
         ...prefs,
+        idPrefix: config.prefix,
         employeeIdPrefix: config.prefix,
-        employeeIdYearFormat: config.yearFormat === 'YY' ? 'YY' : 'YYYY',
+        employeeIdYearFormat: yearFormat,
         employeeIdSequenceDigits: config.sequenceDigits,
+        idDigits: config.sequenceDigits,
         employeeIdDelimiter: config.delimiter,
         employeeIdLastYear: config.lastYear,
         employeeIdCurrentSequence: config.currentSequence,
+        idTemplate: buildSequenceFormulaTemplate({
+          prefix: config.prefix,
+          yearFormat,
+          delimiter: config.delimiter,
+        }),
       };
     } catch {
       return prefs;

@@ -42,8 +42,9 @@ export function buildFacultyCustomFieldsById(
 
 /** Responsive breakpoint utility for a Work column (shared by head + cell). */
 function facultyWorkColumnBreakpointClass(columnKey: string): string {
-  if (columnKey === "designation" || columnKey === "specialization") return "hidden sm:table-cell";
-  if (columnKey === "qualification" || columnKey === "joinDate") {
+  if (columnKey === "designation" || columnKey === "department") return "hidden sm:table-cell";
+  if (columnKey === "qualification" || columnKey === "joinDate" || columnKey === "employmentStartDate"
+    || columnKey === "employmentEndDate" || columnKey === "performanceRating") {
     return "hidden md:table-cell";
   }
   if (customFieldKeyFromColumnKey(columnKey) !== null) {

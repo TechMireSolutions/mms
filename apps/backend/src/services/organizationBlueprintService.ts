@@ -72,7 +72,12 @@ export async function applyOrganizationBlueprint(
       }
     }
 
-    // 3. Sync Designations
+    // 3. Sync Designations (department inferred from the first position using each designation)
+    const desigDeptCode = new Map<string, string>();
+    for (const pos of blueprint.positions) {
+      if (!desigDeptCode.has(pos.designationCode)) desigDeptCode.set(pos.designationCode, pos.departmentCode);
+    }
+    const fallbackDeptId = blueprint.departments[0] ? deptMap.get(blueprint.departments[0].code) ?? null : null;
     const desigMap = new Map<string, string>();
     for (const dg of blueprint.designations) {
       const existing = await tx
@@ -94,6 +99,8 @@ export async function applyOrganizationBlueprint(
           workspaceSubdomain: subdomain,
           name: dg.name,
           code: dg.code,
+          departmentId: deptMap.get(desigDeptCode.get(dg.code) ?? '') ?? fallbackDeptId,
+          status: 'active',
           hierarchyRank: dg.level,
         });
         desigMap.set(dg.code, id);

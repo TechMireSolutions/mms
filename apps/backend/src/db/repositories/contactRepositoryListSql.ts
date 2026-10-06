@@ -1,6 +1,8 @@
 import { sql, type SQL } from 'drizzle-orm';
 import { normalizeSearchString } from '@mms/shared';
-import { contacts, students, faculty, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
+import {
+  contacts, students, faculty, facultyEmployments, tenantUsers, contactEmails, contactAddresses,
+} from '../schema.js';
 import { primaryPhoneDigitsSql } from './contactRepositorySql.js';
 
 export const FACULTY_USER_ROLES_SQL = sql`('faculty', 'teacher', 'assistant_teacher')`;
@@ -17,9 +19,13 @@ export function existsActiveStudentLinkSql(subdomain: string): SQL {
 export function existsActiveFacultyLinkSql(subdomain: string): SQL {
   return sql`EXISTS (
     SELECT 1 FROM ${faculty}
+    INNER JOIN ${facultyEmployments}
+      ON ${facultyEmployments.workspaceSubdomain} = ${faculty.workspaceSubdomain}
+      AND ${facultyEmployments.id} = ${faculty.employmentId}
+      AND ${facultyEmployments.deletedAt} IS NULL
     WHERE ${faculty.workspaceSubdomain} = ${subdomain}
       AND ${faculty.deletedAt} IS NULL
-      AND NULLIF(trim(${faculty.contactId}), '') = ${contacts.id}
+      AND NULLIF(trim(${facultyEmployments.contactId}), '') = ${contacts.id}
   )`;
 }
 

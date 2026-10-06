@@ -51,7 +51,7 @@ describe("toFacultyListSortField", () => {
   it("returns sort field for valid sortable columns", () => {
     expect(toFacultyListSortField("name")).toBe("name");
     expect(toFacultyListSortField("employeeId")).toBe("employeeId");
-    expect(toFacultyListSortField("joinDate")).toBe("joinDate");
+    expect(toFacultyListSortField("employmentStartDate")).toBe("employmentStartDate");
   });
 
   it("returns null for non-sortable columns", () => {
@@ -73,10 +73,10 @@ describe("buildFacultyCustomFieldsById", () => {
 });
 
 describe("facultyWorkColumn responsive classes", () => {
-  it("applies responsive breakpoint classes to specialization and custom columns", () => {
-    expect(facultyWorkColumnCellClass("specialization")).toContain("hidden sm:table-cell");
-    expect(facultyWorkColumnHeadClass("specialization")).toContain("hidden sm:table-cell");
-    expect(facultyWorkColumnCellClass("qualification")).toContain("hidden md:table-cell");
+  it("applies responsive breakpoint classes to department and employment columns", () => {
+    expect(facultyWorkColumnCellClass("department")).toContain("hidden sm:table-cell");
+    expect(facultyWorkColumnHeadClass("department")).toContain("hidden sm:table-cell");
+    expect(facultyWorkColumnCellClass("employmentStartDate")).toContain("hidden md:table-cell");
     expect(facultyWorkColumnCellClass("custom:certification")).toContain("hidden lg:table-cell");
   });
 

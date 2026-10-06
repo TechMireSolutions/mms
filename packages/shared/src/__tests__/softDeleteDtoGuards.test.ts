@@ -150,6 +150,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
         contactId: 'c-1',
         employeeId: 'EMP-001',
         specialization: 'Fiqh',
+        designationId: 'des-1',
         deletedAt: '2026-09-10T12:00:00Z',
         deletedBy: 'attacker',
         deletionReason: 'Illegal archive attempt',

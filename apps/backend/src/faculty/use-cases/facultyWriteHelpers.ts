@@ -1,137 +1,118 @@
-import type { FacultyDesignationHolding, FacultyRecord } from '@mms/shared';
-import { facultyDesignationHoldingsSchema } from '@mms/shared';
-import { saveFacultyAssignment } from '../../db/repositories/facultyAssignmentRepository.js';
-import { listOrganizationPositions } from '../../db/repositories/organizationPositionRepository.js';
+import type { FacultyRecord } from '@mms/shared';
+import {
+  closeAssignment,
+  findPrimaryFacultyAssignment,
+  saveFacultyAssignment,
+} from '../../db/repositories/facultyAssignmentRepository.js';
 import { ValidationError } from '../../lib/httpErrors.js';
 import { prepareFacultyRecord } from './facultyNormalizeUseCases.js';
+import {
+  validateFacultyContactLink,
+  validateFacultyDesignationLink,
+} from './facultyWriteGuards.js';
 
-function resolveHoldingDates(
-  normalized: FacultyRecord,
-  rawRecord: Record<string, unknown>,
-  holding: FacultyDesignationHolding,
-): { startsOn: string; endsOn: string | null } {
-  const startsOn =
-    (typeof holding.startsOn === 'string' && holding.startsOn.trim())
-    || (typeof rawRecord.designationStartsOn === 'string' && rawRecord.designationStartsOn.trim())
-    || (typeof normalized.joinDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(normalized.joinDate)
-      ? normalized.joinDate
-      : new Date().toISOString().slice(0, 10));
-
-  const endsOn =
-    holding.endsOn != null && String(holding.endsOn).trim()
-      ? String(holding.endsOn).trim()
-      : (typeof rawRecord.designationEndsOn === 'string' && rawRecord.designationEndsOn.trim()
-        ? rawRecord.designationEndsOn.trim()
-        : null);
-
-  return { startsOn, endsOn };
+/** Injectable guard seam so unit tests run against in-memory repositories. */
+export interface FacultyWriteGuards {
+  validateContactLink: typeof validateFacultyContactLink;
+  validateDesignationLink: typeof validateFacultyDesignationLink;
+  syncPrimaryAppointment: typeof syncPrimaryAppointment;
 }
 
-function resolveHoldingDepartmentId(
-  holding: FacultyDesignationHolding,
-  rawRecord: Record<string, unknown>,
-): string {
-  if (typeof holding.departmentId === 'string' && holding.departmentId.trim()) {
-    return holding.departmentId.trim();
-  }
-  return typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
-}
+const isoToday = (): string => new Date().toISOString().slice(0, 10);
 
-function resolveHoldingPositionId(
-  holding: FacultyDesignationHolding,
-  rawRecord: Record<string, unknown>,
-): string | null {
-  if (typeof holding.positionId === 'string' && holding.positionId.trim()) {
-    return holding.positionId.trim();
-  }
-  if (typeof rawRecord.positionId === 'string' && rawRecord.positionId.trim()) {
-    return rawRecord.positionId.trim();
-  }
-  return null;
-}
-
-/** Parse designations[] from create payload, or synthesize one row from legacy designationId. */
-export function parseDesignationHoldings(rawRecord: Record<string, unknown>): FacultyDesignationHolding[] {
-  const parsed = facultyDesignationHoldingsSchema.safeParse(rawRecord.designations);
-  if (parsed.success && parsed.data.length > 0) {
-    return parsed.data.filter((row) => row.designationId.trim().length > 0);
-  }
-
-  const designationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';
-  if (!designationId) return [];
-  const departmentId = typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
-  const positionId = typeof rawRecord.positionId === 'string' ? rawRecord.positionId.trim() : '';
-  return [{
-    designationId,
-    status: 'active',
-    ...(departmentId ? { departmentId } : {}),
-    ...(positionId ? { positionId } : {}),
-  }];
-}
-
-async function tenantRequiresPosition(tenant: string): Promise<boolean> {
-  const positions = await listOrganizationPositions(tenant);
-  return positions.some((p) => p.isActive !== false);
-}
-
-async function persistDesignationHoldings(
-  tenant: string,
-  facultyId: string,
-  holdings: FacultyDesignationHolding[],
-  normalized: FacultyRecord,
-  rawRecord: Record<string, unknown>,
-): Promise<void> {
-  if (holdings.length === 0) return;
-
-  const requiresPosition = await tenantRequiresPosition(tenant);
-  let primaryAssigned = false;
-  let writeIndex = 0;
-  for (const holding of holdings) {
-    const departmentId = resolveHoldingDepartmentId(holding, rawRecord);
-    if (!departmentId) continue;
-
-    const { startsOn, endsOn } = resolveHoldingDates(normalized, rawRecord, holding);
-    const status = holding.status === 'inactive' ? 'inactive' : 'active';
-    const isPrimary = status === 'active' && !primaryAssigned
-      ? (holding.isPrimary !== false)
-      : false;
-    if (isPrimary) primaryAssigned = true;
-    writeIndex += 1;
-
-    const positionId = resolveHoldingPositionId(holding, rawRecord);
-    if (requiresPosition && isPrimary && !positionId) {
-      throw new ValidationError(
-        'Organization position is required for the primary appointment when positions exist',
-      );
-    }
-
-    await saveFacultyAssignment(tenant, {
-      id: `fa-${facultyId}-${writeIndex}`,
-      workspaceSubdomain: tenant,
-      facultyId,
-      departmentId,
-      designationId: holding.designationId,
-      positionId,
-      startDate: startsOn,
-      endDate: endsOn,
-      isPrimary,
-      status,
-      notes: null,
-    });
-  }
+function shiftIsoDate(iso: string, days: number): string {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 /**
- * Handles the implicit restore path when
- * an incoming `contactId` matches a soft-deleted faculty row.
- *
- * Returns the merged + persisted record (already saved via `repo.save`).
+ * Compatibility bridge: mirrors primary designation (from payload / employ-designation)
+ * into the primary `faculty_assignments` row so Organization positions, Tasks
+ * delegation and Sessions keep working. Carries the existing position across
+ * designation changes. HR tenure SSOT remains faculty_employ_designations.
+ */
+export async function syncPrimaryAppointment(
+  tenant: string,
+  record: FacultyRecord,
+  departmentId: string | null,
+): Promise<void> {
+  const designationId = record.designationId?.trim();
+  if (!designationId || !departmentId) return;
+  const facultyId = String(record.id);
+  const today = isoToday();
+  const current = await findPrimaryFacultyAssignment(tenant, facultyId, today);
+  if (current?.designationId === designationId && current.departmentId === departmentId) return;
+
+  if (current && current.startDate >= today) {
+    await saveFacultyAssignment(tenant, {
+      ...current, workspaceSubdomain: tenant, departmentId, designationId, status: 'active', updatedBy: record.updatedBy ?? null,
+    });
+    return;
+  }
+  if (current) {
+    await closeAssignment(tenant, current.id, shiftIsoDate(today, -1), record.updatedBy ?? undefined);
+  }
+  const designationStart = typeof record.designationStartDate === 'string'
+    ? record.designationStartDate.trim()
+    : '';
+  const startDate = current
+    ? today
+    : (designationStart.length > 0 ? designationStart : today);
+  await saveFacultyAssignment(tenant, {
+    id: `fa-${facultyId}-${Date.now().toString(36)}`,
+    workspaceSubdomain: tenant,
+    facultyId,
+    departmentId,
+    designationId,
+    positionId: current?.positionId ?? null,
+    startDate: startDate > today ? today : startDate,
+    endDate: typeof record.designationEndDate === 'string' ? record.designationEndDate : null,
+    isPrimary: true,
+    status: 'active',
+    notes: null,
+    updatedBy: record.updatedBy ?? null,
+  });
+}
+
+export const defaultFacultyWriteGuards: FacultyWriteGuards = {
+  validateContactLink: validateFacultyContactLink,
+  validateDesignationLink: validateFacultyDesignationLink,
+  syncPrimaryAppointment,
+};
+
+/**
+ * Runs the Faculty Management link guards before persisting. Returns the record
+ * with the registered `userId` attached (when a user account exists for the
+ * contact) and the designation's department for the appointment bridge.
+ */
+export async function applyFacultyWriteGuards(
+  tenant: string,
+  record: FacultyRecord,
+  guards: FacultyWriteGuards,
+  options: { excludeFacultyId?: string; designationChanged: boolean; contactChanged: boolean },
+): Promise<{ record: FacultyRecord; departmentId: string | null }> {
+  let next = record;
+  const contactId = record.contactId != null ? String(record.contactId).trim() : '';
+  if (contactId && options.contactChanged) {
+    const { userId } = await guards.validateContactLink(tenant, contactId, options.excludeFacultyId);
+    if (userId && !next.userId) next = { ...next, userId };
+  }
+  const designationId = record.designationId?.trim() ?? '';
+  if (!designationId) throw new ValidationError('Selected designation is required');
+  if (!options.designationChanged) return { record: next, departmentId: null };
+  const { departmentId } = await guards.validateDesignationLink(tenant, designationId);
+  return { record: next, departmentId };
+}
+
+/**
+ * Handles the implicit restore path when an incoming `contactId` matches a
+ * soft-deleted faculty row. Returns the merged + persisted record.
  */
 export async function handleImplicitRestore(
   tenant: string,
   archived: FacultyRecord,
   normalized: FacultyRecord,
-  rawRecord: Record<string, unknown>,
   save: (tenant: string, record: FacultyRecord) => Promise<void>,
 ): Promise<FacultyRecord> {
   const merged = prepareFacultyRecord({
@@ -140,28 +121,5 @@ export async function handleImplicitRestore(
     id: archived.id,
   });
   await save(tenant, merged);
-
-  const holdings = parseDesignationHoldings(rawRecord);
-  if (holdings.length > 0) {
-    try {
-      await persistDesignationHoldings(tenant, String(merged.id), holdings, merged, rawRecord);
-    } catch {
-      // Non-fatal: overlap / unique conflicts with existing appointments — skip silently.
-    }
-  }
   return merged;
-}
-
-/**
- * Saves initial designation holdings after a fresh faculty record has been persisted.
- * Writes faculty_assignments only (FA SSOT); does not dual-write legacy FDA rows.
- */
-export async function saveDesignationOnCreate(
-  tenant: string,
-  normalized: FacultyRecord,
-  rawRecord: Record<string, unknown>,
-): Promise<void> {
-  const holdings = parseDesignationHoldings(rawRecord);
-  if (holdings.length === 0) return;
-  await persistDesignationHoldings(tenant, String(normalized.id), holdings, normalized, rawRecord);
 }

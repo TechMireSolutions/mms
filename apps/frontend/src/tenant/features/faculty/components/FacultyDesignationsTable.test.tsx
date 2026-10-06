@@ -18,18 +18,23 @@ vi.mock('@/hooks/useTranslation', () => ({
 const mockDesignations: FacultyDesignationDefinition[] = [
   {
     id: 'des-1',
+    departmentId: 'dept-1',
+    departmentName: 'Hadith',
     name: 'Senior Lecturer',
-    code: 'snr-lec',
+    parentDesignationId: 'des-dean',
+    parentDesignationName: 'Dean',
     hierarchyRank: 2,
-    isActive: true,
-    assignableRoles: ['instructor', 'academic_head'],
+    status: 'active',
+    assignableRoles: [],
   },
   {
     id: 'des-2',
+    departmentId: 'dept-2',
+    departmentName: 'Fiqh',
     name: 'Adjunct Professor',
-    code: 'adj-prof',
-    hierarchyRank: 5,
-    isActive: false,
+    parentDesignationId: null,
+    hierarchyRank: 1,
+    status: 'inactive',
     assignableRoles: [],
   },
 ];
@@ -69,12 +74,15 @@ describe('FacultyDesignationsTable', () => {
 
     const headers = container.querySelectorAll('th');
     expect(headers.length).toBe(5);
+    expect(container.textContent).toContain('faculty.designations.department');
+    expect(container.textContent).toContain('faculty.designations.parentDesignation');
     expect(container.textContent).toContain('Senior Lecturer');
-    expect(container.textContent).toContain('snr-lec');
-    expect(container.textContent).toContain('instructor');
+    expect(container.textContent).toContain('Hadith');
+    expect(container.textContent).toContain('Dean');
     expect(container.textContent).toContain('Adjunct Professor');
-    expect(container.textContent).toContain('adj-prof');
-    expect(container.textContent).not.toContain('faculty.form.hierarchyRank');
+    expect(container.textContent).toContain('faculty.status.inactive');
+    expect(container.textContent).not.toContain('faculty.designations.code');
+    expect(container.textContent).not.toContain('faculty.designations.roles');
   });
 
   it('triggers onEdit callback when edit button is clicked', async () => {
@@ -140,6 +148,23 @@ describe('FacultyDesignationsTable', () => {
 
     const rows = container.querySelectorAll('tbody tr');
     expect(rows[0].className).toContain('ring-primary');
+  });
+
+  it('hides row actions when canWrite is false', async () => {
+    await act(async () => {
+      root.render(
+        <FacultyDesignationsTable
+          designations={mockDesignations}
+          isPending={false}
+          canWrite={false}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />,
+      );
+    });
+
+    expect(container.querySelector('button[aria-label^="common.edit"]')).toBeNull();
+    expect(container.querySelector('button[aria-label^="common.delete"]')).toBeNull();
   });
 
   it('renders empty state when no designations exist', async () => {

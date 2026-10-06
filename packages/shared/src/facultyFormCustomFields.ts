@@ -6,6 +6,7 @@ import { INITIAL_FACULTY_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
+import { applyFacultyFieldProductLocks } from './facultyFormFieldMigration.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_FACULTY_FIELD_SEED);
 
@@ -25,51 +26,6 @@ export function cloneFacultyFieldSeed(): Record<string, FieldDefinition[]> {
     next[tabId] = fields.map((field) => ({ ...field }));
   }
   return next;
-}
-
-const RETIRED_FACULTY_FORM_FIELDS = new Set([
-  'specialization',
-  'qualification',
-  'hierarchyRank',
-  'reportingFacultyId',
-]);
-
-function fieldKeyRequired(
-  tabbed: Record<string, FieldDefinition[]>,
-  key: string,
-): boolean {
-  return Object.values(tabbed).some((tabFields) =>
-    tabFields.some((field) => field.key === key && field.required),
-  );
-}
-
-/** Product invariants after Setup overlays (contact compulsory; retired fields off; alias required parity). */
-function applyFacultyFieldProductLocks(
-  tabbed: Record<string, FieldDefinition[]>,
-): Record<string, FieldDefinition[]> {
-  for (const tabFields of Object.values(tabbed)) {
-    for (let index = 0; index < tabFields.length; index += 1) {
-      const field = tabFields[index];
-      if (field.key === 'contactId') {
-        tabFields[index] = { ...field, enabled: true, required: true };
-      } else if (RETIRED_FACULTY_FORM_FIELDS.has(field.key)) {
-        tabFields[index] = { ...field, enabled: false, required: false };
-      }
-    }
-  }
-  const syncRequired = (primary: string, alias: string) => {
-    if (!fieldKeyRequired(tabbed, primary) && !fieldKeyRequired(tabbed, alias)) return;
-    for (const tabFields of Object.values(tabbed)) {
-      for (let index = 0; index < tabFields.length; index += 1) {
-        const field = tabFields[index];
-        if (field.key === primary) tabFields[index] = { ...field, required: true };
-        if (field.key === alias) tabFields[index] = { ...field, required: false };
-      }
-    }
-  };
-  syncRequired('designation', 'designationId');
-  syncRequired('department', 'departmentId');
-  return tabbed;
 }
 
 /**

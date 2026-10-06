@@ -4,32 +4,27 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
-import { useTranslation } from '@/hooks/useTranslation';
-import { notify } from '@/lib/notify';
-import {
-  useDeleteFacultyDesignation,
-  useFacultyDesignations,
-  useSaveFacultyDesignation,
-} from '../hooks/useFacultyDesignations';
-import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
+import { useFacultyDepartments } from '../hooks/useFacultyDepartments';
+import { useFacultyDesignationsController } from '../hooks/useFacultyDesignationsController';
 import { FacultyDesignationsTable } from './FacultyDesignationsTable';
 import { FacultyDesignationFormModal } from './FacultyDesignationFormModal';
 
 /** Designations work surface — same directory chrome as Faculties (toolbar + table/cards). */
-export function FacultyDesignationsSetupSection(): React.JSX.Element {
-  const { t } = useTranslation();
-  const query = useFacultyDesignations();
-  const save = useSaveFacultyDesignation();
-  const remove = useDeleteFacultyDesignation();
-  const workspaceRoles = useWorkspaceRoles();
+export function FacultyDesignationsSetupSection({
+  canWrite = true,
+}: {
+  canWrite?: boolean;
+}): React.JSX.Element {
+  const { t, query, designations, isPending, isSaving, saveDesignation, handleDelete } =
+    useFacultyDesignationsController();
+  const { data: departments = [] } = useFacultyDepartments();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDesignation, setEditingDesignation] = useState<FacultyDesignationDefinition | null>(null);
   const [designationToDelete, setDesignationToDelete] = useState<FacultyDesignationDefinition | null>(null);
 
-  const isPending = save.isPending || remove.isPending;
-
   const handleStartEdit = (designation: FacultyDesignationDefinition) => {
+    if (!canWrite) return;
     setEditingDesignation(designation);
     setModalOpen(true);
   };
@@ -39,29 +34,11 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
     setEditingDesignation(null);
   };
 
-  const handleSave = async (
-    payload: Pick<FacultyDesignationDefinition, 'id' | 'code' | 'name' | 'hierarchyRank' | 'isActive' | 'assignableRoles'>,
-  ) => {
-    await save.mutateAsync({
-      ...payload,
-      id: payload.id || crypto.randomUUID(),
-    });
-    notify.success(t('faculty.designations.saved'));
-  };
-
   const handleConfirmDelete = async () => {
     if (!designationToDelete) return;
-    try {
-      await remove.mutateAsync(designationToDelete.id);
-      notify.success(t('faculty.designations.deleted'));
-      if (editingDesignation?.id === designationToDelete.id) {
-        handleCloseModal();
-      }
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : t('faculty.designations.deleteFailed'));
-    } finally {
-      setDesignationToDelete(null);
-    }
+    const deleted = await handleDelete(designationToDelete);
+    if (deleted && editingDesignation?.id === designationToDelete.id) handleCloseModal();
+    setDesignationToDelete(null);
   };
 
   return (
@@ -75,25 +52,30 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
           />
         ) : (
           <FacultyDesignationsTable
-            designations={query.data ?? []}
-            roles={workspaceRoles}
+            designations={designations}
             editingDesignationId={editingDesignation?.id}
             isPending={isPending}
             isLoading={query.isLoading}
+            canWrite={canWrite}
             onEdit={handleStartEdit}
-            onDelete={(d) => setDesignationToDelete(d)}
+            onDelete={(d) => {
+              if (!canWrite) return;
+              setDesignationToDelete(d);
+            }}
           />
         )}
 
-        <FacultyDesignationFormModal
-          open={modalOpen}
-          onClose={handleCloseModal}
-          designation={editingDesignation}
-          workspaceRoles={workspaceRoles}
-          isPending={save.isPending}
-          designationOptions={query.data ?? []}
-          onSave={handleSave}
-        />
+        {canWrite ? (
+          <FacultyDesignationFormModal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            designation={editingDesignation}
+            departments={departments}
+            designationOptions={designations}
+            isPending={isSaving}
+            onSave={async (payload) => (await saveDesignation(payload)) !== null}
+          />
+        ) : null}
 
         <ConfirmAlertDialog
           open={Boolean(designationToDelete)}

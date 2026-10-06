@@ -43,3 +43,10 @@ export {
   useUsersContractRestore,
   useUsersContractVerifyEmail,
 } from '@/tenant/features/users/hooks/useUsersTsrHooks';
+
+/** Role catalog create — Faculty and other modules must import from this facade. */
+export { RoleFormModal } from '@/tenant/features/users/components/RoleFormModal';
+export {
+  useCreateWorkspaceRole,
+  type UseCreateWorkspaceRoleResult,
+} from '@/tenant/features/users/hooks/useCreateWorkspaceRole';

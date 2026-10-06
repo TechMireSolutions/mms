@@ -1,5 +1,9 @@
-import { useMemo, useState } from 'react';
-import type { FacultyDepartmentEntity } from '@mms/shared';
+import { useCallback, useMemo } from 'react';
+import {
+  isDuplicateFacultyDepartmentName,
+  type FacultyDepartmentEntity,
+  type FacultyDepartmentWrite,
+} from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import {
@@ -8,142 +12,79 @@ import {
   useDeleteFacultyDepartment,
 } from './useFacultyDepartments';
 
-export function slugifyDepartmentCode(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 32);
-}
+/** Payload the department form produces (Faculty Management model: name / description / status). */
+export type FacultyDepartmentFormPayload = Omit<FacultyDepartmentWrite, 'id'> & { id?: string };
 
-export function getDescendantDepartmentIds(all: FacultyDepartmentEntity[], rootId: string): Set<string> {
-  const ids = new Set<string>([rootId]);
-  let added = true;
-  while (added) {
-    added = false;
-    for (const d of all) {
-      if (d.parentId && ids.has(d.parentId) && !ids.has(d.id)) {
-        ids.add(d.id);
-        added = true;
-      }
-    }
-  }
-  return ids;
-}
+const isDeleteConflict = (err: unknown): boolean => {
+  const msg = err instanceof Error ? err.message.toLowerCase() : '';
+  return msg.includes('designation') || msg.includes('assignment') || msg.includes('dependents');
+};
 
+const isNameConflict = (err: unknown): boolean =>
+  err instanceof Error && err.message.toLowerCase().includes('already exists');
+
+/**
+ * Single owner of department catalog writes: duplicate-name preflight, server
+ * save/delete, and user notifications. Both the Setup tab and the in-form
+ * quick-create overlay go through this hook.
+ */
 export function useFacultyDepartmentsController() {
   const { t } = useTranslation();
   const { data: departments = [], isLoading } = useFacultyDepartments();
   const saveMutation = useSaveFacultyDepartment();
   const deleteMutation = useDeleteFacultyDepartment();
 
-  const [editingDepartment, setEditingDepartment] = useState<FacultyDepartmentEntity | null>(null);
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [parentId, setParentId] = useState('');
-
   const isPending = saveMutation.isPending || deleteMutation.isPending || isLoading;
 
-  const handleStartEdit = (dept: FacultyDepartmentEntity) => {
-    setEditingDepartment(dept);
-    setName(dept.name);
-    setCode(dept.code);
-    setParentId(dept.parentId || '');
-  };
+  const orderedDepartments = useMemo(
+    () => [...departments].sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'active' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    }),
+    [departments],
+  );
 
-  const handleCancelEdit = () => {
-    setEditingDepartment(null);
-    setName('');
-    setCode('');
-    setParentId('');
-  };
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const trimmedName = name.trim();
-    if (!trimmedName) return;
-
-    const trimmedCode = code.trim() || slugifyDepartmentCode(trimmedName);
-    const editingId = editingDepartment?.id;
-    const isDuplicate = departments.some(
-      (d) => d.id !== editingId && d.code.toLowerCase() === trimmedCode.toLowerCase(),
-    );
-    if (isDuplicate) {
-      notify.error(t('faculty.setup.departmentCodeDuplicate'));
-      return;
+  const saveDepartment = useCallback(async (payload: FacultyDepartmentFormPayload): Promise<FacultyDepartmentEntity | null> => {
+    const name = payload.name.trim();
+    if (!name) return null;
+    if (isDuplicateFacultyDepartmentName(departments, name, payload.id ?? null)) {
+      notify.error(t('faculty.setup.departmentNameDuplicate'));
+      return null;
     }
-
     try {
-      await saveMutation.mutateAsync({
-        id: editingId || crypto.randomUUID(),
-        name: trimmedName,
-        code: trimmedCode,
-        parentId: parentId.trim() || null,
+      const saved = await saveMutation.mutateAsync({
+        id: payload.id || crypto.randomUUID(),
+        name,
+        description: payload.description?.trim() ? payload.description.trim() : null,
+        status: payload.status ?? 'active',
       });
       notify.success(t('faculty.setup.departmentSaved'));
-      handleCancelEdit();
-    } catch {
-      notify.error(t('faculty.setup.lookupsSaveFailed'));
+      return saved;
+    } catch (err) {
+      notify.error(isNameConflict(err) ? t('faculty.setup.departmentNameDuplicate') : t('faculty.setup.lookupsSaveFailed'));
+      return null;
     }
-  };
+  }, [departments, saveMutation, t]);
 
-  const handleDelete = async (dept: FacultyDepartmentEntity) => {
+  const handleDelete = useCallback(async (dept: FacultyDepartmentEntity): Promise<boolean> => {
     try {
       await deleteMutation.mutateAsync(dept.id);
-      if (editingDepartment?.id === dept.id) {
-        handleCancelEdit();
-      }
       notify.success(t('faculty.setup.departmentSaved'));
+      return true;
     } catch (err) {
-      const msg = err instanceof Error ? err.message.toLowerCase() : '';
-      const isConflict =
-        msg.includes('assignment') || msg.includes('children') || msg.includes('dependents');
-      notify.error(
-        isConflict
-          ? t('faculty.setup.departmentInUse')
-          : t('faculty.setup.lookupsSaveFailed'),
-      );
+      notify.error(isDeleteConflict(err) ? t('faculty.setup.departmentInUse') : t('faculty.setup.lookupsSaveFailed'));
+      return false;
     }
-  };
-
-  const availableParents = useMemo(() => {
-    if (!editingDepartment) return departments;
-    const forbidden = getDescendantDepartmentIds(departments, editingDepartment.id);
-    return departments.filter((d) => !forbidden.has(d.id));
-  }, [departments, editingDepartment]);
-
-  const orderedDepartments = useMemo(() => {
-    const roots = departments.filter((d) => !d.parentId);
-    const withParents = departments.filter((d) => Boolean(d.parentId));
-    return [...roots, ...withParents.filter((d) => !roots.some((r) => r.id === d.id))];
-  }, [departments]);
-
-  const parentOptions = useMemo(() => [
-    { value: '', label: t('faculty.setup.noParentDepartment') },
-    ...availableParents.map((d) => ({
-      value: d.id,
-      label: `${d.name} (${d.code})`,
-    })),
-  ], [availableParents, t]);
+  }, [deleteMutation, t]);
 
   return {
     t,
     departments,
     orderedDepartments,
-    availableParents,
-    parentOptions,
     isLoading,
     isPending,
-    editingDepartment,
-    name,
-    setName,
-    code,
-    setCode,
-    parentId,
-    setParentId,
-    handleStartEdit,
-    handleCancelEdit,
-    handleSubmit,
+    isSaving: saveMutation.isPending,
+    saveDepartment,
     handleDelete,
   };
 }

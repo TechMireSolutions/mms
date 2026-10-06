@@ -5,7 +5,9 @@
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { OrganizationPositionTreeNode, PositionOccupant } from '@mms/shared';
-import { facultyAssignments, organizationPositions, faculty, contacts } from '../schema.js';
+import {
+  facultyAssignments, organizationPositions, faculty, facultyEmployments, contacts,
+} from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { positionHierarchySql } from './positionHierarchySql.js';
 
@@ -96,7 +98,7 @@ export async function getOrganizationPositionTree(
         facultyId: facultyAssignments.facultyId,
         positionId: facultyAssignments.positionId,
         isPrimary: facultyAssignments.isPrimary,
-        employeeId: faculty.employeeId,
+        employeeId: facultyEmployments.employeeId,
         userId: faculty.userId,
         contactFirstName: contacts.firstName,
         contactLastName: contacts.lastName,
@@ -104,7 +106,15 @@ export async function getOrganizationPositionTree(
       })
       .from(facultyAssignments)
       .innerJoin(faculty, eq(facultyAssignments.facultyId, faculty.id))
-      .leftJoin(contacts, eq(faculty.contactId, contacts.id))
+      .leftJoin(
+        facultyEmployments,
+        and(
+          eq(faculty.workspaceSubdomain, facultyEmployments.workspaceSubdomain),
+          eq(faculty.employmentId, facultyEmployments.id),
+          isNull(facultyEmployments.deletedAt),
+        ),
+      )
+      .leftJoin(contacts, eq(facultyEmployments.contactId, contacts.id))
       .where(
         and(
           eq(facultyAssignments.workspaceSubdomain, subdomain),

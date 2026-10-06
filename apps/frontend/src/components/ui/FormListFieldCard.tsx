@@ -50,7 +50,7 @@ export function FormListFieldCard({
       animate={{ opacity: 1, y: 0 }}
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.15 }}
-      style={{ zIndex: 100 - index }}
+      style={{ zIndex: Math.max(1, 10 - index) }}
       className={cn(FORM_CARD, "p-4.5 space-y-4", CARD_STRIPE_INSET)}
     >
       <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, "transition-colors", LIST_CARD_STRIPE)} />

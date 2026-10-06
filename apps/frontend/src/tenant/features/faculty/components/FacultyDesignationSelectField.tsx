@@ -1,26 +1,33 @@
 import React, { useMemo } from "react";
 import { Info } from "lucide-react";
-import type { FacultyDesignationDefinition } from "@mms/shared";
+import {
+  formatDesignationOptionLabel,
+  resolveRoleDisplayName,
+  type FacultyDepartmentEntity,
+  type FacultyDesignationDefinition,
+  type FacultyMember,
+} from "@mms/shared";
 import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
+import { buildDesignationDraftPatch, selectableDesignationOptions } from "./facultyFormDesignationDraft";
 
 export interface FacultyDesignationSelectFieldProps {
   id?: string;
-  designationId?: string;
+  designationId?: string | null;
   designationName?: string;
   error?: string;
   required?: boolean;
   disabled?: boolean;
   designationOptions?: FacultyDesignationDefinition[];
+  departmentEntities?: FacultyDepartmentEntity[];
   canAdd?: boolean;
   onOpenAdd?: () => void;
-  onChange: (patch: {
-    designationId: string;
-    designation: string;
-    designationAssignableRoles?: string[];
-  }) => void;
+  /** Receives the full designation-derived patch (designation, department, roles, parent). */
+  onChange: (patch: Partial<FacultyMember>) => void;
 }
 
+/** Single designation select — options read "Department · Designation · Role". */
 export function FacultyDesignationSelectField({
   id = "designationId",
   designationId,
@@ -29,24 +36,30 @@ export function FacultyDesignationSelectField({
   required,
   disabled,
   designationOptions = [],
+  departmentEntities = [],
   canAdd = false,
   onOpenAdd,
   onChange,
 }: FacultyDesignationSelectFieldProps): React.JSX.Element {
   const { t } = useTranslation();
+  const workspaceRoles = useWorkspaceRoles();
 
   const activeOptions = useMemo(
-    () => designationOptions.filter((item) => item.isActive || item.id === designationId),
+    () => selectableDesignationOptions(designationOptions, designationId),
     [designationOptions, designationId],
   );
 
+  const selectOptions = useMemo(
+    () => activeOptions.map((item) => {
+      const roleId = item.assignableRoles?.[0];
+      const roleLabel = roleId ? resolveRoleDisplayName(roleId, workspaceRoles, t) : undefined;
+      return { value: item.id, label: formatDesignationOptionLabel(item, roleLabel) };
+    }),
+    [activeOptions, t, workspaceRoles],
+  );
+
   return (
-    <Field
-      label={t("faculty.field.designation")}
-      id={id}
-      required={required}
-      error={error}
-    >
+    <Field label={t("faculty.field.designation")} id={id} required={required} error={error}>
       <FormSelectWithQuickCreate
         id={id}
         name={id}
@@ -58,13 +71,9 @@ export function FacultyDesignationSelectField({
         addAriaLabel={t("faculty.designations.addDesignation")}
         onChange={(value) => {
           const def = designationOptions.find((item) => item.id === value);
-          onChange({
-            designationId: value,
-            designation: def?.name ?? "",
-            designationAssignableRoles: def?.assignableRoles ?? [],
-          });
+          onChange(buildDesignationDraftPatch(def, departmentEntities));
         }}
-        options={activeOptions.map((item) => ({ value: item.id, label: item.name }))}
+        options={selectOptions}
       />
       {activeOptions.length === 0 ? (
         <p role="status" className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">

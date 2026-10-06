@@ -1,120 +1,113 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
-import type { FacultyDesignationDefinition, WorkspaceRole } from '@mms/shared';
+import {
+  collectDesignationDescendantIds,
+  type FacultyCatalogStatus,
+  type FacultyDepartmentEntity,
+  type FacultyDesignationDefinition,
+} from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import { slugifyDepartmentCode } from '../hooks/useFacultyDepartmentsController';
+import type { FacultyDesignationFormPayload } from '../hooks/useFacultyDesignationsController';
 import { FacultyDesignationFormFields } from './FacultyDesignationFormFields';
 
 export interface FacultyDesignationFormModalProps {
   open: boolean;
   onClose: () => void;
   designation: FacultyDesignationDefinition | null;
-  workspaceRoles: readonly WorkspaceRole[];
-  isPending: boolean;
+  departments: readonly FacultyDepartmentEntity[];
   designationOptions?: readonly FacultyDesignationDefinition[];
-  onSave: (payload: Pick<FacultyDesignationDefinition, 'id' | 'code' | 'name' | 'hierarchyRank' | 'isActive' | 'assignableRoles'>) => Promise<void>;
+  isPending: boolean;
+  /** Pre-selects a department for quick-create from the faculty form. */
+  defaultDepartmentId?: string;
+  onOpenCreateDepartment?: () => void;
+  /** Resolves true when the save succeeded (modal closes), false to keep it open. */
+  onSave: (payload: FacultyDesignationFormPayload) => Promise<boolean>;
 }
 
+const isLive = (row: { status?: string; deletedAt?: string | null }) => row.status !== 'inactive' && !row.deletedAt;
+
+/** Faculty Management model — Designation modal: department, name, parent (self-referencing), status. */
 export function FacultyDesignationFormModal({
   open,
   onClose,
   designation,
-  workspaceRoles,
-  isPending,
+  departments,
   designationOptions = [],
+  isPending,
+  defaultDepartmentId = '',
+  onOpenCreateDepartment,
   onSave,
 }: FacultyDesignationFormModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const [departmentId, setDepartmentId] = useState('');
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
   const [parentDesignationId, setParentDesignationId] = useState('');
-  const [hierarchyRank, setHierarchyRank] = useState(1);
-  const [isActive, setIsActive] = useState(true);
+  const [status, setStatus] = useState<FacultyCatalogStatus>('active');
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
 
-  const availableDesignations = useMemo(
-    () => designationOptions.filter((d) => d.id !== designation?.id),
-    [designationOptions, designation?.id],
+  useEffect(() => {
+    if (!open) return;
+    setDepartmentId(designation?.departmentId ?? defaultDepartmentId);
+    setName(designation?.name ?? '');
+    setParentDesignationId(designation?.parentDesignationId ?? '');
+    setStatus(designation?.status ?? 'active');
+    setAssignableRoles(designation?.assignableRoles ?? []);
+  }, [open, designation, defaultDepartmentId]);
+
+  const departmentOptions = useMemo(
+    () => departments
+      .filter((d) => isLive(d) || d.id === designation?.departmentId)
+      .map((d) => ({ value: d.id, label: d.name })),
+    [departments, designation?.departmentId],
   );
 
-  const parentOptions = useMemo(() => [
-    { value: '', label: t('faculty.designations.topLevel') },
-    ...availableDesignations.map((d) => ({ value: d.id, label: d.name })),
-  ], [availableDesignations, t]);
+  /** Parents live in the same department and cannot be the designation itself or one of its descendants. */
+  const parentOptions = useMemo(() => {
+    const forbidden = designation ? collectDesignationDescendantIds(designationOptions, designation.id) : new Set<string>();
+    return [
+      { value: '', label: t('faculty.designations.topLevel') },
+      ...designationOptions
+        .filter((d) => d.departmentId === departmentId && !forbidden.has(d.id) && !d.deletedAt)
+        .map((d) => ({ value: d.id, label: d.name })),
+    ];
+  }, [designation, designationOptions, departmentId, t]);
 
   const statusOptions = useMemo(() => [
     { value: 'active', label: t('faculty.status.active') },
     { value: 'inactive', label: t('faculty.status.inactive') },
   ], [t]);
 
-  useEffect(() => {
-    if (!open) return;
-    if (designation) {
-      setName(designation.name);
-      setCode(designation.code);
-      setCodeManuallyEdited(true);
-      const existingParent = availableDesignations
-        .filter((d) => d.hierarchyRank < designation.hierarchyRank)
-        .sort((a, b) => b.hierarchyRank - a.hierarchyRank)[0];
-      setParentDesignationId(existingParent ? existingParent.id : '');
-      setHierarchyRank(designation.hierarchyRank);
-      setIsActive(designation.isActive);
-      setAssignableRoles(designation.assignableRoles ?? []);
-      return;
-    }
-    setName('');
-    setCode('');
-    setCodeManuallyEdited(false);
-    setParentDesignationId('');
-    setHierarchyRank(1);
-    setIsActive(true);
-    setAssignableRoles([]);
-  }, [open, designation, availableDesignations]);
+  const trimmedName = name.trim();
+  const duplicateName = designationOptions.some(
+    (d) => d.id !== designation?.id && !d.deletedAt && d.departmentId === departmentId
+      && d.name.trim().toLowerCase() === trimmedName.toLowerCase(),
+  );
 
   const isDirty = designation
-    ? name !== designation.name
-      || code !== designation.code
-      || hierarchyRank !== designation.hierarchyRank
-      || isActive !== designation.isActive
+    ? departmentId !== designation.departmentId
+      || name !== designation.name
+      || parentDesignationId !== (designation.parentDesignationId ?? '')
+      || status !== designation.status
       || JSON.stringify(assignableRoles) !== JSON.stringify(designation.assignableRoles ?? [])
-    : Boolean(name.trim() || code.trim() || parentDesignationId || assignableRoles.length > 0 || !isActive);
+    : Boolean(trimmedName || parentDesignationId || status !== 'active' || departmentId !== defaultDepartmentId || assignableRoles.length > 0);
 
-  const handleNameChange = (val: string) => {
-    setName(val);
-    if (!codeManuallyEdited && !designation) setCode(slugifyDepartmentCode(val));
-  };
-
-  const handleCodeChange = (val: string) => {
-    setCode(slugifyDepartmentCode(val));
-    setCodeManuallyEdited(true);
-  };
-
-  const handleParentDesignationChange = (val: string) => {
-    setParentDesignationId(val);
-    if (!val) {
-      setHierarchyRank(1);
-      return;
-    }
-    const parent = availableDesignations.find((d) => d.id === val);
-    setHierarchyRank(parent ? Math.min(99, parent.hierarchyRank + 1) : 2);
+  const handleDepartmentChange = (next: string) => {
+    setDepartmentId(next);
+    setParentDesignationId('');
   };
 
   const handleSubmit = async () => {
-    const trimmedName = name.trim();
-    if (!trimmedName) return;
-    const trimmedCode =
-      code.trim() || slugifyDepartmentCode(trimmedName) || `des-${Date.now().toString(36)}`;
-    await onSave({
-      id: designation?.id || crypto.randomUUID(),
+    if (!trimmedName || !departmentId || duplicateName) return;
+    const saved = await onSave({
+      id: designation?.id,
+      departmentId,
       name: trimmedName,
-      code: trimmedCode,
-      hierarchyRank,
-      isActive,
+      parentDesignationId: parentDesignationId || null,
+      status,
       assignableRoles,
     });
-    onClose();
+    if (saved) onClose();
   };
 
   return (
@@ -128,7 +121,7 @@ export function FacultyDesignationFormModal({
       cancelLabel={t('common.cancel')}
       saveLabel={designation ? t('common.save') : t('faculty.designations.addDesignation')}
       saving={isPending}
-      saveDisabled={isPending || !name.trim() || !code.trim()}
+      saveDisabled={isPending || !trimmedName || !departmentId || duplicateName}
       isDirty={isDirty}
       discardUnsavedTitle={t('faculty.form.discardUnsavedTitle')}
       discardUnsavedDescription={t('faculty.form.discardUnsavedDescription')}
@@ -137,20 +130,22 @@ export function FacultyDesignationFormModal({
       onSave={() => void handleSubmit()}
     >
       <FacultyDesignationFormFields
+        departmentId={departmentId}
         name={name}
-        code={code}
         parentDesignationId={parentDesignationId}
-        isActive={isActive}
+        status={status}
         assignableRoles={assignableRoles}
+        departmentOptions={departmentOptions}
         parentOptions={parentOptions}
         statusOptions={statusOptions}
-        workspaceRoles={workspaceRoles}
         isPending={isPending}
-        onNameChange={handleNameChange}
-        onCodeChange={handleCodeChange}
-        onParentChange={handleParentDesignationChange}
-        onActiveChange={setIsActive}
+        nameError={duplicateName ? t('faculty.designations.nameDuplicate') : undefined}
+        onDepartmentChange={handleDepartmentChange}
+        onNameChange={setName}
+        onParentChange={setParentDesignationId}
+        onStatusChange={(val) => setStatus(val === 'inactive' ? 'inactive' : 'active')}
         onAssignableRolesChange={setAssignableRoles}
+        onOpenCreateDepartment={onOpenCreateDepartment}
       />
     </FormModal>
   );

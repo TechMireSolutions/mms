@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   loadContacts: vi.fn(),
-  listCurrent: vi.fn(),
-  listHoldings: vi.fn(),
+  listDesignations: vi.fn(),
 }));
 
 vi.mock('../services/contactService.js', () => ({
@@ -11,65 +10,53 @@ vi.mock('../services/contactService.js', () => ({
 }));
 
 vi.mock('../db/repositories/facultyDesignationRepository.js', () => ({
-  listCurrentFacultyDesignationAssignments: mocks.listCurrent,
-  listCurrentFacultyDesignationHoldings: mocks.listHoldings,
+  listFacultyDesignations: mocks.listDesignations,
 }));
 
 import { hydrateFacultyFromContacts } from '../faculty/use-cases/facultyHydrateUseCases.js';
 
-describe('hydrateFacultyFromContacts temporal designations', () => {
+describe('hydrateFacultyFromContacts designation roles', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.loadContacts.mockResolvedValue([]);
-    mocks.listHoldings.mockResolvedValue(new Map());
+    mocks.listDesignations.mockResolvedValue([]);
   });
 
-  it('projects the designation effective today over legacy scalar fields', async () => {
-    mocks.listCurrent.mockResolvedValue(new Map([['fac-1', {
-      id: 'assignment-1',
-      facultyId: 'fac-1',
-      designationId: 'hod',
-      designationName: 'Head of Department',
-      hierarchyRank: 2,
-      assignableRoles: ['teacher', 'department_manager'],
-      startsOn: '2026-01-01',
-      endsOn: null,
-    }]]));
-    mocks.listHoldings.mockResolvedValue(new Map([['fac-1', [{
-      designationId: 'hod',
-      departmentId: 'dept-1',
-      departmentName: 'Islamic Studies',
-      status: 'active',
-      startsOn: '2026-01-01',
-      endsOn: null,
-      isPrimary: true,
-      designationName: 'Head of Department',
-      assignableRoles: ['teacher', 'department_manager'],
-    }]]]));
+  it('given a faculty row with a designation, should attach the roles that designation permits', async () => {
+    // Arrange
+    mocks.listDesignations.mockResolvedValue([
+      { id: 'hod', name: 'Head of Department', departmentId: 'dept-1', assignableRoles: ['teacher', 'department_manager'] },
+      { id: 'lect', name: 'Lecturer', departmentId: 'dept-1', assignableRoles: ['teacher'] },
+    ]);
 
+    // Act
     const [faculty] = await hydrateFacultyFromContacts('demo', [{
       id: 'fac-1',
       contactId: 'contact-1',
       status: 'active',
-      designation: 'Legacy Teacher',
-      department: 'Legacy Dept',
-      hierarchyRank: 4,
+      designationId: 'hod',
+      designation: 'Head of Department',
+      department: 'Islamic Studies',
+      departmentId: 'dept-1',
     }]);
 
+    // Assert — repository projection is preserved; roles are layered on top
     expect(faculty).toMatchObject({
       designation: 'Head of Department',
       designationId: 'hod',
       department: 'Islamic Studies',
       departmentId: 'dept-1',
-      designationStartsOn: '2026-01-01',
-      designationEndsOn: null,
       designationAssignableRoles: ['teacher', 'department_manager'],
-      hierarchyRank: 2,
-      designations: [{
-        designationId: 'hod',
-        status: 'active',
-        isPrimary: true,
-      }],
     });
+    expect(mocks.listDesignations).toHaveBeenCalledWith('demo', { limit: null });
+  });
+
+  it('given no faculty row carries a designation, should not load the designation catalog', async () => {
+    // Act
+    const [faculty] = await hydrateFacultyFromContacts('demo', [{ id: 'fac-2', contactId: '', status: 'inactive' }]);
+
+    // Assert
+    expect(faculty.designationAssignableRoles).toBeUndefined();
+    expect(mocks.listDesignations).not.toHaveBeenCalled();
   });
 });

@@ -2,25 +2,22 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FacultyDepartmentEntity } from '@mms/shared';
-import {
-  getDescendantDepartmentIds,
-  slugifyDepartmentCode,
-  useFacultyDepartmentsController,
-} from './useFacultyDepartmentsController';
+import { slugifyFacultyCatalogCode } from '@mms/shared';
+import { useFacultyDepartmentsController } from './useFacultyDepartmentsController';
+import { notify } from '@/lib/notify';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const mockSaveMutateAsync = vi.fn().mockResolvedValue({ id: 'dept-3', name: 'Fiqh', code: 'fiqh' });
+const mockSaveMutateAsync = vi.fn().mockResolvedValue({ id: 'dept-3', name: 'Fiqh', status: 'active' });
 const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined);
 
 const testDepartments: FacultyDepartmentEntity[] = [
-  { id: 'dept-root-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies', isActive: true },
-  { id: 'dept-child-1', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-root-1', isActive: true },
-  { id: 'dept-grandchild-1', workspaceSubdomain: 'tenant', name: 'Hadith Sciences', code: 'hadith-sciences', parentId: 'dept-child-1', isActive: true },
-  { id: 'dept-root-2', workspaceSubdomain: 'tenant', name: 'Languages', code: 'languages', isActive: true },
+  { id: 'dept-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', status: 'active' },
+  { id: 'dept-2', workspaceSubdomain: 'tenant', name: 'Hadith', status: 'inactive' },
+  { id: 'dept-3', workspaceSubdomain: 'tenant', name: 'Languages', status: 'active' },
 ];
 
 vi.mock('./useFacultyDepartments', () => ({
@@ -67,6 +64,7 @@ describe('useFacultyDepartmentsController', () => {
     root = createRoot(container);
     mockSaveMutateAsync.mockClear();
     mockDeleteMutateAsync.mockClear();
+    vi.mocked(notify.error).mockClear();
   });
 
   afterEach(async () => {
@@ -76,97 +74,53 @@ describe('useFacultyDepartmentsController', () => {
     container.remove();
   });
 
-  it('slugifies department codes properly', () => {
-    expect(slugifyDepartmentCode('Quran & Sunnah')).toBe('quran-sunnah');
-    expect(slugifyDepartmentCode('  Islamic Studies! ')).toBe('islamic-studies');
+  it('given a catalog name, should slugify it for legacy code consumers', () => {
+    expect(slugifyFacultyCatalogCode('Quran & Sunnah')).toBe('quran-sunnah');
+    expect(slugifyFacultyCatalogCode('  Islamic Studies! ')).toBe('islamic-studies');
   });
 
-  it('computes descendant IDs correctly to prevent circular parent hierarchy', () => {
-    const descendants = getDescendantDepartmentIds(testDepartments, 'dept-root-1');
-    expect(descendants.has('dept-root-1')).toBe(true);
-    expect(descendants.has('dept-child-1')).toBe(true);
-    expect(descendants.has('dept-grandchild-1')).toBe(true);
-    expect(descendants.has('dept-root-2')).toBe(false);
-  });
-
-  it('starts and cancels edit mode properly', async () => {
+  it('given mixed statuses, should list active departments first then by name', async () => {
     await act(async () => {
       root.render(<TestHarness />);
     });
 
-    act(() => {
-      hookValue.handleStartEdit(testDepartments[1]);
-    });
-
-    expect(hookValue.editingDepartment?.id).toBe('dept-child-1');
-    expect(hookValue.name).toBe('Hadith');
-    expect(hookValue.code).toBe('hadith');
-    expect(hookValue.parentId).toBe('dept-root-1');
-
-    act(() => {
-      hookValue.handleCancelEdit();
-    });
-
-    expect(hookValue.editingDepartment).toBeNull();
-    expect(hookValue.name).toBe('');
-    expect(hookValue.code).toBe('');
-    expect(hookValue.parentId).toBe('');
+    expect(hookValue.orderedDepartments.map((d) => d.id)).toEqual(['dept-1', 'dept-3', 'dept-2']);
   });
 
-  it('filters parent options when editing to avoid cycles', async () => {
+  it('given a duplicate name, should notify and skip the save', async () => {
     await act(async () => {
       root.render(<TestHarness />);
     });
 
-    act(() => {
-      hookValue.handleStartEdit(testDepartments[0]); // Islamic Studies
-    });
+    const saved = await hookValue.saveDepartment({ name: 'Hadith', status: 'active' });
 
-    const parentIds = hookValue.parentOptions.map((opt) => opt.value);
-    expect(parentIds).toContain(''); // None (top level)
-    expect(parentIds).toContain('dept-root-2'); // Languages
-    expect(parentIds).not.toContain('dept-root-1'); // cannot be parent of self
-    expect(parentIds).not.toContain('dept-child-1'); // cannot be parent of descendant
-    expect(parentIds).not.toContain('dept-grandchild-1');
+    expect(saved).toBeNull();
+    expect(mockSaveMutateAsync).not.toHaveBeenCalled();
+    expect(notify.error).toHaveBeenCalledWith('faculty.setup.departmentNameDuplicate');
   });
 
-  it('saves an edited department using its existing ID', async () => {
+  it('given a new department, should persist name, description and status', async () => {
     await act(async () => {
       root.render(<TestHarness />);
     });
 
-    act(() => {
-      hookValue.handleStartEdit(testDepartments[1]);
-      hookValue.setName('Hadith & Sciences');
-    });
+    await hookValue.saveDepartment({ name: 'Fiqh', description: 'Usul', status: 'active' });
 
-    await act(async () => {
-      await hookValue.handleSubmit();
-    });
-
-    expect(mockSaveMutateAsync).toHaveBeenCalledWith({
-      id: 'dept-child-1',
-      name: 'Hadith & Sciences',
-      code: 'hadith',
-      parentId: 'dept-root-1',
-    });
-    expect(hookValue.editingDepartment).toBeNull();
+    expect(mockSaveMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Fiqh',
+      description: 'Usul',
+      status: 'active',
+    }));
   });
 
-  it('deletes a department and cancels edit if deleting the active one', async () => {
+  it('given delete, should call the mutation with the department id', async () => {
     await act(async () => {
       root.render(<TestHarness />);
     });
 
-    act(() => {
-      hookValue.handleStartEdit(testDepartments[1]);
-    });
+    const ok = await hookValue.handleDelete(testDepartments[1]);
 
-    await act(async () => {
-      await hookValue.handleDelete(testDepartments[1]);
-    });
-
-    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('dept-child-1');
-    expect(hookValue.editingDepartment).toBeNull();
+    expect(ok).toBe(true);
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('dept-2');
   });
 });

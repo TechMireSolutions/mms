@@ -56,6 +56,16 @@ describe('facultySetupConfigTypes prefs SSOT', () => {
     expect(Array.isArray(settings.fields?.basic)).toBe(true);
   });
 
+  it('derives idTemplate from sequence prefix, year format, and delimiter', () => {
+    const prefs = normalizeFacultyModulePreferences({
+      employeeIdPrefix: 'PROF',
+      employeeIdYearFormat: 'YY',
+      employeeIdDelimiter: '-',
+    });
+    expect(prefs.idPrefix).toBe('PROF');
+    expect(prefs.idTemplate).toBe('{PREFIX}-{YY}-{SEQ}');
+  });
+
   it('forces requireContactLink true even when a stored false is present', () => {
     const prefs = normalizeFacultyModulePreferences({ requireContactLink: false });
     expect(prefs.requireContactLink).toBe(true);

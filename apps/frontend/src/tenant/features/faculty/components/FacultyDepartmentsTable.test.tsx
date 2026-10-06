@@ -16,8 +16,8 @@ vi.mock('@/hooks/useTranslation', () => ({
 }));
 
 const mockDepartments: FacultyDepartmentEntity[] = [
-  { id: 'dept-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies', isActive: true },
-  { id: 'dept-2', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-1', isActive: true },
+  { id: 'dept-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', description: 'Core Islamic sciences', status: 'active', designationCount: 3 },
+  { id: 'dept-2', workspaceSubdomain: 'tenant', name: 'Hadith', description: null, status: 'inactive', designationCount: 0 },
 ];
 
 describe('FacultyDepartmentsTable', () => {
@@ -46,7 +46,6 @@ describe('FacultyDepartmentsTable', () => {
       root.render(
         <FacultyDepartmentsTable
           departments={mockDepartments}
-          orderedDepartments={mockDepartments}
           isPending={false}
           isLoading={false}
           onEdit={onEdit}
@@ -57,12 +56,15 @@ describe('FacultyDepartmentsTable', () => {
 
     const headers = container.querySelectorAll('th');
     expect(headers.length).toBe(5);
+    expect(container.textContent).toContain('faculty.setup.departmentDescription');
+    expect(container.textContent).toContain('faculty.setup.departmentDesignationCount');
     expect(container.textContent).toContain('Islamic Studies');
-    expect(container.textContent).toContain('islamic-studies');
+    expect(container.textContent).toContain('Core Islamic sciences');
     expect(container.textContent).toContain('Hadith');
-    expect(container.textContent).toContain('hadith');
     expect(container.textContent).toContain('faculty.status.active');
-    expect(container.textContent).not.toContain('faculty.setup.departmentHead');
+    expect(container.textContent).toContain('faculty.status.inactive');
+    expect(container.textContent).not.toContain('faculty.setup.departmentCode');
+    expect(container.textContent).not.toContain('faculty.setup.parentDepartment');
   });
 
   it('triggers onEdit when edit action button is clicked', async () => {
@@ -70,7 +72,6 @@ describe('FacultyDepartmentsTable', () => {
       root.render(
         <FacultyDepartmentsTable
           departments={mockDepartments}
-          orderedDepartments={mockDepartments}
           isPending={false}
           isLoading={false}
           onEdit={onEdit}
@@ -96,7 +97,6 @@ describe('FacultyDepartmentsTable', () => {
       root.render(
         <FacultyDepartmentsTable
           departments={mockDepartments}
-          orderedDepartments={mockDepartments}
           isPending={false}
           isLoading={false}
           onEdit={onEdit}
@@ -117,12 +117,29 @@ describe('FacultyDepartmentsTable', () => {
     expect(onDelete).toHaveBeenCalledWith(mockDepartments[1]);
   });
 
+  it('hides row actions when canWrite is false', async () => {
+    await act(async () => {
+      root.render(
+        <FacultyDepartmentsTable
+          departments={mockDepartments}
+          isPending={false}
+          isLoading={false}
+          canWrite={false}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />,
+      );
+    });
+
+    expect(container.querySelector('button[aria-label="common.edit Hadith"]')).toBeNull();
+    expect(container.querySelector('button[aria-label="common.delete Hadith"]')).toBeNull();
+  });
+
   it('displays empty state row when no departments exist and not loading', async () => {
     await act(async () => {
       root.render(
         <FacultyDepartmentsTable
           departments={[]}
-          orderedDepartments={[]}
           isPending={false}
           isLoading={false}
           onEdit={onEdit}

@@ -15,13 +15,13 @@ describe('resolveFacultyEnabledTabIds', () => {
     );
   });
 
-  it('uses non-empty enabledTabs when formTabs are absent and always includes locked basic', () => {
+  it('uses non-empty enabledTabs when formTabs are absent and always includes locked tabs', () => {
     expect(resolveFacultyEnabledTabIds({ enabledTabs: ['employment'] })).toEqual(
-      expect.arrayContaining(['basic', 'employment']),
+      expect.arrayContaining(['basic', 'employment', 'designation']),
     );
     expect(
       resolveFacultyEnabledTabIds({ enabledTabs: ['basic', 'employment'] }),
-    ).toEqual(expect.arrayContaining(['basic', 'employment']));
+    ).toEqual(expect.arrayContaining(['basic', 'employment', 'designation']));
   });
 
   it('prefers formTabs.enabled over enabledTabs when formTabs are present', () => {
@@ -34,17 +34,16 @@ describe('resolveFacultyEnabledTabIds', () => {
       formTabs,
       enabledTabs: ['basic', 'employment'],
     });
-    expect(resolved).toEqual(expect.arrayContaining(['basic', 'custom_house']));
-    expect(resolved).not.toContain('employment');
+    expect(resolved).toEqual(expect.arrayContaining(['basic', 'employment', 'designation', 'custom_house']));
   });
 
-  it('always includes locked basic even when formTabs omit or disable it', () => {
+  it('always includes locked profile tabs even when formTabs omit or disable them', () => {
     const formTabs: TabDefinition[] = [
       { key: 'basic', label: 'Basic', enabled: false, order: 0 },
       { key: 'employment', label: 'Employment', enabled: true, order: 1 },
     ];
     expect(resolveFacultyEnabledTabIds({ formTabs })).toEqual(
-      expect.arrayContaining(['basic', 'employment']),
+      expect.arrayContaining(['basic', 'employment', 'designation']),
     );
   });
 
