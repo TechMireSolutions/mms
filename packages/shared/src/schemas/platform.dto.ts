@@ -107,8 +107,11 @@ export type PlatformPasswordResendInput = z.infer<typeof platformPasswordResendB
 const platformProfilePatchBodyBaseSchema = z.object({
   name: z.string().refine((val: string) => !validatePlatformSetupName(val), {
     message: 'Invalid display name',
-  }),
-}).strict();
+  }).optional(),
+  phone: z.string().trim().regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in E.164 format').or(z.literal('')).optional(),
+}).strict().refine((val) => val.name !== undefined || val.phone !== undefined, {
+  message: 'At least one field is required',
+});
 
 export const platformProfilePatchBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;

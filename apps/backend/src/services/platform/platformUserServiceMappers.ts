@@ -18,6 +18,7 @@ export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserP
     id: stored.id,
     email: stored.email,
     name: stored.name,
+    phone: stored.phone,
     role: stored.role,
     permissions: stored.permissions,
     createdAt: stored.createdAt,
@@ -31,6 +32,7 @@ export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone,
     role: user.role,
     permissions: user.permissions,
   };

@@ -1,4 +1,4 @@
-import { PLATFORM_OTP_MAX_ATTEMPTS, type StoredPlatformUser } from '@mms/shared';
+import { PLATFORM_OTP_MAX_ATTEMPTS, resolvePlatformNotificationChannel, type StoredPlatformUser } from '@mms/shared';
 import {
   createArtifactId,
   deleteAuthArtifact,
@@ -12,7 +12,10 @@ import {
   verifyOtpCode,
 } from '../auth/authCookieService.js';
 import { getStoredPlatformUserById } from './platformUserService.js';
-import { dispatchPlatformOtp } from './platformOtpService.js';
+import { dispatchPlatformOtp, type PlatformOtpDispatchResult } from './platformOtpService.js';
+import { getPlatformSettings } from './platformSettingsService.js';
+import { sendPlatformSms } from './platformSmsService.js';
+import { logger } from '../../lib/logger.js';
 
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 
@@ -25,6 +28,37 @@ export interface PlatformTwoFactorChallengePayload {
 /** True when platform login requires an OTP step (opt-in via env). */
 export function isPlatformTwoFactorRequired(): boolean {
   return process.env.PLATFORM_REQUIRE_2FA === 'true';
+}
+
+/**
+ * Dispatches a platform OTP via whichever channel platform settings resolve to.
+ * SMS requires the admin to have a phone on file; falls back to email otherwise.
+ */
+async function dispatchPlatformTwoFactorCode(
+  user: StoredPlatformUser,
+  code: string,
+  ttlMinutes: number,
+  logLabel: string,
+): Promise<PlatformOtpDispatchResult> {
+  const channel = resolvePlatformNotificationChannel(getPlatformSettings());
+
+  if (channel === 'sms' && user.phone) {
+    const result = await sendPlatformSms({
+      to: user.phone,
+      body: `Your MMS platform verification code is ${code}. It expires in ${ttlMinutes} minutes.`,
+    });
+    if (result.sent) return { sent: true };
+    logger.warn({ channel, reason: result.reason, label: logLabel }, 'platform 2FA SMS dispatch failed, falling back to email');
+  }
+
+  return dispatchPlatformOtp({
+    email: user.email,
+    code,
+    subject: 'Your MMS platform verification code',
+    bodyLines: ['Use this verification code to finish signing in to the MMS platform:'],
+    ttlMinutes,
+    logLabel,
+  });
 }
 
 /**
@@ -48,14 +82,7 @@ export async function createPlatformTwoFactorChallenge(
     challengeId,
   );
 
-  const dispatch = await dispatchPlatformOtp({
-    email: user.email,
-    code,
-    subject: 'Your MMS platform verification code',
-    bodyLines: ['Use this verification code to finish signing in to the MMS platform:'],
-    ttlMinutes: CHALLENGE_TTL_MS / 60_000,
-    logLabel: 'Platform 2FA code',
-  });
+  const dispatch = await dispatchPlatformTwoFactorCode(user, code, CHALLENGE_TTL_MS / 60_000, 'Platform 2FA code');
 
   if (!dispatch.sent && process.env.NODE_ENV === 'production') {
     await takeAuthArtifact(challengeId, 'platform_two_factor_challenge');
@@ -91,14 +118,7 @@ export async function resendPlatformTwoFactorChallenge(
   await deleteAuthArtifact(challengeId);
   await putAuthArtifact('platform_two_factor_challenge', updated, CHALLENGE_TTL_MS, challengeId);
 
-  const dispatch = await dispatchPlatformOtp({
-    email: user.email,
-    code,
-    subject: 'Your MMS platform verification code',
-    bodyLines: ['Use this verification code to finish signing in to the MMS platform:'],
-    ttlMinutes: CHALLENGE_TTL_MS / 60_000,
-    logLabel: 'Platform 2FA code',
-  });
+  const dispatch = await dispatchPlatformTwoFactorCode(user, code, CHALLENGE_TTL_MS / 60_000, 'Platform 2FA code');
 
   if (!dispatch.sent && process.env.NODE_ENV === 'production') {
     await deleteAuthArtifact(challengeId);

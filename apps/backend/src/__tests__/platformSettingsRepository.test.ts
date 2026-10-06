@@ -119,6 +119,8 @@ describe('platformSettingsRepository', () => {
         syncTlsOnCreate: true,
         tlsExtraSans: '*.old.local',
         certbotEmail: 'old@madrasa.local',
+        emailNotifications: true,
+        smsNotifications: false,
         updatedAt: '2026-01-01T00:00:00.000Z',
       };
 

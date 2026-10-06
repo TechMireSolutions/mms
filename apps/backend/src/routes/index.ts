@@ -10,6 +10,8 @@ import platformAuthRoutes from "./platform/platformAuth.js";
 import platformWorkspaceRoutes from "./platform/platformWorkspaces.js";
 import platformUsersRoutes from "./platform/platformUsers.js";
 import platformSettingsRoutes from "./platform/platformSettings.js";
+import platformEmailIntegrationRoutes from "./platform/platformEmailIntegrationRoutes.js";
+import platformSmsIntegrationRoutes from "./platform/platformSmsIntegrationRoutes.js";
 import platformAdminSystemRoutes from "./platform/platformAdminSystem.js";
 import platformSchemaRoutes from "./platform/platformSchemaRoutes.js";
 import platformAiRoutes from "./platform/platformAiRoutes.js";
@@ -50,6 +52,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(platformWorkspaceRoutes);
   await app.register(platformUsersRoutes);
   await app.register(platformSettingsRoutes);
+  await app.register(platformEmailIntegrationRoutes, { prefix: '/api/platform/email' });
+  await app.register(platformSmsIntegrationRoutes, { prefix: '/api/platform/sms' });
   await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/admin/system' });
   await app.register(platformSchemaRoutes, { prefix: '/api/platform/schema' });
   await app.register(platformAiRoutes, { prefix: '/api/platform/ai' });

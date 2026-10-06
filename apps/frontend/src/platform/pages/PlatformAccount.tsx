@@ -89,7 +89,7 @@ export default function PlatformAccount(): React.JSX.Element {
                     </motion.div>
 
                     <motion.div variants={cardVariants} className="lg:col-span-2">
-                      <PlatformProfileNameForm initialName={profile.name ?? ""} />
+                      <PlatformProfileNameForm initialName={profile.name ?? ""} initialPhone={profile.phone} />
                     </motion.div>
                   </motion.div>
                 )}

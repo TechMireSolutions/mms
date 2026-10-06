@@ -64,6 +64,7 @@ export async function updatePlatformUserRow(
       StoredPlatformUser,
       | 'email'
       | 'name'
+      | 'phone'
       | 'passwordHash'
       | 'emailVerifiedAt'
       | 'role'
@@ -101,6 +102,7 @@ export async function updatePlatformUserRow(
       .set({
         email: next.email,
         name: next.name,
+        phone: next.phone ?? null,
         passwordHash: next.passwordHash,
         role: next.role,
         sessionVersion: next.sessionVersion,

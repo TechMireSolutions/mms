@@ -61,8 +61,11 @@ export function useUpdatePlatformProfileName() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async (name: string) => {
-      const res = await apiContract.platform.patchMe({ body: { name: name.trim() } });
+    mutationFn: async (patch: { name?: string; phone?: string }) => {
+      const body: { name?: string; phone?: string } = {};
+      if (patch.name !== undefined) body.name = patch.name.trim();
+      if (patch.phone !== undefined) body.phone = patch.phone.trim();
+      const res = await apiContract.platform.patchMe({ body });
       const resBody = res.body && typeof res.body === 'object' && 'user' in res.body
         ? (res.body as { user: PlatformUserProfile })
         : null;

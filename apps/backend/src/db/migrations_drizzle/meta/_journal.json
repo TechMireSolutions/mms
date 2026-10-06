@@ -1065,6 +1065,13 @@
       "when": 1791101700000,
       "tag": "0151_platform_settings_global_check",
       "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1791101800000,
+      "tag": "0152_platform_notification_settings",
+      "breakpoints": true
     }
   ]
 }

@@ -61,6 +61,8 @@ export const platformUsers = pgTable('platform_users', {
   id: text('id').primaryKey(),
   email: text('email').notNull(),
   name: text('name').notNull(),
+  /** E.164 — only source of a real number for platform SMS 2FA; set by the admin themselves. */
+  phone: text('phone'),
   passwordHash: text('password_hash').notNull(),
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true, mode: 'date' }),
   role: text('role').$type<PlatformRole>().notNull().default('admin'),
@@ -99,6 +101,43 @@ export const platformSettings = pgTable('platform_settings', {
   syncTlsOnCreate: boolean('sync_tls_on_create').notNull().default(true),
   tlsExtraSans: text('tls_extra_sans').notNull().default(''),
   certbotEmail: text('certbot_email').notNull().default(''),
+  emailNotifications: boolean('email_notifications').notNull().default(true),
+  smsNotifications: boolean('sms_notifications').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
+/** Platform-wide email provider config & credentials — singleton row, mirrors tenant `email_integrations`. */
+export const platformEmailIntegrations = pgTable('platform_email_integrations', {
+  id: text('id').primaryKey().default('global'),
+  providerId: varchar('provider_id', { length: 40 }).notNull().default('gmail'),
+  fromAddress: varchar('from_address', { length: 255 }).notNull().default(''),
+  fromName: varchar('from_name', { length: 255 }).notNull().default('MMS Platform'),
+  smtpUsername: varchar('smtp_username', { length: 255 }).notNull().default(''),
+  smtpHost: varchar('smtp_host', { length: 255 }),
+  smtpPort: integer('smtp_port'),
+  smtpSecure: boolean('smtp_secure'),
+  smtpPassword: text('smtp_password'),
+  connected: boolean('connected').notNull().default(false),
+  hasCredentials: boolean('has_credentials').notNull().default(false),
+  lastTestAt: timestamp('last_test_at', { withTimezone: true, mode: 'date' }),
+  lastTestOk: boolean('last_test_ok'),
+  lastError: text('last_error'),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
+/** Platform-wide SMS provider config & credentials — singleton row, mirrors tenant `sms_integrations`. */
+export const platformSmsIntegrations = pgTable('platform_sms_integrations', {
+  id: text('id').primaryKey().default('global'),
+  providerId: varchar('provider_id', { length: 40 }).notNull().default('twilio'),
+  accountId: varchar('account_id', { length: 255 }).notNull().default(''),
+  senderId: varchar('sender_id', { length: 255 }).notNull().default(''),
+  apiBaseUrl: varchar('api_base_url', { length: 255 }),
+  accountSecret: text('account_secret'),
+  connected: boolean('connected').notNull().default(false),
+  hasCredentials: boolean('has_credentials').notNull().default(false),
+  lastTestAt: timestamp('last_test_at', { withTimezone: true, mode: 'date' }),
+  lastTestOk: boolean('last_test_ok'),
+  lastError: text('last_error'),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -151,5 +190,9 @@ export type PlatformUserPermissionRow = typeof platformUserPermissions.$inferSel
 export type InsertPlatformUserPermissionRow = typeof platformUserPermissions.$inferInsert;
 export type PlatformSettingRow = typeof platformSettings.$inferSelect;
 export type InsertPlatformSettingRow = typeof platformSettings.$inferInsert;
+export type PlatformEmailIntegrationRow = typeof platformEmailIntegrations.$inferSelect;
+export type InsertPlatformEmailIntegrationRow = typeof platformEmailIntegrations.$inferInsert;
+export type PlatformSmsIntegrationRow = typeof platformSmsIntegrations.$inferSelect;
+export type InsertPlatformSmsIntegrationRow = typeof platformSmsIntegrations.$inferInsert;
 export type PlatformActivityLogRow = typeof platformActivityLogs.$inferSelect;
 export type InsertPlatformActivityLogRow = typeof platformActivityLogs.$inferInsert;

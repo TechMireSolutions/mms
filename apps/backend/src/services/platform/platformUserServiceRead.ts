@@ -26,9 +26,24 @@ export async function updatePlatformUserName(
   userId: string,
   name: string,
 ): Promise<StoredPlatformUser> {
-  const trimmedName = name.trim();
-  if (!trimmedName) throw new PlatformError('invalid_name', 'Name cannot be empty');
-  const updated = await updatePlatformUserRow(userId, { name: trimmedName });
+  return updatePlatformUserNameAndPhone(userId, { name });
+}
+
+export async function updatePlatformUserNameAndPhone(
+  userId: string,
+  patch: { name?: string; phone?: string },
+): Promise<StoredPlatformUser> {
+  const rowPatch: { name?: string; phone?: string } = {};
+  if (patch.name !== undefined) {
+    const trimmedName = patch.name.trim();
+    if (!trimmedName) throw new PlatformError('invalid_name', 'Name cannot be empty');
+    rowPatch.name = trimmedName;
+  }
+  if (patch.phone !== undefined) {
+    rowPatch.phone = patch.phone.trim();
+  }
+
+  const updated = await updatePlatformUserRow(userId, rowPatch);
   if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   if (updated.role === 'super_user') {
     const { syncPlatformSuperUserToTenants } = await import('./platformSuperUserTenantSyncService.js');
@@ -39,8 +54,8 @@ export async function updatePlatformUserName(
 
 export async function updatePlatformUserProfile(
   userId: string,
-  name: string,
+  patch: { name?: string; phone?: string },
 ): Promise<PlatformUserProfile> {
-  const updated = await updatePlatformUserName(userId, name);
+  const updated = await updatePlatformUserNameAndPhone(userId, patch);
   return toPlatformUserProfile(updated);
 }

@@ -59,7 +59,7 @@ export async function handlePlatformUpdateMe(
   const parsed = parseRequest(platformProfilePatchBodySchema, request.body);
   if (!parsed.ok) return replyValidationError(reply, parsed.message);
   const { platformUser } = request as PlatformAuthenticatedRequest;
-  const profile = await updatePlatformUserProfile(platformUser.id, parsed.data.name);
+  const profile = await updatePlatformUserProfile(platformUser.id, parsed.data);
   const stored = await getStoredPlatformUserById(profile.id);
   await issuePlatformSession(
     {

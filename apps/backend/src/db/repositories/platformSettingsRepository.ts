@@ -11,6 +11,8 @@ function rowToPlatformSettings(row: typeof platformSettings.$inferSelect): Platf
     syncTlsOnCreate: row.syncTlsOnCreate,
     tlsExtraSans: row.tlsExtraSans,
     certbotEmail: row.certbotEmail,
+    emailNotifications: row.emailNotifications,
+    smsNotifications: row.smsNotifications,
     updatedAt: row.updatedAt?.toISOString(),
   };
 }
@@ -22,6 +24,8 @@ export async function findPlatformSettingsRow(id = GLOBAL_SETTINGS_ID): Promise<
       syncTlsOnCreate: platformSettings.syncTlsOnCreate,
       tlsExtraSans: platformSettings.tlsExtraSans,
       certbotEmail: platformSettings.certbotEmail,
+      emailNotifications: platformSettings.emailNotifications,
+      smsNotifications: platformSettings.smsNotifications,
       updatedAt: platformSettings.updatedAt,
     })
     .from(platformSettings)
@@ -36,6 +40,8 @@ export async function insertPlatformSettingsDefaultRow(defaults: {
   syncTlsOnCreate: boolean;
   tlsExtraSans: string;
   certbotEmail: string;
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
 }): Promise<PlatformSettings | null> {
   const inserted = await activeDb()
     .insert(platformSettings)
@@ -44,6 +50,8 @@ export async function insertPlatformSettingsDefaultRow(defaults: {
       syncTlsOnCreate: defaults.syncTlsOnCreate,
       tlsExtraSans: defaults.tlsExtraSans,
       certbotEmail: defaults.certbotEmail,
+      emailNotifications: defaults.emailNotifications ?? true,
+      smsNotifications: defaults.smsNotifications ?? false,
       updatedAt: new Date(),
     })
     .onConflictDoNothing()
@@ -60,6 +68,8 @@ export async function upsertPlatformSettingsRow(
   const syncTlsOnCreate = input.syncTlsOnCreate ?? current.syncTlsOnCreate;
   const tlsExtraSans = input.tlsExtraSans !== undefined ? input.tlsExtraSans.trim() : current.tlsExtraSans;
   const certbotEmail = input.certbotEmail !== undefined ? input.certbotEmail.trim() : current.certbotEmail;
+  const emailNotifications = input.emailNotifications ?? current.emailNotifications;
+  const smsNotifications = input.smsNotifications ?? current.smsNotifications;
   const updatedAt = new Date();
 
   await activeDb()
@@ -69,6 +79,8 @@ export async function upsertPlatformSettingsRow(
       syncTlsOnCreate,
       tlsExtraSans,
       certbotEmail,
+      emailNotifications,
+      smsNotifications,
       updatedAt,
     })
     .onConflictDoUpdate({
@@ -77,6 +89,8 @@ export async function upsertPlatformSettingsRow(
         syncTlsOnCreate,
         tlsExtraSans,
         certbotEmail,
+        emailNotifications,
+        smsNotifications,
         updatedAt,
       },
     });
@@ -86,6 +100,8 @@ export async function upsertPlatformSettingsRow(
     syncTlsOnCreate,
     tlsExtraSans,
     certbotEmail,
+    emailNotifications,
+    smsNotifications,
     updatedAt: updatedAt.toISOString(),
   };
 }

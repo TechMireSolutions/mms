@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Settings, Globe, Palette, ShieldCheck } from 'lucide-react';
+import { Settings, Globe, Palette, ShieldCheck, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -10,11 +10,12 @@ import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformGlobalSettingsPanel } from '@/platform/components/settings/PlatformGlobalSettingsPanel';
 import { PlatformThemeSettingsPanel } from '@/platform/components/settings/PlatformThemeSettingsPanel';
 import { PlatformSecuritySettingsPanel } from '@/platform/components/settings/PlatformSecuritySettingsPanel';
+import { PlatformNotificationsSettingsPanel } from '@/platform/components/settings/PlatformNotificationsSettingsPanel';
 
-export type PlatformSettingsSection = 'global' | 'theme' | 'security';
+export type PlatformSettingsSection = 'global' | 'theme' | 'notifications' | 'security';
 
 function parseSettingsSection(raw: string | null): PlatformSettingsSection {
-  if (raw === 'theme' || raw === 'security' || raw === 'global') return raw;
+  if (raw === 'theme' || raw === 'notifications' || raw === 'security' || raw === 'global') return raw;
   return 'global';
 }
 
@@ -45,6 +46,11 @@ export default function PlatformSettingsPage(): React.JSX.Element {
       id: 'theme',
       label: t('platform.settingsTabTheme'),
       icon: Palette,
+    },
+    {
+      id: 'notifications',
+      label: t('platform.notifications'),
+      icon: Bell,
     },
     {
       id: 'security',
@@ -80,6 +86,7 @@ export default function PlatformSettingsPage(): React.JSX.Element {
             <Suspense fallback={<CardSkeleton count={2} />}>
               {activeSection === 'global' && <PlatformGlobalSettingsPanel />}
               {activeSection === 'theme' && <PlatformThemeSettingsPanel />}
+              {activeSection === 'notifications' && <PlatformNotificationsSettingsPanel />}
               {activeSection === 'security' && <PlatformSecuritySettingsPanel />}
             </Suspense>
           </motion.div>

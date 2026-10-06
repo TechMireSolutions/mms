@@ -54,6 +54,8 @@ export interface PlatformUser {
   id: string;
   email: string;
   name: string;
+  /** E.164 — only source of a real number for platform SMS 2FA; optional until the admin sets it. */
+  phone?: string;
   role: PlatformRole;
   permissions: PlatformAdminPermissions;
 }
