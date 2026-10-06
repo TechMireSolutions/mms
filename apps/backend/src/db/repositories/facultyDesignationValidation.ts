@@ -95,7 +95,8 @@ export async function recomputeDescendantRanks(tx: Executor, tenant: string, roo
 export async function validateDesignationDeletion(tx: Executor, tenant: string, id: string): Promise<void> {
   await lockFacultyHierarchy(tx, tenant);
   const dependents = await tx.execute<{ id: string }>(sql`
-    SELECT id FROM faculty WHERE workspace_subdomain = ${tenant} AND designation_id = ${id} AND deleted_at IS NULL
+    SELECT fed.id FROM faculty_employ_designations fed
+    WHERE fed.workspace_subdomain = ${tenant} AND fed.designation_id = ${id} AND fed.deleted_at IS NULL
     UNION ALL
     SELECT id FROM faculty_designations WHERE workspace_subdomain = ${tenant}
       AND parent_designation_id = ${id} AND deleted_at IS NULL

@@ -32,8 +32,10 @@ describe('Faculty review fixes against PostgreSQL', () => {
     // Act / Assert
     await expect(saveFaculty(tenant, { id: 'f24', contactId: 'c23', employeeId: 'DIFFERENT', status: 'active' }, { createOnly: true })).rejects.toThrow();
     await withTenant(tenant, async (tx) => {
-      const result = await tx.execute(sql`SELECT contact_id, deleted_at IS NOT NULL AS archived
-        FROM faculty WHERE workspace_subdomain = ${tenant} AND id = 'f24'`);
+      const result = await tx.execute(sql`SELECT e.contact_id, f.deleted_at IS NOT NULL AS archived
+        FROM faculty f
+        JOIN faculty_employments e ON e.workspace_subdomain = f.workspace_subdomain AND e.id = f.employment_id
+        WHERE f.workspace_subdomain = ${tenant} AND f.id = 'f24'`);
       expect(result.rows).toEqual([{ contact_id: 'c24', archived: true }]);
       await tx.execute(sql`UPDATE faculty SET deleted_at = NULL WHERE workspace_subdomain = ${tenant} AND id = 'f24'`);
     });

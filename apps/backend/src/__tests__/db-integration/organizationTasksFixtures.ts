@@ -50,7 +50,7 @@ export async function seedOrganizationTasks(): Promise<void> {
       id: 'd-it', workspaceSubdomain: tenant, name: 'IT', code: 'IT',
     });
     await tx.insert(facultyDesignations).values({
-      id: 'des-mgr', workspaceSubdomain: tenant, name: 'Manager', code: 'MGR', hierarchyRank: 2,
+      id: 'des-mgr', workspaceSubdomain: tenant, departmentId: 'd-it', name: 'Manager', code: 'MGR', hierarchyRank: 2,
     });
     await tx.insert(organizationPositions).values([
       { id: 'p-gm', workspaceSubdomain: tenant, code: 'GM', name: 'General Manager', capacity: 1 },

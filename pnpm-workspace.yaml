@@ -67,3 +67,9 @@ overrides:
   # Transitive path: mermaid → chevrotain → lodash-es. Pin to >=4.17.24 (patch-safe).
   lodash-es: ">=4.17.24"
   fast-uri: "^4.1.3"
+  # Security: Seroval GHSA-p6vx-979v-rg4c and GHSA-jp82-f5mq-hwhp.
+  # Transitive path: @tanstack/react-query-devtools > @kobalte/core > solid-js > seroval.
+  seroval: ">=1.6.3"
+  # Security: source-map-js GHSA-68fv-2mgg-jv7q event-loop DoS via indexed section offsets.
+  # Transitive path: @vitest/coverage-v8 > magicast / vite > postcss > source-map-js.
+  source-map-js: ">=1.2.2"

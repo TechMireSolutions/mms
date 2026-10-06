@@ -70,7 +70,7 @@ describe('faculty domain database structure', () => {
   it('enforces NOT NULL contact_id with an ON DELETE RESTRICT foreign key to contacts', async () => {
     const nullable = await queryRows<{ is_nullable: string }>(
       `SELECT is_nullable FROM information_schema.columns
-       WHERE table_schema = 'public' AND table_name = 'faculty' AND column_name = 'contact_id'`,
+       WHERE table_schema = 'public' AND table_name = 'faculty_employments' AND column_name = 'contact_id'`,
     );
     expect(nullable[0]?.is_nullable).toBe('NO');
 
@@ -78,7 +78,7 @@ describe('faculty domain database structure', () => {
       `SELECT rc.delete_rule
        FROM information_schema.referential_constraints rc
        WHERE rc.constraint_schema = 'public'
-         AND rc.constraint_name = 'faculty_workspace_subdomain_contact_id_contacts_workspace_subdomain_id_fk'`,
+         AND rc.constraint_name = 'faculty_employments_contact_fk'`,
     );
     expect(fk[0]?.delete_rule).toBe('RESTRICT');
   });
@@ -133,7 +133,7 @@ describe('faculty domain database structure', () => {
     );
     const names = indexes.map((row) => row.indexname);
     expect(names).toContain('faculty_workspace_active_idx');
-    expect(names).toContain('faculty_workspace_employee_id_active_uidx');
+    expect(names).toContain('faculty_workspace_profile_status_active_idx');
 
     const legacyIndexes = await queryRows<{ indexname: string }>(
       `SELECT indexname FROM pg_indexes
