@@ -101,7 +101,7 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 
 ## Scripts
 
-Prefer **`pnpm ci:local`** (`scripts/ci/local-ci.sh`) before push/PR: it runs `pre-pr-review.sh` then path-aware unit tests (mirrors `ci.yml` change filters). `.githooks/pre-push` invokes it automatically.
+Prefer **`pnpm ci:local`** (`scripts/ci/local-ci.sh`) before push/PR: it runs `pre-pr-review.sh` then path-aware unit tests (mirrors `ci.yml` change filters). `.githooks/pre-commit` invokes it automatically; `.githooks/pre-push` only blocks direct pushes to `main`.
 
 Gates-only (no tests):
 
