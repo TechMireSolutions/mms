@@ -53,6 +53,7 @@ export function findUnknownTokens(
 export type SentDispatchRecord = {
   recipientId: string | number;
   body: string;
+  subject?: string;
   status: 'sent' | 'failed';
 };
 
@@ -144,7 +145,10 @@ export async function saveDispatchHistory({
       channel,
       body: record.body,
       status: record.status,
-      subject: channel === 'email' ? subject || undefined : undefined,
+      subject:
+        channel === 'email'
+          ? record.subject || subject || undefined
+          : undefined,
       category: activeTemplate?.category || 'general',
     }));
     try {

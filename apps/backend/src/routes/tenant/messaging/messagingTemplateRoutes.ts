@@ -7,6 +7,10 @@ import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/htt
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { canWriteMessaging } from '../../../services/rbacService.js';
 import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
+import {
+  collectUnknownPersonalizationTokens,
+  formatUnknownTokensMessage,
+} from './messagingPersonalizationGuard.js';
 
 /** Messaging template list/create/delete routes. */
 export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
@@ -15,6 +19,10 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canWriteMessaging(user)) return sendForbidden(reply);
     const parsed = parseRequest(messageTemplateInputSchema, req.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const unknownTokens = collectUnknownPersonalizationTokens(parsed.data.body);
+    if (unknownTokens.length > 0) {
+      return replyValidationError(reply, formatUnknownTokensMessage(unknownTokens));
+    }
     const tenantSubdomain = getRequestTenant();
     if (!tenantSubdomain) {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });

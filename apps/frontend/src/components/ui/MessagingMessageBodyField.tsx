@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
-import { appendVariableToken } from '@mms/shared';
+import { insertVariableTokenAt } from '@mms/shared';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
@@ -13,6 +13,7 @@ export interface MessagingMessageBodyFieldProps {
   name?: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   required?: boolean;
   error?: string;
@@ -28,24 +29,39 @@ export function MessagingMessageBodyField({
   name,
   value,
   onChange,
+  onBlur,
   placeholder,
   required = false,
   error,
   footer,
 }: MessagingMessageBodyFieldProps): React.JSX.Element {
   const { t } = useTranslation();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertToken = (token: string): void => {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? start;
+    const { next, caret } = insertVariableTokenAt(value, token, start, end);
+    onChange(next);
+    requestAnimationFrame(() => {
+      const node = textareaRef.current;
+      if (!node) return;
+      node.focus();
+      node.setSelectionRange(caret, caret);
+    });
+  };
 
   return (
     <Field id={id} label={t('messaging.messageBody')} required={required} error={error}>
-      <MessagingVariableTokensBar
-        onSelectToken={(token) => onChange(appendVariableToken(value, token))}
-        className="mb-2"
-      />
+      <MessagingVariableTokensBar onSelectToken={insertToken} className="mb-2" />
       <Textarea
+        ref={textareaRef}
         id={id}
         name={name ?? id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         rows={4}
         required={required}

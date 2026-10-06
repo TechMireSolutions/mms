@@ -6,8 +6,36 @@ export interface SmsSegmentResult {
   remainingInSegment: number;
 }
 
+/** Soft cost thresholds used by campaign composers (Twilio ≤320 guidance). */
+export const SMS_SOFT_CHAR_WARN = 320;
+export const SMS_MULTI_SEGMENT_WARN = 2;
+export const SMS_HIGH_SEGMENT_WARN = 3;
+
 /** GSM 7-bit basic character set regex */
 const GSM_7BIT_BASIC_REGEX = /^[A-Za-z0-9 @£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#%&'()*+,\-./:;<=>?¡¿\r\n\t]*$/;
+const GSM_7BIT_EXTENSION = '{}[]~^|€';
+
+function isGsm7Character(ch: string): boolean {
+  if (GSM_7BIT_EXTENSION.includes(ch)) return true;
+  return GSM_7BIT_BASIC_REGEX.test(ch);
+}
+
+/**
+ * Returns unique non-GSM-7 characters in text (order of first appearance).
+ * Used to hint authors that curly quotes / emojis force UCS-2.
+ */
+export function listNonGsmCharacters(text: string, limit = 8): string[] {
+  if (!text) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const ch of text) {
+    if (isGsm7Character(ch) || seen.has(ch)) continue;
+    seen.add(ch);
+    out.push(ch);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 /**
  * Calculates SMS character length, detects Unicode vs GSM 7-bit encoding,

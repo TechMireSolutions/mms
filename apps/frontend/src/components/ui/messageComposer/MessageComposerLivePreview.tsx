@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ValidatedMessagingRecipient } from './useMessageComposerDispatch';
 
@@ -31,12 +32,16 @@ export function MessageComposerLivePreview({
   onPreviewIndexChange,
 }: MessageComposerLivePreviewProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const isEmail = channel === 'email';
   const isSms = channel === 'sms';
   const isBulk = eligibleRecipients.length > 1;
-  const smsStats = calculateSmsSegments(message);
   const recipient = eligibleRecipients[previewIndex] || eligibleRecipients[0];
-  const previewText = message.trim() && recipient ? personalizeMessage(message, recipient, personalizeOptions) : '';
+  const previewText =
+    message.trim() && recipient
+      ? personalizeMessage(message, recipient, personalizeOptions)
+      : '';
+  const smsStats = calculateSmsSegments(previewText);
 
   if (!previewText || !recipient) return null;
 
@@ -44,16 +49,20 @@ export function MessageComposerLivePreview({
     <AnimatePresence mode="wait">
       <motion.div
         key={`${previewIndex}-${channel}`}
-        initial={{ opacity: 0, y: 8 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.15 }}
+        exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+        transition={{ duration: reducedMotion ? 0 : 0.15 }}
         className="rounded-xl border border-border/80 bg-muted/20 p-3.5 backdrop-blur-xs"
       >
         <h5 className="mb-2.5 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs font-bold text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1.5 text-foreground">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 animate-pulse text-primary" />
-            <span className="min-w-0 truncate">{t('messaging.livePreview', { name: recipient.name })}</span>
+            <Sparkles
+              className={`h-3.5 w-3.5 shrink-0 text-primary ${reducedMotion ? '' : 'animate-pulse'}`}
+            />
+            <span className="min-w-0 truncate">
+              {t('messaging.livePreview', { name: recipient.name })}
+            </span>
           </span>
           <div className="flex shrink-0 items-center gap-2">
             {isBulk && (
@@ -69,14 +78,18 @@ export function MessageComposerLivePreview({
                 >
                   <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
                 </Button>
-                <span className="font-mono">{previewIndex + 1}/{eligibleRecipients.length}</span>
+                <span className="font-mono">
+                  {previewIndex + 1}/{eligibleRecipients.length}
+                </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="min-h-11 min-w-11"
                   disabled={previewIndex >= eligibleRecipients.length - 1}
-                  onClick={() => onPreviewIndexChange(Math.min(eligibleRecipients.length - 1, previewIndex + 1))}
+                  onClick={() =>
+                    onPreviewIndexChange(Math.min(eligibleRecipients.length - 1, previewIndex + 1))
+                  }
                   aria-label={t('common.next')}
                 >
                   <ChevronRight className="h-3 w-3 rtl:rotate-180" />
@@ -95,7 +108,11 @@ export function MessageComposerLivePreview({
               </div>
               <div className="mt-0.5">
                 <span className="me-1 font-semibold text-foreground">{t('messaging.subjectLabel')}:</span>
-                {personalizeMessage(subject || t('messaging.defaultSubject'), recipient, personalizeOptions)}
+                {personalizeMessage(
+                  subject || t('messaging.defaultSubject'),
+                  recipient,
+                  personalizeOptions,
+                )}
               </div>
             </div>
             <div className="whitespace-pre-wrap leading-relaxed text-foreground">{previewText}</div>

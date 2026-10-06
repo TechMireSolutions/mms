@@ -17,6 +17,7 @@ import {
   type SentDispatchRecord,
   type ValidatedMessagingRecipient,
 } from './messageComposerDispatchService';
+import { formatUnknownTokensLabel } from './messageComposerTokenErrors';
 
 export type { DispatchSpeed, ValidatedMessagingRecipient };
 
@@ -109,7 +110,7 @@ export function useMessageComposerDispatch({
     const unknownTokens = findUnknownTokens(channel, subject, message);
     if (unknownTokens.length > 0) {
       notify.error(t('messaging.unknownTokens', {
-        tokens: unknownTokens.map((token) => `{${token}}`).join(', '),
+        tokens: formatUnknownTokensLabel(unknownTokens),
       }));
       return;
     }
@@ -118,6 +119,10 @@ export function useMessageComposerDispatch({
       sentRecords.push({
         recipientId: recipient.id,
         body: personalizeMessage(message, recipient, personalizeOptions),
+        subject:
+          channel === 'email'
+            ? personalizeMessage(subject || t('messaging.defaultSubject'), recipient, personalizeOptions)
+            : undefined,
         status: success ? 'sent' : 'failed',
       });
     };
@@ -167,15 +172,6 @@ export function useMessageComposerDispatch({
     cancelRef.current = true;
   };
 
-  const requestClose = (): void => {
-    if (opening) {
-      cancelRef.current = true;
-      return;
-    }
-    if (saving || pendingAudit) return;
-    onClose();
-  };
-
   return {
     personalizeOptions,
     validatedRecipients,
@@ -192,6 +188,5 @@ export function useMessageComposerDispatch({
     executeSend,
     sendAll,
     cancelDispatch,
-    requestClose,
   };
 }

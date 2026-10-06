@@ -127,7 +127,7 @@ export default function MessagingPage(): React.JSX.Element {
   const confirmDeleteTemplate = async (): Promise<void> => {
     if (!deleteTemplateId) return;
     try {
-      await (deleteTemplate.mutateAsync as (arg: unknown) => Promise<unknown>)({ params: { id: deleteTemplateId } });
+      await deleteTemplate.mutateAsync(deleteTemplateId);
       setDeleteTemplateId(null);
       notify.success(t('common.delete'));
     } catch {
@@ -137,7 +137,7 @@ export default function MessagingPage(): React.JSX.Element {
 
   const confirmClearLogs = async (): Promise<void> => {
     try {
-      await (clearLogs.mutateAsync as (arg: unknown) => Promise<unknown>)({ body: {} });
+      await clearLogs.mutateAsync();
       setConfirmClearLogsOpen(false);
       notify.success(t('messaging.clearLogs'));
     } catch {

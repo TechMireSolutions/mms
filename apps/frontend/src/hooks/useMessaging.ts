@@ -168,8 +168,22 @@ export function useMessagingMutations() {
 
   return {
     saveTemplate,
-    deleteTemplate,
+    deleteTemplate: {
+      ...deleteTemplate,
+      mutateAsync: (id: string) =>
+        (
+          deleteTemplate.mutateAsync as (arg: {
+            params: { id: string };
+          }) => Promise<unknown>
+        )({ params: { id } }),
+    },
     recordDispatches,
-    clearLogs,
+    clearLogs: {
+      ...clearLogs,
+      mutateAsync: () =>
+        (clearLogs.mutateAsync as (arg: { body: Record<string, never> }) => Promise<unknown>)({
+          body: {},
+        }),
+    },
   };
 }

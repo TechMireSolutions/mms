@@ -63,8 +63,6 @@ const messageInsertBaseSchema = z
     deletedAt: z.string().optional(),
     deletedBy: z.string().optional(),
     deletionReason: z.string().optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
   })
   .strict();
 

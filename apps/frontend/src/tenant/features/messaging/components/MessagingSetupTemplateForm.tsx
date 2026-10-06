@@ -10,6 +10,8 @@ import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyF
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
+const TEMPLATE_FORM_ID = 'messaging-setup-template-form';
+
 interface MessagingSetupTemplateFormProps {
   open: boolean;
   editingId: string | null;
@@ -21,10 +23,13 @@ interface MessagingSetupTemplateFormProps {
   channelSelectOptions: Array<{ value: string; label: string }>;
   errors?: Record<string, string>;
   saving?: boolean;
+  saveDisabled?: boolean;
+  isDirty?: boolean;
   onReset: () => void;
   onSave: () => void | Promise<void>;
   onLabelChange: (value: string) => void;
   onBodyChange: (value: string) => void;
+  onBodyBlur?: () => void;
   onCategoryChange: (value: MessageCategory) => void;
   onChannelChange: (value: 'all' | 'sms' | 'whatsapp' | 'email') => void;
 }
@@ -40,14 +45,22 @@ export function MessagingSetupTemplateForm({
   channelSelectOptions,
   errors = {},
   saving = false,
+  saveDisabled = false,
+  isDirty = false,
   onReset,
   onSave,
   onLabelChange,
   onBodyChange,
+  onBodyBlur,
   onCategoryChange,
   onChannelChange,
 }: MessagingSetupTemplateFormProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const trySave = (): void => {
+    if (saveDisabled) return;
+    void onSave();
+  };
 
   return (
     <FormModal
@@ -58,15 +71,27 @@ export function MessagingSetupTemplateForm({
       icon={editingId ? Edit3 : Plus}
       cancelLabel={t('common.cancel')}
       saveLabel={editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
-      onSave={onSave}
+      onSave={trySave}
       saving={saving}
-      formId="messaging-setup-template-form"
+      saveDisabled={saveDisabled}
+      isDirty={isDirty}
+      discardUnsavedTitle={t('settings.unsavedChanges')}
+      discardUnsavedDescription={t('messaging.setup.discardUnsavedTemplateConfirm')}
+      discardConfirmLabel={t('common.yes')}
+      discardCancelLabel={t('common.cancel')}
+      formId={TEMPLATE_FORM_ID}
     >
       <form
-        id="messaging-setup-template-form"
+        id={TEMPLATE_FORM_ID}
         onSubmit={(event) => {
           event.preventDefault();
-          void onSave();
+          trySave();
+        }}
+        onKeyDown={(event) => {
+          if (!(event.metaKey || event.ctrlKey) || event.key !== 'Enter') return;
+          if (event.nativeEvent.isComposing) return;
+          event.preventDefault();
+          trySave();
         }}
         className="space-y-3"
       >
@@ -105,6 +130,7 @@ export function MessagingSetupTemplateForm({
           id="tplBody"
           value={body}
           onChange={onBodyChange}
+          onBlur={onBodyBlur}
           placeholder={t('messaging.templateBodyPlaceholder')}
           required
           error={errors.body}

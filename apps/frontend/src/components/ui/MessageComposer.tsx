@@ -12,6 +12,8 @@ import { useMessageComposerModel } from './messageComposer/useMessageComposerMod
 
 export type { RecipientPickerSlotProps };
 
+const COMPOSER_FORM_ID = 'message-composer-form';
+
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
   recipients: MessagingRecipient[];
@@ -28,20 +30,23 @@ export interface MessageComposerProps {
 export default function MessageComposer(props: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
   const model = useMessageComposerModel(props);
-  const { step, setStep, localRecipients, dispatch, isEmail, isSms, isBulk, Icon } = model;
+  const { step, dispatch, isEmail, isSms, isBulk, Icon } = model;
+  const canGoPrevious = step === 'compose' && props.recipients.length === 0;
 
+  /** FormModal onClose after discard confirm, or immediate close when clean. */
   const handleClose = () => {
-    if (step === 'compose' && props.recipients.length === 0) {
-      setStep('pick');
-    } else {
-      dispatch.requestClose();
+    if (canGoPrevious) {
+      if (model.isDirty) {
+        model.discardDraftAndGoBack();
+      } else {
+        model.setStep('pick');
+      }
+      return;
     }
+    model.discardDraftAndClose();
   };
 
-  const cancelLabel =
-    step === 'compose' && props.recipients.length === 0
-      ? t('common.previous')
-      : t('common.cancel');
+  const cancelLabel = canGoPrevious ? t('common.previous') : t('common.cancel');
 
   return (
     <FormModal
@@ -57,25 +62,27 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
       saving={step === 'compose' && (dispatch.opening || dispatch.saving)}
       onSave={model.handleSave}
       saveDisabled={model.saveDisabled}
+      formId={COMPOSER_FORM_ID}
+      isDirty={model.isDirty}
+      discardUnsavedTitle={t('settings.unsavedChanges')}
+      discardUnsavedDescription={t('messaging.discardComposeDraft')}
+      discardConfirmLabel={t('common.yes')}
+      discardCancelLabel={t('common.cancel')}
     >
-      <div
-        id="debug-saveDisabled"
-        data-debug={JSON.stringify({
-          step,
-          localRecipientsCount: localRecipients.length,
-          pendingAudit: !!dispatch.pendingAudit,
-          isBusy: model.isBusy,
-          opening: dispatch.opening,
-          saving: dispatch.saving,
-          eligibleRecipientsCount: dispatch.eligibleRecipients.length,
-          messageEmpty: !model.message.trim(),
-          messageValue: model.message,
-          isEmail,
-          subjectEmpty: !model.subject.trim(),
-          saveDisabled: model.saveDisabled,
-        })}
-      />
-      <div className="space-y-4">
+      <form
+        id={COMPOSER_FORM_ID}
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!model.saveDisabled) model.handleSave();
+        }}
+        onKeyDown={(event) => {
+          if (!(event.metaKey || event.ctrlKey) || event.key !== 'Enter') return;
+          if (event.nativeEvent.isComposing) return;
+          event.preventDefault();
+          if (!model.saveDisabled) model.handleSave();
+        }}
+      >
         {step === 'compose' && (
           <>
             <p className="text-xs leading-relaxed text-muted-foreground">{model.note}</p>
@@ -101,12 +108,16 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
               templateId={model.templateId}
               subject={model.subject}
               message={model.message}
+              messageError={model.bodyError}
+              subjectError={model.subjectError}
               eligibleRecipients={dispatch.eligibleRecipients}
               previewIndex={model.previewIndex}
               personalizeOptions={dispatch.personalizeOptions}
               onTemplateChange={model.changeTemplate}
               onSubjectChange={model.setSubject}
               onMessageChange={model.setMessage}
+              onMessageBlur={() => model.syncTokenErrorsOnBlur('body')}
+              onSubjectBlur={() => model.syncTokenErrorsOnBlur('subject')}
               onPreviewIndexChange={model.setPreviewIndex}
             />
           </>
@@ -132,7 +143,7 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
           isPickStep={step === 'pick'}
           renderRecipientPicker={props.renderRecipientPicker}
         />
-      </div>
+      </form>
     </FormModal>
   );
 }

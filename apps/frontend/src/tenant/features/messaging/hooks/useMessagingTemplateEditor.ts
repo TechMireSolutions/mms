@@ -1,104 +1,115 @@
 import { useState } from "react";
 import {
   findUnknownPersonalizationTokens,
+  messageTemplateInputSchema,
+  type AppTranslationKey,
   type MessageCategory,
   type MessageTemplate,
 } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { mapZodFormErrors } from "@/lib/forms/mapZodFormErrors";
+import { formatUnknownTokensLabel } from "@/components/ui/messageComposer/messageComposerTokenErrors";
 import { useMessagingMutations } from "./useMessaging";
+
+type TemplateChannel = "all" | "sms" | "whatsapp" | "email";
+interface Baseline {
+  label: string;
+  body: string;
+  category: MessageCategory;
+  channel: TemplateChannel;
+}
+const EMPTY: Baseline = { label: "", body: "", category: "general", channel: "all" };
 
 export function useMessagingTemplateEditor() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { saveTemplate } = useMessagingMutations();
-
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<MessageCategory>("general");
-  const [channel, setChannel] = useState<"all" | "sms" | "whatsapp" | "email">("all");
+  const [channel, setChannel] = useState<TemplateChannel>("all");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [baseline, setBaseline] = useState<Baseline>(EMPTY);
 
-  const isFormDirty = Boolean(formOpen && (label.trim() || body.trim() || editingId));
+  const isFormDirty =
+    formOpen &&
+    (label !== baseline.label || body !== baseline.body ||
+      category !== baseline.category || channel !== baseline.channel);
+  const saveDisabled =
+    !label.trim() || !body.trim() ||
+    findUnknownPersonalizationTokens(body).length > 0 || saveTemplate.isPending;
 
-  const resetForm = (): void => {
-    setFormOpen(false);
-    setEditingId(null);
-    setLabel("");
-    setBody("");
-    setCategory("general");
-    setChannel("all");
+  const applyFields = (next: Baseline, id: string | null): void => {
+    setEditingId(id);
+    setLabel(next.label);
+    setBody(next.body);
+    setCategory(next.category);
+    setChannel(next.channel);
+    setBaseline(next);
     setErrors({});
   };
 
-  const openCreate = (): void => {
-    setEditingId(null);
-    setLabel("");
-    setBody("");
-    setCategory("general");
-    setChannel("all");
-    setErrors({});
-    setFormOpen(true);
-  };
+  const resetForm = (): void => { applyFields(EMPTY, null); setFormOpen(false); };
+  const openCreate = (): void => { applyFields(EMPTY, null); setFormOpen(true); };
 
   const handleLabelChange = (value: string): void => {
     setLabel(value);
-    if (errors.label) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.label;
-        return next;
-      });
-    }
+    if (!errors.label) return;
+    setErrors((prev) => { const next = { ...prev }; delete next.label; return next; });
   };
 
-  const handleBodyChange = (value: string): void => {
-    setBody(value);
-    if (errors.body) {
-      setErrors((prev) => {
-        const next = { ...prev };
+  const syncBodyTokenErrorOnBlur = (): void => {
+    const unknown = findUnknownPersonalizationTokens(body);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (unknown.length > 0) {
+        next.body = t("messaging.unknownTokens", { tokens: formatUnknownTokensLabel(unknown) });
+      } else {
         delete next.body;
-        return next;
-      });
-    }
+      }
+      return next;
+    });
   };
 
   const save = async (): Promise<void> => {
     if (!user) return;
-    const newErrors: Record<string, string> = {};
-    if (!label.trim()) newErrors.label = t("common.required");
-    if (!body.trim()) newErrors.body = t("common.required");
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      notify.error(t("messaging.createPresetDesc"));
-      return;
-    }
-    const unknownTokens = findUnknownPersonalizationTokens(body.trim());
-    if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
+    const parsed = messageTemplateInputSchema.safeParse({
+      id: editingId ?? undefined, label: label.trim(), body: body.trim(), category, channel,
+    });
+    if (!parsed.success) {
+      const fieldErrors = mapZodFormErrors(parsed.error, (message) => {
+        if (message.startsWith("Unknown personalization tokens:")) {
+          return t("messaging.unknownTokens", {
+            tokens: message.replace(/^Unknown personalization tokens:\s*/, ""),
+          });
+        }
+        if (message.toLowerCase().includes("required") || message.includes("at least")) {
+          return t("common.required");
+        }
+        return t(message as AppTranslationKey);
+      });
+      setErrors(fieldErrors);
+      notify.error(fieldErrors.body || fieldErrors.label || t("messaging.createPresetDesc"));
       return;
     }
     try {
-      await saveTemplate.mutateAsync({
-        body: { id: editingId ?? undefined, label: label.trim(), body: body.trim(), category, channel },
-      });
+      await saveTemplate.mutateAsync({ body: parsed.data });
       notify.success(t("messaging.saveTemplate"));
       resetForm();
-    } catch {
-      // Mutation hook reports the failure.
-    }
+    } catch { /* Mutation hook reports the failure. */ }
   };
 
   const handleEdit = (template: MessageTemplate): void => {
-    setEditingId(template.id);
-    setLabel(template.label);
-    setBody(template.body);
-    setCategory(template.category || "general");
-    setChannel(template.channel || "all");
-    setErrors({});
+    applyFields({
+      label: template.label,
+      body: template.body,
+      category: (template.category || "general") as MessageCategory,
+      channel: (template.channel || "all") as TemplateChannel,
+    }, template.id);
     setFormOpen(true);
   };
 
@@ -106,7 +117,7 @@ export function useMessagingTemplateEditor() {
     if (!user) return;
     const unknownTokens = findUnknownPersonalizationTokens(template.body);
     if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
+      notify.error(t("messaging.unknownTokens", { tokens: formatUnknownTokensLabel(unknownTokens) }));
       return;
     }
     try {
@@ -119,9 +130,7 @@ export function useMessagingTemplateEditor() {
         },
       });
       notify.success(t("messaging.duplicateSuccess"));
-    } catch {
-      // Mutation hook reports the failure.
-    }
+    } catch { /* Mutation hook reports the failure. */ }
   };
 
   const handleCopy = async (templateBody: string): Promise<void> => {
@@ -130,24 +139,9 @@ export function useMessagingTemplateEditor() {
   };
 
   return {
-    formOpen,
-    editingId,
-    label,
-    body,
-    category,
-    setCategory,
-    channel,
-    setChannel,
-    errors,
-    isFormDirty,
-    saving: saveTemplate.isPending,
-    resetForm,
-    openCreate,
-    handleLabelChange,
-    handleBodyChange,
-    save,
-    handleEdit,
-    handleDuplicate,
-    handleCopy,
+    formOpen, editingId, label, body, category, setCategory, channel, setChannel, errors,
+    isFormDirty, saving: saveTemplate.isPending, saveDisabled, resetForm, openCreate,
+    handleLabelChange, handleBodyChange: setBody, syncBodyTokenErrorOnBlur, save,
+    handleEdit, handleDuplicate, handleCopy,
   };
 }
