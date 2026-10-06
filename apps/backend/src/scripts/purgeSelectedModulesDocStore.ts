@@ -15,8 +15,6 @@ export const PURGE_DOCUMENT_STORE_SUFFIXES: readonly string[] = [
   'facultyFieldConfigs',
   'facultyModulePreferences',
   'facultySetupConfig',
-  'organizationPositions',
-  'organizationLocations',
   'sessions',
   'sessionClasses',
   'sessionFaculty',

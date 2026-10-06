@@ -1,40 +1,5 @@
 import type { ErdDomain } from './erdCatalogTypes.js';
 
-/** Organization locations and positions (Drizzle organization*Tables). */
-export const ERD_DOMAIN_ORGANIZATION: ErdDomain = {
-  id: 'organization',
-  labelKey: 'nav.organization',
-  tables: [
-    {
-      name: 'organization_locations',
-      columns: [
-        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
-        { name: 'id', type: 'text', kind: 'pk' },
-        { name: 'code', type: 'varchar(32)', kind: 'column' },
-        { name: 'name', type: 'varchar(255)', kind: 'column' },
-      ],
-    },
-    {
-      name: 'organization_positions',
-      columns: [
-        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
-        { name: 'id', type: 'text', kind: 'pk' },
-        { name: 'designation_id', type: 'text', kind: 'fk' },
-        { name: 'location_id', type: 'text', kind: 'fk' },
-      ],
-    },
-  ],
-  relationships: [
-    {
-      fromTable: 'organization_positions',
-      fromColumn: 'location_id',
-      toTable: 'organization_locations',
-      toColumn: 'id',
-      cardinality: 'N:1',
-    },
-  ],
-};
-
 /** Task management (Drizzle tasksTables + taskSettingsTables). */
 export const ERD_DOMAIN_TASKS: ErdDomain = {
   id: 'tasks',

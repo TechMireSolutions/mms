@@ -10,7 +10,6 @@ export interface DelegationValidationResult {
   resolvedAssignees: Array<{
     facultyId: string;
     facultyAssignmentId: string;
-    positionId: string;
     userId: string;
   }>;
   reason?: string;
@@ -24,7 +23,6 @@ export function resolveTaskRecipients(
   for (const input of inputs) {
     const match = eligible.find((row) => row.facultyId === input.facultyId
       && (!input.facultyAssignmentId || row.assignmentId === input.facultyAssignmentId)
-      && (!input.positionId || row.positionId === input.positionId)
       && (!input.userId || row.userId === input.userId));
     if (!match) return {
       valid: false, resolvedAssignees: [], reason: 'Recipient is not eligible for this assignment',
@@ -32,7 +30,6 @@ export function resolveTaskRecipients(
     resolved.set(match.userId, {
       facultyId: match.facultyId,
       facultyAssignmentId: match.assignmentId,
-      positionId: match.positionId,
       userId: match.userId,
     });
   }

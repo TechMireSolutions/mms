@@ -15,12 +15,10 @@ import { workspaces } from './platform.js';
 import { faculty } from './faculty.js';
 import { facultyDepartments } from './facultyDepartmentTables.js';
 import { facultyDesignations } from './facultyDesignationTables.js';
-import { organizationPositions } from './organizationPositionTables.js';
 import { softDeleteColumns } from './softDeleteSchema.js';
 
 /**
- * Faculty multi-role temporal assignments.
- * Reporting structure uses organization_positions.parent_position_id + position_id.
+ * Faculty multi-role temporal assignments (department + designation occupancy).
  */
 export const facultyAssignments = pgTable('faculty_assignments', {
   id: text('id').notNull(),
@@ -30,7 +28,6 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   facultyId: text('faculty_id').notNull(),
   departmentId: text('department_id').notNull(),
   designationId: text('designation_id').notNull(),
-  positionId: text('position_id'),
   isPrimary: boolean('is_primary').notNull().default(false),
   status: varchar('status', { length: 20 }).notNull().default('active'),
   startDate: date('start_date', { mode: 'string' }).notNull(),
@@ -60,13 +57,8 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   index('faculty_assignments_faculty_primary_active_idx')
     .on(table.workspaceSubdomain, table.facultyId, table.isPrimary)
     .where(sql`${table.deletedAt} is null`),
-  // Covering INCLUDE (department_id, designation_id, position_id) lives in migration 0148 —
-  // Drizzle 0.45 IndexBuilder has no .include(); keep key columns + WHERE in sync with DDL.
   index('faculty_assignments_primary_active_covering_idx')
     .on(table.workspaceSubdomain, table.facultyId, table.startDate)
-    .where(sql`${table.deletedAt} is null and ${table.isPrimary} = true and ${table.status} = 'active'`),
-  index('faculty_assignments_position_primary_active_idx')
-    .on(table.workspaceSubdomain, table.positionId)
     .where(sql`${table.deletedAt} is null and ${table.isPrimary} = true and ${table.status} = 'active'`),
   index('faculty_assignments_faculty_open_active_idx')
     .on(table.workspaceSubdomain, table.facultyId)
@@ -74,9 +66,6 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   index('faculty_assignments_deleted_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
-  index('faculty_assignments_position_active_idx')
-    .on(table.workspaceSubdomain, table.positionId)
-    .where(sql`${table.deletedAt} is null`),
   check(
     'faculty_assignments_date_range_check',
     sql`${table.endDate} is null or ${table.endDate} >= ${table.startDate}`,
@@ -96,10 +85,6 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.designationId],
     foreignColumns: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
-  }).onDelete('restrict'),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.positionId],
-    foreignColumns: [organizationPositions.workspaceSubdomain, organizationPositions.id],
   }).onDelete('restrict'),
 ]);
 

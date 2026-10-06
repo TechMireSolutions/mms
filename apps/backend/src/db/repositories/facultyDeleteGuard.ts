@@ -8,24 +8,6 @@ export async function guardFacultyAssignmentDependents(tenant: string, ids: stri
   await withTenant(tenant, async (tx) => {
     await lockFacultyHierarchy(tx, tenant);
     const members = sql.join(ids.map((id) => sql`${id}`), sql`, `);
-    const dependents = await tx.execute(sql`
-      SELECT child.id FROM faculty_assignments parent
-      JOIN organization_positions pop ON pop.workspace_subdomain = parent.workspace_subdomain
-        AND pop.id = parent.position_id AND pop.deleted_at IS NULL
-      JOIN organization_positions child_pos ON child_pos.workspace_subdomain = pop.workspace_subdomain
-        AND child_pos.parent_position_id = pop.id AND child_pos.deleted_at IS NULL
-      JOIN faculty_assignments child ON child.workspace_subdomain = child_pos.workspace_subdomain
-        AND child.position_id = child_pos.id AND child.deleted_at IS NULL
-      JOIN faculty member ON member.workspace_subdomain = child.workspace_subdomain
-        AND member.id = child.faculty_id
-      WHERE child.workspace_subdomain = ${tenant}
-        AND parent.faculty_id IN (${members}) AND child.faculty_id NOT IN (${members})
-        AND child.deleted_at IS NULL AND parent.deleted_at IS NULL AND member.deleted_at IS NULL
-      LIMIT 1
-    `);
-    if (dependents.rows.length) {
-      throw new ConflictError('Reassign position reporting before deleting their supervisor');
-    }
 
     // Session FKs are ON DELETE RESTRICT — block soft-delete while *active* sessions
     // still reference faculty (archived sessions must not permanently block delete).

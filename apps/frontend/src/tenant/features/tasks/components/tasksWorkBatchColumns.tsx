@@ -89,7 +89,7 @@ export function buildTasksWorkBatchColumns(
             <UserIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">
               {task.assignees
-                .map((a) => a.facultyName || a.positionName || t('tasks.assigneeFallback'))
+                .map((a) => a.facultyName || t('tasks.assigneeFallback'))
                 .join(', ')}
             </span>
           </div>

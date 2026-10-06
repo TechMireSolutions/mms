@@ -19,7 +19,6 @@ function appointment(id: string, overrides = {}) {
     facultyId: 'f0',
     departmentId: 'd',
     designationId: 'g',
-    positionId: 'pos-d-g',
     startDate: '2025-01-01',
     isPrimary: false,
     ...overrides,
@@ -50,18 +49,6 @@ describe('Faculty appointment integrity', () => {
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
   });
 
-  it('persists appointments on shared positions without legacy reports_to columns', async () => {
-    await expect(saveFacultyAssignment(tenant, appointment('same-person'))).resolves.toBeUndefined();
-    await withTenant(tenant, async (tx) => {
-      const result = await tx.execute(sql`
-        SELECT position_id
-        FROM faculty_assignments
-        WHERE workspace_subdomain = ${tenant} AND id = 'same-person'
-      `);
-      expect(result.rows[0]?.position_id).toBe('pos-d-g');
-    });
-    await expect(saveFacultyAssignment(tenant, appointment('a2'))).rejects.toThrow('belongs');
-  });
 
   it('rejects missing references and an end date before the start', async () => {
     await expect(saveFacultyAssignment(tenant, appointment('missing', { departmentId: 'missing' }))).rejects.toThrow('active');

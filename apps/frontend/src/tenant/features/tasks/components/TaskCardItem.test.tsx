@@ -56,7 +56,6 @@ const mockTask: TaskRecord = {
       facultyId: 'fac-1',
       userId: 'c0000000-0000-0000-0000-000000000001',
       facultyName: 'Sheikh Ahmad',
-      positionName: 'Senior Teacher',
     },
   ],
   createdAt: '2026-10-01T00:00:00.000Z',

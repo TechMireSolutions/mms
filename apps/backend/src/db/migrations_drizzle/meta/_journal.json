@@ -1128,6 +1128,13 @@
       "when": 1791102600000,
       "tag": "0160_faculty_drop_employment_mirrors",
       "breakpoints": true
+    },
+    {
+      "idx": 161,
+      "version": "7",
+      "when": 1791102700000,
+      "tag": "0161_drop_organization_module",
+      "breakpoints": true
     }
   ]
 }

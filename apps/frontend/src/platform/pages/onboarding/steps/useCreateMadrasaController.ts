@@ -4,7 +4,6 @@ import {
   slugifySubdomain,
   SYSTEM_MODULES,
   getRecommendedModulesForIndustry,
-  getRecommendedBlueprintForIndustry,
   type IndustryType,
 } from "@mms/shared";
 import { getAppDomain } from "@/lib/config/tenantConfig";
@@ -40,13 +39,11 @@ export function useCreateMadrasaController(
 
   const handleIndustryChange = (industry: IndustryType) => {
     const recommended = getRecommendedModulesForIndustry(industry);
-    const blueprint = getRecommendedBlueprintForIndustry(industry);
     const requiredIds = SYSTEM_MODULES.filter((m) => m.required).map((m) => m.id);
     const combined = Array.from(new Set([...requiredIds, ...recommended]));
     onChange((prev) => ({
       ...prev,
       industryType: industry,
-      blueprintId: prev.applyRecommendedStructure ? blueprint : "",
       modules: combined,
     }));
   };

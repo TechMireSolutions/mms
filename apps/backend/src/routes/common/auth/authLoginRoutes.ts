@@ -131,7 +131,6 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
             socialLinks: body.socialLinks,
             modules: body.modules,
             industryType: body.industryType,
-            blueprintId: body.blueprintId,
           });
           await insertPlatformActivityLog({
             userId: platformUser.id,

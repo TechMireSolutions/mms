@@ -10,7 +10,7 @@ describe('useOnboardingWizardController Definition & Types', () => {
     expect(ONBOARDING_INITIAL_DATA.subdomain).toBe('');
     expect(ONBOARDING_INITIAL_DATA.email).toBe('');
     expect(ONBOARDING_INITIAL_DATA.agreedTerms).toBe(false);
-    expect(ONBOARDING_INITIAL_DATA.applyRecommendedStructure).toBe(true);
+    expect(ONBOARDING_INITIAL_DATA.industryType).toBe('madrasa');
   });
 
   it('contains five onboarding wizard steps', () => {

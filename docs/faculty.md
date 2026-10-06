@@ -13,7 +13,7 @@ The **Faculty Module** in the Madrasa Management System (MMS) manages academic p
 Historically transformed from a simplistic "teachers" table, the current Faculty domain represents an enterprise-grade personnel subsystem with:
 1. **Separation of Personal Identity vs. Employment:** Personal data (names, identity numbers, phones, avatars, addresses) is strictly owned by the **Contacts** module ([`contacts.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/contacts.js)). The Faculty profile owns institutional employment attributes (employee IDs, ranks, specializations, qualifications, join dates, and temporal appointments).
 2. **Normalized Multi-Role Temporal Appointments:** Faculty members can hold appointments across multiple departments and designations simultaneously or consecutively over date ranges (`startDate` → `endDate`), with transactional validation guaranteeing at most one active primary appointment.
-3. **Organizational Hierarchy (position-based):** The **canonical** org chart and task-delegation tree is `organization_positions.parent_position_id`. Faculty occupy positions via `faculty_assignments.position_id`. Department/designation display names and rank are resolved from primary `faculty_assignments` rows (not denormalized on `faculty`). Session tables (`session_faculty`, `session_classes`, timetable periods) reference `faculty` via composite FKs.
+3. **Department / designation structure:** Department and designation catalogs define institutional structure and rank. Display names and hierarchy rank are resolved from primary `faculty_assignments` rows (not denormalized on `faculty`). Session tables (`session_faculty`, `session_classes`, timetable periods) reference `faculty` via composite FKs. The former Organization positions/locations module has been removed.
 4. **Three-Tier Command Centre UX:** Conforms strictly to the MMS Master Module Scaffold Layout:
    - **Work Tier:** High-density directory table, responsive mobile cards, quick filters, bulk actions, column customizer, slide-over detail drawer, and batch-printable laminated ID cards.
    - **Reports Tier:** KPI metrics, departmental distributions, qualification breakdowns, and multi-format exports (CSV, Excel, print).
@@ -112,23 +112,16 @@ Normalized academic titles and permissions ([`facultyDesignationTables.ts`](file
 - **Designation history:** Projected from `faculty_assignments` (FA SSOT). Legacy `faculty_designation_assignments` is retired.
 
 #### 4. Multi-Role Temporal Appointments: `faculty_assignments`
-Models multi-role holding, joint appointments, position occupancy, and designation history ([`facultyAssignmentTables.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/facultyAssignmentTables.ts)).
+Models multi-role holding, joint appointments, and designation history ([`facultyAssignmentTables.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/facultyAssignmentTables.ts)).
 - **Primary Key:** `(workspace_subdomain, id)`.
 - **Foreign Keys:**
   - `faculty_id` → `faculty.id` `ON DELETE CASCADE`.
   - `department_id` → `faculty_departments.id` `ON DELETE RESTRICT`.
   - `designation_id` → `faculty_designations.id` `ON DELETE RESTRICT`.
-  - `position_id` → `organization_positions.id` `ON DELETE RESTRICT` (canonical occupancy; optional until assigned).
-  - `reports_to_assignment_id` → `faculty_assignments.id` `ON DELETE RESTRICT` (**compatibility only**; not the org-chart authority).
-- **Attributes:** `is_primary` (boolean), `start_date` (ISO date), `end_date` (ISO date, nullable), `notes`.
+- **Attributes:** `is_primary` (boolean), `status`, `start_date` (ISO date), `end_date` (ISO date, nullable), `notes`.
 - **Integrity Checks:**
   - `CHECK (end_date IS NULL OR end_date >= start_date)`.
-  - `CHECK (reports_to_assignment_id IS NULL OR reports_to_assignment_id <> id)`.
-
-#### 4b. Organization positions & locations (canonical structure)
-- **`organization_positions`:** Structural reporting via `parent_position_id`. Survives staff turnover. Capacity controls concurrent occupants. Used by org chart UI and Tasks delegation.
-- **`organization_locations`:** Multi-branch/campus sites inside one tenant. Departments stay tenant-level; location binds on the **position**, not the department.
-- **Migration strategy:** Keep legacy faculty/assignment reporting columns until dependents are migrated; new features must use positions. Do not drop legacy columns in this release.
+  - `CHECK (status IN ('active', 'inactive'))`.
 
 #### 5. Dynamic Sequence State: `faculty_setup_config`
 Maintains atomic sequence generation state per tenant.

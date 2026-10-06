@@ -53,13 +53,10 @@ export interface OnboardInput {
   socialLinks?: BrandingSocialLink[];
   modules?: string[];
   industryType?: string;
-  blueprintId?: string;
 }
 
 export interface OnboardResult extends AuthResult {
   workspace: Workspace;
-  /** Present when recommended blueprint apply failed (onboarding still succeeds). */
-  blueprintApplyWarning?: string;
 }
 
 import { parseSessionTimeoutMinutes } from '@mms/shared';
@@ -230,33 +227,8 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     throw new Error('Failed to create workspace administrator.');
   }
 
-  // Explicit empty blueprintId = start blank (skip apply). Omitted/undefined still
-  // falls back to the industry recommendation for older clients.
-  const blueprintToApply =
-    input.blueprintId === ''
-      ? null
-      : input.blueprintId ||
-        (input.industryType
-          ? (await import('@mms/shared')).getRecommendedBlueprintForIndustry(input.industryType)
-          : null);
-  let blueprintApplyWarning: string | undefined;
-  if (blueprintToApply) {
-    const { applyOrganizationBlueprint } = await import('../organizationBlueprintService.js');
-    try {
-      await applyOrganizationBlueprint(workspace.subdomain, blueprintToApply, user.id);
-    } catch (err) {
-      blueprintApplyWarning =
-        err instanceof Error
-          ? err.message
-          : `Failed to apply organization blueprint ${blueprintToApply}`;
-      // Non-blocking: workspace onboarding still succeeds.
-      console.warn('[onboardUser] blueprint apply failed', {
-        subdomain: workspace.subdomain,
-        blueprintToApply,
-        message: blueprintApplyWarning,
-      });
-    }
-  }
+  // Organization blueprints removed — industryType retained for module recommendations only.
+  void input.industryType;
 
-  return { user, workspace, blueprintApplyWarning };
+  return { user, workspace };
 }

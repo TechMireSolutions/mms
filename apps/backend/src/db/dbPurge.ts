@@ -22,9 +22,7 @@ async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'ten
         set_config('app.allow_hard_purge', 'true', true)
     `);
     if (columnName === 'workspace_subdomain') {
-      await tx.execute(sql`UPDATE "organization_positions" SET "parent_position_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "faculty_departments" SET "parent_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
-      await tx.execute(sql`UPDATE "organization_locations" SET "parent_location_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
       await tx.execute(sql`UPDATE "tasks" SET "parent_task_id" = NULL WHERE "workspace_subdomain" = ${tenant}`);
     }
     const result = await tx.execute(sql`
@@ -36,8 +34,8 @@ async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'ten
         CASE
           WHEN table_name = 'contacts' THEN 6
           WHEN table_name IN ('accounting_accounts', 'accounting_fiscal_years') THEN 5
-          WHEN table_name IN ('faculty_departments', 'faculty_designations', 'organization_locations', 'tenant_users') THEN 4
-          WHEN table_name IN ('organization_positions', 'faculty', 'finance_invoices') THEN 3
+          WHEN table_name IN ('faculty_departments', 'faculty_designations', 'tenant_users') THEN 4
+          WHEN table_name IN ('faculty', 'finance_invoices') THEN 3
           WHEN table_name IN ('sessions', 'questions', 'tests', 'finance_payments') THEN 2
           WHEN table_name IN ('faculty_assignments', 'task_assignees', 'finance_payment_allocations', 'finance_invoice_lines', 'finance_credit_notes') THEN 1
           ELSE 0

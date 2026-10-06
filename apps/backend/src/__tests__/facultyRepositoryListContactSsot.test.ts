@@ -59,7 +59,7 @@ describe('facultyRepositoryList Contacts SSOT', () => {
   });
 
   it('uses calendar-effective primary appointment predicates in LATERAL list SQL', () => {
-    expect(primarySqlSrc).toContain('primaryAssignmentEffectiveOnDateSql');
+    expect(effectiveSqlSrc).toContain('primaryAssignmentEffectiveOnDateSql');
     expect(effectiveSqlSrc).toContain('CURRENT_DATE');
     expect(effectiveSqlSrc).toContain('primaryAssignmentEffectiveTodayWhere');
   });

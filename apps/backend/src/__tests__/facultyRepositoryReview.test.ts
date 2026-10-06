@@ -12,10 +12,10 @@ beforeEach(() => { tx.execute.mockReset(); tx.select.mockReset(); });
 
 describe('Faculty repository review regressions', () => {
   it('given a PostgreSQL result envelope, returns ancestor IDs when checking a supervisor', async () => {
-    // Arrange
+    // Arrange — organization hierarchy removed; returns empty ancestor chain
     tx.execute.mockResolvedValue({ rows: [{ ancestor_id: 'manager' }, { ancestor_id: 'principal' }], rowCount: 2 });
     // Act / Assert
-    expect(await findAncestorChain('demo', 'member')).toEqual(['manager', 'principal']);
+    expect(await findAncestorChain('demo', 'member')).toEqual([]);
   });
 
   it('given stored custom fields and notes, includes them in the directory response', async () => {
@@ -56,17 +56,16 @@ describe('Faculty repository review regressions', () => {
   });
 
   it('given no surviving dependents, permits deletion', async () => {
-    // Arrange — lock + dependents + session FK checks
+    // Arrange — lock + session FK checks
     tx.execute.mockResolvedValue({ rows: [] });
     // Act / Assert
     await expect(guardFacultyAssignmentDependents('demo', ['manager', 'child'])).resolves.toBeUndefined();
-    expect(tx.execute).toHaveBeenCalledTimes(3);
+    expect(tx.execute).toHaveBeenCalledTimes(2);
   });
 
   it('given session faculty links, rejects deletion', async () => {
     tx.execute
       .mockResolvedValueOnce({ rows: [] }) // lock
-      .mockResolvedValueOnce({ rows: [] }) // no position dependents
       .mockResolvedValueOnce({ rows: [{ '?column?': 1 }] }); // session links
     await expect(guardFacultyAssignmentDependents('demo', ['manager'])).rejects.toMatchObject({
       statusCode: 409,

@@ -50,7 +50,7 @@ export function TaskCardItem({
 
   const assigneeLabel = task.assignees?.length
     ? task.assignees
-        .map((a) => a.facultyName || a.positionName || t('tasks.assigneeFallback'))
+        .map((a) => a.facultyName || t('tasks.assigneeFallback'))
         .join(', ')
     : t('tasks.noAssignees');
 

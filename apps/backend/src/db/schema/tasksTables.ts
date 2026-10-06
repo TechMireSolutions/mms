@@ -14,7 +14,6 @@ import { sql } from 'drizzle-orm';
 import { workspaces } from './platform.js';
 import { faculty } from './faculty.js';
 import { facultyAssignments } from './facultyAssignmentTables.js';
-import { organizationPositions } from './organizationPositionTables.js';
 import { tenantUsers } from './contacts.js';
 import { softDeleteColumns } from './softDeleteSchema.js';
 
@@ -92,7 +91,6 @@ export const taskAssignees = pgTable('task_assignees', {
   taskId: text('task_id').notNull(),
   facultyId: text('faculty_id').notNull(),
   facultyAssignmentId: text('faculty_assignment_id'),
-  positionId: text('position_id'),
   userId: text('user_id').notNull(),
   assignedAt: timestamp('assigned_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   assignedByUserId: text('assigned_by_user_id').notNull(),
@@ -128,10 +126,6 @@ export const taskAssignees = pgTable('task_assignees', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.facultyAssignmentId],
     foreignColumns: [facultyAssignments.workspaceSubdomain, facultyAssignments.id],
-  }).onDelete('restrict'),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.positionId],
-    foreignColumns: [organizationPositions.workspaceSubdomain, organizationPositions.id],
   }).onDelete('restrict'),
   foreignKey({
     columns: [table.workspaceSubdomain, table.userId],

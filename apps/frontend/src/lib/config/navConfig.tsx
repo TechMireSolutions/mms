@@ -17,7 +17,6 @@ import {
   BookOpen,
   School,
   CheckSquare,
-  Network,
   type LucideIcon,
 } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
@@ -57,11 +56,6 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.messaging",
     icon: MessageSquare,
     path: ROUTES.messaging,
-  },
-  {
-    labelKey: "nav.organization",
-    icon: Network,
-    path: ROUTES.organization,
   },
   {
     labelKey: "nav.tasks",

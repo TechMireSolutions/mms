@@ -161,8 +161,6 @@ export interface EligibleAssigneeItem {
   name: string;
   employeeId?: string | null;
   assignmentId?: string | null;
-  positionId?: string | null;
-  positionName?: string | null;
   departmentName?: string | null;
   userId: string;
   isSelf: boolean;

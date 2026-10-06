@@ -7,9 +7,7 @@ export const PURGE_SELF_FK_NULLS: ReadonlyArray<{
   table: string;
   column: string;
 }> = [
-  { table: 'organization_positions', column: 'parent_position_id' },
   { table: 'faculty_departments', column: 'parent_id' },
-  { table: 'organization_locations', column: 'parent_location_id' },
   { table: 'tasks', column: 'parent_task_id' },
 ];
 
@@ -91,8 +89,6 @@ export const PURGE_MODULE_TABLES: readonly string[] = [
   'mujtahids',
   'obligation_types',
   // organization (before faculty setup catalogs they FK)
-  'organization_positions',
-  'organization_locations',
   // faculty
   'faculty_designation_roles',
   'faculty_assignments',

@@ -44,7 +44,6 @@ describe('purgeSelectedModulesAllowlist', () => {
     expect(idx('session_classes')).toBeLessThan(idx('sessions'));
     expect(idx('student_enrolled_sessions')).toBeLessThan(idx('students'));
     expect(idx('obligation_collections')).toBeLessThan(idx('obligation_types'));
-    expect(idx('organization_positions')).toBeLessThan(idx('faculty_departments'));
     expect(idx('faculty_assignments')).toBeLessThan(idx('faculty'));
     expect(idx('faculty')).toBeLessThan(idx('faculty_designations'));
   });

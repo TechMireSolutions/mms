@@ -26,10 +26,8 @@ export const taskAssigneeRecordSchema = z.object({
   taskId: z.string().min(1),
   facultyId: z.string().min(1),
   facultyAssignmentId: z.string().min(1).nullable().optional(),
-  positionId: z.string().min(1).nullable().optional(),
   userId: z.string().min(1),
   facultyName: z.string().optional(),
-  positionName: z.string().optional(),
   userEmail: z.string().optional(),
   assignedAt: z.string().or(z.date()).optional(),
 }).strict();
@@ -59,7 +57,6 @@ export type TaskRecord = z.infer<typeof taskRecordSchema>;
 export const taskAssigneeInputSchema = z.object({
   facultyId: z.string().min(1),
   facultyAssignmentId: z.string().min(1).optional(),
-  positionId: z.string().min(1).optional(),
   userId: z.string().min(1).optional(),
 }).strict();
 

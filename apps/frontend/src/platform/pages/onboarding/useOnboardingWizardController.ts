@@ -93,7 +93,7 @@ export function useOnboardingWizardController() {
     setLoading(true);
 
     try {
-      const result = await onboard({
+      await onboard({
         madrasaName: data.name.trim(),
         tagline: DEFAULT_BRANDING_SETTINGS.tagline,
         adminName: `${data.firstName} ${data.lastName}`.trim(),
@@ -103,18 +103,11 @@ export function useOnboardingWizardController() {
         subdomain: data.subdomain,
         modules: data.modules,
         industryType: data.industryType,
-        // Empty string means start blank — backend must not fall back to industry default.
-        blueprintId: data.applyRecommendedStructure ? data.blueprintId : "",
       });
 
       notify.success(t("platform.workspaceCreatedToast"), {
         description: data.subdomain,
       });
-      if (result.blueprintApplyWarning) {
-        notify.warning(t("organization.blueprint.applyFailed"), {
-          description: result.blueprintApplyWarning,
-        });
-      }
       void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaces });
       void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaceRegistry });
 

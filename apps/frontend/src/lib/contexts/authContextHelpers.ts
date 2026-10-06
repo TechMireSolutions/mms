@@ -22,7 +22,6 @@ export function clearUserScopedCachesOnLogout(userId: string, prefix: string): v
 export interface OnboardResult {
   user: User;
   workspace: Workspace;
-  blueprintApplyWarning?: string;
 }
 
 export interface OnboardPayload {
@@ -45,7 +44,6 @@ export interface OnboardPayload {
   region?: string;
   modules?: string[];
   industryType?: IndustryType;
-  blueprintId?: string;
 }
 
 export interface AuthContextType {

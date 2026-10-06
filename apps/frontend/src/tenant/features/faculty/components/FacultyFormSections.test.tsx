@@ -34,14 +34,6 @@ vi.mock("@/tenant/hooks/useWorkspaceRoles", () => ({
   ],
 }));
 
-vi.mock("@/tenant/hooks/collections/organization", () => ({
-  useOrganizationPositions: () => ({ data: [] }),
-}));
-
-vi.mock("@/tenant/components/organization/OrganizationPositionFormModal", () => ({
-  OrganizationPositionFormModal: () => null,
-}));
-
 describe("FacultyFormSections Components", () => {
   it("renders FacultyContactSection with contact picker and contact pills", () => {
     const html = renderToStaticMarkup(

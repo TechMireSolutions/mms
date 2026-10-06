@@ -15,7 +15,6 @@ export const ERD_DOMAIN_IDS = [
   'inventory',
   'messaging',
   'obligations',
-  'organization',
   'outbox',
   'platform',
   'questionBank',

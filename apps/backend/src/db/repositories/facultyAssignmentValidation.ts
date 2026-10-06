@@ -1,4 +1,3 @@
-import { validatePositionOccupancy } from './positionOccupancyValidation.js';
 import { sql } from 'drizzle-orm';
 import type { TenantTransaction } from '../tenant-context.js';
 import type { InsertFacultyAssignmentRow } from '../schema/facultyAssignmentTables.js';
@@ -13,17 +12,12 @@ export async function validateFacultyAssignment(
   input: InsertFacultyAssignmentRow,
 ): Promise<void> {
   await lockFacultyHierarchy(tx, tenant);
-  const existing = await tx.execute<{ faculty_id: string; deleted_at: Date | null; position_id: string | null }>(sql`
-    SELECT faculty_id, deleted_at, position_id FROM faculty_assignments
+  const existing = await tx.execute<{ faculty_id: string; deleted_at: Date | null }>(sql`
+    SELECT faculty_id, deleted_at FROM faculty_assignments
     WHERE workspace_subdomain = ${tenant} AND id = ${input.id} FOR UPDATE
   `);
   if (existing.rows.some((row) => row.faculty_id !== input.facultyId || row.deleted_at !== null)) {
     throw new Error('Assignment is archived or belongs to another faculty member');
-  }
-  const isCreate = existing.rows.length === 0;
-  const currentPositionId = existing.rows[0]?.position_id ?? null;
-  if (!isCreate && currentPositionId && !input.positionId) {
-    throw new Error('Cannot clear organization position on an appointment');
   }
   const member = await tx.execute(sql`
     SELECT id FROM faculty WHERE workspace_subdomain = ${tenant}
@@ -50,5 +44,4 @@ export async function validateFacultyAssignment(
     `);
     if (overlaps.rows.length) throw new Error('Primary assignment overlaps an existing appointment');
   }
-  if (input.positionId) await validatePositionOccupancy(tx, tenant, input);
 }
