@@ -1,19 +1,16 @@
 import { useMemo, type FormEvent } from "react";
-import { formatDate } from "@mms/shared";
-import { CheckCircle2, DollarSign, Download, Plus, Sparkles, TrendingUp } from "lucide-react";
+import { CheckCircle2, DollarSign, Download, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import type { JournalEntry } from "@/lib/data/accountingData";
-import { QUICK_ACTIONS, resolveEntryDirection, type QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
-import { getJournalEntryLineTotals, getJournalTagLabel } from "@/tenant/features/accounting/components/journalEntriesListShared";
+import { QUICK_ACTIONS, type QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
+import { JournalRecentEntryCard } from "@/tenant/features/accounting/components/JournalRecentEntryCard";
 
 // Cash-flow direction comes from `resolveEntryDirection`, which reads the
 // entry's own transaction type / tags through ONE source — the quick-action
@@ -31,6 +28,8 @@ interface JournalQuickActionsPanelProps {
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
   pageScopeLabel: string;
+  canPrintVoucher?: (entry: JournalEntry) => boolean;
+  onPrintVoucher?: (entry: JournalEntry) => void;
 }
 
 export function JournalQuickActionsPanel({
@@ -43,6 +42,8 @@ export function JournalQuickActionsPanel({
   onOpenPrefill,
   onExportCsv,
   pageScopeLabel,
+  canPrintVoucher,
+  onPrintVoucher,
 }: JournalQuickActionsPanelProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -149,39 +150,15 @@ export function JournalQuickActionsPanel({
           />
         ) : (
           <div className="space-y-2">
-            {recentEntries.map((entry) => {
-              const { totalDebit: amount } = getJournalEntryLineTotals(entry);
-              const isMoneyIn = resolveEntryDirection(entry) === "in";
-              return (
-                <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex flex-col gap-3 px-5 py-3 hover:bg-muted/20 transition-all duration-300 sm:flex-row sm:items-center sm:gap-4">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
-                      {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
-                      <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
-                        <span className="text-xs font-mono text-muted-foreground">{entry.ref}</span>
-                        {(entry.tags || []).map((tag) => (
-                          <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
-                            {getJournalTagLabel(tag, t)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 sm:justify-end shrink-0 ps-12 sm:ps-0">
-                    <div className="text-end">
-                      <p className={`text-sm font-bold font-mono m-0 ${isMoneyIn ? "text-success" : "text-destructive"}`}>
-                        {isMoneyIn ? "+" : "−"}{formatCurrency(amount)}
-                      </p>
-                    </div>
-                    <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
-                  </div>
-                </Card>
-              );
-            })}
+            {recentEntries.map((entry) => (
+              <JournalRecentEntryCard
+                key={entry.id}
+                entry={entry}
+                statusConfig={journalStatusConfig}
+                formatCurrency={formatCurrency}
+                onPrintVoucher={canPrintVoucher?.(entry) ? onPrintVoucher : undefined}
+              />
+            ))}
           </div>
         )}
       </section>

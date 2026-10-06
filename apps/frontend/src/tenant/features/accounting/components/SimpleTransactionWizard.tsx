@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -13,6 +14,8 @@ import { type QuickActionType } from "./simpleTransactionWizardTypes";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useSimpleTransactionWizard } from "./useSimpleTransactionWizard";
 import { useAccountQuickCreate } from "./useAccountQuickCreate";
+import { resolveWizardTransactionGroups } from "./simpleTransactionTemplateGroups";
+import { useJournalTemplates } from "@/tenant/features/accounting/hooks/useJournalTemplates";
 
 interface SimpleTransactionWizardProps {
   open: boolean;
@@ -41,6 +44,8 @@ export function SimpleTransactionWizard({
 }: SimpleTransactionWizardProps) {
   const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useAccountingCurrency();
+  const { templates } = useJournalTemplates(accounts);
+  const transactionGroups = useMemo(() => resolveWizardTransactionGroups(templates, accounts), [templates, accounts]);
 
   const {
     step,
@@ -67,6 +72,7 @@ export function SimpleTransactionWizard({
     prefillType,
     prefillAmount,
     prefillDescription,
+    transactionGroups,
   });
 
   const accountQuickCreate = useAccountQuickCreate({
@@ -110,7 +116,7 @@ export function SimpleTransactionWizard({
       >
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
-            {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
+            {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} groups={transactionGroups} />}
             {step === 2 && selectedType && (
               <StepTransactionForm
                 type={selectedType}

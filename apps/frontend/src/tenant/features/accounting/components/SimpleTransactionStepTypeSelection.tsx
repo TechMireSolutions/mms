@@ -1,19 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
-import { TRANSACTION_GROUP_COLORS, TRANSACTION_GROUPS, type QuickActionType } from "./simpleTransactionWizardTypes";
+import { TRANSACTION_GROUP_COLORS, TRANSACTION_GROUPS, type QuickActionType, type TransactionGroup } from "./simpleTransactionWizardTypes";
+import { quickActionLabel } from "./quickActionLabels";
 
 interface StepTypeSelectionProps {
   selected: QuickActionType | null;
   onSelect: (type: QuickActionType, advance: boolean) => void;
+  /** Entry-template groups, or the built-in groups when the workspace has none. */
+  groups?: readonly TransactionGroup[];
 }
 
-export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps) {
+export function StepTypeSelection({ selected, onSelect, groups = TRANSACTION_GROUPS }: StepTypeSelectionProps) {
   const { t } = useTranslation();
 
   return (
     <div className="space-y-5">
-      {TRANSACTION_GROUPS.map((group) => {
+      {groups.map((group) => {
         const colors = TRANSACTION_GROUP_COLORS[group.color];
         const GroupIcon = group.icon;
         const translatedGroupName = t(group.groupKey);
@@ -48,7 +51,7 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className={`text-xs font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{t(item.labelKey)}</span>
+                    <span className={`text-xs font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{quickActionLabel(item, t)}</span>
                   </Button>
                 );
               })}

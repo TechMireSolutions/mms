@@ -10,7 +10,18 @@ import { PAYMENT_VOUCHER_LABEL_KEYS, buildPaymentVoucherBody } from "@/tenant/fe
 const account = (id: string, type: Account["type"], name: string): Account => ({
   id, code: id.toUpperCase(), name, type, subtype: "", description: "", isActive: true,
 });
-const accounts = [account("cash", "Asset", "Cash"), account("sal", "Expense", "Salaries"), account("fee", "Revenue", "Fees")];
+const accounts = [
+  account("cash", "Asset", "Cash"),
+  account("bank", "Asset", "Bank Account"),
+  account("sal", "Expense", "Salaries"),
+  account("fee", "Revenue", "Fees"),
+  account("payable", "Liability", "Accounts Payable"),
+  account("capital", "Equity", "Capital"),
+];
+const twoLines = (debitId: string, creditId: string, amount = 500) => [
+  { id: "d", account_id: debitId, debit: amount, credit: 0, description: "" },
+  { id: "c", account_id: creditId, debit: 0, credit: amount, description: "" },
+];
 
 const entry = (overrides: Partial<JournalEntry> = {}): JournalEntry => ({
   id: "je-1", date: "2026-09-30", ref: "JV-1", description: "", status: "posted", created_by: "",
@@ -53,6 +64,15 @@ describe("isPaymentVoucherEligible", () => {
       ],
     });
     expect(isPaymentVoucherEligible(feeIn, accounts)).toBe(false);
+  });
+
+  it("given a supplier paid from the bank, should be eligible without any tag", () => {
+    expect(isPaymentVoucherEligible(entry({ lines: twoLines("payable", "bank") }), accounts)).toBe(true);
+  });
+
+  it("given a cash-to-bank transfer or a money-out tag on non-payment heads, should not be eligible", () => {
+    expect(isPaymentVoucherEligible(entry({ lines: twoLines("bank", "cash") }), accounts)).toBe(false);
+    expect(isPaymentVoucherEligible(entry({ tags: ["Payroll"], lines: twoLines("capital", "fee") }), accounts)).toBe(false);
   });
 });
 

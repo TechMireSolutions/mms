@@ -12,6 +12,9 @@ export interface QuickActionType {
   descriptionKey: AppTranslationKey;
   groupKey: AppTranslationKey;
   color: string;
+  /** Literal label/description (entry templates); wins over the translation keys. */
+  label?: string;
+  description?: string;
 }
 
 interface QuickAction {

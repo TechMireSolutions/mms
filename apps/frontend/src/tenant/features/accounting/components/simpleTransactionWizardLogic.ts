@@ -1,5 +1,6 @@
 import { moneyToCents, type Account, type AppTranslationKey } from "@mms/shared";
 import { parseMoneyInput } from "./simpleTransactionMoney";
+import { quickActionDescription } from "./quickActionLabels";
 import type {
   QuickActionType,
   WizardAccountOption,
@@ -162,7 +163,7 @@ export function buildWizardFormState(
     date: defaults.date,
     amount: initialValues?.amount ?? "",
     ...resolveSimpleTransactionAccounts(prefillType, accounts),
-    description: initialValues?.description ?? (prefillType ? translate(prefillType.descriptionKey) : ""),
+    description: initialValues?.description ?? (prefillType ? quickActionDescription(prefillType, translate) : ""),
     ref: "",
     receipt: "",
     fiscal_year: defaults.fiscalYearLabel,

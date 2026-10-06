@@ -10,7 +10,8 @@ import { resolveVisibleColumns, toColumnResize, type DataTableColumnLayout } fro
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { buildCashbookFooterCells, type CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
-import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
+import { useCashbookColumns, type CashbookVoucherAction } from "@/tenant/features/accounting/components/useCashbookColumns";
+import { PaymentVoucherPrintButton } from "@/tenant/features/accounting/components/PaymentVoucherPrintButton";
 
 /** ReportMoneyCard tile (report) — not DirectoryCard. */
 interface CashbookViewTableProps {
@@ -21,6 +22,7 @@ interface CashbookViewTableProps {
   viewMode?: WorkDirectoryViewMode;
   /** Page-owned column visibility/order/width (`useModuleColumnLayout`). */
   columnLayout?: DataTableColumnLayout;
+  voucher?: CashbookVoucherAction;
 }
 
 export function CashbookViewTable({
@@ -30,11 +32,12 @@ export function CashbookViewTable({
   formatCurrency,
   viewMode: propViewMode,
   columnLayout,
+  voucher,
 }: CashbookViewTableProps) {
   const { t } = useTranslation();
   const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
   const viewMode = propViewMode ?? hookViewMode;
-  const { columns, flowBadge, flowIcon } = useCashbookColumns(formatCurrency);
+  const { columns, flowBadge, flowIcon } = useCashbookColumns(formatCurrency, voucher);
 
   if (rows.length === 0) {
     return (
@@ -59,6 +62,9 @@ export function CashbookViewTable({
               <div className="inline-flex items-center gap-1.5">
                 {flowIcon(row.flowType)}
                 {flowBadge(row)}
+                {voucher?.canPrint(row) && (
+                  <PaymentVoucherPrintButton entry={row} onPrint={voucher.onPrint} />
+                )}
               </div>
             }
           >

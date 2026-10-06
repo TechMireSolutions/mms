@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
+import type { JournalAmountSide } from './useJournalLineAssist';
 
 interface JournalEntryLinesEditorMobileProps {
   accounts: readonly Account[];
@@ -20,6 +21,8 @@ interface JournalEntryLinesEditorMobileProps {
   onOpenAddAccount?: (lineIndex: number) => void;
   onRemoveLine: (lineIndex: number) => void;
   onUpdateLine: (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => void;
+  lockedSideFor?: (lineId: string) => JournalAmountSide | undefined;
+  lockTemplateName?: string | null;
 }
 
 export function JournalEntryLinesEditorMobile({
@@ -34,14 +37,18 @@ export function JournalEntryLinesEditorMobile({
   onOpenAddAccount,
   onRemoveLine,
   onUpdateLine,
+  lockedSideFor,
+  lockTemplateName,
 }: JournalEntryLinesEditorMobileProps) {
   const { t } = useTranslation();
+  const lockHint = t("accounting.journal.form.amountLocked", { name: lockTemplateName ?? "" });
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
 
   return (
     <div className="space-y-3 p-3">
       {lines.map((line, lineIndex) => {
         const account = accountMap.get(line.account_id);
+        const lockedSide = lockedSideFor?.(line.id);
         return (
           <FormListFieldCard
             key={line.id}
@@ -105,6 +112,8 @@ export function JournalEntryLinesEditorMobile({
                     value={line.debit}
                     placeholder="0.00"
                     onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
+                    disabled={lockedSide === "credit"}
+                    title={lockedSide === "credit" ? lockHint : undefined}
                     className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
                   />
                 </Field>
@@ -121,6 +130,8 @@ export function JournalEntryLinesEditorMobile({
                     value={line.credit}
                     placeholder="0.00"
                     onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
+                    disabled={lockedSide === "debit"}
+                    title={lockedSide === "debit" ? lockHint : undefined}
                     className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
                   />
                 </Field>

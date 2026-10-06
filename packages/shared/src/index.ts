@@ -267,6 +267,7 @@ export * from './sessionsWidgetAggregate.js';
 // 9. Attendance, Finance, Accounting & Obligations
 // ---------------------------------------------------------------------------
 export * from './accountingDefaultChart.js';
+export * from './accountingJournalTemplates.js';
 export * from './accountingLedgerInvariants.js';
 export * from './accountingLedgerOps.js';
 export * from './accountingVoucherNumbering.js';

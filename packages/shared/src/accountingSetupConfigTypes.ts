@@ -8,6 +8,7 @@ import {
   INITIAL_ACCOUNTING_FIELD_SEED,
 } from './moduleFieldSetupFinance.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
+import { journalTemplatesSchema, normalizeJournalTemplates, type JournalTemplate } from './accountingJournalTemplates.js';
 
 /** Deep clone {@link INITIAL_ACCOUNTING_FIELD_SEED} for default and Setup states. */
 export function cloneAccountingFieldSeed(): Record<string, FieldDefinition[]> {
@@ -100,6 +101,7 @@ export const accountingPreferencesPutBodySchema = z
     retainedEarningsAccount: z.string().default('a3100'),
     organizationName: z.string().default('').optional(),
     defaultViewLayout: z.string().optional(),
+    journalTemplates: journalTemplatesSchema.optional(),
   })
   .strict();
 
@@ -123,6 +125,8 @@ export interface AccountingModulePreferences {
   retainedEarningsAccount: string;
   organizationName?: string;
   defaultViewLayout?: string;
+  /** Journal entry templates (tags with default debit/credit heads). */
+  journalTemplates?: JournalTemplate[];
 }
 
 /** Default preferences. */
@@ -140,6 +144,7 @@ export const DEFAULT_ACCOUNTING_PREFERENCES: AccountingModulePreferences = {
   retainedEarningsAccount: DEFAULT_ACCOUNTING_SETTINGS.retainedEarningsAccount,
   organizationName: DEFAULT_ACCOUNTING_SETTINGS.organizationName,
   defaultViewLayout: DEFAULT_ACCOUNTING_SETTINGS.defaultViewLayout,
+  journalTemplates: [],
 };
 
 /** Normalizes raw DB JSON into strict typed preferences. */
@@ -162,6 +167,7 @@ export function normalizeAccountingModulePreferences(raw: unknown): AccountingMo
     retainedEarningsAccount: typeof safe.retainedEarningsAccount === 'string' ? safe.retainedEarningsAccount : DEFAULT_ACCOUNTING_PREFERENCES.retainedEarningsAccount,
     organizationName: typeof safe.organizationName === 'string' ? safe.organizationName : DEFAULT_ACCOUNTING_PREFERENCES.organizationName,
     defaultViewLayout: typeof safe.defaultViewLayout === 'string' ? safe.defaultViewLayout : DEFAULT_ACCOUNTING_PREFERENCES.defaultViewLayout,
+    journalTemplates: normalizeJournalTemplates(safe.journalTemplates),
   };
 }
 
@@ -219,6 +225,7 @@ export function composeAccountingSettings(
     retainedEarningsAccount: prefs.retainedEarningsAccount,
     organizationName: prefs.organizationName,
     defaultViewLayout: prefs.defaultViewLayout,
+    journalTemplates: prefs.journalTemplates ?? [],
     ...(formTabs ? { formTabs } : {}),
   };
 }
@@ -242,6 +249,7 @@ export function stripAccountingFieldConfigForPersist(
     retainedEarningsAccount: _retainedEarningsAccount,
     organizationName: _organizationName,
     defaultViewLayout: _defaultViewLayout,
+    journalTemplates: _journalTemplates,
     ...fieldConfigOnly 
   } = config;
   return fieldConfigOnly;

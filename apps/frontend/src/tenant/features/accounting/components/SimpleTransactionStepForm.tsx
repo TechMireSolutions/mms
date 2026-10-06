@@ -1,3 +1,4 @@
+import { quickActionDescription } from "./quickActionLabels";
 import type { Dispatch, SetStateAction } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormField";
@@ -162,7 +163,7 @@ export function StepTransactionForm({
                   onProceed?.();
                 }
               }}
-              placeholder={t(type.descriptionKey)}
+              placeholder={quickActionDescription(type, t)}
             />
           </Field>
         </div>

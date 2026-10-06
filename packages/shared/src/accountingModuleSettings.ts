@@ -1,6 +1,7 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_ACCOUNTING_FIELD_SEED } from "./moduleFieldSetupFinance.js";
+import type { JournalTemplate } from "./accountingJournalTemplates.js";
 
 // ─── Accounting Settings ─────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ export interface AccountingSettings {
   retainedEarningsAccount: string;
   organizationName?: string;
   defaultViewLayout?: string;
+  journalTemplates?: JournalTemplate[];
   fields?: Record<string, unknown>;
   customFields?: [];
   fieldOrder?: string[];

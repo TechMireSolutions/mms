@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { useMemo, type FormEvent } from "react";
 
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { CashbookView } from "@/tenant/features/accounting/components/CashbookView";
@@ -9,6 +9,8 @@ import type { QuickActionType } from "@/tenant/features/accounting/components/jo
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
 import type { JournalEntrySave } from "./journalEntriesTypes";
+import { isPaymentVoucherEligible } from "@/tenant/features/accounting/components/paymentVoucherModel";
+import { usePaymentVoucherPrint } from "@/tenant/features/accounting/hooks/usePaymentVoucherPrint";
 
 /** Quick-action ids that open the dedicated cross-module entry modal instead of the generic wizard. */
 const SPECIALIZED_ENTRY_TYPES = new Set(["fee_collection", "salary"]);
@@ -70,6 +72,14 @@ export function JournalEntriesSimpleMode({
   pageScopeLabel,
 }: JournalEntriesSimpleModeProps) {
   const { t } = useTranslation();
+  const printVoucher = usePaymentVoucherPrint(accounts);
+  const voucher = useMemo(
+    () => ({
+      canPrint: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
+      onPrint: (entry: JournalEntry) => void printVoucher(entry),
+    }),
+    [accounts, printVoucher],
+  );
   const specializedType = simpleModal?.prefillType && SPECIALIZED_ENTRY_TYPES.has(simpleModal.prefillType.id)
     ? simpleModal.prefillType.id === "fee_collection"
       ? "fee" as const
@@ -94,7 +104,7 @@ export function JournalEntriesSimpleMode({
       />
 
       {tab === "cashbook" ? (
-        <CashbookView entries={entries} accounts={accounts} pageScopeLabel={pageScopeLabel} />
+        <CashbookView entries={entries} accounts={accounts} pageScopeLabel={pageScopeLabel} voucher={voucher} />
       ) : (
         <JournalQuickActionsPanel
           entries={entries}
@@ -106,6 +116,8 @@ export function JournalEntriesSimpleMode({
           onOpenPrefill={onOpenPrefill}
           onExportCsv={onExportCsv}
           pageScopeLabel={pageScopeLabel}
+          canPrintVoucher={voucher.canPrint}
+          onPrintVoucher={voucher.onPrint}
         />
       )}
 

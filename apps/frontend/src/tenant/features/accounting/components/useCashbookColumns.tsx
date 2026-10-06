@@ -6,6 +6,14 @@ import type { WorkBatchTableColumn } from "@/components/common/work/WorkBatchTab
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
+import type { JournalEntry } from "@/lib/data/accountingData";
+import { PaymentVoucherPrintButton } from "@/tenant/features/accounting/components/PaymentVoucherPrintButton";
+
+/** Optional payment-voucher action; the column exists only when this is given. */
+export interface CashbookVoucherAction {
+  canPrint: (entry: JournalEntry) => boolean;
+  onPrint: (entry: JournalEntry) => void;
+}
 
 function flowIcon(flowType: CashbookRow["flowType"]) {
   if (flowType === "in") return <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" aria-hidden="true" />;
@@ -15,7 +23,7 @@ function flowIcon(flowType: CashbookRow["flowType"]) {
 }
 
 /** Cashbook table/card column definitions plus the flow icon + badge renderers they share. */
-export function useCashbookColumns(formatCurrency: (amount: number) => string) {
+export function useCashbookColumns(formatCurrency: (amount: number) => string, voucher?: CashbookVoucherAction) {
   const { t } = useTranslation();
 
   const flowBadge = useCallback((row: CashbookRow) => (
@@ -83,8 +91,19 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string) {
       render: (row) => row.flowType === "out" ? (
         <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
       ) : <span className="text-muted-foreground">—</span>,
-    }
-  ], [t, formatCurrency, flowBadge]);
+    },
+    ...(voucher
+      ? [{
+          id: "voucher",
+          label: t("accounting.journal.voucher.title"),
+          headerClassName: "text-end",
+          cellClassName: "text-end",
+          render: (row: CashbookRow) => voucher.canPrint(row) ? (
+            <PaymentVoucherPrintButton entry={row} onPrint={voucher.onPrint} />
+          ) : null,
+        }]
+      : []),
+  ], [t, formatCurrency, flowBadge, voucher]);
 
   return { columns, flowBadge, flowIcon };
 }

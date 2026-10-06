@@ -1,24 +1,39 @@
 import React, { useState } from "react";
-import { Plus, Tag, X } from "lucide-react";
+import { Plus, Sparkles, Tag, X } from "lucide-react";
+import type { JournalTemplate } from "@mms/shared";
 import { JOURNAL_TAGS } from '@/lib/data/accountingData';
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { type AppTranslationKey } from "@mms/shared";
+import { getJournalTagLabel } from "./journalEntriesListShared";
 import type { DraftForm } from "./journalEntryFormTypes";
 
 interface JournalEntryFormTagsSectionProps {
   t: TranslationFunction;
   form: DraftForm;
   toggleTag: (tag: string) => void;
+  /** Configured entry templates; when empty the legacy built-in tags are offered. */
+  templates?: readonly JournalTemplate[];
+  canSeedTemplates?: boolean;
+  seedingTemplates?: boolean;
+  onSeedTemplates?: () => void | Promise<void>;
 }
 
-export function JournalEntryFormTagsSection({ t, form, toggleTag }: JournalEntryFormTagsSectionProps): React.JSX.Element {
+export function JournalEntryFormTagsSection({
+  t,
+  form,
+  toggleTag,
+  templates = [],
+  canSeedTemplates = false,
+  seedingTemplates = false,
+  onSeedTemplates,
+}: JournalEntryFormTagsSectionProps): React.JSX.Element {
   const [customTagInput, setCustomTagInput] = useState("");
   const activeTags = form.tags || [];
-  const customTags = activeTags.filter((tag) => !JOURNAL_TAGS.includes(tag));
+  const presetTags = templates.length > 0 ? templates.map((template) => template.name) : JOURNAL_TAGS;
+  const customTags = activeTags.filter((tag) => !presetTags.includes(tag));
 
   const handleAddCustomTag = () => {
     const trimmed = customTagInput.trim();
@@ -37,8 +52,27 @@ export function JournalEntryFormTagsSection({ t, form, toggleTag }: JournalEntry
       className="shadow-sm text-start"
     >
       <div className="space-y-3">
+        {templates.length > 0 ? (
+          <p className="m-0 text-xs text-muted-foreground">{t("accounting.templates.formHint")}</p>
+        ) : (
+          canSeedTemplates && onSeedTemplates && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2">
+              <p className="m-0 flex-1 text-xs text-muted-foreground">{t("accounting.templates.empty")}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={seedingTemplates}
+                onClick={() => void onSeedTemplates()}
+                className="min-h-11 gap-1.5 text-xs font-semibold"
+              >
+                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.templates.seedAction")}
+              </Button>
+            </div>
+          )
+        )}
         <div className="flex flex-wrap items-center gap-1.5">
-          {JOURNAL_TAGS.map((tag) => (
+          {presetTags.map((tag) => (
             <Button
               key={tag}
               type="button"
@@ -47,7 +81,7 @@ export function JournalEntryFormTagsSection({ t, form, toggleTag }: JournalEntry
               aria-pressed={activeTags.includes(tag)}
               className="min-h-11 px-2.5 py-1 rounded-full text-xs font-semibold"
             >
-              {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+              {getJournalTagLabel(tag, t)}
             </Button>
           ))}
           {customTags.map((tag) => (
