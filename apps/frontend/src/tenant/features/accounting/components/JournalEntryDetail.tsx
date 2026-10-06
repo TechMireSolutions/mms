@@ -1,4 +1,4 @@
-import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
+import { Pencil, CheckCircle2, Printer, RotateCcw, Tag } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { formatDate, isJournalEntryBalanced, moneyToCents } from "@mms/shared";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ interface JournalEntryDetailProps {
   onReverse?: () => void;
   onRestore?: () => void | Promise<void>;
   canRestore?: boolean;
+  /** Present only for entries that can print a payment voucher (posted money-out). */
+  onPrintVoucher?: () => void;
 }
 
 /**
@@ -36,6 +38,7 @@ export function JournalEntryDetail({
   onReverse,
   onRestore,
   canRestore = true,
+  onPrintVoucher,
 }: JournalEntryDetailProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -105,6 +108,11 @@ export function JournalEntryDetail({
               className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-semibold"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.restore")}
+            </Button>
+          )}
+          {!isArchived && onPrintVoucher && (
+            <Button type="button" variant="outline" size="sm" onClick={onPrintVoucher} className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-semibold">
+              <Printer className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.voucher.print")}
             </Button>
           )}
           {!isArchived && entry.status === "draft" && onEdit && (

@@ -31,6 +31,7 @@ export {
   facultyWidgetAggregatesQueryOptions,
   useFacultyMetrics,
   useFacultyByIds,
+  facultyResolveQueryOptions,
   useFacultyWidgetAggregates,
   checkFacultyRegistrationDuplicate,
   migrateFacultyEmployeeIds,

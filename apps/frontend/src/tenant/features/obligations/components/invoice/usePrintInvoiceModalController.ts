@@ -5,7 +5,7 @@ import { DEFAULT_CURRENCIES } from "@mms/shared";
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import { buildPrintWindowHtml } from "./printWindowHtml";
+import { buildPrintWindowHtml } from "@/lib/printWindowHtml";
 
 interface UsePrintInvoiceModalControllerProps {
   collection: ObligationCollection;

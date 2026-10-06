@@ -11,6 +11,7 @@ export {
   facultyWidgetAggregatesQueryOptions,
   useFacultyMutations,
   useFacultyByIds,
+  facultyResolveQueryOptions,
   useFacultyMetrics,
   useFacultyWidgetAggregates,
   type FacultyRecord,

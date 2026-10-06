@@ -34,6 +34,10 @@ vi.mock("@/lib/backgroundJobs/runGridCsvExportJob", () => ({
   runGridCsvExportJob: vi.fn(),
 }));
 
+vi.mock("@/tenant/features/accounting/hooks/usePaymentVoucherPrint", () => ({
+  usePaymentVoucherPrint: () => vi.fn(),
+}));
+
 const mockEntries: JournalEntry[] = [
   {
     id: "entry-1",
