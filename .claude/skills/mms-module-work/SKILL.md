@@ -21,6 +21,7 @@ metadata:
 
 - **Scope Boundary**: Work tier contains directories, CRUD, drawers, filters, and bulk actions. Zero analytical charts (belong in Reports).
 - **PageHeader & Metrics**: Keep `PageHeader` visible; render command metrics using `ModuleCommandMetricsGrid`.
+- **Dual IO (header + panel)**: Keep Create/Import/Export on `PageHeader` actions. Mount `ModuleEntityIoToolbar` as a separate row above Work directory chrome on every operational Work/peer-entity tab. Omit on Reports/Setup; hide in trash. Do not also put Add in `ModuleWorkToolbar.primaryAction`.
 - **Filters SSOT**: Single filter menu via `ModuleFilterDropdown` / `ModuleFiltersMenuButton`. Active state indicated by count badge + Clear CTA; never duplicate active filters in a permanent pill bar.
 - **Selection SSOT**: Page controller owns row selection via `useWorkSelection`; list-local selection state is banned.
 - **Virtualization**: Mandatory `@tanstack/react-virtual` row virtualization whenever collection items > 30.
@@ -34,6 +35,7 @@ metadata:
 | Cards | `DirectoryEntityCard`, `DirectoryCardFooterActions`, `DirectoryCardMetaGrid` |
 | Card actions | `useWorkCardAction` |
 | Toolbar / trash | `ModuleWorkToolbar`, `ModuleTrashToggle` |
+| Panel IO row | `ModuleEntityIoToolbar` (Export / Import / Add; Faculty wraps via `FacultyTabIoToolbar`) |
 | Bulk | `ModuleUniversalBulkActionBar`, `ModuleWorkBulkActionBar`, `BulkSelectionDeleteAction`, `BulkSelectionRestoreAction` |
 | Archive chrome | `@/components/ui/DetailDrawerArchiveChrome` (`EntityArchivedBanner`, `DetailDrawerArchivedBanner`) |
 

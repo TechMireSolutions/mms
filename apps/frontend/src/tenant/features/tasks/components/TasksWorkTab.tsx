@@ -6,7 +6,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { TASK_STATUSES, type TaskRecord, type TaskStatus } from '@mms/shared';
-import { Button } from '@/components/ui/button';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { WorkTaskToolbar } from '@/components/common/work/WorkTaskToolbar';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -77,16 +77,17 @@ export function TasksWorkTab({
     });
   }, [tasks, search, statusFilter]);
 
-  const primaryAction =
-    canWrite && !viewingDeleted ? (
-      <Button type="button" className="min-h-11 gap-1.5" onClick={onAddNew}>
-        <Plus className="h-4 w-4" aria-hidden />
-        {t('tasks.create')}
-      </Button>
-    ) : undefined;
+  const primaryAction = undefined;
 
   return (
     <div className="space-y-3">
+      <ModuleEntityIoToolbar
+        canWrite={canWrite}
+        viewingDeleted={viewingDeleted}
+        onAdd={onAddNew}
+        addLabel={t('tasks.create')}
+        addIcon={Plus}
+      />
       <WorkTaskToolbar
         regionLabel={t('nav.tasks')}
         shownCountLabel={t('tasks.shownCount', { count: filteredTasks.length })}

@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { MessageSquare, type LucideIcon } from "lucide-react";
+import { MessageSquare, Send, type LucideIcon } from "lucide-react";
 import {
   type Message,
   type MessageTemplate,
@@ -7,6 +7,7 @@ import {
 } from "@mms/shared";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -123,15 +124,23 @@ export function MessagingPageView({
           panelIdPrefix="messaging-tab"
         >
           {activeTab === "work" && (
-            <MessagingWorkTier
-              canWrite={canWrite}
-              canClearLogs={canClearLogs}
-              onClearLogsRequest={() => setConfirmClearLogsOpen(true)}
-              onResend={resend}
-              onBulkResend={handleBulkResend}
-              channel={channelFilter}
-              onChannelChange={setChannelFilter}
-            />
+            <div className="space-y-5">
+              <ModuleEntityIoToolbar
+                canWrite={canWrite}
+                onAdd={() => startCampaign("whatsapp")}
+                addLabel={t("messaging.newCampaign")}
+                addIcon={Send}
+              />
+              <MessagingWorkTier
+                canWrite={canWrite}
+                canClearLogs={canClearLogs}
+                onClearLogsRequest={() => setConfirmClearLogsOpen(true)}
+                onResend={resend}
+                onBulkResend={handleBulkResend}
+                channel={channelFilter}
+                onChannelChange={setChannelFilter}
+              />
+            </div>
           )}
           {activeTab === "reports" && (
             <Suspense fallback={<RouteStatusFallback />}>

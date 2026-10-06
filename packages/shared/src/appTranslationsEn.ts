@@ -1300,6 +1300,7 @@ export const APP_TRANSLATIONS_EN = {
   "common.edit": "Edit",
   "common.enterPlaceholder": "Enter…",
   "common.export": "Export",
+  "common.import": "Import",
   "common.filters": "Filters",
   "common.formPleaseFixErrors": "Please fix the following errors",
   "common.formProgress": "Progress",

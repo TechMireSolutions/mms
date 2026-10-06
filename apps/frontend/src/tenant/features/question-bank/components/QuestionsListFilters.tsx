@@ -1,6 +1,4 @@
 import type { Dispatch, JSX, SetStateAction } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { WorkTaskToolbar } from '@/components/common/work';
@@ -109,18 +107,7 @@ export function QuestionsListFilters({
       filterChips={
         <FilterChips chips={[...categoryChips, ...difficultyChips]} onClearAll={clearFilters} />
       }
-      primaryAction={
-        !hideToolbarAdd && canWrite && !showDeleted ? (
-          <Button
-            type="button"
-            onClick={onAddQuestion}
-            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden />
-            {t('questionBank.addQuestion')}
-          </Button>
-        ) : undefined
-      }
+      primaryAction={undefined}
       trashToggle={
         canDelete && onToggleDeleted
           ? {

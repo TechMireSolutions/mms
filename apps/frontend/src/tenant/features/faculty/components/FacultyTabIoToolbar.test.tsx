@@ -30,10 +30,10 @@ describe("FacultyTabIoToolbar", () => {
     expect(html).not.toContain("faculty.designations.addDesignation");
   });
 
-  it("uses department add label for departments entity", () => {
+  it("uses designation add label for designations entity", () => {
     const html = renderToStaticMarkup(
       <FacultyTabIoToolbar
-        entity="departments"
+        entity="designations"
         canExport={true}
         canWrite={true}
         viewingDeleted={false}
@@ -43,7 +43,7 @@ describe("FacultyTabIoToolbar", () => {
       />,
     );
 
-    expect(html).toContain("faculty.setup.addDepartment");
+    expect(html).toContain("faculty.designations.addDesignation");
     expect(html).not.toContain("action.addFaculty");
   });
 

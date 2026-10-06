@@ -3,6 +3,7 @@ import { useFinancePageController } from "@/tenant/features/finance/hooks/useFin
 import { AnimatePresence } from "framer-motion";
 import { Plus, DollarSign, CalendarRange, Bell, AlarmClock } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -80,11 +81,22 @@ export default function Finance(): React.JSX.Element {
         panelIdPrefix="finance-tab"
       >
         {c.activeTab === "work" && (
-          <SubTabBar
-            tabs={c.SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={c.activeSubTab}
-            onChange={c.setActiveSubTab}
-          />
+          <>
+            <SubTabBar
+              tabs={c.SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+              value={c.activeSubTab}
+              onChange={c.setActiveSubTab}
+            />
+            {c.activeSubTab === "invoices" ? (
+              <ModuleEntityIoToolbar
+                canWrite={c.canWrite}
+                viewingDeleted={c.showDeleted}
+                onAdd={c.openCreateInvoice}
+                addLabel={c.t("finance.newInvoice")}
+                addIcon={Plus}
+              />
+            ) : null}
+          </>
         )}
 
         <AnimatePresence mode="wait">

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCheck, ClipboardEdit } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { AttendanceCommandMetrics } from '@/tenant/features/attendance/components/AttendanceCommandMetrics';
@@ -85,7 +86,18 @@ export default function Attendance() {
     }
 
     return (
-      <AttendanceWorkTier
+      <div className="space-y-5">
+        <ModuleEntityIoToolbar
+          canWrite={canWriteAttendance}
+          viewingDeleted={showDeleted}
+          onAdd={() => {
+            setActiveTab('work');
+            setActiveOpsTab('mark');
+          }}
+          addLabel={t('attendance.tabs.mark')}
+          addIcon={ClipboardEdit}
+        />
+        <AttendanceWorkTier
         filters={filters}
         role={role}
         activeRecords={activeAttendanceRecords}
@@ -122,6 +134,7 @@ export default function Attendance() {
           },
         }}
       />
+      </div>
     );
   };
 

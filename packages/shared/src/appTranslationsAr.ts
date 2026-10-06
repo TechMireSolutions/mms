@@ -1302,6 +1302,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "common.edit": "تعديل",
   "common.enterPlaceholder": "أدخل…",
   "common.export": "تصدير",
+  "common.import": "استيراد",
   "common.filters": "عوامل التصفية",
   "common.formPleaseFixErrors": "يرجى تصحيح الأخطاء التالية",
   "common.formProgress": "التقدم",

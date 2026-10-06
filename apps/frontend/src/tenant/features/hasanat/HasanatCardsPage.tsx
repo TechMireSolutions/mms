@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Star, Send } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -81,7 +82,15 @@ export default function HasanatCards() {
             )}
 
             {c.effectiveTab === 'work' && (
-              <HasanatWorkTier
+              <div className="space-y-5">
+                <ModuleEntityIoToolbar
+                  canWrite={c.canWrite}
+                  viewingDeleted={c.showDeleted}
+                  onAdd={c.openDistribute}
+                  addLabel={c.t('hasanat.distributeCards')}
+                  addIcon={Send}
+                />
+                <HasanatWorkTier
                 tabs={c.SUB_TABS}
                 activeSubTab={c.effectiveSubTab}
                 showDeleted={c.showDeleted}
@@ -118,6 +127,7 @@ export default function HasanatCards() {
                 onToggleSelectAll={c.distributionSelection.toggleSelectAll}
                 onClearSelection={c.distributionSelection.clearSelection}
               />
+              </div>
             )}
           </ModuleTierMotion>
         </AnimatePresence>

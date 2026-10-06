@@ -54,10 +54,6 @@ vi.mock("@/tenant/features/faculty/components/FacultyWorkTier", () => ({
   FacultyWorkTier: () => <div data-testid="faculty-work-tier">Faculty Directory</div>,
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyDepartmentsSetupSection", () => ({
-  FacultyDepartmentsSetupSection: () => <div>Departments Section</div>,
-}));
-
 vi.mock("@/tenant/features/faculty/components/FacultyDesignationsSetupSection", () => ({
   FacultyDesignationsSetupSection: () => <div>Designations Section</div>,
 }));
@@ -83,7 +79,6 @@ describe("FacultyPageView Component", () => {
     visibleTabs: (
       [
         ["faculties", "Faculties", "Directory"],
-        ["departments", "Departments", "Catalog"],
         ["designations", "Designations", "Catalog"],
         ["reports", "Reports", "Analytics"],
         ["setup", "Setup", "Config"],
@@ -123,14 +118,14 @@ describe("FacultyPageView Component", () => {
     expect(html).toContain("Faculty Overlays");
   });
 
-  it("shows dashboard IO and scoped tab IO on departments", () => {
+  it("shows dashboard IO and scoped tab IO on designations", () => {
     const html = renderToStaticMarkup(
-      <FacultyPageView {...baseProps} activeTab="departments" />,
+      <FacultyPageView {...baseProps} activeTab="designations" />,
     );
 
     expect(html).toContain("Dashboard IO");
-    expect(html).toContain("Tab IO departments");
-    expect(html).toContain("Departments Section");
+    expect(html).toContain("Tab IO designations");
+    expect(html).toContain("Designations Section");
     expect(html).not.toContain("Faculty Directory");
   });
 
