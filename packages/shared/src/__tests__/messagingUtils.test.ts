@@ -5,6 +5,7 @@ import {
   validateRecipientAddress,
   MESSAGING_VARIABLE_TOKENS,
   appendVariableToken,
+  insertVariableTokenAt,
 } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
 import {
@@ -162,6 +163,20 @@ describe('messagingUtils', () => {
 
     it('returns token directly when body is empty', () => {
       expect(appendVariableToken('', '{name}')).toBe('{name}');
+    });
+  });
+
+  describe('insertVariableTokenAt', () => {
+    it('inserts at caret without trailing selection', () => {
+      const { next, caret } = insertVariableTokenAt('Hello world', '{name}', 5, 5);
+      expect(next).toBe('Hello {name} world');
+      expect(caret).toBe('Hello {name}'.length);
+    });
+
+    it('replaces the selected range', () => {
+      const { next, caret } = insertVariableTokenAt('Hello world', '{name}', 6, 11);
+      expect(next).toBe('Hello {name}');
+      expect(caret).toBe('Hello {name}'.length);
     });
   });
 });

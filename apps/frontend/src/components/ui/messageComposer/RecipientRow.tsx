@@ -44,7 +44,7 @@ export const RecipientRow = memo(function RecipientRow({
   const previewDisabled = eligibleIndex < 0;
 
   return (
-    <li
+    <div
       className={`flex min-w-0 items-center gap-2 rounded p-1.5 text-xs transition-colors ${
         !recipient.isValid
           ? "border border-warning/20 bg-warning/10 text-warning"
@@ -52,6 +52,7 @@ export const RecipientRow = memo(function RecipientRow({
             ? "bg-primary/10 font-semibold text-foreground"
             : "text-muted-foreground hover:bg-muted/30"
       }`}
+      role="listitem"
     >
       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-extrabold text-primary">
         {getInitials(recipient.name)}
@@ -90,13 +91,13 @@ export const RecipientRow = memo(function RecipientRow({
           size="icon"
           disabled={disabled}
           onClick={() => onRemove(recipient.id)}
-          className="relative h-6 w-6 text-muted-foreground hover:text-destructive after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+          className="relative min-h-11 min-w-11 text-muted-foreground hover:text-destructive"
           aria-label={removeLabel}
           title={removeLabel}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>
-    </li>
+    </div>
   );
 });

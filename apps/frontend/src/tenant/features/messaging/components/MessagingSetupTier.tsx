@@ -52,6 +52,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
     openCreate,
     handleLabelChange,
     handleBodyChange,
+    syncBodyTokenErrorOnBlur,
     save,
     handleEdit,
     handleDuplicate,
@@ -120,10 +121,12 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     errors={errors}
                     saving={saving}
                     saveDisabled={saveDisabled}
+                    isDirty={isFormDirty}
                     onReset={resetForm}
                     onSave={() => void save()}
                     onLabelChange={handleLabelChange}
                     onBodyChange={handleBodyChange}
+                    onBodyBlur={syncBodyTokenErrorOnBlur}
                     onCategoryChange={setCategory}
                     onChannelChange={setChannel}
                   />

@@ -35,13 +35,13 @@ export function MessageComposerRecipientsList({
   removeLabel,
 }: MessageComposerRecipientsListProps): React.JSX.Element {
   const { t } = useTranslation();
-  const listParentRef = useRef<HTMLUListElement>(null);
+  const listParentRef = useRef<HTMLDivElement>(null);
   const isListVirtualized = displayedRecipients.length > 25;
 
   const rowVirtualizer = useVirtualizer({
     count: displayedRecipients.length,
     getScrollElement: () => listParentRef.current,
-    estimateSize: () => 36,
+    estimateSize: () => 52,
     overscan: 4,
     enabled: isListVirtualized,
   });
@@ -53,75 +53,57 @@ export function MessageComposerRecipientsList({
     return t("messaging.openWhatsapp");
   };
 
+  const rowProps = (recipient: ValidatedMessagingRecipient) => ({
+    recipient,
+    eligibleIndex: eligibleIndexMap.get(recipient.id) ?? -1,
+    previewIndex,
+    message,
+    isEmail,
+    isSms,
+    disabled,
+    onPreviewIndexChange,
+    onSendOne,
+    onRemove,
+    missingAddressLabel,
+    removeLabel,
+    sendLabel: getSendLabel(recipient),
+  });
+
   return (
-    <ul
+    <div
       ref={listParentRef}
-      className="max-h-36 list-none space-y-1 overflow-y-auto rounded-lg border border-border/50 bg-muted/10 p-2"
+      className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border/50 bg-muted/10 p-2"
+      role="list"
     >
       {displayedRecipients.length === 0 ? (
-        <li>
-          <EmptyState title={t("messaging.noRecipientsFound")} compact icon={null} />
-        </li>
+        <EmptyState title={t("messaging.noRecipientsFound")} compact icon={null} />
       ) : isListVirtualized ? (
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
+        >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const recipient = displayedRecipients[virtualRow.index];
-            const eligibleIndex = eligibleIndexMap.get(recipient.id) ?? -1;
-
             return (
               <div
                 key={recipient.id}
                 style={{
                   position: "absolute",
                   top: 0,
-                  left: 0,
+                  insetInlineStart: 0,
                   width: "100%",
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <RecipientRow
-                  recipient={recipient}
-                  eligibleIndex={eligibleIndex}
-                  previewIndex={previewIndex}
-                  message={message}
-                  isEmail={isEmail}
-                  isSms={isSms}
-                  disabled={disabled}
-                  onPreviewIndexChange={onPreviewIndexChange}
-                  onSendOne={onSendOne}
-                  onRemove={onRemove}
-                  missingAddressLabel={missingAddressLabel}
-                  removeLabel={removeLabel}
-                  sendLabel={getSendLabel(recipient)}
-                />
+                <RecipientRow {...rowProps(recipient)} />
               </div>
             );
           })}
         </div>
       ) : (
-        displayedRecipients.map((recipient) => {
-          const eligibleIndex = eligibleIndexMap.get(recipient.id) ?? -1;
-
-          return (
-            <RecipientRow
-              key={recipient.id}
-              recipient={recipient}
-              eligibleIndex={eligibleIndex}
-              previewIndex={previewIndex}
-              message={message}
-              isEmail={isEmail}
-              isSms={isSms}
-              disabled={disabled}
-              onPreviewIndexChange={onPreviewIndexChange}
-              onSendOne={onSendOne}
-              onRemove={onRemove}
-              missingAddressLabel={missingAddressLabel}
-              removeLabel={removeLabel}
-              sendLabel={getSendLabel(recipient)}
-            />
-          );
-        })
+        displayedRecipients.map((recipient) => (
+          <RecipientRow key={recipient.id} {...rowProps(recipient)} />
+        ))
       )}
-    </ul>
+    </div>
   );
 }

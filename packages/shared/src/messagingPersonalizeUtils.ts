@@ -134,6 +134,25 @@ export function appendVariableToken(body: string, token: string): string {
   return body ? `${body} ${token}` : token;
 }
 
+/**
+ * Inserts a variable token at a textarea selection range (caret-aware).
+ * @returns next body and caret index after the inserted token
+ */
+export function insertVariableTokenAt(
+  body: string,
+  token: string,
+  selectionStart: number,
+  selectionEnd: number = selectionStart,
+): { next: string; caret: number } {
+  const start = Math.max(0, Math.min(selectionStart, body.length));
+  const end = Math.max(start, Math.min(selectionEnd, body.length));
+  const before = body.slice(0, start);
+  const after = body.slice(end);
+  const needsSpace = before.length > 0 && !/\s$/.test(before);
+  const insert = `${needsSpace ? ' ' : ''}${token}`;
+  return { next: `${before}${insert}${after}`, caret: before.length + insert.length };
+}
+
 
 
 /**

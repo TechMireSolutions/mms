@@ -1,7 +1,7 @@
-import { AlertCircle } from 'lucide-react';
+import { useRef } from 'react';
 import {
-  calculateSmsSegments,
   getMessageCategoryLabelKey,
+  insertVariableTokenAt,
   type MessageTemplate,
 } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -9,10 +9,12 @@ import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
+import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ValidatedMessagingRecipient } from './useMessageComposerDispatch';
 import { MessageComposerLivePreview } from './MessageComposerLivePreview';
+import { MessageComposerSmsCostFooter } from './MessageComposerSmsCostFooter';
 
 interface MessageComposerFormBodyProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -28,6 +30,8 @@ interface MessageComposerFormBodyProps {
   onTemplateChange: (templateId: string) => void;
   onSubjectChange: (subject: string) => void;
   onMessageChange: (message: string) => void;
+  onMessageBlur?: () => void;
+  onSubjectBlur?: () => void;
   onPreviewIndexChange: (index: number) => void;
 }
 
@@ -45,22 +49,42 @@ export function MessageComposerFormBody({
   onTemplateChange,
   onSubjectChange,
   onMessageChange,
+  onMessageBlur,
+  onSubjectBlur,
   onPreviewIndexChange,
 }: MessageComposerFormBodyProps): React.JSX.Element {
   const { t } = useTranslation();
   const isEmail = channel === 'email';
   const isSms = channel === 'sms';
-  const smsStats = calculateSmsSegments(message);
+  const previewRecipient = eligibleRecipients[previewIndex] || eligibleRecipients[0];
+  const subjectRef = useRef<HTMLInputElement>(null);
+
+  const insertSubjectToken = (token: string): void => {
+    const el = subjectRef.current;
+    const start = el?.selectionStart ?? subject.length;
+    const end = el?.selectionEnd ?? start;
+    const { next, caret } = insertVariableTokenAt(subject, token, start, end);
+    onSubjectChange(next);
+    requestAnimationFrame(() => {
+      const node = subjectRef.current;
+      if (!node) return;
+      node.focus();
+      node.setSelectionRange(caret, caret);
+    });
+  };
 
   return (
     <div className="space-y-3">
       {isEmail && (
         <Field id="emailSubject" label={t('messaging.subject')} required error={subjectError}>
+          <MessagingVariableTokensBar onSelectToken={insertSubjectToken} className="mb-2" />
           <Input
+            ref={subjectRef}
             id="emailSubject"
             name="emailSubject"
             value={subject}
             onChange={(event) => onSubjectChange(event.target.value)}
+            onBlur={onSubjectBlur}
             placeholder={t('messaging.subjectPlaceholder')}
             required
             aria-invalid={subjectError ? true : undefined}
@@ -88,38 +112,25 @@ export function MessageComposerFormBody({
         id="messageBody"
         value={message}
         onChange={onMessageChange}
+        onBlur={onMessageBlur}
         placeholder={t('messaging.templateBodyPlaceholder')}
         required
         error={messageError}
-        footer={(
-          <>
-            <div className="mt-1 flex flex-wrap items-center justify-end gap-2 font-mono text-xs text-muted-foreground">
-              {isSms && (
-                <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase ${
-                    smsStats.isUnicode
-                      ? 'border border-warning/30 bg-warning/15 text-warning'
-                      : 'bg-muted text-foreground'
-                  }`}
-                >
-                  {smsStats.isUnicode ? t('messaging.encodingUnicode') : t('messaging.encodingGsm')}
-                  {' • '}
-                  {t('messaging.smsSegmentStats', {
-                    segments: smsStats.totalSegments,
-                    remaining: smsStats.remainingInSegment,
-                  })}
-                </span>
-              )}
-              <span className="shrink-0">{message.length} {t('messaging.chars')}</span>
+        footer={
+          isSms ? (
+            <MessageComposerSmsCostFooter
+              message={message}
+              previewRecipient={previewRecipient}
+              personalizeOptions={personalizeOptions}
+            />
+          ) : (
+            <div className="mt-1 flex justify-end font-mono text-xs text-muted-foreground">
+              <span>
+                {message.length} {t('messaging.chars')}
+              </span>
             </div>
-            {isSms && smsStats.isUnicode && (
-              <p className="mt-1 flex items-center gap-1 text-xs font-medium text-warning">
-                <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                {t('messaging.unicodeWarning')}
-              </p>
-            )}
-          </>
-        )}
+          )
+        }
       />
 
       <MessageComposerLivePreview
