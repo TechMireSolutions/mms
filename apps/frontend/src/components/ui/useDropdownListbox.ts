@@ -69,7 +69,8 @@ export function useDropdownListbox<T = string>({
         if (options.length > 0) setHighlightedIndex(options.length - 1);
       } else if (
         event.key === "Enter" &&
-        (event.target as HTMLElement).tagName !== "INPUT"
+        ((event.target as HTMLElement).tagName !== "INPUT" ||
+          (event.target as HTMLElement).dataset.listboxSearch !== undefined)
       ) {
         if (highlightedIndex >= 0 && highlightedIndex < options.length) {
           event.preventDefault();

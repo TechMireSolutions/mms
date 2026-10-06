@@ -1272,6 +1272,7 @@ export const APP_TRANSLATIONS_EN = {
   "common.cancel": "Cancel",
   "common.clearFilters": "Clear Filters",
   "common.clearSearch": "Clear Search",
+  "common.noMatchingOptions": "No matching options",
   "common.close": "Close",
   "common.copy": "Copy",
   "common.columns": "Columns",

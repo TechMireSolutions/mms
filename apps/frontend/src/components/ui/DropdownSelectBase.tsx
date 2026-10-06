@@ -19,7 +19,7 @@ export interface DropdownSelectBaseProps<T = string> {
       "aria-controls": string;
     };
   }) => ReactNode;
-  header?: ReactNode;
+  header?: ReactNode | ((api: { setHighlightedIndex: (index: number) => void }) => ReactNode);
   footer?: ReactNode | ((api: { close: () => void }) => ReactNode);
   children: (api: {
     highlightedIndex: number;
@@ -95,7 +95,7 @@ export function DropdownSelectBase<T = string>({
         )}
         onKeyDown={handleKeyDown}
       >
-        {header}
+        {typeof header === "function" ? header({ setHighlightedIndex }) : header}
         <div
           id={listboxId}
           role="listbox"
