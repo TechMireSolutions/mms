@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { apiContract } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 import {
   FACULTY_QUERY_KEY,
@@ -92,11 +92,10 @@ export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
   });
 }
 
-export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
-  const { isAuthenticated } = useAuth();
-  const normalized = (() => uniqueRegistryIds(ids))();
-
-  const query = useQuery({
+/** Resolve faculty members by id — shared by {@link useFacultyByIds} and imperative `fetchQuery` callers. */
+export function facultyResolveQueryOptions(ids: (string | number | null | undefined)[]) {
+  const normalized = uniqueRegistryIds(ids);
+  return queryOptions({
     queryKey: [...FACULTY_QUERY_KEY, 'resolve', normalized.join(',')] as const,
     queryFn: async ({ signal }) => {
       const res = await apiContract.faculty.resolve({
@@ -106,9 +105,15 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
       const body = res.body as { faculty?: Faculty[] } | null;
       return body?.faculty;
     },
-    enabled: isAuthenticated && normalized.length > 0,
+    enabled: normalized.length > 0,
     staleTime: 30_000,
   });
+}
+
+export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
+  const { isAuthenticated } = useAuth();
+  const options = facultyResolveQueryOptions(ids);
+  const query = useQuery({ ...options, enabled: isAuthenticated && options.enabled === true });
 
   return { ...query, data: query.data };
 }

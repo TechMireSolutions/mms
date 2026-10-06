@@ -21,7 +21,7 @@ type JournalEntriesControllerProps = JournalEntriesProps & JournalEntriesServerQ
 
 export function useJournalEntriesController({
   entries,
-  accounts: _accounts,
+  accounts,
   settings: __settings,
   fiscalYears: _fiscalYears,
   onChange,
@@ -112,6 +112,7 @@ export function useJournalEntriesController({
 
   const actions = useJournalEntriesActions({
     entries,
+    accounts,
     filtered,
     showDeleted,
     canWrite,

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { JournalEntry } from '@/lib/data/accountingData';
+import type { Account, JournalEntry } from '@/lib/data/accountingData';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { JournalEntriesChange } from '@/tenant/features/accounting/components/journalEntriesTypes';
 import type { QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
@@ -13,9 +13,12 @@ import { useJournalEntriesTrashReversal } from '@/tenant/features/accounting/com
 import { createJournalEntryActionsRenderer } from '@/tenant/features/accounting/components/journalEntriesControllerSelection';
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
+import { isPaymentVoucherEligible } from '@/tenant/features/accounting/components/paymentVoucherModel';
+import { usePaymentVoucherPrint } from '@/tenant/features/accounting/hooks/usePaymentVoucherPrint';
 
 export interface UseJournalEntriesActionsOptions {
   entries: JournalEntry[];
+  accounts: Account[];
   filtered: JournalEntry[];
   showDeleted: boolean;
   canWrite: boolean;
@@ -43,6 +46,7 @@ export interface UseJournalEntriesActionsOptions {
 
 export function useJournalEntriesActions({
   entries,
+  accounts,
   filtered,
   showDeleted,
   canWrite,
@@ -61,6 +65,7 @@ export function useJournalEntriesActions({
   setSelected,
   setSimpleModal,
 }: UseJournalEntriesActionsOptions) {
+  const printVoucher = usePaymentVoucherPrint(accounts);
   const actionDeps = {
     entries,
     showDeleted,
@@ -102,6 +107,8 @@ export function useJournalEntriesActions({
       handlePost,
       requestRowTrash: trashReversal.requestRowTrash,
       handleReverse: trashReversal.requestReverse,
+      printVoucher,
+      canPrintVoucher: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
     },
     { triggerClassName: MODULE_ROW_ACTIONS_TRIGGER_CLASS },
   );
@@ -116,6 +123,8 @@ export function useJournalEntriesActions({
       handlePost,
       requestRowTrash: trashReversal.requestRowTrash,
       handleReverse: trashReversal.requestReverse,
+      printVoucher,
+      canPrintVoucher: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
     },
     { triggerClassName: ENTITY_CARD_OVERFLOW_TRIGGER_CLASS, hideViewItem: true },
   );

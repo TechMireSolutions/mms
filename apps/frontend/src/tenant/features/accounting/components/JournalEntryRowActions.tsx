@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { CheckCircle2, RotateCcw } from 'lucide-react';
+import { CheckCircle2, Printer, RotateCcw } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,6 +17,8 @@ interface JournalEntryRowActionsProps {
   onPost: (entry: JournalEntry) => void;
   onReverse: (entry: JournalEntry) => void;
   onTrashAction: (id: string) => void;
+  /** Present only for entries that can print a payment voucher (posted money-out). */
+  onPrintVoucher?: (entry: JournalEntry) => void;
   triggerClassName?: string;
 }
 
@@ -37,6 +39,7 @@ export function JournalEntryRowActions({
   onPost,
   onReverse,
   onTrashAction,
+  onPrintVoucher,
   triggerClassName,
 }: JournalEntryRowActionsProps): JSX.Element {
   const { t } = useTranslation();
@@ -60,14 +63,19 @@ export function JournalEntryRowActions({
       hideViewItem={hideViewItem}
       triggerClassName={triggerClassName}
       extras={
-        !showDeleted && canWrite && (isDraft || isPosted) ? (
+        !showDeleted && ((canWrite && (isDraft || isPosted)) || onPrintVoucher) ? (
           <>
-            {isDraft ? (
+            {onPrintVoucher ? (
+              <DropdownMenuItem onClick={() => onPrintVoucher(entry)}>
+                <Printer className="w-3.5 h-3.5 me-2" /> {t('accounting.journal.voucher.print')}
+              </DropdownMenuItem>
+            ) : null}
+            {canWrite && isDraft ? (
               <DropdownMenuItem onClick={() => onPost(entry)}>
                 <CheckCircle2 className="w-3.5 h-3.5 me-2 text-success" /> {t('accounting.journal.actions.post')}
               </DropdownMenuItem>
             ) : null}
-            {isPosted ? (
+            {canWrite && isPosted ? (
               <DropdownMenuItem onClick={() => onReverse(entry)}>
                 <RotateCcw className="w-3.5 h-3.5 me-2 text-warning" /> {t('accounting.journal.actions.reverse')}
               </DropdownMenuItem>

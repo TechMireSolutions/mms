@@ -47,6 +47,8 @@ interface JournalEntryActionsRendererDeps {
   handlePost: (entry: JournalEntry) => void | Promise<void>;
   requestRowTrash: (id: string) => void;
   handleReverse: (entry: JournalEntry) => void | Promise<void>;
+  printVoucher?: (entry: JournalEntry) => void | Promise<void>;
+  canPrintVoucher?: (entry: JournalEntry) => boolean;
 }
 
 export interface JournalEntryActionsRendererOptions {
@@ -85,6 +87,13 @@ export function createJournalEntryActionsRenderer(
       onTrashAction={(id) => {
         deps.requestRowTrash(id);
       }}
+      onPrintVoucher={
+        deps.printVoucher && deps.canPrintVoucher?.(entry)
+          ? (journalEntry) => {
+              void deps.printVoucher?.(journalEntry);
+            }
+          : undefined
+      }
     />
   );
 }

@@ -3,6 +3,7 @@ import type {
   QuestionBankQuestion as Question,
   QuestionBankTest,
 } from "@mms/shared";
+import { escapeHtml } from "@/lib/escapeHtml";
 import {
   PRINT_COLORS,
   PRINT_SECTION_NOTE,
@@ -137,14 +138,7 @@ export function createPaperDraftFromTest(
   };
 }
 
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+export { escapeHtml };
 
 export function openPaperPrintWindow(content: HTMLElement, title: string): boolean {
   const printWindow = window.open("", "_blank", "width=900,height=800");
