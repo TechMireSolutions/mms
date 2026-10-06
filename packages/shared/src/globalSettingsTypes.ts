@@ -72,7 +72,6 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "contacts",    label: "Contacts",       description: "Comprehensive CRM directory",         icon: "Users",           category: "core",     required: true },
   { id: "messaging",   label: "Messaging",      description: "SMS, WhatsApp and announcements",     icon: "MessageSquare",   category: "core",     required: true },
   { id: "tasks",       label: "Tasks",          description: "Task delegation and tracking",         icon: "CheckSquare",     category: "core" },
-  { id: "organization", label: "Organization",  description: "Org chart, positions and locations",  icon: "Network",         category: "core" },
   { id: "students",    label: "Students",       description: "Student directory and records",       icon: "GraduationCap",   category: "academic", required: true },
   { id: "faculty",     label: "Faculty",        description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
   { id: "sessions",    label: "Sessions",       description: "Classes, schedules and timetables",   icon: "Calendar",        category: "academic" },
@@ -116,7 +115,6 @@ export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   { type: "module", moduleId: "dashboard" },
   { type: "module", moduleId: "contacts" },
   { type: "module", moduleId: "tasks" },
-  { type: "module", moduleId: "organization" },
   { type: "module", moduleId: "faculty" },
   { type: "module", moduleId: "messaging" },
   {
@@ -183,10 +181,6 @@ export function normalizeEnabledModules(
     ...DEFAULT_GLOBAL_SETTINGS.enabledModules,
     ...incoming,
   };
-  // Soft-enable organization when faculty is on and org was never persisted.
-  if (incoming.organization === undefined && merged.faculty === true) {
-    merged.organization = true;
-  }
   // Required modules are always on, regardless of stored value.
   for (const mod of SYSTEM_MODULES) {
     if (mod.required) merged[mod.id] = true;

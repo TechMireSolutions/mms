@@ -60,8 +60,6 @@ export function useTaskFormController({
       const current = initialData.assignees?.map((a) => ({
         facultyId: a.facultyId,
         name: a.facultyName || t('tasks.assigneeFallback'),
-        positionId: a.positionId ?? undefined,
-        positionName: a.positionName ?? undefined,
       })) ?? [];
       setSelectedAssignees(current);
     } else {
@@ -87,8 +85,6 @@ export function useTaskFormController({
       {
         facultyId: match.facultyId,
         name: match.name,
-        positionId: match.positionId ?? undefined,
-        positionName: match.positionName ?? undefined,
       },
     ]);
   };
@@ -106,7 +102,6 @@ export function useTaskFormController({
 
     const assignees = selectedAssignees.map((a) => ({
       facultyId: a.facultyId,
-      ...(a.positionId ? { positionId: a.positionId } : {}),
     }));
 
     const payload: TaskInsert = {

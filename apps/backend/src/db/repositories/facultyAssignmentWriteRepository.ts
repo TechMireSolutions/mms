@@ -1,5 +1,5 @@
 import { emitOutboxEvent } from '../../services/outboxEventService.js';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { facultyAssignments } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import type { InsertFacultyAssignmentRow } from '../schema/facultyAssignmentTables.js';
@@ -14,13 +14,6 @@ export async function saveFacultyAssignment(
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await lockFacultyHierarchy(tx, subdomain);
-    const current = await findFacultyAssignmentById(subdomain, assignment.id);
-    assignment = {
-      ...assignment,
-      positionId: assignment.positionId === undefined
-        ? current?.positionId ?? null
-        : assignment.positionId,
-    };
     await validateFacultyAssignment(tx, subdomain, assignment);
     await tx
       .insert(facultyAssignments)
@@ -30,7 +23,6 @@ export async function saveFacultyAssignment(
         set: {
           departmentId: assignment.departmentId,
           designationId: assignment.designationId,
-          ...(assignment.positionId !== undefined ? { positionId: assignment.positionId } : {}),
           isPrimary: assignment.isPrimary,
           status: assignment.status ?? 'active',
           startDate: assignment.startDate,
@@ -81,19 +73,6 @@ export async function softDeleteFacultyAssignment(
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await lockFacultyHierarchy(tx, subdomain);
-    const dependents = await tx.execute(sql`
-      SELECT child.id FROM faculty_assignments parent
-      JOIN organization_positions pop ON pop.workspace_subdomain = parent.workspace_subdomain
-        AND pop.id = parent.position_id AND pop.deleted_at IS NULL
-      JOIN organization_positions child_pos ON child_pos.workspace_subdomain = pop.workspace_subdomain
-        AND child_pos.parent_position_id = pop.id AND child_pos.deleted_at IS NULL
-      JOIN faculty_assignments child ON child.workspace_subdomain = child_pos.workspace_subdomain
-        AND child.position_id = child_pos.id AND child.deleted_at IS NULL
-      WHERE parent.workspace_subdomain = ${subdomain} AND parent.id = ${id}
-        AND child.id <> parent.id AND child.faculty_id <> parent.faculty_id
-      LIMIT 1
-    `);
-    if (dependents.rows.length) throw new Error('Assignment has active position dependents');
     const deletedAt = new Date();
     const changed = await tx
       .update(facultyAssignments)

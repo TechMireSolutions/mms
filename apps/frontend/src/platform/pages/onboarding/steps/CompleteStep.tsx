@@ -6,7 +6,7 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { ClipboardCheck } from "lucide-react";
-import { SYSTEM_MODULES, findBlueprintById } from "@mms/shared";
+import { SYSTEM_MODULES } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Field } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ interface CompleteStepProps {
 
 export default function CompleteStep({ data, onChange }: CompleteStepProps): React.JSX.Element {
   const { t } = useTranslation();
-  const blueprint = data.blueprintId ? findBlueprintById(data.blueprintId) : undefined;
   const moduleCount = data.modules.filter((id) =>
     SYSTEM_MODULES.some((module) => module.id === id),
   ).length;
@@ -44,11 +43,7 @@ export default function CompleteStep({ data, onChange }: CompleteStepProps): Rea
         />
         <SummaryRow
           label={t("onboarding.structureTitle")}
-          value={
-            data.applyRecommendedStructure && blueprint
-              ? blueprint.name
-              : t("onboarding.structureStartBlank")
-          }
+          value={t("onboarding.structureStartBlank")}
         />
         <SummaryRow
           label={t("onboarding.stepAdminLabel")}

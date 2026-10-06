@@ -44,7 +44,7 @@ vi.mock('../db/schema.js', () => ({
 
 import { saveFacultyAssignment } from '../db/repositories/facultyAssignmentWriteRepository.js';
 
-describe('saveFacultyAssignment position-first writes', () => {
+describe('saveFacultyAssignment writes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     withTenant.mockImplementation(async (_tenant: string, fn: (tx: unknown) => Promise<void>) => {
@@ -67,12 +67,8 @@ describe('saveFacultyAssignment position-first writes', () => {
     recordModernAuditEvent.mockResolvedValue(undefined);
   });
 
-  it('preserves positionId on update when omitted from payload', async () => {
-    findFacultyAssignmentById.mockResolvedValue({
-      id: 'a1',
-      positionId: 'p1',
-    });
-
+  it('validates and upserts an appointment', async () => {
+    findFacultyAssignmentById.mockResolvedValue(null);
     await saveFacultyAssignment('demo', {
       id: 'a1',
       facultyId: 'f1',
@@ -83,12 +79,7 @@ describe('saveFacultyAssignment position-first writes', () => {
       updatedBy: 'u1',
     } as never);
 
-    expect(validateFacultyAssignment).toHaveBeenCalledWith(
-      expect.anything(),
-      'demo',
-      expect.objectContaining({
-        positionId: 'p1',
-      }),
-    );
+    expect(validateFacultyAssignment).toHaveBeenCalled();
+    expect(recordModernAuditEvent).toHaveBeenCalled();
   });
 });

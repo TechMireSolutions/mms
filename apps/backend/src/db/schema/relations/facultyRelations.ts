@@ -4,7 +4,6 @@ import { contacts, tenantUsers } from '../contacts.js';
 import { faculty, facultyDesignations, facultyDesignationRoles,
   facultyDepartments, facultyAssignments, facultyEmployments,
   facultyEmployDesignations } from '../faculty.js';
-import { organizationPositions } from '../organizationPositionTables.js';
 import { hasanatDistributions } from '../hasanat.js';
 
 export const facultyDesignationsRelations = relations(facultyDesignations, ({ one, many }) => ({
@@ -48,7 +47,6 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
     references: [facultyEmployments.workspaceSubdomain, facultyEmployments.id],
   }),
   hasanatDistributions: many(hasanatDistributions),
-  // Ownership: employ_designations = HR tenure/RBAC; assignments = org position/reporting.
   assignments: many(facultyAssignments),
 }));
 
@@ -113,9 +111,5 @@ export const facultyAssignmentsRelations = relations(facultyAssignments, ({ one 
   designation: one(facultyDesignations, {
     fields: [facultyAssignments.workspaceSubdomain, facultyAssignments.designationId],
     references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
-  }),
-  position: one(organizationPositions, {
-    fields: [facultyAssignments.workspaceSubdomain, facultyAssignments.positionId],
-    references: [organizationPositions.workspaceSubdomain, organizationPositions.id],
   }),
 }));

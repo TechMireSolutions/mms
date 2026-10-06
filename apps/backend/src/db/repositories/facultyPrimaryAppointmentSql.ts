@@ -1,17 +1,13 @@
 /**
  * @file facultyPrimaryAppointmentSql.ts
- * @description Faculty Work list FROM: employment SSOT + primary employ-designation + position LATERAL.
- *
- * Ownership: designation display from employ-designations (HR tenure) → catalog;
- * reports-to / position from faculty_assignments only.
+ * @description Faculty Work list FROM: employment SSOT + primary employ-designation.
  */
 import { sql, type SQL } from 'drizzle-orm';
 import { faculty } from '../schema.js';
-import { primaryAssignmentEffectiveOnDateSql } from './facultyPrimaryAppointmentEffective.js';
 
 /**
  * FROM clause: faculty + employment + LATERAL primary open employ-designation
- * + designation/department catalog + LATERAL primary appointment (position) + contact.
+ * + designation/department catalog + contact.
  */
 export function facultyWithPrimaryAppointmentFromSql(): SQL {
   return sql`
@@ -38,18 +34,6 @@ export function facultyWithPrimaryAppointmentFromSql(): SQL {
     LEFT JOIN faculty_departments pa_dept
       ON pa_dept.workspace_subdomain = ${faculty.workspaceSubdomain}
       AND pa_dept.id = pa_desig.department_id
-    LEFT JOIN LATERAL (
-      SELECT a.position_id
-      FROM faculty_assignments a
-      WHERE a.workspace_subdomain = ${faculty.workspaceSubdomain}
-        AND a.faculty_id = ${faculty.id}
-        AND a.is_primary = true
-        AND a.deleted_at IS NULL
-        AND a.status = 'active'
-        AND ${primaryAssignmentEffectiveOnDateSql('a')}
-      ORDER BY a.start_date DESC
-      LIMIT 1
-    ) pa ON true
     LEFT JOIN contacts fc
       ON fc.workspace_subdomain = ${faculty.workspaceSubdomain}
       AND fc.id = fe_emp.contact_id
@@ -85,28 +69,7 @@ export function joinedContactGenderExpr(): SQL {
   return sql`lower(trim(COALESCE(fc.gender, '')))`;
 }
 
-/**
- * Supervisor filter using LATERAL pa.position_id (one primary lookup already done).
- * Requires facultyWithPrimaryAppointmentFromSql in FROM.
- */
-export function joinedReportsToFacultyExpr(supervisorFacultyId: string): SQL {
-  return sql`EXISTS (
-    SELECT 1
-    FROM faculty_assignments sup_a
-    INNER JOIN organization_positions sup_pos
-      ON sup_pos.workspace_subdomain = sup_a.workspace_subdomain
-      AND sup_pos.id = sup_a.position_id
-      AND sup_pos.deleted_at IS NULL
-    INNER JOIN organization_positions sub_pos
-      ON sub_pos.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND sub_pos.id = pa.position_id
-      AND sub_pos.deleted_at IS NULL
-    WHERE sup_a.workspace_subdomain = ${faculty.workspaceSubdomain}
-      AND sup_a.faculty_id = ${supervisorFacultyId}
-      AND sup_a.is_primary = true
-      AND sup_a.deleted_at IS NULL
-      AND sup_a.status = 'active'
-      AND ${primaryAssignmentEffectiveOnDateSql('sup_a')}
-      AND sub_pos.parent_position_id = sup_pos.id
-  )`;
+/** Organization hierarchy removed — reports-to filter never matches. */
+export function joinedReportsToFacultyExpr(_supervisorFacultyId: string): SQL {
+  return sql`false`;
 }

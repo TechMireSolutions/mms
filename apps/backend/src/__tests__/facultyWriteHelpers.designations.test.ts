@@ -119,7 +119,7 @@ describe('syncPrimaryAppointment (faculty_assignments compatibility bridge)', ()
     // Assert
     expect(mocks.close).not.toHaveBeenCalled();
     expect(mocks.save).toHaveBeenCalledWith('demo', expect.objectContaining({
-      facultyId: 'fac-1', departmentId: 'dept-1', designationId: 'des-2', positionId: null,
+      facultyId: 'fac-1', departmentId: 'dept-1', designationId: 'des-2',
       startDate: '2024-01-01', endDate: null, isPrimary: true, status: 'active',
     }));
   });
@@ -127,7 +127,7 @@ describe('syncPrimaryAppointment (faculty_assignments compatibility bridge)', ()
   it('given a different past-dated primary appointment, should close it yesterday and open a new one carrying the position', async () => {
     // Arrange
     mocks.findPrimary.mockResolvedValue({
-      id: 'fa-old', designationId: 'des-1', departmentId: 'dept-1', startDate: '2023-01-01', positionId: 'pos-7',
+      id: 'fa-old', designationId: 'des-1', departmentId: 'dept-1', startDate: '2023-01-01',
     });
 
     // Act
@@ -137,13 +137,13 @@ describe('syncPrimaryAppointment (faculty_assignments compatibility bridge)', ()
     expect(mocks.close).toHaveBeenCalledWith('demo', 'fa-old', expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), 'usr-1');
     expect(mocks.close.mock.calls[0]?.[2] < today).toBe(true);
     expect(mocks.save).toHaveBeenCalledWith('demo', expect.objectContaining({
-      designationId: 'des-2', positionId: 'pos-7', startDate: today, isPrimary: true,
+      designationId: 'des-2', startDate: today, isPrimary: true,
     }));
   });
 
   it('given a future-dated primary appointment, should update it in place instead of closing it', async () => {
     // Arrange
-    const current = { id: 'fa-future', designationId: 'des-1', departmentId: 'dept-1', startDate: '2999-01-01', positionId: null };
+    const current = { id: 'fa-future', designationId: 'des-1', departmentId: 'dept-1', startDate: '2999-01-01' };
     mocks.findPrimary.mockResolvedValue(current);
 
     // Act

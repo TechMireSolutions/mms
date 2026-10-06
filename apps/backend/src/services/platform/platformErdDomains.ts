@@ -21,8 +21,6 @@ import * as messagingSchema from '../../db/schema/messaging.js';
 import * as inventorySchema from '../../db/schema/inventory.js';
 import * as charitySchema from '../../db/schema/charity.js';
 import * as workshopsSchema from '../../db/schema/workshops.js';
-import * as organizationLocationSchema from '../../db/schema/organizationLocationTables.js';
-import * as organizationPositionSchema from '../../db/schema/organizationPositionTables.js';
 import * as tasksSchema from '../../db/schema/tasksTables.js';
 import * as taskSettingsSchema from '../../db/schema/taskSettingsTables.js';
 import * as usersSchema from '../../db/schema/users.js';
@@ -101,11 +99,7 @@ export const DOMAIN_REGISTRY: readonly DomainConfig[] = [
     labelKey: 'nav.obligations',
     modules: [obligationsSchema],
   },
-  {
-    id: 'organization',
-    labelKey: 'nav.organization',
-    modules: [organizationLocationSchema, organizationPositionSchema],
-  },
+
   {
     id: 'outbox',
     labelKey: 'platform.erdDomainOutbox',

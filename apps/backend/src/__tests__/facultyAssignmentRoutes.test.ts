@@ -57,7 +57,6 @@ describe('facultyAssignmentRouteHandlers', () => {
     it('returns 200 with serialized assignments for authorized user', async () => {
       mockListFacultyAssignments.mockResolvedValueOnce([{
         id: 'asgn-1', facultyId: 'fac-1', departmentId: 'dept-1', designationId: 'des-1',
-        positionId: 'pos-1', isPrimary: true, startDate: '2024-01-01', endDate: null,
         notes: 'Primary role', deletedAt: null, createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'),
       }]);
       const res = await handleListAssignments({
@@ -83,7 +82,6 @@ describe('facultyAssignmentRouteHandlers', () => {
     it('passes the actor to the transactional repository on valid save', async () => {
       const savedRow = {
         id: 'asgn-new', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
-        positionId: null, status: 'active', isPrimary: true, startDate: '2024-01-01',
         endDate: null, notes: null, deletedAt: null, createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'),
       };
       mockFindFacultyAssignmentById.mockResolvedValueOnce(savedRow);

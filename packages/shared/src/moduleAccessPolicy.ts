@@ -11,7 +11,6 @@ import { FINANCE_MODULE_MANIFEST } from './financeModuleManifest.js';
 import { HASANAT_MODULE_MANIFEST } from './hasanatModuleManifest.js';
 import { MESSAGING_MODULE_MANIFEST } from './messagingModuleManifest.js';
 import { OBLIGATIONS_MODULE_MANIFEST } from './obligationsModuleManifest.js';
-import { ORGANIZATION_MODULE_MANIFEST } from './organizationModuleManifest.js';
 import { QUESTION_BANK_MODULE_MANIFEST } from './questionBankModuleManifest.js';
 import { SESSIONS_MODULE_MANIFEST } from './sessionsModuleManifest.js';
 import { STUDENTS_MODULE_MANIFEST } from './studentsModuleManifest.js';
@@ -75,7 +74,6 @@ const MODULE_PERMISSION_SOURCES = {
   messaging: MESSAGING_MODULE_MANIFEST,
   students: STUDENTS_MODULE_MANIFEST,
   faculty: FACULTY_MODULE_MANIFEST,
-  organization: ORGANIZATION_MODULE_MANIFEST,
   sessions: SESSIONS_MODULE_MANIFEST,
   attendance: ATTENDANCE_MODULE_MANIFEST,
   enrollment: ENROLLMENTS_MODULE_MANIFEST,

@@ -6,7 +6,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { TaskAssigneeRecord } from '@mms/shared';
 import {
-  contacts, faculty, facultyEmployments, organizationPositions, taskAssignees, tenantUsers,
+  contacts, faculty, facultyEmployments, taskAssignees, tenantUsers,
 } from '../schema.js';
 import type { TenantTransaction } from '../tenant-context.js';
 
@@ -23,12 +23,10 @@ export async function fetchAssigneesByTaskIds(
       taskId: taskAssignees.taskId,
       facultyId: taskAssignees.facultyId,
       facultyAssignmentId: taskAssignees.facultyAssignmentId,
-      positionId: taskAssignees.positionId,
       userId: taskAssignees.userId,
       assignedAt: taskAssignees.assignedAt,
       contactFirstName: contacts.firstName,
       contactLastName: contacts.lastName,
-      positionName: organizationPositions.name,
       userEmail: tenantUsers.loginEmail,
     })
     .from(taskAssignees)
@@ -41,8 +39,6 @@ export async function fetchAssigneesByTaskIds(
     ))
     .leftJoin(contacts, and(eq(facultyEmployments.contactId, contacts.id),
       eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt)))
-    .leftJoin(organizationPositions, and(eq(taskAssignees.positionId, organizationPositions.id),
-      eq(organizationPositions.workspaceSubdomain, subdomain), isNull(organizationPositions.deletedAt)))
     .leftJoin(tenantUsers, and(eq(taskAssignees.userId, tenantUsers.id),
       eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)))
     .where(
@@ -61,10 +57,8 @@ export async function fetchAssigneesByTaskIds(
       taskId: a.taskId,
       facultyId: a.facultyId,
       facultyAssignmentId: a.facultyAssignmentId,
-      positionId: a.positionId,
       userId: a.userId,
       facultyName: [a.contactFirstName, a.contactLastName].filter(Boolean).join(' ') || undefined,
-      positionName: a.positionName ?? undefined,
       userEmail: a.userEmail ?? undefined,
       assignedAt: a.assignedAt ? a.assignedAt.toISOString() : undefined,
     });
@@ -81,7 +75,6 @@ export async function syncTaskAssignees(
   assignees: Array<{
     facultyId: string;
     facultyAssignmentId?: string | null;
-    positionId?: string | null;
     userId: string;
   }>,
   actorUserId?: string,
@@ -101,6 +94,6 @@ export async function syncTaskAssignees(
   await tx.insert(taskAssignees).values(assignees.map((a) => ({
     id: crypto.randomUUID(), workspaceSubdomain: subdomain, taskId,
     facultyId: a.facultyId, facultyAssignmentId: a.facultyAssignmentId ?? null,
-    positionId: a.positionId ?? null, userId: a.userId, assignedByUserId: actorUserId ?? 'system',
+    userId: a.userId, assignedByUserId: actorUserId ?? 'system',
   })));
 }

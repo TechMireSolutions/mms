@@ -49,7 +49,7 @@ export const facultyCoreSchema = z.object({
   /** Read projection — not persisted on faculty. */
   designation: z.string().optional(),
   parentDesignationId: z.string().nullable().optional(),
-  /** Read projection via organization_positions parent — not persisted on faculty. */
+  /** Optional reports-to projection — not persisted on faculty. */
   reportingFacultyId: z.string().nullable().optional(),
   /** Read projection: designation depth in the parent chain. */
   hierarchyRank: z.coerce.number().int().min(1).max(99).optional(),

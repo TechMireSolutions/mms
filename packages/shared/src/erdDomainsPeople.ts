@@ -384,7 +384,7 @@ export const ERD_DOMAIN_STUDENTS: ErdDomain = {
   ],
 };
 
-/** Staff rows linked to contacts; org shape via faculty_assignments + organization_positions. */
+/** Staff rows linked to contacts via faculty_assignments. */
 export const ERD_DOMAIN_FACULTY: ErdDomain = {
   id: 'faculty',
   labelKey: 'nav.faculty',
@@ -412,19 +412,8 @@ export const ERD_DOMAIN_FACULTY: ErdDomain = {
         { name: 'faculty_id', type: 'text', kind: 'fk' },
         { name: 'department_id', type: 'text', kind: 'fk' },
         { name: 'designation_id', type: 'text', kind: 'fk' },
-        { name: 'position_id', type: 'text', kind: 'fk' },
         { name: 'is_primary', type: 'boolean', kind: 'column' },
         { name: 'status', type: 'varchar(20)', kind: 'column' },
-      ],
-    },
-    {
-      name: 'organization_positions',
-      columns: [
-        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
-        { name: 'id', type: 'text', kind: 'pk' },
-        { name: 'parent_position_id', type: 'text', kind: 'fk' },
-        { name: 'department_id', type: 'text', kind: 'fk' },
-        { name: 'designation_id', type: 'text', kind: 'fk' },
       ],
     },
     {
@@ -499,20 +488,6 @@ export const ERD_DOMAIN_FACULTY: ErdDomain = {
       toColumn: 'id',
       cardinality: 'N:1',
       onDelete: 'cascade',
-    },
-    {
-      fromTable: 'faculty_assignments',
-      fromColumn: 'position_id',
-      toTable: 'organization_positions',
-      toColumn: 'id',
-      cardinality: 'N:1',
-    },
-    {
-      fromTable: 'organization_positions',
-      fromColumn: 'parent_position_id',
-      toTable: 'organization_positions',
-      toColumn: 'id',
-      cardinality: 'N:1',
     },
   ],
 };

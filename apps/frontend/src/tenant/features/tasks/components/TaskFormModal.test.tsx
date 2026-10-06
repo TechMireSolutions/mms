@@ -23,8 +23,6 @@ vi.mock('@/tenant/hooks/collections/tasks', () => ({
       {
         facultyId: 'fac-1',
         name: 'Ustadh Zaid',
-        positionId: 'pos-1',
-        positionName: 'Senior Lecturer',
         userId: 'usr-1',
         isSelf: false,
       },

@@ -100,15 +100,5 @@ describe('erdCatalog', () => {
     expect(faculty.id).toBe('faculty');
     expect(listErdTableNames(faculty.tables)).toContain('faculty');
     expect(listErdTableNames(faculty.tables)).toContain('faculty_lookups');
-
-    const positionHierarchyRel = faculty.relationships.find(
-      (rel) => rel.fromTable === 'organization_positions'
-        && rel.toTable === 'organization_positions'
-        && rel.fromColumn === 'parent_position_id',
-    );
-    expect(positionHierarchyRel).toBeDefined();
-    expect(positionHierarchyRel?.cardinality).toBe('N:1');
-    expect(listErdTableNames(faculty.tables)).toContain('faculty_assignments');
-    expect(listErdTableNames(faculty.tables)).toContain('organization_positions');
   });
 });

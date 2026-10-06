@@ -4,8 +4,6 @@
  */
 export const REST_ONLY_TYPED_COLLECTIONS = new Set([
   'tasks',
-  'organization_positions',
-  'organization_locations',
   'attendance',
   'attendance_records',
   'finance_invoices',

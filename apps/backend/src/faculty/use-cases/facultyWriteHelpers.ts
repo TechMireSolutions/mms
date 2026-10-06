@@ -65,7 +65,6 @@ export async function syncPrimaryAppointment(
     facultyId,
     departmentId,
     designationId,
-    positionId: current?.positionId ?? null,
     startDate: startDate > today ? today : startDate,
     endDate: typeof record.designationEndDate === 'string' ? record.designationEndDate : null,
     isPrimary: true,

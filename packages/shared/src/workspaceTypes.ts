@@ -1,4 +1,4 @@
-import type { IndustryType } from './organizationBlueprintTypes.js';
+import type { IndustryType } from './industryTypes.js';
 
 /** Workspace / tenant record created during onboarding. */
 export interface Workspace {

@@ -3,11 +3,10 @@ import {
   INDUSTRY_PROFILES,
   getIndustryProfile,
   getRecommendedModulesForIndustry,
-  getRecommendedBlueprintForIndustry,
   getRecommendedRolesForIndustry,
   getTerminologyForIndustry,
 } from '../industryProfiles.js';
-import { INDUSTRY_TYPES } from '../organizationBlueprintTypes.js';
+import { INDUSTRY_TYPES } from '../industryTypes.js';
 
 describe('industryProfiles', () => {
   it('covers all supported industry types', () => {
@@ -28,12 +27,6 @@ describe('industryProfiles', () => {
     expect(modules).not.toContain('hasanat');
   });
 
-  it('provides independent recommended blueprint for each industry', () => {
-    expect(getRecommendedBlueprintForIndustry('hotel')).toBe('hotel-standard-v2');
-    expect(getRecommendedBlueprintForIndustry('office')).toBe('office-standard-v1');
-    expect(getRecommendedBlueprintForIndustry('retail')).toBe('retail-standard-v1');
-    expect(getRecommendedBlueprintForIndustry('madrasa')).toBe('madrasa-standard-v1');
-  });
 
   it('provides tailored terminology keys without breaking canonical internal models', () => {
     const hotelTerms = getTerminologyForIndustry('hotel');

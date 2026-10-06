@@ -20,9 +20,6 @@ export interface OnboardingData {
   agreedTerms: boolean;
   modules: string[];
   industryType: IndustryType;
-  /** Empty string = start blank (skip blueprint apply). */
-  blueprintId: string;
-  applyRecommendedStructure: boolean;
 }
 
 type OnboardingTitleKey =
@@ -108,6 +105,4 @@ export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   agreedTerms: false,
   modules: SYSTEM_MODULES.map((m) => m.id),
   industryType: "madrasa",
-  blueprintId: "madrasa-standard-v1",
-  applyRecommendedStructure: true,
 };

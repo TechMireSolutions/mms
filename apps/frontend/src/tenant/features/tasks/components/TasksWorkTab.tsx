@@ -71,7 +71,7 @@ export function TasksWorkTab({
       if (statusFilter.length > 0 && !statusFilter.includes(task.status)) return false;
       if (!q) return true;
       const haystack = `${task.title} ${task.description ?? ''} ${
-        task.assignees?.map((a) => a.facultyName || a.positionName).join(' ') ?? ''
+        task.assignees?.map((a) => a.facultyName).join(' ') ?? ''
       }`.toLowerCase();
       return haystack.includes(q);
     });

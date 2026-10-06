@@ -4,9 +4,7 @@
 
 /** Self-referencing FK columns that must be set to NULL before deleting rows */
 export const SELF_REFERENCING_FKS: ReadonlyArray<{ table: string; column: string }> = [
-  { table: 'organization_positions', column: 'parent_position_id' },
   { table: 'faculty_departments', column: 'parent_id' },
-  { table: 'organization_locations', column: 'parent_location_id' },
   { table: 'tasks', column: 'parent_task_id' },
 ];
 

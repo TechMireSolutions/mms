@@ -7,8 +7,6 @@ import type { EligibleAssigneeItem } from '@/tenant/features/tasks/hooks/useTask
 export interface SelectedAssignee {
   facultyId: string;
   name: string;
-  positionId?: string;
-  positionName?: string;
 }
 
 export interface TaskFormAssigneePickerProps {
@@ -43,7 +41,7 @@ export function TaskFormAssigneePicker({
           .filter((item) => !selectedAssignees.some((a) => a.facultyId === item.facultyId))
           .map((f) => ({
             value: f.facultyId,
-            label: `${f.name}${f.positionName ? ` (${f.positionName})` : ''}${f.isSelf ? ' • Self' : ''}`,
+            label: `${f.name}${f.isSelf ? ' • Self' : ''}`,
           }))}
       />
 
