@@ -73,6 +73,17 @@ export function AccountTypeGroup({
       });
     }
 
+    if (isColumnVisible("type")) {
+      cols.push({
+        id: "type",
+        label: t("accounting.columns.account.type"),
+        width: getColumnWidth?.("type"),
+        headerClassName: "hidden sm:table-cell",
+        cellClassName: "hidden text-xs text-muted-foreground sm:table-cell",
+        render: (account) => t(`accounting.type.${account.type}` as AppTranslationKey),
+      });
+    }
+
     if (isColumnVisible("subtype")) {
       cols.push({
         id: "subtype",

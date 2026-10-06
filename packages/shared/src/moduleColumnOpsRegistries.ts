@@ -8,6 +8,9 @@ export interface ObligationCollectionWorkColumnLabels {
   repMujtahid: string;
   amount: string;
   paymentMode: string;
+  reference: string;
+  currency: string;
+  receivedBy: string;
 }
 
 /** Builds tenant-default Work column registry for Obligation collections (before per-user overlay). */
@@ -15,7 +18,18 @@ export function buildObligationCollectionWorkColumnRegistry(
   labels: ObligationCollectionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['receiptNo', 'receivedDate', 'sender', 'obligationType', 'repMujtahid', 'amount', 'paymentMode'],
+    [
+      'receiptNo',
+      'receivedDate',
+      'sender',
+      'obligationType',
+      'repMujtahid',
+      'amount',
+      'paymentMode',
+      'reference',
+      'currency',
+      'receivedBy',
+    ],
     labels,
   );
 }
@@ -43,6 +57,7 @@ export function buildAccountingJournalWorkColumnRegistry(
 export interface AccountingAccountWorkColumnLabels {
   code: string;
   name: string;
+  type: string;
   subtype: string;
   description: string;
   normalBalance: string;
@@ -53,7 +68,7 @@ export function buildAccountingAccountWorkColumnRegistry(
   labels: AccountingAccountWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['code', 'name', 'subtype', 'description', 'normalBalance'],
+    ['code', 'name', 'type', 'subtype', 'description', 'normalBalance'],
     labels,
   );
 }
@@ -61,6 +76,7 @@ export function buildAccountingAccountWorkColumnRegistry(
 export interface HasanatDistributionWorkColumnLabels {
   card: string;
   recipient: string;
+  recipientType: string;
   recipientClass: string;
   quantity: string;
   reason: string;
@@ -74,7 +90,17 @@ export function buildHasanatDistributionWorkColumnRegistry(
   labels: HasanatDistributionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['card', 'recipient', 'recipientClass', 'quantity', 'reason', 'issuedDate', 'issuedBy', 'status'],
+    [
+      'card',
+      'recipient',
+      'recipientType',
+      'recipientClass',
+      'quantity',
+      'reason',
+      'issuedDate',
+      'issuedBy',
+      'status',
+    ],
     labels,
   );
 }

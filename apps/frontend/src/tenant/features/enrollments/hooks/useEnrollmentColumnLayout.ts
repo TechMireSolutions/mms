@@ -17,6 +17,7 @@ export function useEnrollmentColumnLayout() {
         finalFee: t('enrollments.columns.finalFee'),
         status: t('enrollments.columns.status'),
         payment: t('enrollments.columns.payment'),
+        notes: t('enrollments.columns.notes'),
       }))();
 
   return useModuleColumnLayout({

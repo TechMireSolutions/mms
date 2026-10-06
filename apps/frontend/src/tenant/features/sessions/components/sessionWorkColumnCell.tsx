@@ -31,14 +31,22 @@ export function renderSessionWorkColumnValue(
   switch (columnKey) {
     case "type":
       return <StatusBadge status={session.type || "other"} config={typeConfig} size="sm" />;
+    case "startDate":
+      return session.startDate ? formatDate(session.startDate, true) : emptyFallback;
+    case "endDate":
+      return session.endDate ? formatDate(session.endDate, true) : emptyFallback;
     case "duration":
       return `${formatDate(session.startDate, true)} — ${formatDate(session.endDate, true)}`;
     case "fee":
       return formatMoney(session.baseFee, session.currency);
+    case "currency":
+      return session.currency || emptyFallback;
     case "enrolled":
       return `${totalEnrolled}/${totalCapacity || t("common.notSpecified")}`;
     case "status":
       return <StatusBadge status={session.status} config={statusConfig} size="sm" />;
+    case "description":
+      return session.description?.trim() ? session.description : emptyFallback;
     default:
       return emptyFallback;
   }

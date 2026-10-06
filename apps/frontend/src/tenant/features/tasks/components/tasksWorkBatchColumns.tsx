@@ -48,11 +48,19 @@ export function buildTasksWorkBatchColumns(
           <div className="font-medium text-foreground hover:text-primary transition-colors">
             {task.title}
           </div>
-          {task.description ? (
-            <div className="text-xs text-muted-foreground line-clamp-1">{task.description}</div>
-          ) : null}
         </button>
       ),
+    },
+    {
+      id: 'description',
+      label: t('tasks.description'),
+      width: widthOf?.('description') ?? 220,
+      render: (task) =>
+        task.description ? (
+          <div className="text-xs text-muted-foreground line-clamp-2">{task.description}</div>
+        ) : (
+          <span className="text-muted-foreground/60 text-xs">—</span>
+        ),
     },
     {
       id: 'priority',

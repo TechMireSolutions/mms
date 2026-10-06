@@ -21,6 +21,8 @@ export function renderUserWorkColumnValue(
   const { t, formatLoginDate, emptyFallback } = options;
 
   switch (columnKey) {
+    case "email":
+      return user.email?.trim() ? user.email : emptyFallback;
     case "role":
       return <UserRoleBadge roleId={user.role} />;
     case "status":

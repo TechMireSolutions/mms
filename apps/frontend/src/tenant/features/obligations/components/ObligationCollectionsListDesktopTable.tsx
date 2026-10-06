@@ -12,6 +12,7 @@ import type { ObligationCollection } from "@/lib/data/obligationsData";
 import {
   formatObligationCollectionAmount,
   getObligationCollectionResolvedFields,
+  OBLIGATION_COLLECTION_CURRENCIES,
   type ObligationCollectionListContentProps,
 } from "@/tenant/features/obligations/components/obligationCollectionListContentShared";
 
@@ -133,8 +134,38 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
       });
     }
 
+    if (isColumnVisible("reference")) {
+      cols.push({
+        id: "reference",
+        label: t("obligations.columns.reference"),
+        cellClassName: "text-sm text-muted-foreground whitespace-nowrap",
+        render: (collection) => getContact(collection.reference_id)?.name || "—",
+      });
+    }
+
+    if (isColumnVisible("currency")) {
+      cols.push({
+        id: "currency",
+        label: t("obligations.columns.currency"),
+        cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
+        render: (collection) =>
+          OBLIGATION_COLLECTION_CURRENCIES.find((currency) => currency.id === collection.currency_id)?.code
+          || collection.currency_id
+          || "—",
+      });
+    }
+
+    if (isColumnVisible("receivedBy")) {
+      cols.push({
+        id: "receivedBy",
+        label: t("obligations.columns.receivedBy"),
+        cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
+        render: (collection) => collection.received_by || "—",
+      });
+    }
+
     return cols;
-  }, [helpers, isColumnVisible, paymentModeConfig, t]);
+  }, [getContact, helpers, isColumnVisible, paymentModeConfig, t]);
 
   return (
     <WorkBatchTable

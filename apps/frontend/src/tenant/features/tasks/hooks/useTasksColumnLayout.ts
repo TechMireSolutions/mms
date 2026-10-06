@@ -14,6 +14,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 
 const TASK_WORK_COLUMN_KEYS = [
   'title',
+  'description',
   'priority',
   'status',
   'assignees',
@@ -22,6 +23,7 @@ const TASK_WORK_COLUMN_KEYS = [
 
 const TASK_WORK_COLUMN_WIDTHS: Record<(typeof TASK_WORK_COLUMN_KEYS)[number], number | undefined> = {
   title: undefined,
+  description: 220,
   priority: 120,
   status: 140,
   assignees: undefined,
@@ -30,6 +32,7 @@ const TASK_WORK_COLUMN_WIDTHS: Record<(typeof TASK_WORK_COLUMN_KEYS)[number], nu
 
 const TASK_WORK_COLUMN_LABEL_KEYS: Record<(typeof TASK_WORK_COLUMN_KEYS)[number], AppTranslationKey> = {
   title: 'tasks.title',
+  description: 'tasks.description',
   priority: 'tasks.priority',
   status: 'tasks.status',
   assignees: 'tasks.assignees',

@@ -61,14 +61,23 @@ export function UsersListDesktopTable({
         render: (user) => (
           <div className="flex items-center gap-2.5">
             <UsersListAvatar user={user} />
-            <div>
-              <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
-            </div>
+            <p className="whitespace-nowrap text-sm font-semibold text-foreground">
+              {user.name?.trim() || user.email || ""}
+            </p>
           </div>
         ),
       },
     ];
+
+    if (visible('email')) {
+      cols.push({
+        id: 'email',
+        label: t('users.fieldContactEmail'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'px-3 py-2.5 text-xs text-muted-foreground',
+        render: (user) => renderUserWorkColumnValue(user, 'email', columnContext),
+      });
+    }
 
     if (visible('role')) {
       cols.push({

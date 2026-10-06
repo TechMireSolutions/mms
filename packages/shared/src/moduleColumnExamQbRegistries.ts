@@ -9,6 +9,7 @@ export interface ExaminationExamWorkColumnLabels {
   totalMarks: string;
   passingMarks: string;
   classes: string;
+  description: string;
 }
 
 /** Builds tenant-default Work column registry for Examinations exam directory (list view). */
@@ -16,7 +17,17 @@ export function buildExaminationExamWorkColumnRegistry(
   labels: ExaminationExamWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['name', 'subject', 'date', 'duration', 'status', 'totalMarks', 'passingMarks', 'classes'],
+    [
+      'name',
+      'subject',
+      'date',
+      'duration',
+      'status',
+      'totalMarks',
+      'passingMarks',
+      'classes',
+      'description',
+    ],
     labels,
   );
 }

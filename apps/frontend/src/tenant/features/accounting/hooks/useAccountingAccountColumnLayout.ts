@@ -16,6 +16,7 @@ export function useAccountingAccountColumnLayout() {
       buildAccountingAccountWorkColumnRegistry({
         code: t('accounting.columns.account.code'),
         name: t('accounting.columns.account.name'),
+        type: t('accounting.columns.account.type'),
         subtype: t('accounting.columns.account.subtype'),
         description: t('accounting.columns.account.description'),
         normalBalance: t('accounting.columns.account.normalBalance'),

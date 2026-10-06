@@ -22,6 +22,7 @@ export function useExaminationExamColumnLayout() {
         totalMarks: t('examinations.columns.exam.totalMarks'),
         passingMarks: t('examinations.columns.exam.passingMarks'),
         classes: t('examinations.columns.exam.classes'),
+        description: t('examinations.columns.exam.description'),
       }))();
 
   return useModuleColumnLayout({
