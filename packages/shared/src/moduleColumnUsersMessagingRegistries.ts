@@ -2,6 +2,7 @@ import { createColumnRegistry, type ModuleColumnRegistryEntry } from './moduleCo
 
 export interface UsersWorkColumnLabels {
   user: string;
+  email: string;
   role: string;
   status: string;
   lastLogin: string;
@@ -14,7 +15,7 @@ export function buildUsersWorkColumnRegistry(
   labels: UsersWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['user', 'role', 'status', 'lastLogin', 'created', 'twoFactor'],
+    ['user', 'email', 'role', 'status', 'lastLogin', 'created', 'twoFactor'],
     labels,
   );
 }
@@ -73,6 +74,7 @@ export function buildMessagingHistoryWorkColumnRegistry(
 export interface MessagingTemplatesWorkColumnLabels {
   label: string;
   category: string;
+  channel: string;
   body: string;
 }
 
@@ -81,7 +83,7 @@ export function buildMessagingTemplatesWorkColumnRegistry(
   labels: MessagingTemplatesWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['label', 'category', 'body'],
+    ['label', 'category', 'channel', 'body'],
     labels,
   );
 }

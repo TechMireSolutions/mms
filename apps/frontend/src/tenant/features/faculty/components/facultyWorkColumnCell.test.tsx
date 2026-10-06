@@ -45,6 +45,39 @@ describe("renderFacultyWorkColumnValue", () => {
     expect(result).toBe("Alimiyyah");
   });
 
+  it("renders notes text", () => {
+    const result = renderFacultyWorkColumnValue(mockFaculty, "notes", baseOptions);
+
+    expect(result).toBe("Senior Quran instructor");
+  });
+
+  it("renders employment and designation dates", () => {
+    const dated: Faculty = {
+      ...mockFaculty,
+      employmentStartDate: "2023-05-15",
+      employmentEndDate: "2025-01-01",
+      designationStartDate: "2024-02-01",
+      designationEndDate: "2025-06-30",
+      employeeId: "EMP-42",
+    };
+    expect(renderFacultyWorkColumnValue(dated, "employeeId", baseOptions)).toBe("EMP-42");
+    expect(String(renderFacultyWorkColumnValue(dated, "employmentStartDate", baseOptions))).toContain("2023");
+    expect(String(renderFacultyWorkColumnValue(dated, "employmentEndDate", baseOptions))).toContain("2025");
+    expect(String(renderFacultyWorkColumnValue(dated, "designationStartDate", baseOptions))).toContain("2024");
+    expect(String(renderFacultyWorkColumnValue(dated, "designationEndDate", baseOptions))).toContain("2025");
+  });
+
+  it("renders employDesignationStatus badge", () => {
+    const tenureFaculty: Faculty = {
+      ...mockFaculty,
+      employDesignationStatus: "active",
+    };
+    const html = renderToStaticMarkup(
+      <div>{renderFacultyWorkColumnValue(tenureFaculty, "employDesignationStatus", baseOptions)}</div>,
+    );
+    expect(html).toContain("Active");
+  });
+
   it("renders designation with semantic badge styling", () => {
     const facultyWithDesignation: Faculty = {
       ...mockFaculty,

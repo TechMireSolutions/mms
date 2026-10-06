@@ -17,6 +17,9 @@ export function useObligationColumnLayout() {
         repMujtahid: t('obligations.columns.repMujtahid'),
         amount: t('obligations.columns.amount'),
         paymentMode: t('obligations.columns.paymentMode'),
+        reference: t('obligations.columns.reference'),
+        currency: t('obligations.columns.currency'),
+        receivedBy: t('obligations.columns.receivedBy'),
       }))();
 
   return useModuleColumnLayout({

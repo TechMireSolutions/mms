@@ -110,6 +110,11 @@ function ExaminationCard({
               )}
             </EntityCardMetaTile>
           )}
+          {isColumnVisible('description') && exam.description?.trim() && (
+            <EntityCardMetaTile label={t('examinations.columns.exam.description')}>
+              <span className="line-clamp-2 break-words">{exam.description}</span>
+            </EntityCardMetaTile>
+          )}
         </EntityCard.MetaGrid>
       }
       overflowActions={

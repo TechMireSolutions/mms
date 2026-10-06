@@ -11,6 +11,7 @@ export function useUserColumnLayout() {
   const tenantRegistry = (() =>
       buildUsersWorkColumnRegistry({
         user: t('users.colUser'),
+        email: t('users.fieldContactEmail'),
         role: t('users.colRole'),
         status: t('users.colStatus'),
         lastLogin: t('users.colLastLogin'),

@@ -30,6 +30,17 @@ export function renderFacultyWorkColumnValue(
       />
     );
   }
+  if (columnKey === "employDesignationStatus" || columnKey === "profileStatus") {
+    const tenureStatus = faculty.employDesignationStatus || faculty.profileStatus;
+    if (!tenureStatus) return emptyFallback;
+    return (
+      <StatusBadge
+        status={tenureStatus}
+        config={statusConfig}
+        size={statusBadgeSize}
+      />
+    );
+  }
   if (columnKey === "designation") {
     const value = resolveFacultyFieldDisplayText(faculty, columnKey, {
       t,

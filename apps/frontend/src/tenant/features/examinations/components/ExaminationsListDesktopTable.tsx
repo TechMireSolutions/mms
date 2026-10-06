@@ -122,6 +122,16 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
       });
     }
 
+    if (isColumnVisible("description")) {
+      cols.push({
+        id: "description",
+        label: t("examinations.columns.exam.description"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-xs text-muted-foreground max-w-cell-sm truncate",
+        render: (exam) => exam.description?.trim() || "—",
+      });
+    }
+
     return cols;
   }, [classes, enrollments, isColumnVisible, statusConfig, t]);
 

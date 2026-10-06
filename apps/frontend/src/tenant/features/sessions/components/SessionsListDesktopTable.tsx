@@ -90,6 +90,24 @@ export function SessionsListDesktopTable({
       });
     }
 
+    if (isColumnVisible("startDate")) {
+      cols.push({
+        id: "startDate",
+        label: t("sessions.columns.startDate"),
+        cellClassName: "text-xs text-muted-foreground",
+        render: (sessionItem) => renderSessionWorkColumnValue(sessionItem, "startDate", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("endDate")) {
+      cols.push({
+        id: "endDate",
+        label: t("sessions.columns.endDate"),
+        cellClassName: "text-xs text-muted-foreground",
+        render: (sessionItem) => renderSessionWorkColumnValue(sessionItem, "endDate", columnOptions),
+      });
+    }
+
     if (isColumnVisible("duration")) {
       cols.push({
         id: "duration",
@@ -109,6 +127,15 @@ export function SessionsListDesktopTable({
       });
     }
 
+    if (isColumnVisible("currency")) {
+      cols.push({
+        id: "currency",
+        label: t("sessions.columns.currency"),
+        cellClassName: "text-xs text-muted-foreground",
+        render: (sessionItem) => renderSessionWorkColumnValue(sessionItem, "currency", columnOptions),
+      });
+    }
+
     if (isColumnVisible("enrolled")) {
       cols.push({
         id: "enrolled",
@@ -124,6 +151,15 @@ export function SessionsListDesktopTable({
         label: t("sessions.columns.status"),
         sortField: "status",
         render: (sessionItem) => renderSessionWorkColumnValue(sessionItem, "status", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("description")) {
+      cols.push({
+        id: "description",
+        label: t("sessions.columns.description"),
+        cellClassName: "text-xs text-muted-foreground max-w-cell-sm truncate",
+        render: (sessionItem) => renderSessionWorkColumnValue(sessionItem, "description", columnOptions),
       });
     }
 

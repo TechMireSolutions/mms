@@ -66,6 +66,8 @@ export function renderEnrollmentWorkColumnValue(
       return enrollment.paymentStatus
         ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
         : "—";
+    case "notes":
+      return enrollment.notes?.trim() ? enrollment.notes : emptyFallback;
     default:
       return emptyFallback;
   }

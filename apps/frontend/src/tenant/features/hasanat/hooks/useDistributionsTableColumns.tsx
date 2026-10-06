@@ -61,13 +61,27 @@ export function useDistributionsTableColumns({
         id: "recipient",
         label: t("hasanat.columns.distribution.recipient"),
         render: (distribution) => (
+          <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
+        ),
+      });
+    }
+
+    if (isColumnVisible("recipientType")) {
+      cols.push({
+        id: "recipientType",
+        label: t("hasanat.columns.distribution.recipientType"),
+        render: (distribution) => (
           <div className="flex items-center gap-1.5">
             {distribution.recipientType === "faculty" ? (
               <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             ) : (
               <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             )}
-            <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {distribution.recipientType === "faculty"
+                ? t("hasanat.form.recipientType.faculty")
+                : t("hasanat.form.recipientType.student")}
+            </span>
           </div>
         ),
       });

@@ -14,13 +14,19 @@ import {
 import { customFieldKeyFromColumnKey } from './moduleColumnCore.js';
 
 describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
-  it('derives work keys that are a subset of sort keys', () => {
+  it('derives sortable work keys as a subset of sort keys', () => {
+    const sortByKey = new Map(
+      FACULTY_DIRECTORY_COLUMN_SURFACES.map((surface) => [surface.key, surface.sort]),
+    );
     for (const workKey of FACULTY_WORK_COLUMN_KEYS) {
+      if (sortByKey.get(workKey) === false) continue;
       expect(FACULTY_SORT_FIELD_SET.has(workKey)).toBe(true);
     }
     expect(FACULTY_SORT_FIELDS).toContain('name');
     expect(FACULTY_SORT_FIELDS).toContain('employeeId');
+    expect(FACULTY_SORT_FIELDS).toContain('designationEndDate');
     expect(FACULTY_SORT_FIELDS).toContain('updatedAt');
+    expect(FACULTY_SORT_FIELD_SET.has('notes')).toBe(false);
   });
 
   it('builds default Work registry as name + work keys in workOrder', () => {
@@ -46,14 +52,16 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
       'department',
       'reportingFacultyName',
       'specialization',
-      'status',
       'employDesignationStatus',
+      'status',
       'profileStatus',
       'qualification',
-      'employmentStartDate',
       'designationStartDate',
+      'designationEndDate',
+      'employmentStartDate',
       'employmentEndDate',
       'performanceRating',
+      'notes',
     ]);
     expect(
       FACULTY_DIRECTORY_COLUMN_SURFACES.filter((surface) => surface.export).map((s) => s.key).sort(),
@@ -67,12 +75,14 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
     expect(facultyColumnLabelKey('status')).toBe('faculty.field.status');
     expect(facultyColumnLabelKey('specialization')).toBe('faculty.field.specialization');
     expect(facultyColumnLabelKey('qualification')).toBe('faculty.field.qualification');
+    expect(facultyColumnLabelKey('designationEndDate')).toBe('faculty.field.designationEndDate');
+    expect(facultyColumnLabelKey('notes')).toBe('faculty.field.notes');
     expect(facultyColumnLabelKey('joinDate')).toBe('faculty.field.joinDate');
     expect(facultyColumnLabelKey('updatedAt')).toBe('faculty.field.updatedAt');
   });
 
   it('falls back to facultyFieldLabelKey when column key is not in surface table', () => {
-    expect(facultyColumnLabelKey('notes')).toBe('faculty.field.notes');
+    expect(facultyColumnLabelKey('joinDate')).toBe('faculty.field.joinDate');
     expect(facultyColumnLabelKey('custom:cert')).toBe('faculty.field.custom:cert');
   });
 
@@ -86,11 +96,19 @@ describe('FACULTY_DIRECTORY_COLUMN_SURFACES', () => {
     const labels = facultyWorkColumnLabelsFrom((key) => `LABEL_${key.toUpperCase()}`);
     expect(labels).toEqual({
       name: 'LABEL_NAME',
+      employeeId: 'LABEL_EMPLOYEEID',
       designation: 'LABEL_DESIGNATION',
       department: 'LABEL_DEPARTMENT',
-      employmentStartDate: 'LABEL_EMPLOYMENTSTARTDATE',
-      performanceRating: 'LABEL_PERFORMANCERATING',
+      employDesignationStatus: 'LABEL_EMPLOYDESIGNATIONSTATUS',
+      designationStartDate: 'LABEL_DESIGNATIONSTARTDATE',
+      designationEndDate: 'LABEL_DESIGNATIONENDDATE',
       status: 'LABEL_STATUS',
+      employmentStartDate: 'LABEL_EMPLOYMENTSTARTDATE',
+      employmentEndDate: 'LABEL_EMPLOYMENTENDDATE',
+      specialization: 'LABEL_SPECIALIZATION',
+      qualification: 'LABEL_QUALIFICATION',
+      notes: 'LABEL_NOTES',
+      performanceRating: 'LABEL_PERFORMANCERATING',
     });
   });
 

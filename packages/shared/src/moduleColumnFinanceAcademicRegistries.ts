@@ -66,10 +66,14 @@ export function buildAttendanceWorkColumnRegistry(
 export interface SessionWorkColumnLabels {
   name: string;
   type: string;
+  startDate: string;
+  endDate: string;
   duration: string;
   fee: string;
+  currency: string;
   enrolled: string;
   status: string;
+  description: string;
 }
 
 /** Builds tenant-default Work column registry for Sessions list view (before per-user overlay). */
@@ -77,7 +81,18 @@ export function buildSessionWorkColumnRegistry(
   labels: SessionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['name', 'type', 'duration', 'fee', 'enrolled', 'status'],
+    [
+      'name',
+      'type',
+      'startDate',
+      'endDate',
+      'duration',
+      'fee',
+      'currency',
+      'enrolled',
+      'status',
+      'description',
+    ],
     labels,
   );
 }
@@ -90,6 +105,7 @@ export interface EnrollmentWorkColumnLabels {
   finalFee: string;
   status: string;
   payment: string;
+  notes: string;
 }
 
 /** Builds tenant-default Work column registry for Enrollments (before per-user overlay). */
@@ -97,7 +113,7 @@ export function buildEnrollmentWorkColumnRegistry(
   labels: EnrollmentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['student', 'session', 'class', 'enrolledDate', 'finalFee', 'status', 'payment'],
+    ['student', 'session', 'class', 'enrolledDate', 'finalFee', 'status', 'payment', 'notes'],
     labels,
   );
 }

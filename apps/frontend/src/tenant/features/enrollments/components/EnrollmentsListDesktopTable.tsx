@@ -122,6 +122,15 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       });
     }
 
+    if (isColumnVisible("notes")) {
+      cols.push({
+        id: "notes",
+        label: t("enrollments.columns.notes"),
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground max-w-cell-sm truncate",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "notes", columnOptions),
+      });
+    }
+
     return cols;
   }, [columnOptions, isColumnVisible, t]);
 

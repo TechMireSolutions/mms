@@ -16,6 +16,7 @@ export function useHasanatDistributionColumnLayout() {
       buildHasanatDistributionWorkColumnRegistry({
         card: t('hasanat.columns.distribution.card'),
         recipient: t('hasanat.columns.distribution.recipient'),
+        recipientType: t('hasanat.columns.distribution.recipientType'),
         recipientClass: t('hasanat.columns.distribution.recipientClass'),
         quantity: t('hasanat.columns.distribution.quantity'),
         reason: t('hasanat.columns.distribution.reason'),

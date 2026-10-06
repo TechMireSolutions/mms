@@ -113,6 +113,11 @@ export function TaskCardItem({
               />
             </EntityCardMetaTile>
           ) : null}
+          {isColumnVisible('description') ? (
+            <EntityCardMetaTile label={t('tasks.description')}>
+              {task.description?.trim() || '—'}
+            </EntityCardMetaTile>
+          ) : null}
           {isColumnVisible('assignees') ? (
             <EntityCardMetaTile label={t('tasks.assignees')}>{assigneeLabel}</EntityCardMetaTile>
           ) : null}

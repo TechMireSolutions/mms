@@ -108,6 +108,20 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
       ? sql`fe_emp.employment_end_date desc nulls last`
       : sql`fe_emp.employment_end_date asc nulls last`;
   }
+  if (field === 'designationStartDate') {
+    return dir === 'desc'
+      ? sql`fe_desig.start_date desc nulls last`
+      : sql`fe_desig.start_date asc nulls last`;
+  }
+  if (field === 'designationEndDate') {
+    return dir === 'desc'
+      ? sql`fe_desig.end_date desc nulls last`
+      : sql`fe_desig.end_date asc nulls last`;
+  }
+  if (field === 'employDesignationStatus' || field === 'profileStatus') {
+    const tenureSort = sql`lower(trim(COALESCE(fe_desig.status, ${faculty.profileStatus}, '')))`;
+    return dir === 'desc' ? sql`${tenureSort} desc nulls last` : sql`${tenureSort} asc nulls last`;
+  }
   if (field === 'performanceRating') {
     return dir === 'desc'
       ? sql`${faculty.performanceRating} desc nulls last`
