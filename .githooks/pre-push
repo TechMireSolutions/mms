@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
-# Git hook: path-aware local CI before push to GitHub.
+# Git hook: guard pushes before they reach GitHub.
+# - Blocks direct pushes to `main` (use a PR instead).
+# - Does NOT re-run pnpm ci:local — pre-commit already ran it.
+#   Run `pnpm ci:local:full` manually before opening a PR.
 set -euo pipefail
 
 if [[ "${SKIP_LOCAL_CI:-}" == "1" ]]; then
-  echo "⚠ SKIP_LOCAL_CI=1 — skipping pnpm ci:local (agents must not set this unless the user asks)."
+  echo "⚠ SKIP_LOCAL_CI=1 — skipping pre-push checks (agents must not set this unless the user asks)."
   exit 0
 fi
 
-echo "Running local CI before push (pnpm ci:local)..."
-pnpm ci:local
-echo "Local CI passed — proceeding with push."
+# Read the push refspecs from stdin (git passes them automatically).
+while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [[ "$remote_ref" == "refs/heads/main" ]]; then
+    echo "❌ Direct push to main is not allowed — open a Pull Request instead." >&2
+    echo "   git push origin HEAD:<branch-name>   # push your branch" >&2
+    echo "   Then open a PR on GitHub."            >&2
+    exit 1
+  fi
+done
+
+echo "✅ Pre-push branch check passed — pushing."
+echo "   Reminder: run \`pnpm ci:local:full\` (and --with-db / --with-e2e if needed) before opening a PR."
+echo "   Prefer squash-merge with a Conventional Commits PR title."

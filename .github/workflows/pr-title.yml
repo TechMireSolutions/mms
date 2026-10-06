@@ -1,0 +1,33 @@
+# Lightweight Conventional Commits check for PR titles.
+# Separate from ci.yml so title edits do not re-run the full CI DAG.
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-title:
+    name: PR Title (Conventional Commits)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/ci/validate-conventional-commit.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: bash scripts/ci/validate-conventional-commit.sh "$PR_TITLE"
