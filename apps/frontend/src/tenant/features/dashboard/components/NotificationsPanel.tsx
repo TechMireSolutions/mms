@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { DashboardNotificationItem, DashboardNotificationType } from '@/lib/buildDashboardNotifications';
+import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
+import { DASHBOARD_NOTIFICATION_ICONS as ICONS } from '@/lib/dashboardNotificationIcons';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
@@ -11,14 +12,9 @@ import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
 
 interface NotificationsPanelProps {
   items: DashboardNotificationItem[];
+  /** Opens the notification's source (invoices, students, attendance day). */
+  onOpen?: (item: DashboardNotificationItem) => void;
 }
-
-const ICONS: Record<DashboardNotificationType, { icon: React.ElementType; bg: string; text: string }> = {
-  fee: { icon: DollarSign, bg: 'bg-destructive/10', text: 'text-destructive' },
-  event: { icon: Calendar, bg: 'bg-info/10', text: 'text-info' },
-  student: { icon: User, bg: 'bg-success/10', text: 'text-success' },
-  attendance: { icon: AlertTriangle, bg: 'bg-warning/10', text: 'text-warning' },
-};
 
 const SESSION_STORAGE_KEY = 'mms_dashboard_dismissed_notifs';
 
@@ -45,7 +41,7 @@ function saveDismissedToSession(ids: Array<string | number>): void {
   }
 }
 
-export function NotificationsPanel({ items }: NotificationsPanelProps): React.JSX.Element {
+export function NotificationsPanel({ items, onOpen }: NotificationsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState<Array<string | number>>(getInitialDismissed);
 
@@ -130,35 +126,43 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className={`flex items-start gap-3 px-5 py-3.5 hover:bg-muted/30 transition-colors ${
+                  className={`flex items-start gap-1 pe-3 hover:bg-muted/30 transition-colors ${
                     notif.urgent ? 'bg-destructive/[0.03]' : ''
                   }`}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
-                    aria-hidden="true"
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={!onOpen || !notif.target}
+                    onClick={() => onOpen?.(notif)}
+                    className="flex flex-1 min-w-0 h-auto min-h-11 items-start justify-start gap-3 whitespace-normal rounded-none ps-5 pe-2 py-3.5 text-start hover:bg-transparent disabled:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   >
-                    <Icon className={`w-4 h-4 ${meta.text}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2">
-                      <p className="text-sm font-bold text-foreground leading-snug flex-1 m-0">
-                        {notif.title}
-                      </p>
-                      {notif.urgent && (
-                        <Badge pill variant="destructive" className="uppercase tracking-wider flex-shrink-0 select-none">
-                          {t('notifications.urgentLabel')}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-0.5 m-0 leading-normal">{notif.desc}</p>
-                    <p className="text-xs text-muted-foreground mt-1 m-0 font-medium">{notif.time}</p>
-                  </div>
+                    <span
+                      className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
+                      aria-hidden="true"
+                    >
+                      <Icon className={`w-4 h-4 ${meta.text}`} />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="flex items-start gap-2">
+                        <span className="block text-sm font-bold text-foreground leading-snug flex-1">
+                          {notif.title}
+                        </span>
+                        {notif.urgent && (
+                          <Badge pill variant="destructive" className="uppercase tracking-wider flex-shrink-0 select-none">
+                            {t('notifications.urgentLabel')}
+                          </Badge>
+                        )}
+                      </span>
+                      <span className="block text-sm text-muted-foreground mt-0.5 leading-normal">{notif.desc}</span>
+                      <span className="block text-xs text-muted-foreground mt-1 font-medium">{notif.time}</span>
+                    </span>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDismiss(notif.id)}
-                    className="text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0 mt-0.5 shadow-none"
+                    className="text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0 mt-2 shadow-none"
                     aria-label={t('notifications.dismiss', { title: notif.title })}
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />

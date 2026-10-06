@@ -19,6 +19,7 @@ export const ROUTES = {
   tasks: "/tasks",
   users: "/users",
   profile: "/profile",
+  notifications: "/notifications",
   forcePasswordChange: "/force-password-change",
   institutionSetup: "/institution-setup",
   settings: "/settings",
@@ -165,6 +166,7 @@ export const TENANT_APP_PATHS: readonly string[] = [
   ROUTES.messaging,
   ROUTES.users,
   ROUTES.profile,
+  ROUTES.notifications,
 ];
 
 export function isTenantAppPath(pathname: string): boolean {

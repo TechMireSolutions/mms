@@ -12,6 +12,8 @@ export interface NotificationItem {
   desc?: string;
   time?: string;
   urgent?: boolean;
+  /** Read items drop the unread tint and dot emphasis. */
+  read?: boolean;
   href?: string;
   onClick?: () => void;
 }
@@ -121,13 +123,16 @@ export function NotificationsPopover({
                       type="button"
                       variant="ghost"
                       onClick={() => handleItemClick(notification)}
-                      className="w-full min-h-11 h-auto text-start justify-start border-b border-border/50 px-4 py-3 rounded-none last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset block whitespace-normal"
+                      className={cn(
+                        'w-full min-h-11 h-auto text-start justify-start border-b border-border/50 px-4 py-3 rounded-none last:border-0 hover:bg-muted/60 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset block whitespace-normal',
+                        !notification.read && 'bg-primary/5',
+                      )}
                     >
                       <div className="flex items-start gap-3">
                         <div
                           className={cn(
                             'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                            notification.urgent ? 'bg-destructive animate-pulse' : 'bg-primary',
+                            notification.read ? 'bg-muted-foreground/30' : notification.urgent ? 'bg-destructive animate-pulse' : 'bg-primary',
                           )}
                         />
                         <div className="min-w-0 flex-1">

@@ -13,7 +13,6 @@ import { InvoicesListFilters } from "@/tenant/features/finance/components/Invoic
 import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/components/invoiceListVisibleColumns";
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
-
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 export interface InvoicesListProps {
@@ -40,6 +39,8 @@ export interface InvoicesListProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  filterStatus?: string[];
+  onFilterStatusChange?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export function InvoicesList({
@@ -66,30 +67,32 @@ export function InvoicesList({
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
+  filterStatus: controlledFilterStatus,
+  onFilterStatusChange,
 }: InvoicesListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [localFilterStatus, setLocalFilterStatus] = useState<string[]>([]);
+  const filterStatus = controlledFilterStatus ?? localFilterStatus;
+  const setFilterStatus = onFilterStatusChange ?? setLocalFilterStatus;
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
   const columnRegistry = columnCustomizer?.columnRegistry ?? [];
 
-  const filtered = (() => {
-    return invoices.filter((invoice) => {
-      const normalizedSearch = search.toLowerCase();
-      const matchSearch = !normalizedSearch
-        || invoice.studentName.toLowerCase().includes(normalizedSearch)
-        || invoice.id.toLowerCase().includes(normalizedSearch)
-        || invoice.session.toLowerCase().includes(normalizedSearch);
-      const matchStatus = filterStatus.length === 0 || filterStatus.includes(invoice.status);
-      return matchSearch && matchStatus;
-    });
-  })();
+  const normalizedSearch = search.toLowerCase();
+  const filtered = invoices.filter((invoice) => {
+    const matchSearch = !normalizedSearch
+      || invoice.studentName.toLowerCase().includes(normalizedSearch)
+      || invoice.id.toLowerCase().includes(normalizedSearch)
+      || invoice.session.toLowerCase().includes(normalizedSearch);
+    const matchStatus = filterStatus.length === 0 || filterStatus.includes(invoice.status);
+    return matchSearch && matchStatus;
+  });
 
   const selectedSet = new Set(selectedIds);
   const allVisibleSelected = filtered.length > 0 && filtered.every((inv) => selectedSet.has(inv.id));

@@ -38,3 +38,4 @@ export {
   useFinanceContractBulkDeleteInvoices,
   useFinanceContractBulkStatusInvoices,
 } from '@/tenant/features/finance/hooks/useFinanceTsrHooks';
+export { applyFinanceWorkDrillDown } from '@/tenant/features/finance/hooks/financeWorkDrillDown';
