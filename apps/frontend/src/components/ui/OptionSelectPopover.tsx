@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import React, { useMemo, useState, type ReactNode } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { DropdownSelectBase } from "@/components/ui/DropdownSelectBase";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 import { cn } from "@/lib/utils";
 import { REMOVE_BTN } from "@/components/ui/formPrimitiveStyles";
+import { EditableMultiSelectSearchBar } from "@/components/ui/EditableMultiSelectSearchBar";
+import { FORM_SELECT_SEARCH_MIN_OPTIONS, filterSelectOptions } from "@/components/ui/useFormSelectSearch";
 
 export interface OptionSelectPopoverProps {
   options: string[];
@@ -40,6 +42,13 @@ export function OptionSelectPopover({
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t("contacts.form.selectOption");
   const canRemoveOptions = Boolean(onUpdateOptions);
+  const [query, setQuery] = useState("");
+  const isSearchable = options.length >= FORM_SELECT_SEARCH_MIN_OPTIONS;
+  const visibleOptions = useMemo(() => {
+    if (!isSearchable || !query.trim()) return options;
+    const labelled = options.map((option) => ({ value: option, label: formatContactOptionLabel(option, t) }));
+    return filterSelectOptions(labelled, query).map((option) => option.value);
+  }, [isSearchable, options, query, t]);
 
   const handleRemove = (option: string, event: React.MouseEvent): void => {
     if (!onUpdateOptions) return;
@@ -54,10 +63,31 @@ export function OptionSelectPopover({
   return (
     <DropdownSelectBase
       id={id}
-      options={options}
+      options={visibleOptions}
       value={value}
       onSelect={onChange}
-      onOpenChange={onOpenChange}
+      onOpenChange={(open) => {
+        if (!open) setQuery("");
+        onOpenChange?.(open);
+      }}
+      header={
+        isSearchable
+          ? ({ setHighlightedIndex }) => (
+              <EditableMultiSelectSearchBar
+                searchQuery={query}
+                onSearchChange={(next) => {
+                  setQuery(next);
+                  setHighlightedIndex(0);
+                }}
+                onClearSearch={() => {
+                  setQuery("");
+                  setHighlightedIndex(0);
+                }}
+                t={t}
+              />
+            )
+          : undefined
+      }
       footer={footer}
       renderTrigger={({ open, triggerProps }) => (
         <button
@@ -81,7 +111,7 @@ export function OptionSelectPopover({
     >
       {({ highlightedIndex, setHighlightedIndex, select, listboxId }) => (
         <>
-          {options.map((option, index) => {
+          {visibleOptions.map((option, index) => {
             const isSelected = value === option;
             const isHighlighted = index === highlightedIndex;
             return (
@@ -125,9 +155,9 @@ export function OptionSelectPopover({
               </div>
             );
           })}
-          {options.length === 0 && (
-            <div className="px-3 py-2 text-sm text-muted-foreground italic">
-              {t("contacts.form.noOptions")}
+          {visibleOptions.length === 0 && (
+            <div role="status" className="px-3 py-2 text-sm text-muted-foreground italic">
+              {t(options.length === 0 ? "contacts.form.noOptions" : "common.noMatchingOptions")}
             </div>
           )}
         </>

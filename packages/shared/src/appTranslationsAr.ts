@@ -1303,6 +1303,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "common.cancel": "إلغاء",
   "common.clearFilters": "مسح عوامل التصفية",
   "common.clearSearch": "مسح البحث",
+  "common.noMatchingOptions": "لا توجد خيارات مطابقة",
   "common.close": "إغلاق",
   "common.copy": "نسخ",
   "common.columns": "أعمدة",

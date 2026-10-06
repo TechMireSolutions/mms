@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, UserCheck } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FormSelect } from '@/components/ui/FormSelect';
 import type { EligibleAssigneeItem } from '@/tenant/features/tasks/hooks/useTasksApi';
 
 export interface SelectedAssignee {
@@ -24,26 +25,27 @@ export function TaskFormAssigneePicker({
   onRemoveAssignee,
 }: TaskFormAssigneePickerProps): React.JSX.Element {
   const { t } = useTranslation();
+  const pickerId = React.useId();
 
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground mb-1">
+      <label htmlFor={pickerId} className="block text-sm font-medium text-foreground mb-1">
         {t('tasks.assignees')}
       </label>
-      <select
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+      <FormSelect
+        id={pickerId}
         value=""
-        onChange={(e) => onAddAssignee(e.target.value)}
-      >
-        <option value="">{t('tasks.noAssignees')}</option>
-        {eligibleList
+        onChange={(facultyId) => {
+          if (facultyId) onAddAssignee(facultyId);
+        }}
+        placeholder={t('tasks.noAssignees')}
+        options={eligibleList
           .filter((item) => !selectedAssignees.some((a) => a.facultyId === item.facultyId))
-          .map((f) => (
-            <option key={f.facultyId} value={f.facultyId}>
-              {f.name} {f.positionName ? `(${f.positionName})` : ''} {f.isSelf ? '• Self' : ''}
-            </option>
-          ))}
-      </select>
+          .map((f) => ({
+            value: f.facultyId,
+            label: `${f.name}${f.positionName ? ` (${f.positionName})` : ''}${f.isSelf ? ' • Self' : ''}`,
+          }))}
+      />
 
       {selectedAssignees.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 mt-2">

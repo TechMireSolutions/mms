@@ -66,6 +66,7 @@ export function JournalEntryLinesEditorMobile({
                   onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
                   placeholder={t("accounting.journal.form.selectAccount")}
                   options={accountOptions}
+                  searchable
                   canAdd={canAddAccount}
                   onOpenAdd={onOpenAddAccount ? () => onOpenAddAccount(lineIndex) : undefined}
                   addAriaLabel={t("accounting.coa.addAccount")}

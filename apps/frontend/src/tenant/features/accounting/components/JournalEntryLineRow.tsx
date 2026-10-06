@@ -51,6 +51,7 @@ export function JournalEntryLineRow({
           onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
           placeholder={t("accounting.journal.form.selectAccount")}
           options={accountOptions}
+          searchable
           canAdd={canAddAccount}
           onOpenAdd={onOpenAddAccount}
           addAriaLabel={t("accounting.coa.addAccount")}

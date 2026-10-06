@@ -1307,6 +1307,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.cancel": "لغو",
   "common.clearFilters": "پاک‌کردن فیلترها",
   "common.clearSearch": "پاک کردن جستجو",
+  "common.noMatchingOptions": "گزینه‌ای مطابق یافت نشد",
   "common.close": "بستن",
   "common.copy": "کپی",
   "common.columns": "ستون‌ها",

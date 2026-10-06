@@ -1303,6 +1303,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "common.cancel": "منسوخ",
   "common.clearFilters": "فلٹرز صاف کریں",
   "common.clearSearch": "تلاش صاف کریں",
+  "common.noMatchingOptions": "کوئی مماثل اختیار نہیں",
   "common.close": "بند کریں",
   "common.copy": "کاپی",
   "common.columns": "کالمز",
