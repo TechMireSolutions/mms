@@ -21,8 +21,8 @@ afterAll(async () => {
 });
 
 describe('Faculty review fixes against PostgreSQL', () => {
-  it('given position-based reporting, reads the ancestor chain from the real driver', async () => {
-    expect(await findAncestorChain(tenant, 'f1')).toEqual(['f0']);
+  it('given position-based reporting removed, returns empty ancestor chain', async () => {
+    expect(await findAncestorChain(tenant, 'f1')).toEqual([]);
   });
 
   it('given an existing ID, insert-only persistence cannot reactivate or replace it', async () => {
@@ -41,10 +41,29 @@ describe('Faculty review fixes against PostgreSQL', () => {
     });
   });
 
-  it('given assignment-only reporting, blocks orphaning a child but allows deleting the whole chain', async () => {
-    // Act / Assert
-    await expect(guardFacultyAssignmentDependents(tenant, ['f0'])).rejects.toMatchObject({ statusCode: 409 });
-    await expect(guardFacultyAssignmentDependents(tenant, Array.from({ length: 25 }, (_, i) => `f${i}`))).resolves.toBeUndefined();
+  it('guards faculty assignment deletion when session faculty links exist', async () => {
+    await withTenant(tenant, async (tx) => {
+      await tx.execute(sql`
+        INSERT INTO sessions (workspace_subdomain, id, name, status, created_at, updated_at)
+        VALUES (${tenant}, 'sess-test', 'Test Session', 'active', now(), now())
+        ON CONFLICT DO NOTHING
+      `);
+      await tx.execute(sql`
+        INSERT INTO session_faculty (workspace_subdomain, id, session_id, faculty_id, faculty_name, role, status, created_at)
+        VALUES (${tenant}, 'sf-test', 'sess-test', 'f0', 'Faculty 0', 'coordinator', 'active', now())
+        ON CONFLICT DO NOTHING
+      `);
+    });
+    try {
+      await expect(guardFacultyAssignmentDependents(tenant, ['f0'])).rejects.toMatchObject({ statusCode: 409 });
+      await expect(guardFacultyAssignmentDependents(tenant, ['f1'])).resolves.toBeUndefined();
+    } finally {
+      await withTenant(tenant, async (tx) => {
+        await tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+        await tx.execute(sql`DELETE FROM session_faculty WHERE workspace_subdomain = ${tenant} AND id = 'sf-test'`);
+        await tx.execute(sql`DELETE FROM sessions WHERE workspace_subdomain = ${tenant} AND id = 'sess-test'`);
+      });
+    }
   });
 
   it('given stored custom fields and notes, returns their values in list pages', async () => {
