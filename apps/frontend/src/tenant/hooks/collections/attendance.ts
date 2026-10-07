@@ -32,3 +32,4 @@ export {
   useAttendanceContractUpdate,
   useAttendanceContractDelete,
 } from '@/tenant/features/attendance/hooks/useAttendanceTsrHooks';
+export { applyAttendanceWorkDrillDown } from '@/tenant/features/attendance/hooks/attendanceWorkDrillDown';

@@ -23,6 +23,7 @@ import { useFinanceCollectActions } from "./useFinanceCollectActions";
 import { useFinanceBulkActions } from "./useFinanceBulkActions";
 import { useFinanceModalState } from "./useFinanceModalState";
 import { useFinanceFormActions } from "./useFinanceFormActions";
+import { useFinanceInvoiceStatusFilter } from "./useFinanceInvoiceStatusFilter";
 
 export function useFinancePageController() {
   const { t } = useTranslation();
@@ -45,6 +46,7 @@ export function useFinancePageController() {
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [activePayment, setActivePayment] = useState<Payment | null>(null);
   const [showDeleted, setShowDeleted] = useDirectoryTrashState();
+  const invoiceStatusFilter = useFinanceInvoiceStatusFilter({ setActiveTab, setActiveSubTab, setShowDeleted });
   const invoicesResult = useFinanceInvoicesPaginated({
     includeDeleted: showDeleted,
     page: 1,
@@ -186,6 +188,7 @@ export function useFinancePageController() {
     handleBulkStatusChange,
     invoiceSelection,
     paymentSelection,
+    invoiceStatusFilter,
   };
 }
 

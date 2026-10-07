@@ -31,6 +31,7 @@ const Users = React.lazy(() => import("@/tenant/features/users/UsersPage"));
 const AccountProfile = React.lazy(() => import("@/tenant/features/profile/AccountProfilePage"));
 const Obligations = React.lazy(() => import("@/tenant/features/obligations/ObligationsPage"));
 const Tasks = React.lazy(() => import("@/tenant/features/tasks/TasksPage"));
+const Notifications = React.lazy(() => import("@/tenant/features/notifications/NotificationsPage"));
 const Accounting = React.lazy(() => import("@/tenant/features/accounting/AccountingPage"));
 const Login = React.lazy(() => import("@/tenant/pages/auth/Login"));
 const ForgotPassword = React.lazy(() => import("@/tenant/pages/auth/ForgotPassword"));
@@ -139,6 +140,7 @@ function TenantRoutesInner(): React.JSX.Element {
               <Route path={ROUTES.tasks} element={<React.Suspense fallback={<RouteStatusFallback />}><Tasks /></React.Suspense>} />
               <Route path={ROUTES.users} element={<React.Suspense fallback={<RouteStatusFallback />}><Users /></React.Suspense>} />
               <Route path={ROUTES.profile} element={<React.Suspense fallback={<RouteStatusFallback />}><AccountProfile /></React.Suspense>} />
+              <Route path={ROUTES.notifications} element={<React.Suspense fallback={<RouteStatusFallback />}><Notifications /></React.Suspense>} />
               <Route path={ROUTES.settings} element={<React.Suspense fallback={<RouteStatusFallback />}><SettingsPage /></React.Suspense>} />
               <Route path={`${ROUTES.settings}/:section`} element={<Navigate to={ROUTES.settings} replace />} />
             </Route>

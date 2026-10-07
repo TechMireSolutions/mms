@@ -16,7 +16,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { type Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
-
 import { FinanceOverlays } from "@/tenant/features/finance/components/FinanceOverlays";
 
 const FinanceSetupTier = React.lazy(() =>
@@ -122,6 +121,7 @@ export default function Finance(): React.JSX.Element {
               ) : c.activeTab === "work" && c.activeSubTab === "invoices" && (
                 <InvoicesList
                   invoices={c.invoices}
+                  {...c.invoiceStatusFilter}
                   onView={c.setViewInvoice}
                   onRecord={c.setRecordInvoice}
                   canWrite={c.canWrite}

@@ -6,6 +6,8 @@ import {
   ATTENDANCE_MODULE_MANIFEST,
   DASHBOARD_LOW_ATTENDANCE_THRESHOLD,
   DASHBOARD_URGENT_ATTENDANCE_THRESHOLD,
+  OPEN_INVOICE_STATUSES,
+  todayISO,
 } from '@mms/shared';
 import {
   isDashboardAdmin,
@@ -16,6 +18,12 @@ import {
 
 export type DashboardNotificationType = 'fee' | 'event' | 'student' | 'attendance';
 
+/** Where a notification leads when opened — resolved to a route + Work drill-down by the tenant shell. */
+export type DashboardNotificationTarget =
+  | { kind: 'invoices'; statuses: string[] }
+  | { kind: 'students'; status: string }
+  | { kind: 'attendanceDay'; date: string };
+
 export interface DashboardNotificationItem {
   id: string;
   type: DashboardNotificationType;
@@ -23,6 +31,7 @@ export interface DashboardNotificationItem {
   desc: string;
   time: string;
   urgent?: boolean;
+  target?: DashboardNotificationTarget;
 }
 
 export const MAX_DASHBOARD_NOTIFICATIONS = 8;
@@ -74,6 +83,7 @@ export function buildDashboardNotifications(
         }),
         time: t('notifications.timeNow'),
         urgent: outstandingTotal > 0,
+        target: { kind: 'invoices', statuses: [...OPEN_INVOICE_STATUSES] },
       });
     }
   }
@@ -89,6 +99,7 @@ export function buildDashboardNotifications(
         desc: t('notifications.inactiveStudentsDesc'),
         time: t('notifications.timeToday'),
         urgent: false,
+        target: { kind: 'students', status: 'inactive' },
       });
     }
   }
@@ -105,6 +116,7 @@ export function buildDashboardNotifications(
       desc: t('notifications.lowAttendanceDesc', { rate: attendanceRate }),
       time: t('notifications.timeToday'),
       urgent: attendanceRate < urgentThreshold,
+      target: { kind: 'attendanceDay', date: todayISO() },
     });
   }
 
@@ -116,6 +128,7 @@ export function buildDashboardNotifications(
       desc: t('notifications.feesClearDesc'),
       time: t('notifications.timeToday'),
       urgent: false,
+      target: { kind: 'invoices', statuses: [] },
     });
   }
 

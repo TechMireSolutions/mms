@@ -10,6 +10,12 @@ import { useAttendanceColumnLayout } from '@/tenant/features/attendance/hooks/us
 import { useAttendancePageTabs } from '@/tenant/features/attendance/hooks/useAttendancePageTabs';
 import { useViewerRole } from '@/tenant/hooks/useViewerRole';
 import { usePermissions, useModulePermissions } from '@/tenant/hooks/usePermissions';
+import { useWorkDrillDownListener } from '@/lib/query/useWorkDrillDownListener';
+import {
+  ATTENDANCE_WORK_DRILLDOWN_EVENT,
+  consumeAttendanceWorkDrillDown,
+  type AttendanceWorkDrillDown,
+} from '@/tenant/features/attendance/hooks/attendanceWorkDrillDown';
 
 const DEFAULT_FILTERS = {
   sessionId: '',
@@ -29,6 +35,16 @@ export function useAttendancePageController() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showDeleted, setShowDeleted] = useDirectoryTrashState();
   const [shownCount, setShownCount] = useState(0);
+  useWorkDrillDownListener<AttendanceWorkDrillDown>(
+    ATTENDANCE_WORK_DRILLDOWN_EVENT,
+    consumeAttendanceWorkDrillDown,
+    (drillDown) => {
+      setActiveTab('work');
+      setActiveOpsTab('records');
+      setShowDeleted(false);
+      if (drillDown.date) setFilters((prev) => ({ ...prev, date: drillDown.date ?? prev.date }));
+    },
+  );
   const attendanceCollectionQuery = useAttendanceRecords();
   const activeAttendanceRecords = attendanceCollectionQuery.data ?? [];
   // Work records list is server-paged inside `AttendanceRecords` (filters colocated
