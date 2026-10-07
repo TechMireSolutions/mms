@@ -9,7 +9,7 @@ import {
   type FieldDefinition,
 } from '@mms/shared';
 import { loadStudentsSettingsCombined } from './studentConfigService.js';
-import { loadContactsByIds } from './contactService.js';
+import { loadContactsSummaryByIdsForTenant } from './contactService.js';
 import { validateOrThrow } from '../lib/zodRequest.js';
 
 // Cache compiled schema by tenant and config version: `${tenant}:${configVersion}:${language}`
@@ -76,6 +76,7 @@ export async function validateStudentDynamic(
   language = 'en',
 ): Promise<void> {
   const settings = await loadStudentsSettingsCombined();
+  if (!settings) return;
 
   // Version Lock check (Rule 16.3 / CS-6)
   const submittedBlueprintId = getSubmittedBlueprintId(student);
@@ -119,7 +120,7 @@ export async function validateStudentDynamic(
             .map(String),
         ),
       ];
-      const contacts = ids.length === 0 ? [] : await loadContactsByIds(ids);
+      const contacts = ids.length === 0 ? [] : await loadContactsSummaryByIdsForTenant(tenant, ids);
       cachedContactMap = new Map(contacts.map((c) => [String(c.id), c]));
     }
     return cachedContactMap;

@@ -1,5 +1,11 @@
 import { initContract } from '@ts-rest/core';
-import { studentContract } from './students.contract.js';
+import {
+  studentContract,
+  studentCrudContract,
+  studentOperationsContract,
+  studentCrudRoutes,
+  studentOperationRoutes,
+} from './students.contract.js';
 import { financeContract } from './finance.contract.js';
 import { attendanceContract } from './attendance.contract.js';
 import { contactsContract } from './contacts.contract.js';
@@ -63,6 +69,10 @@ export type RootContract = typeof rootContract;
  */
 export {
   studentContract,
+  studentCrudContract,
+  studentOperationsContract,
+  studentCrudRoutes,
+  studentOperationRoutes,
   financeContract,
   attendanceContract,
   contactsContract,

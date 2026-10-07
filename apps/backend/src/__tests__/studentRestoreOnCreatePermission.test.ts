@@ -11,6 +11,12 @@ vi.mock('../lib/tenantContext.js', () => ({
 
 vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
+  activeDb: () => ({}),
+}));
+
+vi.mock('../db/repositories/studentEnrollmentCascade.js', () => ({
+  cascadeSoftDeleteEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
+  restoreCascadedEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../db/repositories/studentRepository.js', () => ({
@@ -48,6 +54,15 @@ vi.mock('../services/contactService.js', () => ({
 
 vi.mock('../students/use-cases/studentPreferencesService.js', () => ({
   loadStudentModulePreferences: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: vi.fn().mockResolvedValue({ id: 1 }),
+  sanitizeAuditState: (v: unknown) => v,
 }));
 
 describe('createStudent restore-on-create permission gate', () => {

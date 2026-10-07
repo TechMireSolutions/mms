@@ -10,6 +10,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Badge } from "@/components/ui/badge";
 import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
+import { ParentNamesSubtitle } from "@/tenant/features/students/components/ParentNamesSubtitle";
 import type {
   StudentsListContentMessagingRecipient,
   StudentsListContentTableProps,
@@ -22,7 +23,6 @@ export interface RenderStudentsListDesktopTableCellOptions {
   displayName: string;
   emptyDash: string;
   statusBadgeConfig: StudentsListContentTableProps["statusBadgeConfig"];
-  isColumnVisible: StudentsListContentTableProps["isColumnVisible"];
   onViewStudent: StudentsListContentTableProps["onViewStudent"];
   viewingDeleted: boolean;
   canWriteMessaging: boolean;
@@ -41,7 +41,6 @@ export function renderStudentsListDesktopTableCell({
   displayName,
   emptyDash,
   statusBadgeConfig,
-  isColumnVisible: _isColumnVisible,
   onViewStudent,
   viewingDeleted,
   canWriteMessaging,
@@ -54,10 +53,6 @@ export function renderStudentsListDesktopTableCell({
       const fatherName = studentRow.fatherName?.trim();
       const motherName = studentRow.motherName?.trim();
       const guardianName = studentRow.guardianName?.trim();
-
-      const fatherLabel = t("students.detail.father");
-      const motherLabel = t("students.detail.mother");
-      const guardianLabel = t("students.idCard.guardian");
 
       return (
         <div className="flex items-start gap-3 min-w-0 py-0.5">
@@ -82,21 +77,13 @@ export function renderStudentsListDesktopTableCell({
                 <span className="block truncate font-bold">{studentName}</span>
               </Button>
             </div>
-            {fatherName ? (
-              <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={fatherName}>
-                <span>{fatherLabel}:</span> {fatherName}
-              </p>
-            ) : null}
-            {motherName ? (
-              <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={motherName}>
-                <span>{motherLabel}:</span> {motherName}
-              </p>
-            ) : null}
-            {!fatherName && !motherName && guardianName ? (
-              <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={guardianName}>
-                <span>{guardianLabel}:</span> {guardianName}
-              </p>
-            ) : null}
+            <ParentNamesSubtitle
+              fatherName={fatherName}
+              motherName={motherName}
+              guardianName={guardianName}
+              t={t}
+              className="text-xs text-muted-foreground leading-tight mt-0.5 space-y-0.5"
+            />
             {viewingDeleted && studentRow.deletionReason ? (
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={studentRow.deletionReason}>
                 {t("students.deletionReasonLabel")}: {studentRow.deletionReason}

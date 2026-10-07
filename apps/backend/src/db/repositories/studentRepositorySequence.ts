@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { StudentGrNumberSettings } from '@mms/shared';
 import { students, studentSequenceConfig } from '../schema.js';
 import { withTenant, type TenantTransaction } from '../tenant-context.js';
+import { enableIncludeDeleted } from '../../lib/softDeleteHelpers.js';
 
 export interface GenerateGrNumberInput {
   regDate: string;
@@ -38,6 +39,7 @@ export async function generateNextGrNumberBatchSql(
       .for('update');
 
     if (!row) {
+      await enableIncludeDeleted(tx);
       const base = eq(students.workspaceSubdomain, subdomain);
       const yearStr = String(year);
       const countRows = await tx

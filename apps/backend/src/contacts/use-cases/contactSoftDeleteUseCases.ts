@@ -41,6 +41,9 @@ export async function bulkSoftDeleteContacts(
   if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
 
   const result = await runInTransaction(async () => {
+    if (repo.guardDeleteDependents) {
+      await repo.guardDeleteDependents(tenant, uniqueIds);
+    }
     let outcome: { succeeded: number; failed: number };
     const now = new Date().toISOString();
     const trimmedReason = deletionReason?.trim();

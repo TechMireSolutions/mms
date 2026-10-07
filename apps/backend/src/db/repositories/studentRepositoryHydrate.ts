@@ -122,10 +122,33 @@ export async function findStudentsByIds(
       .where(
         and(
           eq(students.workspaceSubdomain, subdomain),
+          inArray(students.id, ids),
+        ),
+      );
+    return hydrateStudentsList(tx, subdomain, rows);
+  });
+}
+
+export async function resolveStudentsByIdentifiers(
+  tenant: string,
+  identifiers: string[],
+  options?: { includeDeleted?: boolean },
+): Promise<Student[]> {
+  const subdomain = tenant.trim().toLowerCase();
+  if (identifiers.length === 0) return [];
+  return withTenantRead(subdomain, async (tx) => {
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return [];
+    if (options?.includeDeleted) await enableIncludeDeleted(tx);
+    const rows = await tx
+      .select(STUDENT_COLUMNS)
+      .from(students)
+      .where(
+        and(
+          eq(students.workspaceSubdomain, subdomain),
           or(
-            inArray(students.id, ids),
-            inArray(students.studentId, ids),
-            inArray(students.grNumber, ids),
+            inArray(students.id, identifiers),
+            inArray(students.studentId, identifiers),
+            inArray(students.grNumber, identifiers),
           ),
         ),
       );

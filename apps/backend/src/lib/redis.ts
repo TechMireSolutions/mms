@@ -513,6 +513,7 @@ export const redisKeys = {
   setupLookupsKind: (tenant: string, tableName: string, kind: string) => `mms:${tenant.trim().toLowerCase()}:setup:${tableName}:kind:${kind}`,
   setupPattern: (tenant: string, tableName: string) => `mms:${tenant.trim().toLowerCase()}:setup:${tableName}:*`,
   metrics: (tenant: string, collection: string) => `mms:${tenant.trim().toLowerCase()}:${collection}:metrics`,
+  metricsPattern: (tenant: string, collection: string) => `mms:${tenant.trim().toLowerCase()}:${collection}*:metrics`,
   dashboardSummary: (tenant: string, date?: string) => `mms:${tenant.trim().toLowerCase()}:dashboard:summary:${date ?? 'today'}`,
   dashboardSummaryPattern: (tenant: string) => `mms:${tenant.trim().toLowerCase()}:dashboard:summary:*`,
   searchVersion: (tenant: string, entityType: string, entityId: string) => `mms:${tenant.trim().toLowerCase()}:search:version:${entityType}:${entityId}`,

@@ -54,6 +54,15 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 |-------------|--------|
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 
+## Plan first, task list, then execute — applies to every request
+
+On receiving any request, systematically plan before modifying code:
+1. **Discover & Plan**: Inspect the codebase, locate relevant files/abstractions, clarify requirements, and identify boundaries (tenant isolation, 200 LOC cap, strict TS).
+2. **Actionable Task List**: Formulate an explicit, ordered task checklist (`- [ ]`) decomposing the work into discrete, verifiable phases.
+3. **Iterative Execution & Verification**: Execute task-by-task against the checklist, update progress (`- [x]`), apply surgical changes, and verify (typecheck/lint/test) after each phase before declaring completion. Never guess APIs or modify code without prior discovery.
+
+Owners: always-on `mms-core` §3 (**Workflow Discipline**) · universal standards `mms-agent-universal` §1 (**Cognition & Behaviour**).
+
 ## Reuse first (DRY) — applies to every change
 
 Before implementing any feature, look for existing components, hooks, utilities, layouts, forms, dialogs, and patterns that can be reused or extended. Keep shared behaviour in reusable, configurable implementations; never duplicate UI or business logic across pages. Changes to shared components must stay compatible with their existing consumers — find them, run their tests, and verify the affected pages. Follow the project's design conventions and the `ui-ux-pro-max` skill for UI/UX work. Tabular data uses the shared `DataTable` / `WorkBatchTable` stack.

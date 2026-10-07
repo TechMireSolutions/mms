@@ -3,17 +3,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
-import { studentStatusBadgeConfig, studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { getInitialStudentDraft, studentDraftSnapshot } from "@/tenant/features/students/components/studentFormDraft";
-import type { StudentStatusSelectOption } from "@/tenant/features/students/components/StudentFormSectionShared";
 import { useStudentFormLinkedData } from "@/tenant/features/students/hooks/useStudentFormLinkedData";
 import { useStudentFormActionHandlers } from "@/tenant/features/students/hooks/useStudentFormActionHandlers";
-import { useStudentLookupMutation } from "@/tenant/features/students/hooks/useStudentLookups";
+import { useStudentFormStatusOptions } from "@/tenant/features/students/hooks/useStudentFormStatusOptions";
 import { isStudentCreate } from "@/tenant/features/students/hooks/studentFormHandlers";
 import {
   type FieldDefinition,
   type Student,
-  resolveStudentStatuses,
   DEFAULT_STUDENT_ENABLED_TABS,
 } from "@mms/shared";
 
@@ -28,7 +25,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
   const { settings, statuses: configStatuses, isFieldEnabled, isFieldRequired } = useStudentConfig();
-  const lookupMutation = useStudentLookupMutation();
 
   const formInstanceId = String(student?.id ?? "new");
   const settingsFields = settings.fields;
@@ -50,28 +46,22 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
   const grManuallyEdited = useRef(false);
 
-  const statusBadgeConfig = studentStatusBadgeConfig(t);
-  const resolvedStatuses = resolveStudentStatuses(configStatuses);
-  const currentStatus = studentDraft.status || "active";
-  const statusList = currentStatus && !resolvedStatuses.includes(currentStatus)
-    ? [currentStatus, ...resolvedStatuses]
-    : resolvedStatuses;
-  const statusSelectOptions: StudentStatusSelectOption[] = statusList.map((status) => ({
-    value: status,
-    label: studentStatusLabel(t, status),
-  }));
-
-  const handleUpdateStatuses = async (nextStatuses: string[]) => {
-    await lookupMutation.mutateAsync({ kind: "statuses", items: nextStatuses });
-  };
+  const { statusBadgeConfig, statusSelectOptions, handleUpdateStatuses } =
+    useStudentFormStatusOptions(t, configStatuses, studentDraft.status);
 
   const prevStudentId = useRef(student?.id);
+  const prevFieldsRef = useRef(fields);
   const prevFieldsStr = useRef(JSON.stringify(fields));
 
   useEffect(() => {
     const studentChanged = student?.id !== prevStudentId.current;
-    const currentFieldsStr = JSON.stringify(fields);
-    const fieldsChanged = currentFieldsStr !== prevFieldsStr.current;
+    let fieldsChanged = false;
+    let currentFieldsStr = prevFieldsStr.current;
+    if (fields !== prevFieldsRef.current) {
+      currentFieldsStr = JSON.stringify(fields);
+      fieldsChanged = currentFieldsStr !== prevFieldsStr.current;
+      prevFieldsRef.current = fields;
+    }
     
     if (!studentChanged && !fieldsChanged) {
       return;

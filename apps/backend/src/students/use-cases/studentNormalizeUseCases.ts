@@ -107,11 +107,11 @@ export function prepareStudentRecord(record: StudentRecord | Record<string, unkn
  */
 export class StudentRestoreConflictError extends Error {
   readonly type = 'validation_error';
-  readonly field: 'grNumber' | 'contact';
+  readonly field: 'grNumber' | 'contact' | 'studentId';
 
   constructor(
     message = 'A student with this GR number already exists',
-    field: 'grNumber' | 'contact' = 'grNumber',
+    field: 'grNumber' | 'contact' | 'studentId' = 'grNumber',
   ) {
     super(message);
     this.name = 'StudentRestoreConflictError';

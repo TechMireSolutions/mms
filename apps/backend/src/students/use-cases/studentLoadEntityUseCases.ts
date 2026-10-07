@@ -55,7 +55,9 @@ export async function loadStudentsByIds(
   if (ids.length === 0) return [];
   const tenant = getRequestTenant();
   if (!tenant) return [];
-  const matched = await repo.findByIds(tenant, ids);
+  const matched = repo.resolveByIdentifiers
+    ? await repo.resolveByIdentifiers(tenant, ids)
+    : await repo.findByIds(tenant, ids);
   return hydrateStudentsFromContacts(tenant, matched.filter((student) => !student.deletedAt));
 }
 

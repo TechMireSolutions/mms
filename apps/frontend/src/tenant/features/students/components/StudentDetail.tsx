@@ -1,11 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, IdCard } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { Drawer } from '@/components/ui/Drawer';
-import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
-import { Button } from "@/components/ui/button";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailContactSection } from "@/tenant/features/students/components/StudentDetailContactSection";
@@ -16,6 +14,7 @@ import { StudentDetailQuickActions } from "@/tenant/features/students/components
 import { StudentDetailRelationsSection } from "@/tenant/features/students/components/StudentDetailRelationsSection";
 import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
 import { StudentDetailSiblingsSection } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
+import { StudentDetailHeaderActions } from "@/tenant/features/students/components/StudentDetailHeaderActions";
 import { useStudentDetailModel } from "@/tenant/features/students/components/useStudentDetailModel";
 
 export interface StudentDetailProps {
@@ -60,7 +59,7 @@ export const StudentDetail = (function StudentDetail({
     hasVisibleDetailFields,
     showNotesSection,
     siblings,
-    allStudents,
+    siblingMap,
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
@@ -74,43 +73,31 @@ export const StudentDetail = (function StudentDetail({
     }
   };
 
-  const headerActionsNode = (() => (
-      <div className="flex items-center gap-1.5">
-        {!isArchived && onPrintIdCard && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onPrintIdCard(student)}
-            className="min-h-11 px-3 gap-1.5 font-medium text-xs border-border/60 hover:bg-muted/80"
-            title={t("students.detail.printIdCard")}
-            aria-label={t("students.detail.printIdCard")}
-          >
-            <IdCard className="w-3.5 h-3.5" aria-hidden />
-            <span className="hidden sm:inline">{t("students.detail.printIdCard")}</span>
-          </Button>
-        )}
-        <DetailDrawerRestoreOrEditAction
-          isArchived={isArchived}
-          canRestore={canDelete}
-          canEdit={Boolean(onEdit)}
-          restoreLabel={t("students.restore")}
-          editLabel={t("students.detail.editTitle")}
-          onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
-          onEdit={onEdit ? () => onEdit(student) : undefined}
-        />
-      </div>
-    ))();
+  const headerActionsNode = (
+    <StudentDetailHeaderActions
+      student={student}
+      isArchived={isArchived}
+      canDelete={canDelete}
+      canEdit={Boolean(onEdit)}
+      onPrintIdCard={onPrintIdCard}
+      onRestore={onRestore ? () => void onRestore(String(student.id)) : undefined}
+      onEdit={onEdit ? () => onEdit(student) : undefined}
+      printLabel={t("students.detail.printIdCard")}
+      restoreLabel={t("students.restore")}
+      editLabel={t("students.detail.editTitle")}
+    />
+  );
 
-  const headerExtraNode = (() => <StudentArchivedBanner student={student} />)();
+  // Only mount the archived banner when the student is actually archived — no-op otherwise.
+  const headerExtraNode = isArchived ? <StudentArchivedBanner student={student} /> : null;
 
-  const footerNode = (() => (
-      <DrawerUpdatedStamp
-        updatedAt={student.updatedAt}
-        createdAt={student.createdAt}
-        label={t("students.detail.updatedLabel")}
-      />
-    ))();
+  const footerNode = (
+    <DrawerUpdatedStamp
+      updatedAt={student.updatedAt}
+      createdAt={student.createdAt}
+      label={t("students.detail.updatedLabel")}
+    />
+  );
 
   return (
     <Drawer
@@ -175,8 +162,8 @@ export const StudentDetail = (function StudentDetail({
         onViewSibling={
           onViewStudent
             ? (siblingId) => {
-                const target = allStudents.find((s: { id: string | number }) => String(s.id) === String(siblingId));
-                if (target) onViewStudent(target as Student);
+                const target = siblingMap.get(String(siblingId));
+                if (target) onViewStudent(target);
               }
             : undefined
         }
@@ -193,5 +180,3 @@ export const StudentDetail = (function StudentDetail({
 
 export const StudentDrawer = StudentDetail;
 export default StudentDetail;
-
-

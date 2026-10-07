@@ -2,6 +2,7 @@ export * from "./platform.js";
 export * from "./system.js";
 export * from "./contacts.js";
 export * from "./students.js";
+export * from "./studentSetupTables.js";
 export * from "./faculty.js";
 export * from "./sessions.js";
 export * from "./attendance.js";

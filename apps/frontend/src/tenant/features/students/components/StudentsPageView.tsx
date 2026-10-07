@@ -7,6 +7,7 @@ import { StudentsCommandMetrics } from "@/tenant/features/students/components/St
 import { StudentsPageHeaderActions } from "@/tenant/features/students/components/StudentsPageHeaderActions";
 import { StudentsPageOverlays } from "@/tenant/features/students/components/StudentsPageOverlays";
 import { AnimatePresence } from "framer-motion";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { StudentsWorkTier } from "@/tenant/features/students/components/StudentsWorkTier";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -27,6 +28,7 @@ export function StudentsPageView({
   canExport,
   visibleTabs,
   metricsTotal,
+  metricsSnapshot,
   activeTab,
   setActiveTab,
   viewingDeleted,
@@ -57,7 +59,11 @@ export function StudentsPageView({
         />
       }
       metricsStrip={
-        <StudentsCommandMetrics total={metricsTotal ?? shownCount} shown={shownCount} />
+        <StudentsCommandMetrics
+          total={metricsTotal ?? shownCount}
+          shown={shownCount}
+          serverMetrics={metricsSnapshot}
+        />
       }
     >
       <ResponsiveAccordionTabs
@@ -69,6 +75,10 @@ export function StudentsPageView({
         <AnimatePresence mode="wait">
           {activeTab === "work" ? (
             <div className="space-y-5">
+          {/* NOTE: Export is intentionally reachable from two entry points:
+              1. StudentsPageHeaderActions (persistent top-right — always visible regardless of active tab)
+              2. ModuleEntityIoToolbar below (tab-level, visible only within the Work tab for contextual proximity)
+              Both call the same handleExportCSV action. This is a deliberate UX pattern, not a duplication bug. */}
               <ModuleEntityIoToolbar
                 canExport={canExport}
                 canWrite={canWrite}
@@ -83,13 +93,17 @@ export function StudentsPageView({
               <StudentsWorkTier {...tabPanelProps.workTierProps} />
             </div>
           ) : activeTab === "reports" ? (
-            <Suspense fallback={<RouteStatusFallback />}>
-              <StudentsReportsTier />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<RouteStatusFallback />}>
+                <StudentsReportsTier />
+              </Suspense>
+            </ErrorBoundary>
           ) : activeTab === "setup" ? (
-            <Suspense fallback={<RouteStatusFallback />}>
-              <StudentsSetupTier />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<RouteStatusFallback />}>
+                <StudentsSetupTier />
+              </Suspense>
+            </ErrorBoundary>
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>

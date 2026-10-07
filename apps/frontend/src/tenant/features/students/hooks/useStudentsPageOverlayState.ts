@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toMessagingRecipient, type Student } from "@mms/shared";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -20,20 +20,23 @@ export function useStudentsPageOverlayState() {
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
   const [idCardStudents, setIdCardStudents] = useState<Student[]>([]);
 
-  const openSelectionMessage = (channel: MessageChannel, targets: Student[]) => {
-    openComposer(
-      channel,
-      targets.map((student) => toMessagingRecipient(student)),
-    );
-  };
+  const openSelectionMessage = useCallback(
+    (channel: MessageChannel, targets: Student[]) => {
+      openComposer(
+        channel,
+        targets.map((student) => toMessagingRecipient(student)),
+      );
+    },
+    [openComposer],
+  );
 
-  const openIdCards = (students: Student[]) => {
+  const openIdCards = useCallback((students: Student[]) => {
     setIdCardStudents(students);
-  };
+  }, []);
 
-  const closeIdCards = () => {
+  const closeIdCards = useCallback(() => {
     setIdCardStudents([]);
-  };
+  }, []);
 
   return {
     statusBadgeConfig,

@@ -38,7 +38,6 @@ export const StudentsSetupPanel = (function StudentsSetupPanel({
         isPrefsDirty={isPrefsDirty}
         saving={saving}
         saved={saved}
-        onSave={handleSave}
       />
 
       <ModuleSetupSaveFooter

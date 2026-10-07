@@ -58,7 +58,7 @@ const widgetAggregateResultSchema = z.object({
   chartData: z.array(z.object({ name: z.string(), value: z.number() })),
 });
 
-export const studentContract = c.router({
+export const studentCrudRoutes = {
   list: {
     method: 'GET',
     path: '/api/students',
@@ -123,6 +123,11 @@ export const studentContract = c.router({
     },
     summary: 'Soft delete a student',
   },
+} as const;
+
+export const studentCrudContract = c.router(studentCrudRoutes);
+
+export const studentOperationRoutes = {
   bulkStatus: {
     method: 'POST',
     path: '/api/students/bulk-status',
@@ -187,6 +192,13 @@ export const studentContract = c.router({
     },
     summary: 'Migrate GR numbers',
   },
+} as const;
+
+export const studentOperationsContract = c.router(studentOperationRoutes);
+
+export const studentContract = c.router({
+  ...studentCrudRoutes,
+  ...studentOperationRoutes,
   restore: {
     method: 'POST',
     path: '/api/students/:id/restore',

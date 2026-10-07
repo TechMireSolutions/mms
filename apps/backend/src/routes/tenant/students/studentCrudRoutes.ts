@@ -1,15 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { withTenant } from '../../../db/tenant-context.js';
-import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
-import {
-  STUDENTS_MODULE_MANIFEST,
-  roleHasPermission,
-  isQueryFlagTrue,
-  type User,
-  type Student,
-  studentContract,
-} from '@mms/shared';
+import { isQueryFlagTrue, type User, type Student, studentCrudContract } from '@mms/shared';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
@@ -19,51 +11,30 @@ import {
   mapStudentWriteHttpError,
   sanitizeOneStudentForUser,
   sanitizeStudentsForUser,
+  withStudentTenantScope,
 } from './studentRouteHelpers.js';
-import { enableIncludeDeleted } from '../../../lib/softDeleteHelpers.js';
 
 const s = initServer();
 
-async function withStudentTenantScope<T>(
-  tenantId: string,
-  includeDeleted: boolean,
-  work: () => Promise<T>,
-  options?: { readOnly?: boolean },
-): Promise<T> {
-  return withTenant(tenantId, async (tx) => {
-    if (includeDeleted) await enableIncludeDeleted(tx);
-    return work();
-  }, options);
-}
-
 /** Main student CRUD — @ts-rest contract router. */
 export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
-  const router = s.router(studentContract, {
-    list: async ({ query, request }: ContractRouteArgs<typeof studentContract['list']>): Promise<ContractRouteResponse<typeof studentContract['list']>> => {
+  const router = s.router(studentCrudContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof studentCrudContract['list']>): Promise<ContractRouteResponse<typeof studentCrudContract['list']>> => {
       const user = request.user as User;
-
       if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       const skipCount = isQueryFlagTrue(query?.skipCount);
-
       if (includeDeleted && !canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
       }
-
       const result = await withStudentTenantScope(
         String(request.tenant?.id),
         includeDeleted,
-        () => studentUseCases.loadStudentsPage({
-          ...query,
-          includeDeleted,
-          skipCount,
-        }),
+        () => studentUseCases.loadStudentsPage({ ...query, includeDeleted, skipCount }),
         { readOnly: true },
       );
-
       return {
         status: 200 as const,
         body: {
@@ -73,13 +44,11 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       };
     },
 
-    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof studentContract['get']>): Promise<ContractRouteResponse<typeof studentContract['get']>> => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof studentCrudContract['get']>): Promise<ContractRouteResponse<typeof studentCrudContract['get']>> => {
       const user = request.user as User;
-
       if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-
       try {
         const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
@@ -96,31 +65,26 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
         const response = await sanitizeOneStudentForUser(item as Student, user);
         return { status: 200 as const, body: { student: response } };
-      } catch (error: unknown) {
+      } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load student' } };
       }
     },
 
-    create: async ({ body, request }: ContractRouteArgs<typeof studentContract['create']>): Promise<ContractRouteResponse<typeof studentContract['create']>> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof studentCrudContract['create']>): Promise<ContractRouteResponse<typeof studentCrudContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-
-      const tenant = request.tenant?.id;
-
       try {
-        const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
+        const result = await withTenant(String(request.tenant?.id), () => studentUseCases.createStudent(
           body,
           user,
         ), { readOnly: false });
-
         if (result.restored) {
           await auditStudent(user, 'student.restore', `Restored student ${result.record.id} via re-registration`, String(result.record.id));
         } else {
           await auditStudent(user, 'student.create', `Created student ${result.record.id}`, String(result.record.id));
         }
-
         const response = await sanitizeOneStudentForUser(result.record as Student, user);
         return result.restored
           ? { status: 200 as const, body: { student: response } }
@@ -133,24 +97,19 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['update']>): Promise<ContractRouteResponse<typeof studentContract['update']>> => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentCrudContract['update']>): Promise<ContractRouteResponse<typeof studentCrudContract['update']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-
-      const tenant = request.tenant?.id;
-
       try {
-        const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {
+        const updated = await withTenant(String(request.tenant?.id), () => studentUseCases.updateStudentById(id, {
           ...body,
           id,
-        }), { readOnly: false });
-
+        }, user), { readOnly: false });
         if (!updated) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };
         }
-
         await auditStudent(user, 'student.update', `Updated student ${id}`, id);
         const response = await sanitizeOneStudentForUser(updated as Student, user);
         return { status: 200 as const, body: { student: response } };
@@ -161,22 +120,19 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['delete']>): Promise<ContractRouteResponse<typeof studentContract['delete']>> => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentCrudContract['delete']>): Promise<ContractRouteResponse<typeof studentCrudContract['delete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-
       try {
         const reason = body?.deletionReason;
         const deleted = await withTenant(String(request.tenant?.id), () => studentUseCases.softDeleteStudentById(id, String(user.id), reason), { readOnly: false });
         if (!deleted) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };
         }
-
         const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
         await auditStudent(user, 'student.soft_delete', `Soft-deleted student ${id}${reasonNote}`, id);
-
         return { status: 200 as const, body: { success: true } };
       } catch (error: unknown) {
         const mapped = mapStudentWriteHttpError(error);
@@ -186,103 +142,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete student' } };
       }
     },
-
-    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkStatus']>): Promise<ContractRouteResponse<typeof studentContract['bulkStatus']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.bulkUpdateStudentStatus(
-            body.ids.map(String),
-            body.status,
-          ), { readOnly: false });
-        await auditStudent(
-          user,
-          'student.bulk_status',
-          `Updated status to ${body.status} for ${result.succeeded} student(s); ${result.failed} failed`,
-        );
-        return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update student status' } };
-      }
-    },
-
-    bulkEnroll: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkEnroll']>): Promise<ContractRouteResponse<typeof studentContract['bulkEnroll']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.bulkEnrollStudents({
-            studentIds: body.studentIds.map(String),
-            sessionIds: body.sessionIds.map(String),
-            mode: body.mode,
-          }), { readOnly: false });
-        await auditStudent(
-          user,
-          'student.bulk_enroll',
-          `Updated session enrollments (${body.mode}) for ${result.succeeded} student(s)`,
-        );
-        return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk enroll students' } };
-      }
-    },
-
-    nextGrNumber: async ({ query, request }: ContractRouteArgs<typeof studentContract['nextGrNumber']>): Promise<ContractRouteResponse<typeof studentContract['nextGrNumber']>> => {
-      const user = request.user as User;
-      if (!canReadCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const grNumber = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.computeNextGrNumberForDate(query.registeredDate, {
-            grNumberTemplate: query.template ?? '{seq}-{year}',
-            grNumberDigits: query.digits ?? 4,
-            grNumberRestartAnnually: query.restartAnnually ?? true,
-          }), { readOnly: true });
-        return { status: 200 as const, body: { grNumber } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to compute next GR number' } };
-      }
-    },
-
-    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof studentContract['duplicateCheck']>): Promise<ContractRouteResponse<typeof studentContract['duplicateCheck']>> => {
-      const user = request.user as User;
-      if (!canReadCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      const tenantId = request.tenant?.id || getRequestTenant();
-      if (!tenantId) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'This endpoint requires a tenant subdomain' } };
-      }
-      try {
-        const result = await withTenant(tenantId, () =>
-          studentUseCases.checkStudentRegistrationDuplicate(body, tenantId), { readOnly: true });
-        return { status: 200 as const, body: result };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to check student duplicate');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
-      }
-    },
-
-    migrateGrNumbers: async ({ request }: ContractRouteArgs<typeof studentContract['migrateGrNumbers']>): Promise<ContractRouteResponse<typeof studentContract['migrateGrNumbers']>> => {
-      const user = request.user as User;
-      if (!roleHasPermission(user.role, STUDENTS_MODULE_MANIFEST.permissions.setupWrite)) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.migrateStudentsMissingGrNumbers(), { readOnly: false });
-        return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate GR numbers' } };
-      }
-    },
-  } as unknown as RouterImplementation<typeof studentContract>);
+  } as unknown as RouterImplementation<typeof studentCrudContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

@@ -162,6 +162,7 @@ export function broadcastTenantUpdate(
   if (cleanTenant) {
     if (type === 'collection') {
       void redisDel(redisKeys.metrics(cleanTenant, key));
+      void redisDelPattern(redisKeys.metricsPattern(cleanTenant, key));
       void redisDelPattern(redisKeys.dashboardSummaryPattern(cleanTenant));
       void redisDelPattern(redisKeys.setupPattern(cleanTenant, key));
     } else if (type === 'object') {

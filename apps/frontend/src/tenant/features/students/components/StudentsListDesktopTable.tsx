@@ -94,7 +94,6 @@ export function StudentsListDesktopTable({
           displayName: studentRow.name || "",
           emptyDash: t("students.table.emptyDash"),
           statusBadgeConfig,
-          isColumnVisible,
           onViewStudent,
           viewingDeleted,
           canWriteMessaging: !!canWriteMessaging && !viewingDeleted,
@@ -107,7 +106,6 @@ export function StudentsListDesktopTable({
     visibleColumns,
     getColumnWidth,
     statusBadgeConfig,
-    isColumnVisible,
     onViewStudent,
     viewingDeleted,
     canWriteMessaging,
@@ -122,7 +120,7 @@ export function StudentsListDesktopTable({
         columns={batchColumns}
         selection={{
           selectedIds: selectedSet,
-          onSelectOne: (id) => onSelectOne(id),
+          onSelectOne,
           onSelectAll,
           allSelected,
           someSelected,

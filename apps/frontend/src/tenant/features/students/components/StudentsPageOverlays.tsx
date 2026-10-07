@@ -1,5 +1,6 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
@@ -53,10 +54,10 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
   onViewStudent,
   onViewContact,
 }: StudentsPageOverlaysProps): React.JSX.Element {
-  const configPending = false;
   const sessions = useSessionsCollection();
 
-  const idCardItems = (() => {
+  const idCardItems = useMemo(() => {
+    if (idCardStudents.length === 0) return [];
     return idCardStudents.map((student) => {
       const enrolledSet = new Set(student.enrolledSessions ?? []);
       const sessionNames = sessions
@@ -69,47 +70,51 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
         emergencyPhone: student.phone,
       };
     });
-  })();
+  }, [idCardStudents, sessions]);
 
   return (
     <>
-      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
-        <AnimatePresence>
-          {showStudentForm && !configPending ? (
-            <StudentForm
-              student={editStudent}
-              onClose={onCloseForm}
-              onSave={onSave}
-            />
-          ) : null}
-          {messagingTarget ? (
-            <MessageComposer
-              channel={messagingTarget.channel}
-              recipients={messagingTarget.recipients}
-              onClose={onCloseComposer}
-            />
-          ) : null}
-        </AnimatePresence>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<ModuleOverlayLoadingFallback />}>
+          <AnimatePresence>
+            {showStudentForm ? (
+              <StudentForm
+                student={editStudent}
+                onClose={onCloseForm}
+                onSave={onSave}
+              />
+            ) : null}
+            {messagingTarget ? (
+              <MessageComposer
+                channel={messagingTarget.channel}
+                recipients={messagingTarget.recipients}
+                onClose={onCloseComposer}
+              />
+            ) : null}
+          </AnimatePresence>
+        </Suspense>
+      </ErrorBoundary>
 
-      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-        <AnimatePresence>
-          {viewStudent && !configPending ? (
-            <StudentDetail
-              student={viewStudent}
-              canDelete={canDelete}
-              onClose={onCloseView}
-              onEdit={canWrite ? onEditFromDrawer : undefined}
-              onRestore={onRestoreFromDrawer}
-              openComposer={openComposer}
-              canWriteMessaging={canWriteMessaging}
-              onPrintIdCard={onPrintIdCard}
-              onViewStudent={onViewStudent}
-              onViewContact={onViewContact}
-            />
-          ) : null}
-        </AnimatePresence>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+          <AnimatePresence>
+            {viewStudent ? (
+              <StudentDetail
+                student={viewStudent}
+                canDelete={canDelete}
+                onClose={onCloseView}
+                onEdit={canWrite ? onEditFromDrawer : undefined}
+                onRestore={onRestoreFromDrawer}
+                openComposer={openComposer}
+                canWriteMessaging={canWriteMessaging}
+                onPrintIdCard={onPrintIdCard}
+                onViewStudent={onViewStudent}
+                onViewContact={onViewContact}
+              />
+            ) : null}
+          </AnimatePresence>
+        </Suspense>
+      </ErrorBoundary>
 
       <StudentsPageConfirmDialogs
         bulkDeleteOpen={bulkDeleteOpen}
@@ -125,15 +130,16 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
       />
 
       {idCardStudents.length > 0 && onCloseIdCards ? (
-        <Suspense fallback={null}>
-          <StudentIdCardModal
-            open={idCardStudents.length > 0}
-            onClose={onCloseIdCards}
-            items={idCardItems}
-          />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={null}>
+            <StudentIdCardModal
+              open={idCardStudents.length > 0}
+              onClose={onCloseIdCards}
+              items={idCardItems}
+            />
+          </Suspense>
+        </ErrorBoundary>
       ) : null}
     </>
   );
 });
-

@@ -31,6 +31,7 @@ export const STUDENT_COLUMNS = {
   discountPct: students.discountPct,
   registrationType: students.registrationType,
   notes: students.notes,
+  customFields: students.customFields,
   deletedAt: students.deletedAt,
   deletedBy: students.deletedBy,
   deletionReason: students.deletionReason,

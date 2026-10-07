@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { type Student, type StudentsBulkEnrollBody } from "@mms/shared";
 import {
   type useStudentMutations,
@@ -26,31 +27,22 @@ export function useStudentsCrudActions({
     updateStudent,
   } = mutations;
 
-  const handleSaveStudent = async (studentToSave: Student): Promise<Student> => {
+  const handleSaveStudent = useCallback(async (studentToSave: Student): Promise<Student> => {
     if (editStudent) {
       const res = await updateStudent.mutateAsync({
         params: { id: String(studentToSave.id) },
         body: studentToSave as StudentRecord,
       });
-      return res.body as Student;
+      return ((res.body as { student?: Student })?.student ?? res.body) as Student;
     } else {
       const res = await createStudent.mutateAsync({
         body: studentToSave as StudentRecord,
       });
-      return res.body as Student;
+      return ((res.body as { student?: Student })?.student ?? res.body) as Student;
     }
-  };
+  }, [editStudent, updateStudent, createStudent]);
 
-  const handleDelete = async (studentId: string, deletionReason?: string): Promise<void> => {
-    try {
-      await deleteStudent.mutateAsync({ params: { id: String(studentId) }, body: { deletionReason } });
-      notifyArchivedWithUndo(() => handleRestore(studentId));
-    } catch (error) {
-      handleError(error, "students.delete", "students.deleteFailed");
-    }
-  };
-
-  const handleRestore = async (studentId: string): Promise<void> => {
+  const handleRestore = useCallback(async (studentId: string): Promise<void> => {
     try {
       await restoreStudent.mutateAsync({ params: { id: String(studentId) }, body: {} });
       notifyBulkResult(1, 0, "students.restoreSuccess", "students.bulkRestoreSuccess");
@@ -58,9 +50,18 @@ export function useStudentsCrudActions({
       handleError(error, "students.restore", "students.restoreFailed");
       throw error;
     }
-  };
+  }, [restoreStudent, notifyBulkResult, handleError]);
 
-  const handleBulkDelete = async (
+  const handleDelete = useCallback(async (studentId: string, deletionReason?: string): Promise<void> => {
+    try {
+      await deleteStudent.mutateAsync({ params: { id: String(studentId) }, body: { deletionReason } });
+      notifyArchivedWithUndo(() => handleRestore(studentId));
+    } catch (error) {
+      handleError(error, "students.delete", "students.deleteFailed");
+    }
+  }, [deleteStudent, handleRestore, notifyArchivedWithUndo, handleError]);
+
+  const handleBulkDelete = useCallback(async (
     studentIds: string[],
     deletionReason?: string,
   ): Promise<void> => {
@@ -77,9 +78,9 @@ export function useStudentsCrudActions({
     } catch (error) {
       handleError(error, "students.bulk_delete", "students.deleteFailed");
     }
-  };
+  }, [bulkDeleteStudents, notifyBulkResult, handleError]);
 
-  const handleBulkRestore = async (studentIds: string[]): Promise<void> => {
+  const handleBulkRestore = useCallback(async (studentIds: string[]): Promise<void> => {
     try {
       const result = await bulkRestoreStudents.mutateAsync({ body: { ids: studentIds.map(String) } });
       notifyBulkResult(
@@ -91,9 +92,9 @@ export function useStudentsCrudActions({
     } catch (error) {
       handleError(error, "students.bulk_restore", "students.restoreFailed");
     }
-  };
+  }, [bulkRestoreStudents, notifyBulkResult, handleError]);
 
-  const handleBulkStatusChange = async (
+  const handleBulkStatusChange = useCallback(async (
     studentIds: string[],
     status: string,
   ): Promise<void> => {
@@ -111,9 +112,9 @@ export function useStudentsCrudActions({
       handleError(error, "students.bulk_status", "students.bulkStatusFailed");
       throw error;
     }
-  };
+  }, [bulkUpdateStudentStatus, notifyBulkResult, handleError]);
 
-  const handleBulkEnroll = async (
+  const handleBulkEnroll = useCallback(async (
     studentIds: string[],
     payload: { sessionIds: string[]; mode: StudentsBulkEnrollBody["mode"] },
   ): Promise<void> => {
@@ -123,9 +124,10 @@ export function useStudentsCrudActions({
         sessionIds: payload.sessionIds,
         mode: payload.mode,
       });
+      const resBody = (result as { body?: { succeeded?: number; failed?: number } }).body ?? result;
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        resBody.succeeded ?? 0,
+        resBody.failed ?? 0,
         "students.bulkEnrollSuccess",
         "students.bulkEnrollSuccess",
       );
@@ -133,7 +135,7 @@ export function useStudentsCrudActions({
       handleError(error, "students.bulk_enroll", "students.saveFailed");
       throw error;
     }
-  };
+  }, [bulkEnrollMutation, notifyBulkResult, handleError]);
 
   return {
     handleSaveStudent,

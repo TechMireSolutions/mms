@@ -187,6 +187,7 @@ export * from './schemas/api.dto.js';
 export * from './contracts/ai.contract.js';
 export * from './contracts/health.contract.js';
 export * from './contracts/moduleAccess.contract.js';
+export * from './contracts/students.contract.js';
 export * from './contracts/index.js';
 export * from './studentsExportUtils.js';
 export * from './studentsListQuery.js';

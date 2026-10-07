@@ -1,6 +1,7 @@
 import type { Student } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EntityCard } from "@/components/ui/EntityCard";
+import { ParentNamesSubtitle } from "@/tenant/features/students/components/ParentNamesSubtitle";
 
 export interface StudentCardHeaderProps {
   student: Student;
@@ -35,25 +36,13 @@ export function StudentCardHeader({
   const showGender = !isColumnVisible || isColumnVisible("gender");
   const effectiveGender = showGender ? student.gender : undefined;
 
-  const hasParentSubtitle = showParents && Boolean(fatherName || motherName || guardianName);
-  const subtitle = hasParentSubtitle ? (
-    <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
-      {fatherName ? (
-        <p className="truncate" title={fatherName}>
-          <span>{t("students.detail.father")}:</span> {fatherName}
-        </p>
-      ) : null}
-      {motherName ? (
-        <p className="truncate" title={motherName}>
-          <span>{t("students.detail.mother")}:</span> {motherName}
-        </p>
-      ) : null}
-      {!fatherName && !motherName && guardianName ? (
-        <p className="truncate" title={guardianName}>
-          <span>{t("students.idCard.guardian")}:</span> {guardianName}
-        </p>
-      ) : null}
-    </div>
+  const subtitle = showParents ? (
+    <ParentNamesSubtitle
+      fatherName={fatherName}
+      motherName={motherName}
+      guardianName={guardianName}
+      t={t}
+    />
   ) : undefined;
 
   return (

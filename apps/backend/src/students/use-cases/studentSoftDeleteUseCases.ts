@@ -9,6 +9,7 @@ import { recordModernAuditEvent } from '../../services/auditTrailService.js';
 import { buildStudentForensicSnapshot } from '../../services/forensicSnapshotService.js';
 import { nowIso } from '../../lib/softDeleteHelpers.js';
 import { cascadeSoftDeleteEnrollmentsForStudents } from '../../db/repositories/studentEnrollmentCascade.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 export async function softDeleteStudentById(
   id: string,
@@ -57,7 +58,16 @@ export async function bulkSoftDeleteStudents(
     }
 
     if (toSave.length > 0) {
-      await repo.bulkSave(tenant, toSave);
+      if (repo.bulkSoftDelete) {
+        await repo.bulkSoftDelete(
+          tenant,
+          toSave.map((s) => String(s.id)),
+          deletedBy,
+          trimmedReason,
+        );
+      } else {
+        await repo.bulkSave(tenant, toSave);
+      }
       await cascadeSoftDeleteEnrollmentsForStudents(
         activeDb(),
         tenant,
@@ -90,6 +100,10 @@ export async function bulkSoftDeleteStudents(
     }
     return { succeeded, failed };
   });
-  if (result.succeeded > 0) await broadcastCollection('students');
+  if (result.succeeded > 0) {
+    const tenant = getRequestTenant();
+    if (tenant) await invalidateMultiTierCache({ tenantId: tenant, domain: 'students' });
+    await broadcastCollection('students');
+  }
   return result;
 }

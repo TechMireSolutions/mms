@@ -92,10 +92,14 @@ function singleFilterSql(
     return sql`lower(${fieldExpr}::text) LIKE ${`%${valNormalized}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${fieldExpr}::text, '')::numeric > ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`CASE WHEN ${fieldExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$' THEN ${fieldExpr}::text::numeric ELSE NULL END > ${num}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${fieldExpr}::text, '')::numeric < ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`CASE WHEN ${fieldExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$' THEN ${fieldExpr}::text::numeric ELSE NULL END < ${num}`;
   }
   return null;
 }
