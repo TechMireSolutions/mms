@@ -6,3 +6,7 @@ export {
   findStudentRegistrationConflictSql,
   findSoftDeletedStudentByContactIdSql,
 } from './studentRepositoryWidgetsOps.js';
+export {
+  findActiveGrNumberOwnersSql,
+  findActiveStudentIdOwnersSql,
+} from './studentRepositoryGrOwners.js';

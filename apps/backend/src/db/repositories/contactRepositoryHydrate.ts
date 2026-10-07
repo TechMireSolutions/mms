@@ -116,7 +116,7 @@ export async function countContactsByWorkspace(
 }
 
 import { contactSelectColumns } from './contactRepositoryColumns.js';
-import { findContactById, findContactsByIds } from './contactRepositoryFind.js';
+import { findContactById, findContactsByIds, findContactsSummaryByIds } from './contactRepositoryFind.js';
 
-export { findContactById, findContactsByIds };
+export { findContactById, findContactsByIds, findContactsSummaryByIds };
 

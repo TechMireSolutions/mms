@@ -7,6 +7,8 @@ vi.mock('../contacts/use-cases/contactUseCases.js', () => ({
   contactUseCases: {
     loadContactsByIdsForTenant: (...args: unknown[]) =>
       mockLoadContactsByIdsForTenant(...args),
+    loadContactsSummaryByIdsForTenant: (...args: unknown[]) =>
+      mockLoadContactsByIdsForTenant(...args),
   },
 }));
 

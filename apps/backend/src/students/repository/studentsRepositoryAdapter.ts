@@ -18,8 +18,15 @@ import {
   listStudentLinkedContactIdsSql,
   countStudentsForNextGrNumber,
   findStudentRegistrationConflictSql,
+  findActiveGrNumberOwnersSql,
+  findActiveStudentIdOwnersSql,
   findSoftDeletedStudentByContactIdSql,
 } from '../../db/repositories/studentRepositoryWidgets.js';
+import { guardStudentSoftDelete } from '../../db/repositories/studentDeleteGuard.js';
+import {
+  generateNextGrNumberSql,
+  generateNextGrNumberBatchSql,
+} from '../../db/repositories/studentRepositorySequence.js';
 import type { StudentsRepository } from './studentsRepository.js';
 
 /**
@@ -32,24 +39,34 @@ function createStudentsRepository(): StudentsRepository {
   return {
     countByWorkspace: (tenant, options) => countStudentsByWorkspace(tenant, options),
     listPage: (tenant, query) => listStudentsPage(tenant, query),
-    findById: (tenant, id) => findStudentById(tenant, id),
-    findByIds: (tenant, ids) => findStudentsByIds(tenant, ids),
+    findById: (tenant, id, options) => findStudentById(tenant, id, options),
+    findByIds: (tenant, ids, options) => findStudentsByIds(tenant, ids, options),
     save: (tenant, student) => saveStudent(tenant, student as Student),
-    bulkSave: (tenant, students) => bulkSaveStudents(tenant, students as Student[]),    aggregateCommandMetrics: (tenant, periodDays) =>
+    bulkSave: (tenant, students) => bulkSaveStudents(tenant, students as Student[]),
+    aggregateCommandMetrics: (tenant, periodDays) =>
       aggregateStudentsCommandMetrics(tenant, periodDays),
     aggregateWidgetQueries: (tenant, queries) => aggregateStudentsWidgetQueries(tenant, queries),
     listLinkedContactIds: (tenant, excludeStudentId) =>
       listStudentLinkedContactIdsSql(tenant, excludeStudentId),
     countNextGrNumber: (tenant, input) =>
       countStudentsForNextGrNumber(tenant, input.regDate, input.restartAnnually),
+    generateNextGrNumber: (tenant, input) => generateNextGrNumberSql(tenant, input),
+    generateNextGrNumberBatch: (tenant, count, input) =>
+      generateNextGrNumberBatchSql(tenant, count, input),
     findRegistrationConflict: (tenant, input) =>
       findStudentRegistrationConflictSql(tenant, input),
+    findActiveGrNumberOwners: (tenant, grNumbers) =>
+      findActiveGrNumberOwnersSql(tenant, grNumbers),
+    findActiveStudentIdOwners: (tenant, studentIds) =>
+      findActiveStudentIdOwnersSql(tenant, studentIds),
     findSoftDeletedByContactId: (tenant, contactId) =>
       findSoftDeletedStudentByContactIdSql(tenant, contactId),
-    listActiveMissingGrNumber: (tenant) => listActiveStudentsMissingGrNumber(tenant),
+    listActiveMissingGrNumber: (tenant, options) =>
+      listActiveStudentsMissingGrNumber(tenant, options),
     bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateStudentsStatusSql(tenant, ids, status),
     bulkEnroll: (tenant, studentIds, sessionIds, mode) =>
       bulkEnrollStudents(tenant, studentIds, sessionIds, mode),
+    guardDeleteDependents: (tenant, ids) => guardStudentSoftDelete(tenant, ids),
   };
 }
 

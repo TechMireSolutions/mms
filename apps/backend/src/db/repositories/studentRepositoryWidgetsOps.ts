@@ -2,6 +2,8 @@ import { and, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import { students, contacts, contactEmails } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { studentRowToRecord } from './studentRepositoryMappers.js';
+import { enableIncludeDeleted } from '../../lib/softDeleteHelpers.js';
+import { STUDENT_COLUMNS } from './studentRepositoryColumns.js';
 
 export async function listStudentLinkedContactIdsSql(
   tenant: string,
@@ -34,7 +36,8 @@ export async function countStudentsForNextGrNumber(
   const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
   const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
   return withTenantRead(subdomain, async (tx) => {
-    const base = and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt));
+    await enableIncludeDeleted(tx);
+    const base = eq(students.workspaceSubdomain, subdomain);
     if (!restartAnnually) {
       const rows = await tx
         .select({ count: sql<number>`count(*)::int` })
@@ -122,7 +125,8 @@ export async function findStudentRegistrationConflictSql(
         .where(
           and(
             ...baseConditions,
-            sql`lower(trim(COALESCE(${students.grNumber}, ''))) = ${grNumber}`,
+            isNotNull(students.grNumber),
+            sql`lower(btrim(${students.grNumber})) = ${grNumber}`,
           ),
         )
         .limit(1);
@@ -171,37 +175,9 @@ export async function findSoftDeletedStudentByContactIdSql(
   const trimmedContactId = contactId.trim();
   if (!trimmedContactId) return null;
   return withTenantRead(subdomain, async (tx) => {
+    await enableIncludeDeleted(tx);
     const rows = await tx
-      .select({
-        id: students.id,
-        workspaceSubdomain: students.workspaceSubdomain,
-        contactId: students.contactId,
-        fatherContactId: students.fatherContactId,
-        motherContactId: students.motherContactId,
-        guardianContactId: students.guardianContactId,
-        fatherName: students.fatherName,
-        motherName: students.motherName,
-        guardianName: students.guardianName,
-        grNumber: students.grNumber,
-        studentId: students.studentId,
-        status: students.status,
-        registeredDate: students.registeredDate,
-        enrollmentDate: students.enrollmentDate,
-        discountType: students.discountType,
-        discountPct: students.discountPct,
-        registrationType: students.registrationType,
-        notes: students.notes,
-        deletedAt: students.deletedAt,
-        deletedBy: students.deletedBy,
-        deletionReason: students.deletionReason,
-        restoredAt: students.restoredAt,
-        restoredBy: students.restoredBy,
-        deletedWithCascade: students.deletedWithCascade,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        createdBy: students.createdBy,
-        updatedBy: students.updatedBy,
-      })
+      .select(STUDENT_COLUMNS)
       .from(students)
       .where(
         and(

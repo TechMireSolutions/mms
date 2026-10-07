@@ -52,6 +52,7 @@ export interface ContactsRepository {
   ): Promise<ContactsListPageResult & { nextCursor?: string }>;
   findById(tenant: string, id: string): Promise<Contact | null>;
   findByIds(tenant: string, ids: string[]): Promise<Contact[]>;
+  findSummaryByIds?(tenant: string, ids: string[]): Promise<Contact[]>;
   save(tenant: string, contact: Contact): Promise<void>;
   bulkSave(tenant: string, contacts: Contact[]): Promise<void>;
   bulkSoftDelete?(

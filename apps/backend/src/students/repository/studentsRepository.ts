@@ -9,6 +9,7 @@ import type {
   StudentsWidgetAggregateResult,
   StudentsWidgetQuery,
   RepositoryListOptions,
+  StudentGrNumberSettings,
 } from '@mms/shared';
 
 export type ListStudentsOptions = RepositoryListOptions;
@@ -34,10 +35,19 @@ export interface StudentsRepository {
     tenant: string,
     query: StudentsListQuery & { afterId?: string; skipCount?: boolean },
   ): Promise<StudentsListPageResult & { nextCursor?: string }>;
-  findById(tenant: string, id: string): Promise<Student | null>;
-  findByIds(tenant: string, ids: string[]): Promise<Student[]>;
+  findById(
+    tenant: string,
+    id: string,
+    options?: { includeDeleted?: boolean },
+  ): Promise<Student | null>;
+  findByIds(
+    tenant: string,
+    ids: string[],
+    options?: { includeDeleted?: boolean },
+  ): Promise<Student[]>;
   save(tenant: string, student: Student | StudentRecord): Promise<void>;
-  bulkSave(tenant: string, students: Array<Student | StudentRecord>): Promise<void>;  aggregateCommandMetrics(
+  bulkSave(tenant: string, students: Array<Student | StudentRecord>): Promise<void>;
+  aggregateCommandMetrics(
     tenant: string,
     periodDays?: number,
   ): Promise<StudentsCommandMetricsSnapshot>;
@@ -51,13 +61,26 @@ export interface StudentsRepository {
     tenant: string,
     input: StudentGrSequenceInput,
   ): Promise<number>;
+  generateNextGrNumber?(
+    tenant: string,
+    input: { regDate: string; settings: StudentGrNumberSettings },
+  ): Promise<string>;
+  generateNextGrNumberBatch?(
+    tenant: string,
+    count: number,
+    input: { regDate: string; settings: StudentGrNumberSettings },
+  ): Promise<string[]>;
   findRegistrationConflict(
     tenant: string,
     input: StudentDuplicateCheckInput,
   ): Promise<StudentDuplicateReason | null>;
+  /** Active GR → student id map for bulk-restore conflict checks. */
+  findActiveGrNumberOwners(tenant: string, grNumbers: string[]): Promise<Map<string, string>>;
+  /** Active Student ID → student id map for bulk-restore conflict checks. */
+  findActiveStudentIdOwners(tenant: string, studentIds: string[]): Promise<Map<string, string>>;
   /** Soft-deleted student sharing `contactId` (restore-on-create probe). */
   findSoftDeletedByContactId(tenant: string, contactId: string): Promise<Student | null>;
-  listActiveMissingGrNumber(tenant: string): Promise<Student[]>;
+  listActiveMissingGrNumber(tenant: string, options?: { limit?: number }): Promise<Student[]>;
   bulkUpdateStatusSql(tenant: string, ids: string[], status: string): Promise<number>;
   bulkEnroll(
     tenant: string,
@@ -65,5 +88,6 @@ export interface StudentsRepository {
     sessionIds: string[],
     mode?: 'add' | 'replace' | 'remove',
   ): Promise<{ succeeded: number; failed: number }>;
+  guardDeleteDependents?(tenant: string, ids: string[]): Promise<void>;
 }
 

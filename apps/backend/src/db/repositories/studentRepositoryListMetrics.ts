@@ -14,11 +14,7 @@ export async function aggregateStudentsCommandMetrics(
 ): Promise<StudentsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    const registeredRaw = sql`NULLIF(trim(COALESCE(
-      ${students.registeredDate},
-      to_char(${students.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-      ''
-    )), '')`;
+    const sinceInterval = sql`NOW() - (${periodDays} * INTERVAL '1 day')`;
 
     const rows = await tx
       .select({
@@ -26,12 +22,10 @@ export async function aggregateStudentsCommandMetrics(
         active: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'active')::int`,
         inactive: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'inactive')::int`,
         suspended: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'suspended')::int`,
-        newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${registeredRaw} IS NOT NULL
-          AND ${registeredRaw} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND (${registeredRaw})::timestamptz
-            >= (NOW() - (${periodDays} * INTERVAL '1 day'))
-        )::int`,
+        newThisPeriod: sql<number>`count(*) FILTER (WHERE COALESCE(
+          CASE WHEN ${students.registeredDate} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN ${students.registeredDate}::timestamptz ELSE NULL END,
+          ${students.createdAt}
+        ) >= ${sinceInterval})::int`,
       })
       .from(students)
       .where(and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt)));

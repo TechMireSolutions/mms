@@ -53,6 +53,19 @@ export async function loadContactsByIdsForTenant(
   return matched.filter((contact) => !contact.deletedAt);
 }
 
+/** Lean variant fetching only summary fields + relationships (bypasses heavy subcollections). */
+export async function loadContactsSummaryByIdsForTenant(
+  tenant: string,
+  ids: string[],
+  repo: ContactsRepository = contactsRepository,
+): Promise<Contact[]> {
+  if (ids.length === 0) return [];
+  const fetchFn = repo.findSummaryByIds ? repo.findSummaryByIds.bind(repo) : repo.findByIds.bind(repo);
+  const matched = await fetchFn(tenant, ids);
+  return matched.filter((contact) => !contact.deletedAt);
+}
+
+
 export async function loadContactsPageForTenant(
   tenant: string,
   query: ContactsListQuery,

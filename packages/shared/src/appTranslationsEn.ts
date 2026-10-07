@@ -5033,7 +5033,7 @@ export const APP_TRANSLATIONS_EN = {
   "organization.industry.generalDesc": "Standard general organization structure",
   "organization.terminology.madrasa.facultyLabel": "Faculty",
   "organization.terminology.madrasa.staffSingular": "Teacher",
-  "organization.terminology.madrasa.studentLabel": "Students & Talaba",
+  "organization.terminology.madrasa.studentLabel": "Students",
   "organization.terminology.madrasa.locationLabel": "Campus / Block",
   "organization.terminology.hotel.facultyLabel": "Staff & Team",
   "organization.terminology.hotel.staffSingular": "Employee",

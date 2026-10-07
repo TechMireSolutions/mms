@@ -8,6 +8,7 @@ export {
   countContactsByWorkspace,
   findContactById,
   findContactsByIds,
+  findContactsSummaryByIds,
 } from './contactRepositoryHydrate.js';
 export {
   persistContactTx,

@@ -3,5 +3,6 @@ export { listStudentsPage } from './studentRepositoryListPage.js';
 export { aggregateStudentsCommandMetrics } from './studentRepositoryListMetrics.js';
 export {
   listActiveStudentsMissingGrNumber,
+  MISSING_GR_MIGRATE_CHUNK,
   bulkUpdateStudentsStatusSql,
 } from './studentRepositoryListOps.js';

@@ -5,21 +5,30 @@ import {
   type Contact,
   type Student,
 } from '@mms/shared';
-import { loadContactsByIdsForTenant } from '../../services/contactService.js';
+import {
+  loadContactsByIdsForTenant,
+  loadContactsSummaryByIdsForTenant,
+} from '../../services/contactService.js';
 
 type ContactWithRelationships = Contact & {
   relationshipContacts?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
   relationships?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
 };
 
+function fetchContacts(tenant: string, ids: string[]): Promise<Contact[]> {
+  const fn = typeof loadContactsSummaryByIdsForTenant === 'function'
+    ? loadContactsSummaryByIdsForTenant
+    : loadContactsByIdsForTenant;
+  return fn(tenant, ids);
+}
+
 /**
  * Two-pass hydrate: load primary (+ legacy parent) contacts, derive guardians from
  * Contact relationships, then load any newly discovered guardian contact ids.
  *
- * Contacts are loaded through the contacts composition root (`contactUseCases`),
- * never through raw Drizzle — the same dependency direction the use-case layer
- * uses for every cross-module read. The tenant is passed explicitly so hydration
- * works outside a tenant-scoped request (background jobs, scripts, tests).
+ * Uses lean summary hydration (phones, emails, addresses, relationships) to avoid
+ * over-fetching heavy child subcollections (educations, skills, bank details).
+ * The tenant is passed explicitly so hydration works outside a tenant-scoped request.
  */
 export async function hydrateStudentsFromContacts(
   tenant: string,
@@ -35,7 +44,7 @@ export async function hydrateStudentsFromContacts(
   }
 
   let contacts = (
-    firstPassIds.size === 0 ? [] : await loadContactsByIdsForTenant(tenant, [...firstPassIds])
+    firstPassIds.size === 0 ? [] : await fetchContacts(tenant, [...firstPassIds])
   ) as ContactWithRelationships[];
   const contactById = new Map(contacts.map((contact) => [String(contact.id), contact]));
 
@@ -65,7 +74,7 @@ export async function hydrateStudentsFromContacts(
     }
   }
   if (secondPassIds.size > 0) {
-    const more = (await loadContactsByIdsForTenant(tenant, [...secondPassIds])) as ContactWithRelationships[];
+    const more = (await fetchContacts(tenant, [...secondPassIds])) as ContactWithRelationships[];
     contacts = [...contacts, ...more];
   }
 

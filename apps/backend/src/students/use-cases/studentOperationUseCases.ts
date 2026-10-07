@@ -21,6 +21,9 @@ export async function computeNextGrNumberForDate(
   if (!tenant) {
     return computeNextGrNumber([], settings, regDate);
   }
+  if (repo.generateNextGrNumber) {
+    return repo.generateNextGrNumber(tenant, { regDate, settings });
+  }
   const restartAnnually = settings.grNumberRestartAnnually !== false;
   const count = await repo.countNextGrNumber(tenant, { regDate, restartAnnually });
   const template = settings.grNumberTemplate || '{seq}-{year}';
@@ -45,6 +48,24 @@ export async function computeNextGrNumberForDate(
   }
 
   return candidateGr;
+}
+
+export async function computeNextGrNumberBatchForDate(
+  regDate: string,
+  count: number,
+  settings: StudentGrNumberSettings,
+  repo: StudentsRepository = studentsRepository,
+): Promise<string[]> {
+  if (count <= 0) return [];
+  const tenant = getRequestTenant();
+  if (tenant && repo.generateNextGrNumberBatch) {
+    return repo.generateNextGrNumberBatch(tenant, count, { regDate, settings });
+  }
+  const results: string[] = [];
+  for (let i = 0; i < count; i++) {
+    results.push(await computeNextGrNumberForDate(regDate, settings, repo));
+  }
+  return results;
 }
 
 export async function checkStudentRegistrationDuplicate(
@@ -76,16 +97,19 @@ export async function bulkUpdateStudentStatus(
   return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
-/** One-shot backfill of missing GR numbers for active students (Setup writers). */
+/** Cap per migrate request so Setup backfill stays bounded (re-invoke while hasMore). */
+const MIGRATE_GR_CHUNK = 100;
+
+/** Chunked backfill of missing GR numbers for active students (Setup writers). */
 export async function migrateStudentsMissingGrNumbers(
   repo: StudentsRepository = studentsRepository,
-): Promise<{ updated: number }> {
+): Promise<{ updated: number; hasMore: boolean }> {
   const tenant = getRequestTenant();
-  if (!tenant) return { updated: 0 };
+  if (!tenant) return { updated: 0, hasMore: false };
 
   const settings = normalizeStudentModulePreferences(await loadStudentModulePreferences());
-  const missing = await repo.listActiveMissingGrNumber(tenant);
-  if (missing.length === 0) return { updated: 0 };
+  const missing = await repo.listActiveMissingGrNumber(tenant, { limit: MIGRATE_GR_CHUNK });
+  if (missing.length === 0) return { updated: 0, hasMore: false };
 
   const fallbackDate = todayISO();
   const prefs = {
@@ -110,7 +134,7 @@ export async function migrateStudentsMissingGrNumbers(
   }
 
   await broadcastCollection('students');
-  return { updated };
+  return { updated, hasMore: missing.length >= MIGRATE_GR_CHUNK };
 }
 
 export async function bulkEnrollStudents(

@@ -16,6 +16,20 @@ import { auditStudent, sanitizeOneStudentForUser } from './studentRouteHelpers.j
  * restore payload and a GR-conflict → 400 mapping; bulk ops run in one tx via
  * the domain use cases and broadcast once.
  */
+function mapStudentRestoreError(error: unknown) {
+  if (error instanceof StudentRestoreConflictError) {
+    return {
+      statusCode: 400,
+      body: {
+        type: error.type,
+        message: error.message,
+        errors: [{ field: error.field, message: error.message }],
+      },
+    };
+  }
+  return null;
+}
+
 export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
   registerResourceRoutes(fastify, {
     collection: 'students',
@@ -35,19 +49,7 @@ export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
       success: true,
       student: await sanitizeOneStudentForUser(restored as Student, user as User),
     }),
-    mapRestoreError: (error) => {
-      if (error instanceof StudentRestoreConflictError) {
-        return {
-          statusCode: 400,
-          body: {
-            type: error.type,
-            message: error.message,
-            errors: [{ field: error.field, message: error.message }],
-          },
-        };
-      }
-      return null;
-    },
+    mapRestoreError: mapStudentRestoreError,
   });
 
   registerSoftDeletableBulkTrashRoutes(fastify, {
@@ -57,6 +59,7 @@ export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     canDelete: (user) => canDeleteCollection(user, 'students'),
     bulkDeleteFn: (ids, user, reason) => studentUseCases.bulkSoftDeleteStudents(ids, user, reason),
     bulkRestoreFn: (ids, userId) => studentUseCases.bulkRestoreStudents(ids, userId),
+    mapRestoreError: mapStudentRestoreError,
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditStudent(

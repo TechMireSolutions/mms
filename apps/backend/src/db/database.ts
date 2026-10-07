@@ -1,10 +1,12 @@
 import {
+  activeDb,
   closeDatabase,
   getActivePoolRole,
   getPool,
   getPoolMetrics,
   getReadReplicaDb,
   getRootDb,
+  hasActiveTransaction,
   initializeDatabaseConnection,
   pingDatabase,
   runInReadSnapshotTransaction,
@@ -31,6 +33,7 @@ export async function getDatabaseHealth(): Promise<DatabaseHealth> {
 }
 
 export {
+  activeDb,
   closeDatabase,
   getActivePoolRole,
   getDb,
@@ -38,6 +41,7 @@ export {
   getPoolMetrics,
   getReadReplicaDb,
   getRootDb,
+  hasActiveTransaction,
   initializeDatabaseConnection,
   pingDatabase,
   runInReadSnapshotTransaction,

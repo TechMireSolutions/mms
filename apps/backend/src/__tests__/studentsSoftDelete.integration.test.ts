@@ -7,6 +7,12 @@ vi.mock('../db/database.js', () => ({
   pingDatabase: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('../db/tenant-context.js', () => ({
+  withTenant: vi.fn().mockImplementation(async (_tenant: string | null | undefined, callback: (tx?: unknown) => Promise<unknown>) => {
+    return callback({ execute: vi.fn().mockResolvedValue(undefined) });
+  }),
+}));
+
 vi.mock('../services/auth/authArtifactService.js', () => ({
   purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
   putAuthArtifact: vi.fn(),

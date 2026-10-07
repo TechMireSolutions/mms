@@ -105,6 +105,10 @@ export const studentEnrolledSessionsRelations = relations(studentEnrolledSession
     fields: [studentEnrolledSessions.workspaceSubdomain, studentEnrolledSessions.studentId],
     references: [students.workspaceSubdomain, students.id],
   }),
+  session: one(sessions, {
+    fields: [studentEnrolledSessions.workspaceSubdomain, studentEnrolledSessions.sessionId],
+    references: [sessions.workspaceSubdomain, sessions.id],
+  }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({

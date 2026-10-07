@@ -13,7 +13,25 @@ vi.mock('../lib/tenantContext.js', () => ({
 
 vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
+  activeDb: () => ({
+    execute: async () => undefined,
+    update: () => ({ set: () => ({ where: async () => undefined }) }),
+  }),
+  hasActiveTransaction: () => true,
 }));
+
+vi.mock('../db/repositories/studentEnrollmentCascade.js', () => ({
+  cascadeSoftDeleteEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
+  restoreCascadedEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../lib/softDeleteHelpers.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/softDeleteHelpers.js')>();
+  return {
+    ...actual,
+    enableIncludeDeleted: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
@@ -105,6 +123,8 @@ function createFakeRepo() {
       listLinkedContactIds: vi.fn(async () => []),
       countNextGrNumber: vi.fn(async () => 0),
       findRegistrationConflict: vi.fn(async () => null),
+      findActiveGrNumberOwners: vi.fn(async () => new Map()),
+      findActiveStudentIdOwners: vi.fn(async () => new Map()),
       findSoftDeletedByContactId: vi.fn(async () => null),
       listActiveMissingGrNumber: vi.fn(async () => []),
       bulkUpdateStatusSql: vi.fn(async () => 0),
@@ -150,7 +170,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(restored).toBe(false);
     expect(typeof record.id).toBe('string');
     expect(String(record.id).length).toBeGreaterThan(0);
-    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ grNumber: 'GR-1' }));
+    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ grNumber: 'gr-1' }));
     expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('students');
   });
@@ -166,22 +186,25 @@ describe('createStudentsUseCases (DI composition root)', () => {
     vi.mocked(repo.findSoftDeletedByContactId).mockResolvedValue(archived);
     const useCases = createStudentsUseCases(repo);
 
-    const { record, restored } = await useCases.createStudent({
-      contactId: 'c-archived',
-      status: 'active',
-      grNumber: 'GR-NEW',
-      fatherContactId: undefined,
-      motherContactId: undefined,
-      guardianContactId: undefined,
-    });
+    const { record, restored } = await useCases.createStudent(
+      {
+        contactId: 'c-archived',
+        status: 'active',
+        grNumber: 'GR-NEW',
+        fatherContactId: undefined,
+        motherContactId: undefined,
+        guardianContactId: undefined,
+      },
+      { role: 'admin', id: 'u-admin' } as any,
+    );
 
     expect(restored).toBe(true);
     expect(record.id).toBe('archived');
-    expect(record.grNumber).toBe('GR-NEW');
+    expect(record.grNumber).toBe('gr-new');
     expect(record.deletedAt).toBeUndefined();
     expect(repo.findRegistrationConflict).toHaveBeenCalledWith(
       'demo',
-      expect.objectContaining({ grNumber: 'GR-NEW', excludeId: 'archived' }),
+      expect.objectContaining({ grNumber: 'gr-new', excludeId: 'archived' }),
     );
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'archived' }));
   });
@@ -198,14 +221,17 @@ describe('createStudentsUseCases (DI composition root)', () => {
     const useCases = createStudentsUseCases(repo);
 
     await expect(
-      useCases.createStudent({
-        contactId: 'c-archived',
-        status: 'active',
-        grNumber: 'GR-1',
-        fatherContactId: undefined,
-        motherContactId: undefined,
-        guardianContactId: undefined,
-      }),
+      useCases.createStudent(
+        {
+          contactId: 'c-archived',
+          status: 'active',
+          grNumber: 'GR-1',
+          fatherContactId: undefined,
+          motherContactId: undefined,
+          guardianContactId: undefined,
+        },
+        { role: 'admin', id: 'u-admin' } as any,
+      ),
     ).rejects.toBeInstanceOf(StudentRestoreConflictError);
     expect(repo.save).not.toHaveBeenCalled();
   });
@@ -244,7 +270,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
 
     expect(updated?.id).toBe('a');
     expect(updated?.deletedAt).toBeUndefined();
-    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'a', grNumber: 'GR-99' }));
+    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'a', grNumber: 'gr-99' }));
     expect(mockBroadcastCollection).toHaveBeenCalledWith('students');
   });
 
@@ -332,10 +358,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     const { repo, store } = createFakeRepo();
     store.set('a', fakeStudent('a', { deletedAt: '2026-07-27T00:00:00.000Z', grNumber: 'GR-1' }));
     store.set('ok', fakeStudent('ok', { deletedAt: '2026-07-27T00:00:00.000Z', grNumber: 'GR-2' }));
-    vi.mocked(repo.findRegistrationConflict).mockImplementation(async (_tenant, input) => {
-      if (input.excludeId === 'a') return 'grNumber';
-      return null;
-    });
+    vi.mocked(repo.findActiveGrNumberOwners).mockResolvedValue(new Map([['gr-1', 'other-active']]));
     const useCases = createStudentsUseCases(repo);
 
     const result = await useCases.bulkRestoreStudents(['a', 'ok']);
@@ -361,6 +384,57 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(result.failed).toBe(1);
     expect(result.conflicts).toEqual([
       { id: 's2', errors: [{ field: 'grNumber', message: 'A student with this GR number already exists' }] },
+    ]);
+  });
+
+  it('bulkRestoreStudents collects contact conflicts when contactId is in use', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('s1', fakeStudent('s1', { deletedAt: '2026-07-27T00:00:00.000Z', contactId: 'c-1' }));
+    store.set('s2', fakeStudent('s2', { deletedAt: '2026-07-27T00:00:00.000Z', contactId: 'c-2' }));
+    vi.mocked(repo.listLinkedContactIds).mockResolvedValue(['c-1']);
+    const useCases = createStudentsUseCases(repo);
+
+    const result = await useCases.bulkRestoreStudents(['s1', 's2']);
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.conflicts).toEqual([
+      { id: 's1', errors: [{ field: 'contact', message: 'A student with this contact already exists' }] },
+    ]);
+    expect(store.get('s1')?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(store.get('s2')?.deletedAt).toBeUndefined();
+  });
+
+  it('bulkRestoreStudents collects studentId conflicts without saving conflicting rows', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('s1', fakeStudent('s1', { deletedAt: '2026-07-27T00:00:00.000Z', studentId: 'STD-1' }));
+    store.set('ok', fakeStudent('ok', { deletedAt: '2026-07-27T00:00:00.000Z', studentId: 'STD-2' }));
+    vi.mocked(repo.findActiveStudentIdOwners!).mockResolvedValue(new Map([['std-1', 'other-active']]));
+    const useCases = createStudentsUseCases(repo);
+
+    const result = await useCases.bulkRestoreStudents(['s1', 'ok']);
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.conflicts).toEqual([
+      { id: 's1', errors: [{ field: 'studentId', message: 'A student with this Student ID already exists' }] },
+    ]);
+    expect(store.get('s1')?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(store.get('ok')?.deletedAt).toBeUndefined();
+  });
+
+  it('bulkRestoreStudents detects case-insensitive in-batch studentId collisions', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('s1', fakeStudent('s1', { deletedAt: '2026-07-27T00:00:00.000Z', studentId: 'STD-100' }));
+    store.set('s2', fakeStudent('s2', { deletedAt: '2026-07-27T00:00:00.000Z', studentId: 'std-100' }));
+    const useCases = createStudentsUseCases(repo);
+
+    const result = await useCases.bulkRestoreStudents(['s1', 's2']);
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.conflicts).toEqual([
+      { id: 's2', errors: [{ field: 'studentId', message: 'A student with this Student ID already exists' }] },
     ]);
   });
 
@@ -580,7 +654,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
 
     const result = await useCases.migrateStudentsMissingGrNumbers();
 
-    expect(result).toEqual({ updated: 2 });
+    expect(result).toEqual({ updated: 2, hasMore: false });
     expect(typeof store.get('m1')?.grNumber).toBe('string');
     expect(typeof store.get('m2')?.grNumber).toBe('string');
     expect(store.get('m2')?.grNumber).not.toBe(store.get('m1')?.grNumber);
@@ -594,7 +668,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
 
     const result = await useCases.migrateStudentsMissingGrNumbers();
 
-    expect(result).toEqual({ updated: 0 });
+    expect(result).toEqual({ updated: 0, hasMore: false });
     expect(repo.countNextGrNumber).not.toHaveBeenCalled();
     expect(mockBroadcastCollection).not.toHaveBeenCalled();
   });

@@ -4,6 +4,7 @@ export {
   countContactsByWorkspace,
   findContactById,
   findContactsByIds,
+  findContactsSummaryByIds,
   saveContact,
   bulkSaveContacts,
   bulkSoftDeleteContactsSql,

@@ -5,17 +5,18 @@ import {
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type StudentsListQuery,
 } from '@mms/shared';
-import { students, studentEnrolledSessions, contacts, sessions, sessionClasses, contactPhones, contactEmails } from '../schema.js';
+import {
+  students,
+  studentEnrolledSessions,
+  enrollments,
+  contacts,
+  contactPhones,
+  contactEmails,
+} from '../schema.js';
 
+export { buildOrderBy } from './studentRepositoryListSort.js';
 export const STUDENT_SORT_FIELDS = new Set([
-  'name',
-  'grNumber',
-  'status',
-  'gender',
-  'registeredDate',
-  'dob',
-  'studentId',
-  'updatedAt',
+  'name', 'grNumber', 'status', 'gender', 'registeredDate', 'dob', 'studentId', 'updatedAt',
 ]);
 
 export function statusExpr(): SQL {
@@ -24,126 +25,58 @@ export function statusExpr(): SQL {
 
 /** Gender from linked contact (Contacts SSOT). */
 export function linkedContactGenderExpr(): SQL {
-  return sql`lower(trim(COALESCE((
-    SELECT c.gender
-    FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
-      AND c.id = ${students.contactId}
-    LIMIT 1
-  ), '')))`;
+  return sql`lower(trim(COALESCE((SELECT c.gender FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')))`;
 }
 
 /** DOB from linked contact (Contacts SSOT). */
 export function linkedContactDobExpr(): SQL {
-  return sql`NULLIF(trim(COALESCE((
-    SELECT c.dob::text
-    FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
-      AND c.id = ${students.contactId}
-    LIMIT 1
-  ), '')), '')`;
+  return sql`NULLIF(trim(COALESCE((SELECT c.dob::text FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')), '')`;
 }
 
 /** Display name from linked contact for Work sort (Contacts SSOT). */
 export function linkedContactNameSortExpr(): SQL {
-  return sql`lower(trim(COALESCE((
-    SELECT COALESCE(
-      NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''),
-      NULLIF(trim(COALESCE(c.name, '')), ''),
-      ''
-    )
-    FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
-      AND c.id = ${students.contactId}
-    LIMIT 1
-  ), '')))`;
+  return sql`lower(trim(COALESCE((SELECT COALESCE(NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''), NULLIF(trim(COALESCE(c.name, '')), ''), '') FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')))`;
 }
 
-function grNumberExpr(): SQL {
+export function grNumberExpr(): SQL {
   return sql`lower(trim(COALESCE(${students.grNumber}, '')))`;
 }
 
-function buildSearchSql(search: string): SQL | null {
+function buildSearchSql(search: string, useJoinedContacts = false): SQL | null {
   const normalized = search.trim().toLowerCase();
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
+  const contactMatch = useJoinedContacts
+    ? sql`(${contacts.id} IS NOT NULL AND (
+        lower(COALESCE(${contacts.name}, '')) LIKE ${pattern}
+        OR lower(concat_ws(' ', ${contacts.firstName}, ${contacts.lastName})) LIKE ${pattern}
+        OR COALESCE(${contacts.cnic}, '') LIKE ${pattern}
+        OR EXISTS (SELECT 1 FROM ${contactPhones} cp WHERE cp.workspace_subdomain = ${contacts.workspaceSubdomain} AND cp.contact_id = ${contacts.id} AND lower(cp.number) LIKE ${pattern})
+        OR EXISTS (SELECT 1 FROM ${contactEmails} ce WHERE ce.workspace_subdomain = ${contacts.workspaceSubdomain} AND ce.contact_id = ${contacts.id} AND lower(ce.address) LIKE ${pattern})
+      ))`
+    : sql`EXISTS (
+        SELECT 1 FROM ${contacts} c
+        WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+          AND c.id = ${students.contactId}
+          AND (
+            lower(COALESCE(c.name, '')) LIKE ${pattern}
+            OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
+            OR COALESCE(c.cnic, '') LIKE ${pattern}
+            OR EXISTS (SELECT 1 FROM ${contactPhones} cp WHERE cp.workspace_subdomain = c.workspace_subdomain AND cp.contact_id = c.id AND lower(cp.number) LIKE ${pattern})
+            OR EXISTS (SELECT 1 FROM ${contactEmails} ce WHERE ce.workspace_subdomain = c.workspace_subdomain AND ce.contact_id = c.id AND lower(ce.address) LIKE ${pattern})
+          )
+      )`;
   return sql`(
     lower(COALESCE(${students.grNumber}, '')) LIKE ${pattern}
     OR lower(COALESCE(${students.studentId}, '')) LIKE ${pattern}
-    OR EXISTS (
-      SELECT 1 FROM ${contacts} c
-      WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
-        AND c.id = ${students.contactId}
-        AND (
-          lower(COALESCE(c.name, '')) LIKE ${pattern}
-          OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
-          OR lower(COALESCE(c.first_name, '')) LIKE ${pattern}
-          OR lower(COALESCE(c.last_name, '')) LIKE ${pattern}
-          OR COALESCE(c.cnic, '') LIKE ${pattern}
-          OR EXISTS (
-            SELECT 1 FROM ${contactPhones} cp
-            WHERE cp.workspace_subdomain = c.workspace_subdomain
-              AND cp.contact_id = c.id
-              AND lower(cp.number) LIKE ${pattern}
-          )
-          OR EXISTS (
-            SELECT 1 FROM ${contactEmails} ce
-            WHERE ce.workspace_subdomain = c.workspace_subdomain
-              AND ce.contact_id = c.id
-              AND lower(ce.address) LIKE ${pattern}
-          )
-        )
-    )
+    OR ${contactMatch}
   )`;
-}
-
-export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
-  const dir = sortDir === 'desc' ? 'desc' : 'asc';
-  const field = sortField?.trim();
-  if (!field || !STUDENT_SORT_FIELDS.has(field)) {
-    return sql`${students.id} asc`;
-  }
-  if (field === 'updatedAt') {
-    return dir === 'desc'
-      ? sql`${students.updatedAt} desc nulls last`
-      : sql`${students.updatedAt} asc nulls last`;
-  }
-  if (field === 'grNumber') {
-    const grSort = grNumberExpr();
-    return dir === 'desc' ? sql`${grSort} desc nulls last` : sql`${grSort} asc nulls last`;
-  }
-  if (field === 'status') {
-    const statusSort = statusExpr();
-    return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
-  }
-  if (field === 'gender') {
-    const genderSort = linkedContactGenderExpr();
-    return dir === 'desc' ? sql`${genderSort} desc nulls last` : sql`${genderSort} asc nulls last`;
-  }
-  if (field === 'dob') {
-    const dobSort = linkedContactDobExpr();
-    return dir === 'desc' ? sql`${dobSort} desc nulls last` : sql`${dobSort} asc nulls last`;
-  }
-  if (field === 'name') {
-    const nameSort = linkedContactNameSortExpr();
-    return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
-  }
-  if (field === 'studentId') {
-    return dir === 'desc'
-      ? sql`lower(COALESCE(${students.studentId}, '')) desc nulls last`
-      : sql`lower(COALESCE(${students.studentId}, '')) asc nulls last`;
-  }
-  if (field === 'registeredDate') {
-    return dir === 'desc'
-      ? sql`lower(COALESCE(${students.registeredDate}, '')) desc nulls last`
-      : sql`lower(COALESCE(${students.registeredDate}, '')) asc nulls last`;
-  }
-  return sql`${students.id} asc`;
 }
 
 export function buildListConditions(
   subdomain: string,
   query: StudentsListQuery,
+  useJoinedContacts = false,
 ): SQL[] {
   const conditions: SQL[] = [eq(students.workspaceSubdomain, subdomain)];
 
@@ -156,15 +89,16 @@ export function buildListConditions(
   const rawStatuses = dedupeTrimmedIds(query.status);
   if (rawStatuses.length > 0) {
     const statuses = rawStatuses.map((status) => status.toLowerCase());
-    conditions.push(sql`${statusExpr()} IN (${sql.join(
-      statuses.map((status) => sql`${status}`),
-      sql`, `,
-    )})`);
+    conditions.push(sql`${statusExpr()} IN (${sql.join(statuses.map((s) => sql`${s}`), sql`, `)})`);
   }
 
   if (query.gender?.trim()) {
     const genderFilter = query.gender.trim().toLowerCase();
-    conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);
+    conditions.push(
+      useJoinedContacts
+        ? sql`lower(trim(COALESCE(${contacts.gender}, ''))) = ${genderFilter}`
+        : sql`${linkedContactGenderExpr()} = ${genderFilter}`,
+    );
   }
 
   const quickFilter = query.quickFilter;
@@ -172,7 +106,7 @@ export function buildListConditions(
     if (quickFilter === 'new') {
       const since = sql`now() - (${MODULE_METRICS_DEFAULT_PERIOD_DAYS} * interval '1 day')`;
       conditions.push(sql`COALESCE(
-        NULLIF(trim(COALESCE(${students.registeredDate}, '')), '')::timestamptz,
+        CASE WHEN ${students.registeredDate} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN ${students.registeredDate}::timestamptz ELSE NULL END,
         ${students.createdAt}
       ) >= ${since}`);
     } else if (quickFilter === 'missingGr') {
@@ -184,7 +118,7 @@ export function buildListConditions(
 
   const search = query.search?.trim();
   if (search) {
-    const searchSql = buildSearchSql(search);
+    const searchSql = buildSearchSql(search, useJoinedContacts);
     if (searchSql) conditions.push(searchSql);
   }
 
@@ -200,13 +134,14 @@ export function buildListConditions(
   const className = query.className?.trim();
   if (className) {
     conditions.push(sql`EXISTS (
-      SELECT 1 FROM ${studentEnrolledSessions} ses
-      JOIN ${sessions} s ON s.workspace_subdomain = ses.workspace_subdomain AND s.id = ses.session_id
-      JOIN ${sessionClasses} sc ON sc.workspace_subdomain = s.workspace_subdomain AND sc.session_id = s.id
-      WHERE ses.workspace_subdomain = ${students.workspaceSubdomain}
-        AND ses.student_id = ${students.id}
-        AND s.deleted_at IS NULL
-        AND sc.name = ${className}
+      SELECT 1 FROM ${enrollments} e
+      WHERE e.workspace_subdomain = ${students.workspaceSubdomain}
+        AND e.student_id = ${students.id}
+        AND e.deleted_at IS NULL
+        AND (
+          lower(trim(e.class_name)) = lower(trim(${className}))
+          OR e.class_id = ${className}
+        )
     )`);
   }
 
@@ -214,23 +149,26 @@ export function buildListConditions(
   const fatherName = query.fatherName?.trim().toLowerCase();
   const relationshipConditions: SQL[] = [];
   if (relatedContactIds.length > 0) {
-    relationshipConditions.push(sql`${students.fatherContactId} IN (${sql.join(
-      relatedContactIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})`);
-    relationshipConditions.push(sql`${students.motherContactId} IN (${sql.join(
-      relatedContactIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})`);
-    relationshipConditions.push(sql`${students.guardianContactId} IN (${sql.join(
-      relatedContactIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})`);
+    const ids = sql.join(relatedContactIds.map((id) => sql`${id}`), sql`, `);
+    relationshipConditions.push(
+      sql`${students.fatherContactId} IN (${ids})`,
+      sql`${students.motherContactId} IN (${ids})`,
+      sql`${students.guardianContactId} IN (${ids})`,
+    );
   }
   if (fatherName) {
-    relationshipConditions.push(
-      sql`lower(trim(COALESCE(${students.fatherName}, ''))) = ${fatherName}`,
-    );
+    relationshipConditions.push(sql`(
+      lower(trim(COALESCE(${students.fatherName}, ''))) = ${fatherName}
+      OR EXISTS (
+        SELECT 1 FROM ${contacts} fc
+        WHERE fc.workspace_subdomain = ${students.workspaceSubdomain}
+          AND fc.id = ${students.fatherContactId}
+          AND (
+            lower(trim(COALESCE(fc.name, ''))) = ${fatherName}
+            OR lower(trim(concat_ws(' ', fc.first_name, fc.last_name))) = ${fatherName}
+          )
+      )
+    )`);
   }
   if (relationshipConditions.length > 0) {
     conditions.push(sql`(${sql.join(relationshipConditions, sql` OR `)})`);

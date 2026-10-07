@@ -9,7 +9,7 @@ import {
 import { ConflictError, NotFoundError, ValidationError } from '../lib/httpErrors.js';
 import { restoreContactById, bulkRestoreContacts } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
 import { restoreFacultyById, bulkRestoreFaculty } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
-import { restoreStudentById, bulkRestoreStudents } from '../students/use-cases/studentSoftDeleteUseCases.js';
+import { restoreStudentById, bulkRestoreStudents } from '../students/use-cases/studentRestoreUseCases.js';
 import { StudentRestoreConflictError } from '../students/use-cases/studentNormalizeUseCases.js';
 import { createEnrollmentsUseCases } from '../enrollments/use-cases/enrollmentsUseCases.js';
 import { createFinanceUseCases } from '../finance/use-cases/financeUseCases.js';
@@ -25,7 +25,25 @@ import { z } from 'zod';
 
 vi.mock('../db/database.js', () => ({
   runInTransaction: vi.fn((cb: () => unknown) => cb()),
+  activeDb: () => ({
+    execute: async () => undefined,
+    update: () => ({ set: () => ({ where: async () => undefined }) }),
+  }),
+  hasActiveTransaction: () => true,
 }));
+
+vi.mock('../db/repositories/studentEnrollmentCascade.js', () => ({
+  cascadeSoftDeleteEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
+  restoreCascadedEnrollmentsForStudents: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../lib/softDeleteHelpers.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/softDeleteHelpers.js')>();
+  return {
+    ...actual,
+    enableIncludeDeleted: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: vi.fn().mockResolvedValue(undefined),
@@ -884,7 +902,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
             deletedAt: '2026-05-01T00:00:00.000Z',
           },
         ]),
-        findRegistrationConflict: vi.fn().mockResolvedValue(null),
+        findActiveGrNumberOwners: vi.fn().mockResolvedValue(new Map()),
         bulkSave: vi.fn().mockRejectedValue(pgError),
       } as unknown as StudentsRepository;
 

@@ -45,7 +45,7 @@ export async function createStudent(
       const archived = await repo.findSoftDeletedByContactId(tenant, contactId);
       if (archived) {
         const user = options && 'role' in options ? (options as User) : (options as CreateStudentOptions)?.user;
-        if (user && !canDeleteCollection(user, 'students')) {
+        if (!user || !canDeleteCollection(user, 'students')) {
           throw new StudentPermissionError('Restoring soft-deleted students requires delete permissions');
         }
         const merged = prepareStudentRecord({
