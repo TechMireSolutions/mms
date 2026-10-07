@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
 /** Work directory row selection SSOT for attendance records (person-directory shape). */
@@ -24,7 +24,10 @@ export function useAttendanceSelection(records: AttendanceRecord[]) {
       : currentIds.filter((selectedId) => selectedId !== id));
   });
 
-  const clearSelection = (() => setSelectedIds([]));
+  // Stable + no-op when empty: consumers clear selection from effects keyed on this callback.
+  const clearSelection = useCallback(() => {
+    setSelectedIds((currentIds) => (currentIds.length === 0 ? currentIds : []));
+  }, []);
 
   return {
     selectedIds,

@@ -4600,6 +4600,7 @@ export const APP_TRANSLATIONS_EN = {
   "nav.accountMenu": "Account Menu",
   "nav.forcePasswordChange": "Change Password",
   "nav.institutionSetup": "Institution Setup",
+  "nav.notifications": "Notifications",
   "nav.profile": "Profile",
   "common.archivedIndefinitely": "Archived Indefinitely",
   "notifications.allRead": "All read",

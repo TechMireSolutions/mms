@@ -8208,6 +8208,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.accountMenu": "اکاؤنٹ مینو",
   "nav.forcePasswordChange": "پاس ورڈ تبدیل کریں",
   "nav.institutionSetup": "ادارے کی ترتیب",
+  "nav.notifications": "اطلاعات",
   "nav.profile": "پروفائل",
   "common.archivedIndefinitely": "غیر معینہ مدت تک محفوظ",
   "common.sequenceNumbering.autoGenerate": "{entity} خود بخود بنائیں",

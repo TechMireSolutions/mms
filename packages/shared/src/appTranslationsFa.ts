@@ -4595,6 +4595,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "nav.users": "کاربران",
   "nav.forcePasswordChange": "تغییر گذرواژه",
   "nav.institutionSetup": "راه‌اندازی مؤسسه",
+  "nav.notifications": "اعلان‌ها",
   "nav.profile": "نمایه",
   "nav.desktopNavigation": "ناوبری دسکتاپ",
   "nav.mobileNavigation": "ناوبری موبایل",

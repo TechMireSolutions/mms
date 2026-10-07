@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dehydrate, QueryClient, type DehydratedState } from '@tanstack/react-query';
 import type { User } from '@mms/shared';
 import { readQueryCacheSession, resolveQueryCacheSession, tenantCacheIdentity } from './query/queryCacheSession';
@@ -29,6 +29,13 @@ function records(value: string) {
 }
 
 describe('verified query cache sessions', () => {
+  // Warm the module graph once (hookTimeout budget): the cold transform of `./queryClient`
+  // otherwise lands in the first test and exceeds testTimeout under full-suite load.
+  // Tests still get fresh module instances via `vi.resetModules()`.
+  beforeAll(async () => {
+    await import('./queryClient');
+  });
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.resetModules();
