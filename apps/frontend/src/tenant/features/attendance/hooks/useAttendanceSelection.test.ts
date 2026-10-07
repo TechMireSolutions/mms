@@ -85,4 +85,28 @@ describe("useAttendanceSelection Hook", () => {
     });
     expect(hookResult.selectedIds.length).toBe(0);
   });
+
+  it("given an effect keyed on clearSelection, should settle without re-rendering when nothing is selected", async () => {
+    // Arrange
+    let renders = 0;
+    const clearSelectionRefs = new Set<unknown>();
+    function TestComponent() {
+      renders += 1;
+      const { clearSelection } = useAttendanceSelection(mockRecords);
+      clearSelectionRefs.add(clearSelection);
+      React.useEffect(() => {
+        clearSelection();
+      }, [clearSelection]);
+      return null;
+    }
+
+    // Act
+    await act(async () => {
+      createRoot(container!).render(React.createElement(TestComponent));
+    });
+
+    // Assert
+    expect(clearSelectionRefs.size).toBe(1);
+    expect(renders).toBe(1);
+  });
 });

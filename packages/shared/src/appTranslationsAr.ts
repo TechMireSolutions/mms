@@ -8214,6 +8214,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "nav.accountMenu": "قائمة الحساب",
   "nav.forcePasswordChange": "تغيير كلمة المرور",
   "nav.institutionSetup": "إعداد المؤسسة",
+  "nav.notifications": "الإشعارات",
   "nav.profile": "الملف الشخصي",
   "common.archivedIndefinitely": "مؤرشف بلا حد زمني",
   "common.sequenceNumbering.autoGenerate": "إنشاء {entity} تلقائيًا",
