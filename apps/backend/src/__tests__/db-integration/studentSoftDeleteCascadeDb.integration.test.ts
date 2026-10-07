@@ -61,6 +61,7 @@ beforeAll(async () => {
       END $$;
       GRANT USAGE ON SCHEMA public TO mms_test_tenant_role;
       GRANT ALL ON ALL TABLES IN SCHEMA public TO mms_test_tenant_role;
+      DROP POLICY IF EXISTS "enrollments_tenant_isolation" ON "enrollments";
     `);
     await seedTx.tx
       .insert(workspaces)

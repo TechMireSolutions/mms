@@ -15,6 +15,8 @@ DROP INDEX IF EXISTS "students_workspace_gr_number_idx";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "students_workspace_student_id_idx";
 --> statement-breakpoint
+DROP POLICY IF EXISTS "enrollments_tenant_isolation" ON "enrollments";
+--> statement-breakpoint
 
 -- 2. Format validation CHECK constraints on students dates (idempotent).
 DO $$ BEGIN
