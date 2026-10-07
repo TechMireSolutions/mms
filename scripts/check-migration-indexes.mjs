@@ -51,8 +51,8 @@ const LARGE_TABLES = [
   'audit_trail_events',
 ];
 
-/** Measured 2026-09-14. Raise deliberately, with a reason, never casually. */
-const BASELINE = 167;
+/** Measured 2026-10-07. Baseline raised to 170 for students_workspace_contact_active_uidx and case-insensitive gr_number/student_id in migration 0163. */
+const BASELINE = 170;
 
 function fail(message) {
   console.error(`\n✗ ${message}\n`);

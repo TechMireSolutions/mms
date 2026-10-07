@@ -14,6 +14,7 @@ export const {
   loadContactsPage,
   loadContactsPageForTenant,
   loadContactsByIdsForTenant,
+  loadContactsSummaryByIdsForTenant,
   loadContactRuntimeDefaults,
   loadContactsByIds,
   loadExistingNormalizedContactNames,

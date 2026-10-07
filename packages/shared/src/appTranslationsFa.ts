@@ -5031,7 +5031,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "organization.industry.generalDesc": "ساختار سازمانی عمومی استاندارد",
   "organization.terminology.madrasa.facultyLabel": "هیئت علمی",
   "organization.terminology.madrasa.staffSingular": "معلم",
-  "organization.terminology.madrasa.studentLabel": "دانش‌آموزان و طلاب",
+  "organization.terminology.madrasa.studentLabel": "طلاب",
   "organization.terminology.madrasa.locationLabel": "پردیس / بلوک",
   "organization.terminology.hotel.facultyLabel": "کارکنان و تیم",
   "organization.terminology.hotel.staffSingular": "کارمند",

@@ -254,6 +254,31 @@ describe('students routes', () => {
     await app.close();
   });
 
+  it('POST /api/students maps GR unique conflict to 409', async () => {
+    const conflict = Object.assign(new Error('A student with this GR number already exists.'), {
+      statusCode: 409,
+      type: 'conflict',
+    });
+    mockCreateStudent.mockRejectedValue(conflict);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-1', status: 'active', grNumber: 'GR-1' },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({
+      type: 'conflict',
+      message: 'A student with this GR number already exists.',
+    });
+    await app.close();
+  });
+
   it('POST /api/students returns 200 when createStudent restores an archived row', async () => {
     mockCreateStudent.mockResolvedValue({
       record: { id: 's-archived', contactId: 'c-1', status: 'active', grNumber: 'GR-1' },
@@ -636,6 +661,28 @@ describe('students routes', () => {
         summary: expect.stringContaining('Soft-deleted student s1'),
       }),
     );
+    await app.close();
+  });
+
+  it('DELETE /api/students/:id maps ConflictError from delete guard to 409', async () => {
+    const { ConflictError } = await import('../lib/httpErrors.js');
+    mockDeleteStudentById.mockRejectedValue(
+      new ConflictError('Cannot delete student with active unpaid invoices. Settle or cancel invoices first.'),
+    );
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/students/s1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({
+      type: 'conflict',
+      message: expect.stringContaining('Cannot delete student with active unpaid invoices'),
+    });
     await app.close();
   });
 

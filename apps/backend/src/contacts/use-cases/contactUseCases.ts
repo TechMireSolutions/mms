@@ -32,6 +32,8 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
       loadUseCases.loadContactsPageForTenant(tenant, query, repo),
     loadContactsByIdsForTenant: (tenant: string, ids: string[]) =>
       loadUseCases.loadContactsByIdsForTenant(tenant, ids, repo),
+    loadContactsSummaryByIdsForTenant: (tenant: string, ids: string[]) =>
+      loadUseCases.loadContactsSummaryByIdsForTenant(tenant, ids, repo),
     loadContactsCommandMetrics: () => loadUseCases.loadContactsCommandMetrics(repo),
     loadContactRuntimeDefaults: () => loadUseCases.loadContactRuntimeDefaults(),
     loadContactsReportAnalytics: (options?: Parameters<typeof loadUseCases.loadContactsReportAnalytics>[0]) =>

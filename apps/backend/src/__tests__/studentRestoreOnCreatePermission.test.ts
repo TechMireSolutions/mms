@@ -77,6 +77,15 @@ describe('createStudent restore-on-create permission gate', () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
 
+  it('throws StudentPermissionError when restore-on-create has no user (fail closed)', async () => {
+    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
+    const { StudentPermissionError } = await import('../students/use-cases/studentNormalizeUseCases.js');
+    await expect(
+      createStudent({ contactId: 'c-1', status: 'active' } as never),
+    ).rejects.toBeInstanceOf(StudentPermissionError);
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
   it('restores the archived student when the user has delete permission', async () => {
     const { createStudent } = await import('../students/use-cases/studentUseCases.js');
     const result = await createStudent(

@@ -4,7 +4,7 @@ import { contacts } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { getPreparedContactById } from '../preparedStatements.js';
 import { contactSelectColumns } from './contactRepositoryColumns.js';
-import { hydrateContactsList } from './contactRepositoryCore.js';
+import { hydrateContactsList, hydrateContactsSummaryList } from './contactRepositoryHydrate.js';
 
 type ContactRow = typeof contacts.$inferSelect;
 
@@ -48,3 +48,16 @@ export async function findContactsByIds(tenant: string, ids: string[]): Promise<
     return hydrateContactsList(tx, subdomain, rows);
   });
 }
+
+export async function findContactsSummaryByIds(tenant: string, ids: string[]): Promise<Contact[]> {
+  if (ids.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select(contactSelectColumns)
+      .from(contacts)
+      .where(and(eq(contacts.workspaceSubdomain, subdomain), inArray(contacts.id, ids)));
+    return hydrateContactsSummaryList(tx, subdomain, rows);
+  });
+}
+

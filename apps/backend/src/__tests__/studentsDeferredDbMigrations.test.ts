@@ -31,6 +31,29 @@ describe('students deferred DB migrations (source)', () => {
     expect(sql).toContain('students_workspace_subdomain_contact_id_contacts_workspace_subdomain_id_fk');
     expect(sql).toContain('ON DELETE set null');
   });
+
+  it('0163 upgrades contact_id to partial unique index, adds session FK, and prunes redundant expression indexes', () => {
+    const sql = readFileSync(join(drizzleDir, '0163_students_constraints_hardening.sql'), 'utf8');
+    expect(sql).toContain('students_workspace_contact_active_uidx');
+    expect(sql).toContain('student_enrolled_sessions_session_fk');
+    expect(sql).toContain('DROP INDEX IF EXISTS "students_workspace_status_expr_updated_at_active_idx"');
+    expect(sql).toContain('DROP INDEX IF EXISTS "students_workspace_status_expr_id_active_idx"');
+    expect(sql).toContain('DROP INDEX IF EXISTS "students_workspace_active_idx"');
+    expect(sql).toContain('DROP INDEX IF EXISTS "students_workspace_deleted_idx"');
+    expect(sql).toContain('DROP INDEX IF EXISTS "student_lookups_workspace_kind_idx"');
+    expect(sql).toContain('lower(btrim("gr_number"))');
+    expect(sql).toContain('lower(btrim("student_id"))');
+    expect(sql).toContain('ON DELETE restrict');
+  });
+
+  it('0164 prunes redundant session prefix index, adds date checks, and creates student_sequence_config', () => {
+    const sql = readFileSync(join(drizzleDir, '0164_students_optimizations.sql'), 'utf8');
+    expect(sql).toContain('DROP INDEX IF EXISTS "student_enrolled_sessions_workspace_student_idx"');
+    expect(sql).toContain('students_registered_date_iso_check');
+    expect(sql).toContain('students_enrollment_date_iso_check');
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "student_sequence_config"');
+    expect(sql).toContain('FORCE ROW LEVEL SECURITY');
+  });
 });
 
 describe('students sync integrity (source)', () => {

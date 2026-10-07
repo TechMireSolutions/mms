@@ -41,7 +41,7 @@ export async function loadStudentById(
 ): Promise<Student | null> {
   const tenant = getRequestTenant();
   if (!tenant) return null;
-  const found = await repo.findById(tenant, id);
+  const found = await repo.findById(tenant, id, { includeDeleted });
   if (!found) return null;
   if (!includeDeleted && found.deletedAt) return null;
   const [hydrated] = await hydrateStudentsFromContacts(tenant, [found]);

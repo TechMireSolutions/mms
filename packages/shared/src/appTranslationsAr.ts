@@ -5020,7 +5020,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "organization.industry.generalDesc": "هيكل تنظيمي عام قياسي",
   "organization.terminology.madrasa.facultyLabel": "الهيئة التدريسية",
   "organization.terminology.madrasa.staffSingular": "معلّم",
-  "organization.terminology.madrasa.studentLabel": "الطلاب والطلبة",
+  "organization.terminology.madrasa.studentLabel": "الطلاب",
   "organization.terminology.madrasa.locationLabel": "حرم / مبنى",
   "organization.terminology.hotel.facultyLabel": "الموظفون والفريق",
   "organization.terminology.hotel.staffSingular": "موظف",

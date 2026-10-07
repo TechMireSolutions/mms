@@ -4,6 +4,7 @@ import * as loadEntity from './studentLoadEntityUseCases.js';
 import * as loadAggregate from './studentLoadAggregateUseCases.js';
 import * as write from './studentWriteUseCases.js';
 import * as softDelete from './studentSoftDeleteUseCases.js';
+import * as restore from './studentRestoreUseCases.js';
 import * as operation from './studentOperationUseCases.js';
 import * as sanitize from './studentSanitizeUseCases.js';
 
@@ -14,6 +15,7 @@ export * from './studentLoadAggregateUseCases.js';
 export * from './studentHydrateUseCases.js';
 export * from './studentWriteUseCases.js';
 export * from './studentSoftDeleteUseCases.js';
+export * from './studentRestoreUseCases.js';
 export * from './studentOperationUseCases.js';
 export * from './studentSanitizeUseCases.js';
 
@@ -36,7 +38,8 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       loadEntity.loadStudentLinkedContactIds(excludeStudentId, repo),
     loadStudentsCommandMetrics: () => loadAggregate.loadStudentsCommandMetrics(repo),
     loadStudentsWidgetAggregates: (queries: Parameters<typeof loadAggregate.loadStudentsWidgetAggregates>[0]) =>
-      loadAggregate.loadStudentsWidgetAggregates(queries, repo),    createStudent: (record: Parameters<typeof write.createStudent>[0], options?: Parameters<typeof write.createStudent>[1]) =>
+      loadAggregate.loadStudentsWidgetAggregates(queries, repo),
+    createStudent: (record: Parameters<typeof write.createStudent>[0], options?: Parameters<typeof write.createStudent>[1]) =>
       write.createStudent(record, options, repo),
     updateStudentById: (id: string, record: Parameters<typeof write.updateStudentById>[1]) =>
       write.updateStudentById(id, record, repo),
@@ -45,9 +48,9 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
     bulkSoftDeleteStudents: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDelete.bulkSoftDeleteStudents(ids, deletedBy, deletionReason, repo),
     restoreStudentById: (id: string, userId?: string) =>
-      softDelete.restoreStudentById(id, userId, repo),
+      restore.restoreStudentById(id, userId, repo),
     bulkRestoreStudents: (ids: string[], userId?: string) =>
-      softDelete.bulkRestoreStudents(ids, userId, repo),
+      restore.bulkRestoreStudents(ids, userId, repo),
     bulkUpdateStudentStatus: (ids: string[], status: string) =>
       operation.bulkUpdateStudentStatus(ids, status, repo),
     bulkEnrollStudents: (input: Parameters<typeof operation.bulkEnrollStudents>[0]) =>

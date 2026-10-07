@@ -14,14 +14,27 @@ import { studentUseCases } from '../../../students/use-cases/studentUseCases.js'
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
-import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import {
   auditStudent,
+  mapStudentWriteHttpError,
   sanitizeOneStudentForUser,
   sanitizeStudentsForUser,
 } from './studentRouteHelpers.js';
+import { enableIncludeDeleted } from '../../../lib/softDeleteHelpers.js';
 
 const s = initServer();
+
+async function withStudentTenantScope<T>(
+  tenantId: string,
+  includeDeleted: boolean,
+  work: () => Promise<T>,
+  options?: { readOnly?: boolean },
+): Promise<T> {
+  return withTenant(tenantId, async (tx) => {
+    if (includeDeleted) await enableIncludeDeleted(tx);
+    return work();
+  }, options);
+}
 
 /** Main student CRUD — @ts-rest contract router. */
 export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
@@ -40,11 +53,16 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
       }
 
-      const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
-        ...query,
+      const result = await withStudentTenantScope(
+        String(request.tenant?.id),
         includeDeleted,
-        skipCount,
-      }), { readOnly: true });
+        () => studentUseCases.loadStudentsPage({
+          ...query,
+          includeDeleted,
+          skipCount,
+        }),
+        { readOnly: true },
+      );
 
       return {
         status: 200 as const,
@@ -67,7 +85,12 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }
-        const item = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentById(id, includeDeleted), { readOnly: true });
+        const item = await withStudentTenantScope(
+          String(request.tenant?.id),
+          includeDeleted,
+          () => studentUseCases.loadStudentById(id, includeDeleted),
+          { readOnly: true },
+        );
         if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };
         }
@@ -103,21 +126,8 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
           ? { status: 200 as const, body: { student: response } }
           : { status: 201 as const, body: { student: response } };
       } catch (error: unknown) {
-        if (error instanceof StudentPermissionError) {
-          return { status: 403 as const, body: { type: 'forbidden', message: error.message } };
-        }
-        if (error && typeof error === 'object' && 'type' in error && 'field' in error) {
-          // (typed as the error shape just guarded above)
-          const e = error as { type: string; message: string; field: string };
-          return {
-            status: 400 as const,
-            body: {
-              type: e.type,
-              message: e.message,
-              errors: [{ field: e.field, message: e.message }],
-            },
-          };
-        }
+        const mapped = mapStudentWriteHttpError(error);
+        if (mapped) return { status: mapped.status as 400 | 403 | 409, body: mapped.body };
         request.log.error(error, 'Failed to create student');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create student' } };
       }
@@ -145,6 +155,8 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const response = await sanitizeOneStudentForUser(updated as Student, user);
         return { status: 200 as const, body: { student: response } };
       } catch (error: unknown) {
+        const mapped = mapStudentWriteHttpError(error);
+        if (mapped) return { status: mapped.status as 400 | 403 | 409, body: mapped.body };
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update student' } };
       }
     },
@@ -167,6 +179,10 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
         return { status: 200 as const, body: { success: true } };
       } catch (error: unknown) {
+        const mapped = mapStudentWriteHttpError(error);
+        if (mapped && mapped.status === 409) {
+          return { status: 409 as const, body: mapped.body };
+        }
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete student' } };
       }
     },
@@ -236,7 +252,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof studentContract['duplicateCheck']>): Promise<ContractRouteResponse<typeof studentContract['duplicateCheck']>> => {
       const user = request.user as User;
-      if (!canWriteCollection(user, 'students')) {
+      if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       const tenantId = request.tenant?.id || getRequestTenant();

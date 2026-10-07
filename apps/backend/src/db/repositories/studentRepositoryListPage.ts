@@ -1,9 +1,12 @@
-import { and, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { StudentsListPageResult, StudentsListQuery } from '@mms/shared';
-import { students } from '../schema.js';
+import { isQueryFlagTrue } from '@mms/shared';
+import { students, contacts } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
+import { enableIncludeDeleted } from '../../lib/softDeleteHelpers.js';
 import { hydrateStudentsList } from './studentRepository.js';
 import { buildListConditions, buildOrderBy } from './studentRepositoryListQuery.js';
+import { STUDENT_COLUMNS_LIST } from './studentRepositoryColumns.js';
 
 /**
  * SQL-filtered students Work list page (typed deleted_at + relational filters).
@@ -18,9 +21,16 @@ export async function listStudentsPage(
   const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
   const isCursorPaging = Boolean(query.afterId?.trim());
   const offset = isCursorPaging ? 0 : (page - 1) * limit;
+  const includeDeleted = isQueryFlagTrue(query.includeDeleted);
 
   return withTenantRead(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query);
+    if (includeDeleted) await enableIncludeDeleted(tx);
+    const needsContactsJoin = Boolean(
+      query.gender?.trim() ||
+      query.search?.trim() ||
+      (!isCursorPaging && query.sortField && ['name', 'gender', 'dob'].includes(query.sortField.trim())),
+    );
+    const conditions = buildListConditions(subdomain, query, needsContactsJoin);
     const baseWhereClause = and(...conditions);
     if (isCursorPaging) {
       conditions.push(sql`${students.id} > ${query.afterId!.trim()}`);
@@ -28,53 +38,52 @@ export async function listStudentsPage(
     const whereClause = and(...conditions);
     const effectiveOrderBy = isCursorPaging
       ? sql`${students.id} asc`
-      : buildOrderBy(query.sortField, query.sortDir);
+      : buildOrderBy(query.sortField, query.sortDir, needsContactsJoin);
 
     let total = 0;
     if (!query.skipCount) {
-      const countRows = await tx
-        .select({ count: sql<number>`count(*)::int` })
-        .from(students)
-        .where(baseWhereClause);
+      const countRows = needsContactsJoin
+        ? await tx
+            .select({ count: sql<number>`count(*)::int` })
+            .from(students)
+            .leftJoin(
+              contacts,
+              and(
+                eq(contacts.workspaceSubdomain, students.workspaceSubdomain),
+                eq(contacts.id, students.contactId),
+              ),
+            )
+            .where(baseWhereClause)
+        : await tx
+            .select({ count: sql<number>`count(*)::int` })
+            .from(students)
+            .where(baseWhereClause);
       total = Number(countRows[0]?.count ?? 0);
     }
 
-    const rows = await tx
-      .select({
-        id: students.id,
-        workspaceSubdomain: students.workspaceSubdomain,
-        contactId: students.contactId,
-        fatherContactId: students.fatherContactId,
-        motherContactId: students.motherContactId,
-        guardianContactId: students.guardianContactId,
-        fatherName: students.fatherName,
-        motherName: students.motherName,
-        guardianName: students.guardianName,
-        grNumber: students.grNumber,
-        studentId: students.studentId,
-        status: students.status,
-        registeredDate: students.registeredDate,
-        enrollmentDate: students.enrollmentDate,
-        discountType: students.discountType,
-        discountPct: students.discountPct,
-        registrationType: students.registrationType,
-        notes: sql<string | null>`NULL`.as('notes'),
-        deletedAt: students.deletedAt,
-        deletedBy: students.deletedBy,
-        deletionReason: students.deletionReason,
-        restoredAt: students.restoredAt,
-        restoredBy: students.restoredBy,
-        deletedWithCascade: students.deletedWithCascade,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        createdBy: students.createdBy,
-        updatedBy: students.updatedBy,
-      })
-      .from(students)
-      .where(whereClause)
-      .orderBy(effectiveOrderBy)
-      .limit(limit)
-      .offset(offset);
+    const rows = needsContactsJoin
+      ? await tx
+          // STUDENT_COLUMNS_LIST omits `notes` to reduce bandwidth on list pages.
+          .select(STUDENT_COLUMNS_LIST)
+          .from(students)
+          .leftJoin(
+            contacts,
+            and(
+              eq(contacts.workspaceSubdomain, students.workspaceSubdomain),
+              eq(contacts.id, students.contactId),
+            ),
+          )
+          .where(whereClause)
+          .orderBy(effectiveOrderBy)
+          .limit(limit)
+          .offset(offset)
+      : await tx
+          .select(STUDENT_COLUMNS_LIST)
+          .from(students)
+          .where(whereClause)
+          .orderBy(effectiveOrderBy)
+          .limit(limit)
+          .offset(offset);
 
     const hydratedStudents = await hydrateStudentsList(tx, subdomain, rows);
     const hasMore = isCursorPaging ? rows.length === limit : page * limit < total;

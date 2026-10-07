@@ -30,4 +30,14 @@ describe('studentRepositoryList Contacts SSOT', () => {
     expect(listSrc).toContain('${students.motherContactId} IN');
     expect(listSrc).toContain('${students.guardianContactId} IN');
   });
+
+  it('searches fatherName across both student column and linked father contact', () => {
+    expect(listSrc).toContain('COALESCE(${students.fatherName}');
+    expect(listSrc).toContain('fc.workspace_subdomain = ${students.workspaceSubdomain}');
+    expect(listSrc).toContain('fc.id = ${students.fatherContactId}');
+  });
+
+  it('guards registeredDate date casting with ISO regex pattern', () => {
+    expect(listSrc).toContain('^[0-9]{4}-[0-9]{2}-[0-9]{2}');
+  });
 });

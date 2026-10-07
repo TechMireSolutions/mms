@@ -1,8 +1,10 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar, numeric, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts } from "./contacts.js";
+import { sessions } from "./sessions.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
+import type { StudentModulePreferences } from '@mms/shared';
 
 /**
  * Students entity rows — normalized 3NF relational columns.
@@ -19,6 +21,7 @@ export const students = pgTable('students', {
   guardianName: varchar('guardian_name', { length: 255 }),
   grNumber: varchar('gr_number', { length: 100 }),
   studentId: varchar('student_id', { length: 100 }),
+  // Status values enforced at DB level by students_status_check constraint (migration 0162).
   status: varchar('status', { length: 50 }).notNull().default('active'),
   registeredDate: varchar('registered_date', { length: 35 }),
   enrollmentDate: varchar('enrollment_date', { length: 35 }),
@@ -33,13 +36,6 @@ export const students = pgTable('students', {
   updatedBy: text('updated_by'),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('students_workspace_status_idx').on(table.workspaceSubdomain, table.status),
-  index('students_workspace_gr_number_idx').on(table.workspaceSubdomain, table.grNumber),
-  index('students_workspace_student_id_idx').on(table.workspaceSubdomain, table.studentId),
-  index('students_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
-  index('students_workspace_active_idx')
-    .on(table.workspaceSubdomain)
-    .where(sql`${table.deletedAt} is null`),
   index('students_workspace_id_active_idx')
     .on(table.workspaceSubdomain, table.id)
     .where(sql`${table.deletedAt} is null`),
@@ -55,25 +51,20 @@ export const students = pgTable('students', {
   index('students_workspace_status_updated_at_active_idx')
     .on(table.workspaceSubdomain, table.status, table.updatedAt)
     .where(sql`${table.deletedAt} is null`),
-  index('students_workspace_status_expr_updated_at_active_idx')
-    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.updatedAt)
-    .where(sql`${table.deletedAt} is null`),
-  index('students_workspace_status_expr_id_active_idx')
-    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.id)
-    .where(sql`${table.deletedAt} is null`),
   index('students_workspace_registered_date_active_idx')
     .on(table.workspaceSubdomain, table.registeredDate)
     .where(sql`${table.deletedAt} is null`),
   uniqueIndex('students_workspace_gr_number_active_uidx')
-    .on(table.workspaceSubdomain, table.grNumber)
+    .on(table.workspaceSubdomain, sql`lower(btrim(${table.grNumber}))`)
     .where(sql`${table.deletedAt} is null and ${table.grNumber} is not null`),
   uniqueIndex('students_workspace_student_id_active_uidx')
-    .on(table.workspaceSubdomain, table.studentId)
+    .on(table.workspaceSubdomain, sql`lower(btrim(${table.studentId}))`)
     .where(sql`${table.deletedAt} is null and ${table.studentId} is not null`),
   index('students_workspace_deleted_records_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
-  index('students_workspace_contact_active_idx')
+  // Phase 1: 1:1 contact-to-student mapping enforced by partial unique index (migration 0163).
+  uniqueIndex('students_workspace_contact_active_uidx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
   index('students_workspace_father_contact_idx').on(table.workspaceSubdomain, table.fatherContactId),
@@ -82,7 +73,7 @@ export const students = pgTable('students', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
-  }).onDelete('set null'),
+  }).onDelete('restrict'),
   foreignKey({
     columns: [table.workspaceSubdomain, table.fatherContactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
@@ -95,6 +86,13 @@ export const students = pgTable('students', {
     columns: [table.workspaceSubdomain, table.guardianContactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
   }).onDelete('set null'),
+  // P1-2: Enforce valid status values at DB level (mirrors STUDENT_STATUS_VALUES in @mms/shared).
+  check('students_status_check', sql`lower(trim(COALESCE(${table.status}, 'active'))) IN ('active','inactive','suspended','graduated','transferred')`),
+  // P1-4: Enforce discount_pct in [0, 100] when set.
+  check('students_discount_pct_range_check', sql`${table.discountPct} IS NULL OR (${table.discountPct} >= 0 AND ${table.discountPct} <= 100)`),
+  // P1-5: Enforce valid ISO dates when present.
+  check('students_registered_date_iso_check', sql`${table.registeredDate} IS NULL OR ${table.registeredDate} = '' OR ${table.registeredDate} ~ '^\d{4}-\d{2}-\d{2}'`),
+  check('students_enrollment_date_iso_check', sql`${table.enrollmentDate} IS NULL OR ${table.enrollmentDate} = '' OR ${table.enrollmentDate} ~ '^\d{4}-\d{2}-\d{2}'`),
 ]);
 
 export const studentEnrolledSessions = pgTable('student_enrolled_sessions', {
@@ -106,11 +104,17 @@ export const studentEnrolledSessions = pgTable('student_enrolled_sessions', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.studentId, table.id] }),
-  index('student_enrolled_sessions_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
+  // P1-3: Unique constraint prevents duplicate enrolment rows from concurrent bulk-enroll races.
+  uniqueIndex('student_enrolled_sessions_workspace_student_session_uidx')
+    .on(table.workspaceSubdomain, table.studentId, table.sessionId),
   index('student_enrolled_sessions_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
   foreignKey({
     columns: [table.workspaceSubdomain, table.studentId],
     foreignColumns: [students.workspaceSubdomain, students.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.sessionId],
+    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
   }).onDelete('cascade'),
 ]);
 
@@ -128,12 +132,11 @@ export const studentLookups = pgTable('student_lookups', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  uniqueIndex('student_lookups_workspace_kind_sort_idx').on(
+  index('student_lookups_workspace_kind_sort_idx').on(
     table.workspaceSubdomain,
     table.kind,
     table.sortOrder,
   ),
-  index('student_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
 ]);
 
 /** Students Setup field registry (was document-store `students_settings` fields slice). */
@@ -148,13 +151,22 @@ export const studentFieldConfigs = pgTable('student_field_configs', {
 /** Students Setup preferences — GR / auto-id (was document-store `students_settings` prefs slice). */
 export const studentModulePreferences = pgTable('student_module_preferences', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  preferences: jsonb('preferences').$type<StudentModulePreferences>().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-/** Per-user Students Work column layout (was document-store `student_user_column_preferences`). */
+/** Deterministic, concurrency-safe GR number generation sequence tracking. */
+export const studentSequenceConfig = pgTable('student_sequence_config', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  currentSequence: integer('current_sequence').notNull().default(0),
+  lastYear: integer('last_year').notNull().default(2026),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -169,3 +181,5 @@ export type StudentFieldConfigsRow = typeof studentFieldConfigs.$inferSelect;
 export type InsertStudentFieldConfigsRow = typeof studentFieldConfigs.$inferInsert;
 export type StudentModulePreferencesRow = typeof studentModulePreferences.$inferSelect;
 export type InsertStudentModulePreferencesRow = typeof studentModulePreferences.$inferInsert;
+export type StudentSequenceConfigRow = typeof studentSequenceConfig.$inferSelect;
+export type InsertStudentSequenceConfigRow = typeof studentSequenceConfig.$inferInsert;

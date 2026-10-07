@@ -3,6 +3,7 @@ import {
   countContactsByWorkspace,
   findContactById,
   findContactsByIds,
+  findContactsSummaryByIds,
   saveContact,
   bulkSaveContacts,
   bulkSoftDeleteContactsSql,
@@ -35,6 +36,7 @@ function createContactsRepository(): ContactsRepository {
     listPage: (tenant, query) => listContactsPage(tenant, query),
     findById: (tenant, id) => findContactById(tenant, id),
     findByIds: (tenant, ids) => findContactsByIds(tenant, ids),
+    findSummaryByIds: (tenant, ids) => findContactsSummaryByIds(tenant, ids),
     save: (tenant, contact) => saveContact(tenant, contact),
     bulkSave: (tenant, contacts) => bulkSaveContacts(tenant, contacts),
     bulkSoftDelete: (tenant, ids, deletedBy, deletionReason) =>

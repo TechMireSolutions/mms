@@ -3,44 +3,21 @@ import { dedupeTrimmedIds, type Student } from '@mms/shared';
 import { students } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { hydrateStudentsList } from './studentRepository.js';
+import { STUDENT_COLUMNS } from './studentRepositoryColumns.js';
 
-/** Active students missing typed `gr_number` (null or blank). */
+/** Default batch size for GR backfill (Setup migrate endpoint). */
+export const MISSING_GR_MIGRATE_CHUNK = 100;
+
+/** Active students missing typed `gr_number` (null or blank), optionally capped. */
 export async function listActiveStudentsMissingGrNumber(
   workspaceSubdomain: string,
+  options?: { limit?: number },
 ): Promise<Student[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const limit = Math.min(Math.max(1, options?.limit ?? MISSING_GR_MIGRATE_CHUNK), 500);
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: students.id,
-        workspaceSubdomain: students.workspaceSubdomain,
-        contactId: students.contactId,
-        fatherContactId: students.fatherContactId,
-        motherContactId: students.motherContactId,
-        guardianContactId: students.guardianContactId,
-        fatherName: students.fatherName,
-        motherName: students.motherName,
-        guardianName: students.guardianName,
-        grNumber: students.grNumber,
-        studentId: students.studentId,
-        status: students.status,
-        registeredDate: students.registeredDate,
-        enrollmentDate: students.enrollmentDate,
-        discountType: students.discountType,
-        discountPct: students.discountPct,
-        registrationType: students.registrationType,
-        notes: students.notes,
-        deletedAt: students.deletedAt,
-        deletedBy: students.deletedBy,
-        deletionReason: students.deletionReason,
-        restoredAt: students.restoredAt,
-        restoredBy: students.restoredBy,
-        deletedWithCascade: students.deletedWithCascade,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        createdBy: students.createdBy,
-        updatedBy: students.updatedBy,
-      })
+      .select(STUDENT_COLUMNS)
       .from(students)
       .where(
         and(
@@ -49,7 +26,8 @@ export async function listActiveStudentsMissingGrNumber(
           sql`NULLIF(trim(COALESCE(${students.grNumber}, '')), '') IS NULL`,
         ),
       )
-      .orderBy(asc(students.id));
+      .orderBy(asc(students.id))
+      .limit(limit);
     return hydrateStudentsList(tx, subdomain, rows);
   });
 }
