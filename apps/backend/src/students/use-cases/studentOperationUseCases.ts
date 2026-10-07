@@ -2,12 +2,15 @@ import {
   computeNextGrNumber,
   normalizeStudentModulePreferences,
   todayISO,
+  STUDENT_STATUS_VALUES,
+  type StudentStatus,
   type StudentDuplicateCheckInput,
   type StudentGrNumberSettings,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { loadStudentModulePreferences } from './studentPreferencesService.js';
 import { broadcastCollection } from '../../lib/livePush.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';
 import { throwGrUniqueConflict } from './studentNormalizeUseCases.js';
@@ -87,11 +90,19 @@ export async function bulkUpdateStudentStatus(
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
 
+  const normalizedStatus = status.trim().toLowerCase() as StudentStatus;
+  if (!STUDENT_STATUS_VALUES.includes(normalizedStatus)) {
+    const error = new Error(`Invalid status "${status}". Allowed values: ${STUDENT_STATUS_VALUES.join(', ')}`) as Error & { statusCode: number };
+    error.statusCode = 400;
+    throw error;
+  }
+
   const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
 
-  const succeeded = await repo.bulkUpdateStatusSql(tenant, uniqueIds, status);
+  const succeeded = await repo.bulkUpdateStatusSql(tenant, uniqueIds, normalizedStatus);
   if (succeeded > 0) {
+    await invalidateMultiTierCache({ tenantId: tenant, domain: 'students' });
     await broadcastCollection('students');
   }
   return { succeeded, failed: uniqueIds.length - succeeded };
@@ -102,10 +113,24 @@ const MIGRATE_GR_CHUNK = 100;
 
 /** Chunked backfill of missing GR numbers for active students (Setup writers). */
 export async function migrateStudentsMissingGrNumbers(
-  repo: StudentsRepository = studentsRepository,
+  userIdOrRepo?: string | StudentsRepository,
+  repoOrUserId?: StudentsRepository | string,
 ): Promise<{ updated: number; hasMore: boolean }> {
   const tenant = getRequestTenant();
   if (!tenant) return { updated: 0, hasMore: false };
+
+  const userId =
+    typeof userIdOrRepo === 'string'
+      ? userIdOrRepo
+      : typeof repoOrUserId === 'string'
+        ? repoOrUserId
+        : undefined;
+  const repo =
+    typeof userIdOrRepo === 'object' && userIdOrRepo !== null
+      ? userIdOrRepo
+      : typeof repoOrUserId === 'object' && repoOrUserId !== null
+        ? repoOrUserId
+        : studentsRepository;
 
   const settings = normalizeStudentModulePreferences(await loadStudentModulePreferences());
   const missing = await repo.listActiveMissingGrNumber(tenant, { limit: MIGRATE_GR_CHUNK });
@@ -117,16 +142,13 @@ export async function migrateStudentsMissingGrNumbers(
     grNumberDigits: settings.grNumberDigits,
     grNumberRestartAnnually: settings.grNumberRestartAnnually,
   };
+  const batchGrs = await computeNextGrNumberBatchForDate(fallbackDate, missing.length, prefs, repo);
   let updated = 0;
-  for (const row of missing) {
-    const registeredDate =
-      typeof row.registeredDate === 'string' && row.registeredDate.trim()
-        ? row.registeredDate
-        : fallbackDate;
-    // Persist each row before the next count so SQL next-GR stays monotonic.
-    const grNumber = await computeNextGrNumberForDate(registeredDate, prefs, repo);
+  for (let i = 0; i < missing.length; i++) {
+    const row = missing[i]!;
+    const grNumber = batchGrs[i] ?? (await computeNextGrNumberForDate(fallbackDate, prefs, repo));
     try {
-      await repo.save(tenant, { ...row, grNumber });
+      await repo.save(tenant, { ...row, grNumber, updatedBy: userId });
     } catch (error: unknown) {
       throwGrUniqueConflict(error);
     }
@@ -156,6 +178,7 @@ export async function bulkEnrollStudents(
 
   const result = await repo.bulkEnroll(tenant, uniqueStudentIds, uniqueSessionIds, input.mode ?? 'add');
   if (result.succeeded > 0) {
+    await invalidateMultiTierCache({ tenantId: tenant, domain: 'students' });
     await broadcastCollection('students');
     await broadcastCollection('sessions');
   }

@@ -9,6 +9,27 @@ import { syncBulkStudentEnrolledSessionsTx } from './studentRepositoryBulkEnroll
 
 export type StudentInsert = typeof students.$inferInsert;
 
+const KNOWN_STUDENT_KEYS = new Set([
+  'id', 'workspaceSubdomain', 'contactId', 'fatherContactId', 'motherContactId', 'guardianContactId',
+  'fatherName', 'motherName', 'guardianName', 'grNumber', 'studentId', 'status', 'registeredDate',
+  'enrollmentDate', 'discountType', 'discountPct', 'registrationType', 'notes', 'enrolledSessions',
+  'createdAt', 'updatedAt', 'deletedAt', 'deletedBy', 'deletionReason', 'restoredAt', 'restoredBy',
+  'deletedWithCascade', 'createdBy', 'updatedBy', 'customFields',
+  'name', 'gender', 'dob', 'phone', 'email', 'city', 'cnic', 'isSyed', 'avatar',
+]);
+
+function extractStudentCustomFields(student: Student): Record<string, unknown> {
+  const custom: Record<string, unknown> = {
+    ...(typeof student.customFields === 'object' && student.customFields !== null ? student.customFields : {}),
+  };
+  for (const [key, val] of Object.entries(student)) {
+    if (!KNOWN_STUDENT_KEYS.has(key) && val !== undefined) {
+      custom[key] = val;
+    }
+  }
+  return custom;
+}
+
 export function studentWriteValues(subdomain: string, student: Student): StudentInsert {
   const fatherContactId = student.fatherContactId ? String(student.fatherContactId) : null;
   const motherContactId = student.motherContactId ? String(student.motherContactId) : null;
@@ -35,6 +56,7 @@ export function studentWriteValues(subdomain: string, student: Student): Student
     discountPct: student.discountPct != null ? String(student.discountPct) : null,
     registrationType: student.registrationType ?? null,
     notes: student.notes ?? null,
+    customFields: extractStudentCustomFields(student),
     ...mapAuditToInsert(student),
   } satisfies StudentInsert;
 }
@@ -96,6 +118,7 @@ export async function bulkSaveStudents(tenant: string, items: Student[]): Promis
           discountPct: sql`excluded.discount_pct`,
           registrationType: sql`excluded.registration_type`,
           notes: sql`excluded.notes`,
+          customFields: sql`excluded.custom_fields`,
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,

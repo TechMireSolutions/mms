@@ -1,10 +1,9 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar, numeric, check } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, primaryKey, foreignKey, varchar, numeric, check, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts } from "./contacts.js";
 import { sessions } from "./sessions.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
-import type { StudentModulePreferences } from '@mms/shared';
 
 /**
  * Students entity rows — normalized 3NF relational columns.
@@ -29,6 +28,7 @@ export const students = pgTable('students', {
   discountPct: numeric('discount_pct', { precision: 5, scale: 2 }),
   registrationType: varchar('registration_type', { length: 100 }),
   notes: text('notes'),
+  customFields: jsonb('custom_fields').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -51,15 +51,18 @@ export const students = pgTable('students', {
   index('students_workspace_status_updated_at_active_idx')
     .on(table.workspaceSubdomain, table.status, table.updatedAt)
     .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_status_coalesce_updated_at_active_idx')
+    .on(table.workspaceSubdomain, sql`COALESCE(${table.status}, 'active')`, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
   index('students_workspace_registered_date_active_idx')
     .on(table.workspaceSubdomain, table.registeredDate)
     .where(sql`${table.deletedAt} is null`),
   uniqueIndex('students_workspace_gr_number_active_uidx')
     .on(table.workspaceSubdomain, sql`lower(btrim(${table.grNumber}))`)
-    .where(sql`${table.deletedAt} is null and ${table.grNumber} is not null`),
+    .where(sql`${table.deletedAt} is null and ${table.grNumber} is not null and btrim(${table.grNumber}) <> ''`),
   uniqueIndex('students_workspace_student_id_active_uidx')
     .on(table.workspaceSubdomain, sql`lower(btrim(${table.studentId}))`)
-    .where(sql`${table.deletedAt} is null and ${table.studentId} is not null`),
+    .where(sql`${table.deletedAt} is null and ${table.studentId} is not null and btrim(${table.studentId}) <> ''`),
   index('students_workspace_deleted_records_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
@@ -67,6 +70,9 @@ export const students = pgTable('students', {
   uniqueIndex('students_workspace_contact_active_uidx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
+  index('students_workspace_contact_deleted_idx')
+    .on(table.workspaceSubdomain, table.contactId)
+    .where(sql`${table.deletedAt} is not null`),
   index('students_workspace_father_contact_idx').on(table.workspaceSubdomain, table.fatherContactId),
   index('students_workspace_mother_contact_idx').on(table.workspaceSubdomain, table.motherContactId),
   index('students_workspace_guardian_contact_idx').on(table.workspaceSubdomain, table.guardianContactId),
@@ -118,54 +124,7 @@ export const studentEnrolledSessions = pgTable('student_enrolled_sessions', {
   }).onDelete('cascade'),
 ]);
 
-/**
- * Students Setup option lists (statuses, genderFilters, discountTypes).
- * Replaces document-store collections studentStatuses / studentGenderFilters / studentDiscountTypes.
- */
-export const studentLookups = pgTable('student_lookups', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  kind: text('kind').notNull(),
-  label: text('label').notNull(),
-  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
-  sortOrder: integer('sort_order').notNull().default(0),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('student_lookups_workspace_kind_sort_idx').on(
-    table.workspaceSubdomain,
-    table.kind,
-    table.sortOrder,
-  ),
-]);
-
-/** Students Setup field registry (was document-store `students_settings` fields slice). */
-export const studentFieldConfigs = pgTable('student_field_configs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain] }),
-]);
-
-/** Students Setup preferences — GR / auto-id (was document-store `students_settings` prefs slice). */
-export const studentModulePreferences = pgTable('student_module_preferences', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  preferences: jsonb('preferences').$type<StudentModulePreferences>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain] }),
-]);
-
-/** Deterministic, concurrency-safe GR number generation sequence tracking. */
-export const studentSequenceConfig = pgTable('student_sequence_config', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  currentSequence: integer('current_sequence').notNull().default(0),
-  lastYear: integer('last_year').notNull().default(2026),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain] }),
-]);
+export * from "./studentSetupTables.js";
 
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
@@ -175,11 +134,3 @@ export type StudentRow = typeof students.$inferSelect;
 export type InsertStudentRow = typeof students.$inferInsert;
 export type StudentEnrolledSessionRow = typeof studentEnrolledSessions.$inferSelect;
 export type InsertStudentEnrolledSessionRow = typeof studentEnrolledSessions.$inferInsert;
-export type StudentLookupsRow = typeof studentLookups.$inferSelect;
-export type InsertStudentLookupsRow = typeof studentLookups.$inferInsert;
-export type StudentFieldConfigsRow = typeof studentFieldConfigs.$inferSelect;
-export type InsertStudentFieldConfigsRow = typeof studentFieldConfigs.$inferInsert;
-export type StudentModulePreferencesRow = typeof studentModulePreferences.$inferSelect;
-export type InsertStudentModulePreferencesRow = typeof studentModulePreferences.$inferInsert;
-export type StudentSequenceConfigRow = typeof studentSequenceConfig.$inferSelect;
-export type InsertStudentSequenceConfigRow = typeof studentSequenceConfig.$inferInsert;

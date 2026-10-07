@@ -93,7 +93,9 @@ export function StudentDetailFieldsSection({
       return null;
     }
 
-    const rawValue = (student as Record<string, unknown>)[field.key];
+    const rawValue =
+      (student as Record<string, unknown>)[field.key] ??
+      (student.customFields as Record<string, unknown> | undefined)?.[field.key];
     const displayValue = formatStudentsListContentCustomValue(rawValue, t, field.type);
     if (displayValue == null) return null;
     return (

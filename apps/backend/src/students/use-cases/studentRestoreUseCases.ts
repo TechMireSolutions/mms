@@ -6,8 +6,8 @@ import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';
 import { StudentRestoreConflictError } from './studentNormalizeUseCases.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
-import { emitOutboxEvent } from '../../services/outboxEventService.js';
-import { recordModernAuditEvent } from '../../services/auditTrailService.js';
+import { recordRestoreEvents } from './studentAuditEvents.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 import { buildRestoredRecord, enableIncludeDeleted } from '../../lib/softDeleteHelpers.js';
 import { restoreCascadedEnrollmentsForStudents } from '../../db/repositories/studentEnrollmentCascade.js';
 
@@ -15,7 +15,6 @@ interface StudentBulkRestoreConflict {
   id: string;
   errors: Array<{ field: string; message: string }>;
 }
-
 interface StudentBulkRestoreResult {
   succeeded: number;
   failed: number;
@@ -43,18 +42,30 @@ export async function restoreStudentById(
       grNumber: existing.grNumber,
       contactId: existing.contactId,
     });
-    if (conflict === 'grNumber') {
-      throw new StudentRestoreConflictError();
-    }
+    if (conflict === 'grNumber') throw new StudentRestoreConflictError();
     if (conflict === 'contact') {
       throw new StudentRestoreConflictError('A student with this contact already exists', 'contact');
+    }
+    if (existing.studentId?.trim() && repo.findActiveStudentIdOwners) {
+      const activeOwners = await repo.findActiveStudentIdOwners(tenant, [existing.studentId.trim()]);
+      const normalizedSid = existing.studentId.trim().toLowerCase();
+      const activeOwner = activeOwners.get(normalizedSid);
+      if (activeOwner && activeOwner !== String(id)) {
+        throw new StudentRestoreConflictError('A student with this Student ID already exists', 'studentId');
+      }
     }
 
     const next = buildRestoredRecord(existing, userId);
     try {
       await repo.save(tenant, next);
     } catch (err: unknown) {
-      if (isPgUnique(err)) throw new StudentRestoreConflictError();
+      if (isPgUnique(err)) {
+        const msg = String((err as { message?: unknown })?.message ?? '').toLowerCase();
+        if (msg.includes('student_id')) {
+          throw new StudentRestoreConflictError('A student with this Student ID already exists', 'studentId');
+        }
+        throw new StudentRestoreConflictError();
+      }
       throw err;
     }
 
@@ -69,7 +80,11 @@ export async function restoreStudentById(
     await recordRestoreEvents(tenant, next, restoredAt, userId);
     return next;
   });
-  if (restored) await broadcastCollection('students');
+  if (restored) {
+    const tenant = getRequestTenant();
+    if (tenant) await invalidateMultiTierCache({ tenantId: tenant, domain: 'students' });
+    await broadcastCollection('students');
+  }
   return restored;
 }
 
@@ -139,7 +154,15 @@ export async function bulkRestoreStudents(
 
     if (toSave.length > 0) {
       try {
-        await repo.bulkSave(tenant, toSave);
+        if (repo.bulkRestore) {
+          await repo.bulkRestore(
+            tenant,
+            toSave.map((s) => String(s.id)),
+            userId,
+          );
+        } else {
+          await repo.bulkSave(tenant, toSave);
+        }
       } catch (err: unknown) {
         if (isPgUnique(err)) throw new StudentRestoreConflictError();
         throw err;
@@ -153,25 +176,12 @@ export async function bulkRestoreStudents(
     }
     return { succeeded, failed, conflicts };
   });
-  if (result.succeeded > 0) await broadcastCollection('students');
+  if (result.succeeded > 0) {
+    const tenant = getRequestTenant();
+    if (tenant) await invalidateMultiTierCache({ tenantId: tenant, domain: 'students' });
+    await broadcastCollection('students');
+  }
   return result;
 }
 
-async function recordRestoreEvents(tenant: string, student: Student, restoredAt: string, userId?: string): Promise<void> {
-  await emitOutboxEvent('entity.restored', {
-    entityType: 'students',
-    entityId: String(student.id),
-    tenantId: tenant,
-    restoredAt,
-    restoredBy: userId ?? 'unknown',
-    version: Date.now(),
-  });
-  await recordModernAuditEvent({
-    workspaceSubdomain: tenant,
-    tableName: 'students',
-    recordId: String(student.id),
-    actionType: 'RESTORE',
-    newState: student,
-    minimizeDelta: false,
-  });
-}
+export { recordRestoreEvents } from './studentAuditEvents.js';

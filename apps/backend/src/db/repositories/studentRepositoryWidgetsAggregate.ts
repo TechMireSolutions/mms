@@ -67,8 +67,8 @@ export async function aggregateStudentsWidgetQueries(
           if (target) {
             const targetExpr = resolveStudentFieldExpr(target, useJoined);
             const aggFields = {
-              sum: sql<number>`coalesce(sum(NULLIF(${targetExpr}::text, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${targetExpr}::text, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(CASE WHEN ${targetExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$' THEN ${targetExpr}::text::numeric ELSE 0 END), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE ${targetExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$')::int`,
             };
             const aggRows = useJoined
               ? await tx.select(aggFields).from(students).leftJoin(contacts, contactsJoinOn).where(whereClause)
@@ -95,8 +95,8 @@ export async function aggregateStudentsWidgetQueries(
           const targetExpr = resolveStudentFieldExpr(target, useJoined);
           const chartFields = {
             name: groupExpr,
-            sum: sql<number>`coalesce(sum(NULLIF(${targetExpr}::text, '')::numeric), 0)`,
-            count: sql<number>`count(*) FILTER (WHERE NULLIF(${targetExpr}::text, '') IS NOT NULL)::int`,
+            sum: sql<number>`coalesce(sum(CASE WHEN ${targetExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$' THEN ${targetExpr}::text::numeric ELSE 0 END), 0)`,
+            count: sql<number>`count(*) FILTER (WHERE ${targetExpr}::text ~ '^-?[0-9]+(\.[0-9]+)?$')::int`,
           };
           const numericChart = useJoined
             ? await tx

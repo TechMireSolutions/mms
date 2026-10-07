@@ -51,8 +51,8 @@ const LARGE_TABLES = [
   'audit_trail_events',
 ];
 
-/** Measured 2026-10-07. Baseline raised to 170 for students_workspace_contact_active_uidx and case-insensitive gr_number/student_id in migration 0163. */
-const BASELINE = 170;
+/** Measured 2026-10-08. Baseline raised to 174 for migration 0165: empty-string hardened unique indexes for gr_number/student_id, functional status coalesce index, and partial contact index on soft-deleted students for re-registration. */
+const BASELINE = 174;
 
 function fail(message) {
   console.error(`\n✗ ${message}\n`);

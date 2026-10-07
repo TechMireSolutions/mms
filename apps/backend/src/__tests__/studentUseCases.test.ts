@@ -9,6 +9,7 @@ const mockLoadStudentModulePreferences = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
+  requireTenant: () => mockGetRequestTenant() ?? 'test-subdomain',
 }));
 
 vi.mock('../db/database.js', () => ({

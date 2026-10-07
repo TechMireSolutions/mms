@@ -4,6 +4,7 @@ export {
   listStudentsByWorkspace,
   findStudentById,
   findStudentsByIds,
+  resolveStudentsByIdentifiers,
   countStudentsByWorkspace,
 } from './studentRepositoryHydrate.js';
 export type { ListStudentsOptions } from './studentRepositoryHydrate.js';
@@ -15,3 +16,7 @@ export {
   bulkEnrollStudentsTx,
   bulkEnrollStudents,
 } from './studentRepositoryPersist.js';
+export {
+  bulkSoftDeleteStudentsSql,
+  bulkRestoreStudentsSql,
+} from './studentRepositorySoftDelete.js';

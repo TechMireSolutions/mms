@@ -45,6 +45,11 @@ export interface StudentsRepository {
     ids: string[],
     options?: { includeDeleted?: boolean },
   ): Promise<Student[]>;
+  resolveByIdentifiers?(
+    tenant: string,
+    identifiers: string[],
+    options?: { includeDeleted?: boolean },
+  ): Promise<Student[]>;
   save(tenant: string, student: Student | StudentRecord): Promise<void>;
   bulkSave(tenant: string, students: Array<Student | StudentRecord>): Promise<void>;
   aggregateCommandMetrics(
@@ -87,6 +92,17 @@ export interface StudentsRepository {
     studentIds: string[],
     sessionIds: string[],
     mode?: 'add' | 'replace' | 'remove',
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkSoftDelete?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestore?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
   ): Promise<{ succeeded: number; failed: number }>;
   guardDeleteDependents?(tenant: string, ids: string[]): Promise<void>;
 }

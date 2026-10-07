@@ -7,7 +7,10 @@ description: Universal agent cognition, planning, DRY reuse, communication econo
 **Workflow skills:** orientation / sync → `antigravity-workspace` · PR review → `mms-code-review` · UI design → `ui-ux-pro-max`. Ownership matrix → `.cursor/rules/README.md`.
 
 ## 1. Cognition & Behaviour
-- **Plan:** Emit concise `<plan>` before structural/multi-file edits. For UI components/layouts, query `ui-ux-pro-max` (`mms-ui-ux-design.md` §8).
+- **Plan-First Protocol:** For every request, systematically execute the three-phase lifecycle:
+  1. *Discovery & Plan:* Read and understand intent, search relevant codebase locations, inspect existing patterns/abstractions (`@mms/shared`, hooks, UI primitives), and evaluate constraints (tenant RLS, strict TS, 200 LOC cap). For UI, query `ui-ux-pro-max` (`mms-ui-ux-design.md` §8).
+  2. *Actionable Task List:* Formulate an explicit, structured task checklist (`- [ ]`) breaking the implementation into discrete, sequenced phases (e.g., Types/Schemas → Backend/API → Frontend/Hooks → Components → Verification).
+  3. *Iterative Execution & Verification:* Execute task-by-task against the checklist. Mark tasks in-flight (`- [/]`) and completed (`- [x]`). Run targeted verifications (typecheck, lint, or tests) after each phase before proceeding.
 - **Reuse First (DRY):** Search existing utilities and components (`@mms/shared`, `@/components/ui`, `@/components/common`, `@/hooks`) before writing new code. Keep shared behaviour configurable; verify consumers (`mms-dry.md` §1–§2).
 - **Targeted Focus:** Edit in-scope files only. Terse, functional, idiomatic code without boilerplate or narrating comments.
 - **Surgical Edits:** Emit targeted patches with minimal context; never rewrite whole files unless creating new files.
@@ -35,4 +38,5 @@ description: Universal agent cognition, planning, DRY reuse, communication econo
 - ❌ **Validation Bypass:** Never bypass validation with type casting (`as unknown as T`, `any`, untyped dictionaries).
 - ❌ **File Deletion:** Never delete files without explicit confirmation.
 - ❌ **New Dependencies:** Never invent new dependencies; check Node 24 built-ins, `@mms/shared`, and `pnpm-workspace.yaml` first.
+- ❌ **Premature Execution / Code Guessing:** Never jump straight into code modifications without first discovering codebase context, forming a plan, and establishing an actionable task checklist.
 - ❌ **Norm Restatement:** Never restate an owned norm; link to owning rule in `.cursor/rules/README.md`.

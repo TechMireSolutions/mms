@@ -1,10 +1,7 @@
-import { useCallback, useMemo } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
-import { useDescriptorFilterChips } from "@/components/common/useDescriptorFilterChips";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useStudentEntityDescriptor } from "@/tenant/features/students/hooks/useStudentEntityDescriptor";
+import { useStudentsWorkFilterChips } from "@/tenant/features/students/hooks/useStudentsWorkFilterChips";
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
 import { StudentsList } from "@/tenant/features/students/components/StudentsList";
 import { StudentsListFilters } from "@/tenant/features/students/components/StudentsListFilters";
@@ -63,29 +60,12 @@ export function StudentsWorkTier({
   onServerSort,
   workOverlays,
 }: StudentsWorkTierProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const descriptor = useStudentEntityDescriptor();
-
-  const activeFilters = useMemo(
-    () => ({
-      status: studentFilterStatus.length > 0 ? studentFilterStatus : undefined,
-      gender: studentFilterGender || undefined,
-    }),
-    [studentFilterStatus, studentFilterGender],
-  );
-
-  const onRemoveChip = useCallback(
-    (fieldKey: string, value?: string) => {
-      if (fieldKey === "status" && value) {
-        onToggleStatus(value);
-        return;
-      }
-      if (fieldKey === "gender") onGenderChange("");
-    },
-    [onToggleStatus, onGenderChange],
-  );
-
-  const studentFilterChips = useDescriptorFilterChips(descriptor, activeFilters, onRemoveChip);
+  const studentFilterChips = useStudentsWorkFilterChips({
+    studentFilterStatus,
+    studentFilterGender,
+    onToggleStatus,
+    onGenderChange,
+  });
 
   return (
     <ErrorBoundary>

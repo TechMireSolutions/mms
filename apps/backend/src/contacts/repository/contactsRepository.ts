@@ -102,4 +102,5 @@ export interface ContactsRepository {
     tenant: string,
     queries: ContactsWidgetQuery[],
   ): Promise<Record<string, ContactsWidgetAggregateResult>>;
+  guardDeleteDependents?(tenant: string, ids: string[]): Promise<void>;
 }

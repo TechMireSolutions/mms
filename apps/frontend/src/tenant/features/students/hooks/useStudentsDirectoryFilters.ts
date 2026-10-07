@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDirectoryTrashState } from "@/hooks/useDirectoryTrashState";
 import {
@@ -32,8 +32,13 @@ export function useStudentsDirectoryFilters({
   const [studentFilterGender, setStudentFilterGender] = useState("");
   const [quickFilter, setQuickFilter] = useState<StudentsQuickFilter>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     setListPage(1);
   }, [
     debouncedSearch,
@@ -70,23 +75,23 @@ export function useStudentsDirectoryFilters({
     return () => window.removeEventListener(STUDENTS_WORK_DRILLDOWN_EVENT, handler);
   }, [applyDrillDown]);
 
-  const changeQuickFilter = ((preset: string) => {
+  const changeQuickFilter = useCallback((preset: string) => {
     if (!isStudentsQuickFilter(preset)) return;
     // Status presets express status via the preset; clear the overlapping status filter.
     setStudentFilterStatus([]);
     setQuickFilter(preset);
-  });
+  }, []);
 
-  const clearFilters = (() => {
+  const clearFilters = useCallback(() => {
     setStudentSearch("");
     setStudentFilterStatus([]);
     setStudentFilterGender("");
     setQuickFilter("all");
-  });
+  }, []);
 
-  const clearSelection = (() => {
+  const clearSelection = useCallback(() => {
     setSelectedIds([]);
-  });
+  }, []);
 
   const hasActiveFilters =
     Boolean(studentSearch.trim()) ||
@@ -100,24 +105,24 @@ export function useStudentsDirectoryFilters({
     (studentSearch.trim() ? 1 : 0) +
     (quickFilter !== "all" ? 1 : 0);
 
-  const handleServerSort = ((field: StudentsListContentSortField) => {
-      if (sortField === field) {
-        setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
-      } else {
-        setSortField(field);
-        setSortDir("asc");
-      }
-    });
+  const handleServerSort = useCallback((field: StudentsListContentSortField) => {
+    if (sortField === field) {
+      setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }, [sortField]);
 
-  const handleSelectOne = ((id: string) => {
+  const handleSelectOne = useCallback((id: string) => {
     setSelectedIds((current) => toggleIdInSelection(current, id));
-  });
+  }, []);
 
-  const handleSelectAll = ((pageIds: string[]) => {
+  const handleSelectAll = useCallback((pageIds: string[]) => {
     setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
-  });
+  }, []);
 
-  const toggleStudentStatus = ((status: string) => {
+  const toggleStudentStatus = useCallback((status: string) => {
     // Manual status selection supersedes any quick-filter preset.
     setQuickFilter("all");
     setStudentFilterStatus((selectedStatuses) => {
@@ -129,11 +134,11 @@ export function useStudentsDirectoryFilters({
       }
       return [...nextSet];
     });
-  });
+  }, []);
 
-  const toggleViewingDeleted = (() => {
+  const toggleViewingDeleted = useCallback(() => {
     setViewingDeleted((previous) => !previous);
-  });
+  }, [setViewingDeleted]);
 
   return {
     listPage,

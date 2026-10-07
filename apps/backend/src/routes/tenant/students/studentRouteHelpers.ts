@@ -2,6 +2,8 @@ import type { Student, User } from '@mms/shared';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
+import { withTenant } from '../../../db/tenant-context.js';
+import { enableIncludeDeleted } from '../../../lib/softDeleteHelpers.js';
 
 /** Thin Students audit helper — shared factory, same shape as Contacts/Faculty. */
 export const auditStudent = createCollectionAuditHelper('students');
@@ -13,6 +15,19 @@ export async function sanitizeStudentsForUser(students: Student[], user: User): 
 
 export async function sanitizeOneStudentForUser(student: Student, user: User): Promise<Student> {
   return studentUseCases.sanitizeStudentForViewer(student, user.role);
+}
+
+/** Runs work within tenant context, optionally enabling soft-delete reads. */
+export async function withStudentTenantScope<T>(
+  tenantId: string,
+  includeDeleted: boolean,
+  work: () => Promise<T>,
+  options?: { readOnly?: boolean },
+): Promise<T> {
+  return withTenant(tenantId, async (tx) => {
+    if (includeDeleted) await enableIncludeDeleted(tx);
+    return work();
+  }, options);
 }
 
 type StudentWriteErrorBody =
@@ -37,6 +52,28 @@ export function mapStudentWriteHttpError(
         ? (error as { type: string }).type
         : 'conflict';
     return { status: 409, body: { type, message: error.message } };
+  }
+  if (
+    error instanceof Error &&
+    'statusCode' in error &&
+    typeof (error as { statusCode?: unknown }).statusCode === 'number' &&
+    (error as { statusCode: number }).statusCode === 400
+  ) {
+    const validationErrors =
+      'validationErrors' in error && Array.isArray((error as { validationErrors?: unknown }).validationErrors)
+        ? (error as { validationErrors: Array<{ fieldId?: string; field?: string; message: string }> }).validationErrors.map((e) => ({
+            field: e.field ?? e.fieldId ?? 'form',
+            message: e.message,
+          }))
+        : [{ field: 'form', message: error.message }];
+    return {
+      status: 400,
+      body: {
+        type: 'validation_error',
+        message: error.message,
+        errors: validationErrors,
+      },
+    };
   }
   if (error && typeof error === 'object' && 'type' in error && 'field' in error) {
     const e = error as { type: string; message: string; field: string };

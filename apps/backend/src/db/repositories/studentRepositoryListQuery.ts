@@ -20,7 +20,7 @@ export const STUDENT_SORT_FIELDS = new Set([
 ]);
 
 export function statusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${students.status}, 'active')))`;
+  return sql`COALESCE(${students.status}, 'active')`;
 }
 
 /** Gender from linked contact (Contacts SSOT). */

@@ -81,6 +81,7 @@ export const PURGE_MODULE_TABLES: readonly string[] = [
   'student_lookups',
   'student_field_configs',
   'student_module_preferences',
+  'student_sequence_config',
   // obligations
   'obligation_collections',
   'obligation_distributions',

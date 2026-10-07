@@ -8,10 +8,9 @@ import {
   registerWidgetAggregatesRoute,
   registerLinkedContactIdsRoute,
 } from '../../../lib/crudRouter.js';
-import { studentSoftDeleteRoutes } from './studentSoftDeleteRoutes.js';
 import { sanitizeStudentsForUser } from './studentRouteHelpers.js';
 
-/** Count, metrics, resolve, widget aggregates, and soft-delete routes. */
+/** Count, metrics, resolve, and widget aggregates routes. */
 export const studentAggregateRoutes: FastifyPluginAsync = async (sub) => {
   registerCountRoute(sub, {
     collection: 'students',
@@ -46,6 +45,4 @@ export const studentAggregateRoutes: FastifyPluginAsync = async (sub) => {
     loadLinkedContactIdsFn: (excludeId) => studentUseCases.loadStudentLinkedContactIds(excludeId),
     errorMessagePrefix: 'students',
   });
-
-  await sub.register(studentSoftDeleteRoutes);
 };

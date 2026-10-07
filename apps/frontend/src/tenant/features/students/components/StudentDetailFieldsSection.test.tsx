@@ -72,15 +72,35 @@ describe("StudentDetailFieldsSection Component", () => {
     expect(html).toContain("12 years");
   });
 
-  it("returns null when no fields are rendered", () => {
+  it("renders custom field values nested under student.customFields", () => {
+    const studentWithCustom: Student = {
+      ...mockStudent,
+      customFields: {
+        hostelRoom: "Room 101",
+      },
+    };
+    const customFieldsConfig: SortedField[] = [
+      {
+        key: "hostelRoom",
+        label: "Hostel Room",
+        type: "text",
+        tab: "extended",
+        enabled: true,
+        order: 0,
+        group: "Hostel Information",
+      },
+    ];
+
     const html = renderToStaticMarkup(
       <StudentDetailFieldsSection
-        student={mockStudent}
-        sortedEnabledFields={[]}
+        student={studentWithCustom}
+        sortedEnabledFields={customFieldsConfig}
         age={null}
       />,
     );
 
-    expect(html).toBe("");
+    expect(html).toContain("Hostel Information");
+    expect(html).toContain("Hostel Room");
+    expect(html).toContain("Room 101");
   });
 });

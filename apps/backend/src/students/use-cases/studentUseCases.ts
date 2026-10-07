@@ -41,8 +41,11 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       loadAggregate.loadStudentsWidgetAggregates(queries, repo),
     createStudent: (record: Parameters<typeof write.createStudent>[0], options?: Parameters<typeof write.createStudent>[1]) =>
       write.createStudent(record, options, repo),
-    updateStudentById: (id: string, record: Parameters<typeof write.updateStudentById>[1]) =>
-      write.updateStudentById(id, record, repo),
+    updateStudentById: (
+      id: string,
+      record: Parameters<typeof write.updateStudentById>[1],
+      options?: Parameters<typeof write.updateStudentById>[2],
+    ) => write.updateStudentById(id, record, options, repo),
     softDeleteStudentById: (id: string, deletedBy: string, deletionReason?: string) =>
       softDelete.softDeleteStudentById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteStudents: (ids: string[], deletedBy: string, deletionReason?: string) =>
@@ -63,7 +66,7 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       input: Parameters<typeof operation.checkStudentRegistrationDuplicate>[0],
       tenantOverride?: string,
     ) => operation.checkStudentRegistrationDuplicate(input, repo, tenantOverride),
-    migrateStudentsMissingGrNumbers: () => operation.migrateStudentsMissingGrNumbers(repo),
+    migrateStudentsMissingGrNumbers: (userId?: string) => operation.migrateStudentsMissingGrNumbers(repo, userId),
     sanitizeStudentForViewer: (student: import('@mms/shared').Student, viewerRole: string) =>
       sanitize.sanitizeStudentForViewer(student, viewerRole),
     sanitizeStudentsForViewer: (students: import('@mms/shared').Student[], viewerRole: string) =>

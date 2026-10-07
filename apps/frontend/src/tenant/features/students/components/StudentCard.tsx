@@ -58,6 +58,9 @@ export function StudentCard({
     <DirectoryCard
       entity={student}
       selectedIds={selectedIds}
+      // NOTE: Selection is restricted to users with delete permission.
+      // All bulk actions (bulk delete / restore) require canDelete;
+      // a canWrite-only user has no available bulk action to take.
       canSelect={canDelete}
       onToggleSelected={() => onSelectOne(studentIdStr)}
       onView={onViewStudent}
@@ -77,7 +80,7 @@ export function StudentCard({
           studentId={studentIdStr}
           isSelected={isSelected}
           displayName={displayName}
-          onSelectOne={() => onSelectOne(studentIdStr)}
+          onSelectOne={onSelectOne}
           onViewStudent={onViewStudent}
           isColumnVisible={isColumnVisible}
           reducedMotion={reducedMotion}
@@ -112,7 +115,7 @@ export function StudentCard({
           descriptor={descriptor}
         />
       }
-      banner={<StudentArchivedBanner student={student} />}
+      banner={viewingDeleted || student.deletedAt ? <StudentArchivedBanner student={student} /> : undefined}
       footer={
         <StudentCardActions
           student={student}

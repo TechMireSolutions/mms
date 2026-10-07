@@ -10,6 +10,7 @@ import {
   getPrimaryEmail,
   hasWhatsApp,
 } from "@mms/shared";
+import { useMemo } from "react";
 import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useContactsByIds, useContactById } from "@/tenant/hooks/collections/contacts";
 import { useStudentsContractList } from "@/tenant/features/students/hooks/useStudentsTsrHooks";
@@ -27,7 +28,7 @@ import { buildStudentSiblings } from "@/tenant/features/students/components/stud
 /** Detail drawer model: contact hydration, profile blocks, relationships, field config, siblings. */
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
-  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
+  const statusBadgeConfig = studentStatusBadgeConfig(t);
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
 
@@ -35,9 +36,12 @@ export function useStudentDetailModel(student: Student) {
     student.contactId != null ? String(student.contactId) : undefined,
   );
 
-  const guardians = (() => resolveStudentGuardianLinks(student, primaryContact ?? null))();
+  const guardians = useMemo(
+    () => resolveStudentGuardianLinks(student, primaryContact ?? null),
+    [student, primaryContact],
+  );
 
-  const linkedIds = (() => {
+  const linkedIds = useMemo(() => {
     const ids = new Set<string>();
     if (student.contactId != null && String(student.contactId).trim()) {
       ids.add(String(student.contactId).trim());
@@ -63,18 +67,26 @@ export function useStudentDetailModel(student: Student) {
     }
 
     return Array.from(ids);
-  })();
+  }, [
+    student.contactId,
+    student.fatherContactId,
+    student.guardianContactId,
+    guardians.fatherContactId,
+    guardians.guardianContactId,
+    primaryContact?.relationshipContacts,
+    primaryContact?.relationships,
+  ]);
 
   const contactsQuery = useContactsByIds(linkedIds);
   const contactList = contactsQuery.data ?? [];
 
-  const studentContact = (() => {
+  const studentContact = useMemo(() => {
     return (
       contactList.find((c) => String(c.id) === String(student.contactId)) ??
       primaryContact ??
       undefined
     );
-  })();
+  }, [contactList, student.contactId, primaryContact]);
 
   const { settings } = useStudentConfig();
   const sortedEnabledFields = buildStudentSortedEnabledFields(settings, t);
@@ -92,9 +104,10 @@ export function useStudentDetailModel(student: Student) {
   });
 
   const age = calcAge(student.dob || studentContact?.dob);
-  const enrolledSet = new Set(student.enrolledSessions ?? []);
-  const enrolledSessionDetails = sessions.filter((session) => enrolledSet.has(session.id));
-
+  const enrolledSessionDetails = useMemo(() => {
+    const enrolledSet = new Set(student.enrolledSessions ?? []);
+    return sessions.filter((session) => enrolledSet.has(session.id));
+  }, [student.enrolledSessions, sessions]);
 
   const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
   const primaryEmail = (studentContact ? getPrimaryEmail(studentContact) : null) || student.email;
@@ -112,27 +125,36 @@ export function useStudentDetailModel(student: Student) {
     return true;
   });
 
-  const siblingRelatedContactIds = (() =>
+  const siblingRelatedContactIds = useMemo(() =>
     Array.from(new Set([
       guardians.fatherContactId ? String(guardians.fatherContactId) : "",
       guardians.guardianContactId ? String(guardians.guardianContactId) : "",
-    ].filter(Boolean))))();
+    ].filter(Boolean))),
+    [guardians.fatherContactId, guardians.guardianContactId],
+  );
   const siblingFatherName = (guardians.fatherName || student.fatherName || "").trim();
   const hasSiblingLookup = siblingRelatedContactIds.length > 0 || Boolean(siblingFatherName);
-  const allStudentsQuery = useStudentsContractList({
+  const siblingQueryParams = useMemo(() => ({
     page: 1,
     limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
     relatedContactIds: siblingRelatedContactIds.join(",") || undefined,
     fatherName: siblingFatherName || undefined,
     excludeId: student.id ? String(student.id) : undefined,
-  }, hasSiblingLookup);
+  }), [siblingRelatedContactIds, siblingFatherName, student.id]);
+  const allStudentsQuery = useStudentsContractList(siblingQueryParams, hasSiblingLookup);
   const allStudents = getStudentsFromPage(allStudentsQuery.data?.body);
 
   const siblings: SiblingStudentItem[] = buildStudentSiblings(student, guardians, allStudents, sessions);
 
   const showNotesSection = Boolean(student.notes) && sortedEnabledFields.some((field) => field.key === "notes");
 
-  const legacyRelationshipLinks: StudentContactRelationshipLink[] = (() => {
+  /** O(1) lookup map for sibling navigation — avoids .find() on every click. */
+  const siblingMap = useMemo(
+    () => new Map(allStudents.map((s) => [String(s.id), s])),
+    [allStudents],
+  );
+
+  const legacyRelationshipLinks: StudentContactRelationshipLink[] = useMemo(() => {
     return hydratedRelationships.map((r) => ({
       contactId: r.contactId,
       name: r.name,
@@ -141,7 +163,7 @@ export function useStudentDetailModel(student: Student) {
       gender: r.gender,
       relationship: r.relationship,
     }));
-  })();
+  }, [hydratedRelationships]);
 
   return {
     t,
@@ -161,6 +183,7 @@ export function useStudentDetailModel(student: Student) {
     hasVisibleDetailFields,
     showNotesSection,
     siblings,
+    siblingMap,
     allStudents,
   };
 }

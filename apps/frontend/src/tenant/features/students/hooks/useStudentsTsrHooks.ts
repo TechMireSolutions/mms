@@ -2,28 +2,30 @@
  * Phase 7: Contract-driven query/mutation hooks for the Students module.
  * Uses tsrClient (@ts-rest/react-query v5) for full contract schema enforcement.
  */
-import { apiContract, tsrClient } from '@/lib/api';
+import { apiContract, tsr } from '@/lib/api';
 import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import type { StudentsListPageResult } from '@mms/shared';
 import { STUDENTS_QUERY_KEY } from '@/tenant/features/students/hooks/studentsQueryKeys';
 import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
 import { SESSIONS_QUERY_KEY } from '@/tenant/hooks/collections/sessions';
 
-export function studentsListQueryOptions(
-  query: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sessionId?: string;
-    className?: string;
-    relatedContactIds?: string;
-    fatherName?: string;
-    excludeId?: string;
-    afterId?: string;
-    skipCount?: boolean;
-    [key: string]: unknown;
-  } = {},
-) {
+const studentsClient = tsr.students;
+
+export interface StudentsContractQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sessionId?: string;
+  className?: string;
+  relatedContactIds?: string;
+  fatherName?: string;
+  excludeId?: string;
+  afterId?: string;
+  skipCount?: boolean;
+  [key: string]: unknown;
+}
+
+export function studentsListQueryOptions(query: StudentsContractQueryParams = {}) {
   return queryOptions({
     queryKey: [...STUDENTS_QUERY_KEY, 'contract', query] as const,
     queryFn: async ({ signal }) => {
@@ -42,21 +44,7 @@ export function studentsListQueryOptions(
   });
 }
 
-export function studentsInfiniteQueryOptions(
-  query: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sessionId?: string;
-    className?: string;
-    relatedContactIds?: string;
-    fatherName?: string;
-    excludeId?: string;
-    afterId?: string;
-    skipCount?: boolean;
-    [key: string]: unknown;
-  } = {},
-) {
+export function studentsInfiniteQueryOptions(query: StudentsContractQueryParams = {}) {
   return infiniteQueryOptions({
     queryKey: [...STUDENTS_QUERY_KEY, 'contract-infinite-list', query] as const,
     queryFn: async ({ pageParam, signal }) => {
@@ -81,19 +69,7 @@ export function studentsInfiniteQueryOptions(
 }
 
 export function useStudentsInfiniteList(
-  query: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sessionId?: string;
-    className?: string;
-    relatedContactIds?: string;
-    fatherName?: string;
-    excludeId?: string;
-    afterId?: string;
-    skipCount?: boolean;
-    [key: string]: unknown;
-  } = {},
+  query: StudentsContractQueryParams = {},
   enabled = true,
 ) {
   return useInfiniteQuery({
@@ -103,54 +79,44 @@ export function useStudentsInfiniteList(
 }
 
 export function useStudentsContractList(
-  query: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sessionId?: string;
-    className?: string;
-    relatedContactIds?: string;
-    fatherName?: string;
-    excludeId?: string;
-    [key: string]: unknown;
-  },
+  query: StudentsContractQueryParams,
   enabled = true,
 ) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.list.useQuery({ queryKey: [...STUDENTS_QUERY_KEY, 'contract', query], queryData: { query }, staleTime: 15_000, enabled });
+  return studentsClient.list.useQuery({ queryKey: [...STUDENTS_QUERY_KEY, 'contract', query], queryData: { query }, staleTime: 15_000, enabled });
 }
 
 export function useStudentsContractCreate() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.create.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.create.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractUpdate() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.update.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.update.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractDelete() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.delete.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.delete.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractBulkStatus() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.bulkStatus.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.bulkStatus.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractBulkEnroll() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.bulkEnroll.useMutation({ 
+  return studentsClient.bulkEnroll.useMutation({ 
     onSuccess: () => {
       void invalidateStudentsQueries(queryClient);
-      void queryClient.invalidateQueries({ queryKey: [SESSIONS_QUERY_KEY] });
+      void queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY });
     }
   });
 }
@@ -160,38 +126,38 @@ export function useStudentsContractNextGrNumber(
   enabled = true,
 ) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.nextGrNumber.useQuery({ queryKey: [STUDENTS_QUERY_KEY, 'next-gr', query], queryData: { query }, staleTime: 0, enabled });
+  return studentsClient.nextGrNumber.useQuery({ queryKey: [...STUDENTS_QUERY_KEY, 'next-gr', query], queryData: { query }, staleTime: 0, enabled });
 }
 
 export function useStudentsContractDuplicateCheck() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.duplicateCheck.useMutation({});
+  return studentsClient.duplicateCheck.useMutation({});
 }
 
 export function useStudentsContractRestore() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.restore.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.restore.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractBulkDelete() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.bulkDelete.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.bulkDelete.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractBulkRestore() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.bulkRestore.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
+  return studentsClient.bulkRestore.useMutation({ onSuccess: () => invalidateStudentsQueries(queryClient) });
 }
 
 export function useStudentsContractLogExportAudit() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.exportAudit.useMutation({});
+  return studentsClient.exportAudit.useMutation({});
 }
 
 export function useStudentsContractLogSetupAudit() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.students.setupAudit.useMutation({});
+  return studentsClient.setupAudit.useMutation({});
 }

@@ -27,8 +27,15 @@ export function studentRowToRecord(
     ...restRow
   } = nullsToUndefined(row);
 
+  const custom =
+    row.customFields && typeof row.customFields === 'object' && !Array.isArray(row.customFields)
+      ? (row.customFields as Record<string, unknown>)
+      : {};
+
   return {
+    ...custom,
     ...restRow,
+    customFields: custom,
     contactId: restRow.contactId ?? '',
     fatherContactId: row.fatherContactId ?? null,
     motherContactId: row.motherContactId ?? null,

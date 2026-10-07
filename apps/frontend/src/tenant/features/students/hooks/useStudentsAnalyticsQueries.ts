@@ -8,6 +8,7 @@ import {
 } from "@mms/shared";
 import { serverMetricsQueryOptions, useServerMetrics } from "@/hooks/useServerMetrics";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useMemo } from "react";
 import { useQuery } from '@tanstack/react-query';
 import {
   STUDENTS_QUERY_KEY,
@@ -69,14 +70,13 @@ export function useStudentsWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
 
-  const queries = (() =>
-      widgets
-        .filter((widget) => widget.collection === 'students')
-        .map((widget) => studentsWidgetQueryFromWidget(widget)))();
+  const { queries, querySignature } = useMemo(() => {
+    const resolvedQueries = widgets
+      .filter((widget) => widget.collection === 'students')
+      .map((widget) => studentsWidgetQueryFromWidget(widget));
 
-  const querySignature = (() => {
-    return JSON.stringify(
-      [...queries]
+    const signature = JSON.stringify(
+      [...resolvedQueries]
         .sort((a, b) => a.id.localeCompare(b.id))
         .map((query) => ({
           id: query.id,
@@ -86,7 +86,9 @@ export function useStudentsWidgetAggregates(
           xAxis: query.xAxisField,
         })),
     );
-  })();
+
+    return { queries: resolvedQueries, querySignature: signature };
+  }, [widgets]);
 
   const query = useQuery({
     queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
