@@ -120,9 +120,9 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   useEffect(() => {
     if (!isStudentCreate(student) || !autoGenerateId || !nextGrNumber) return;
     if (grManuallyEdited.current) return;
-    
+
     setStudentDraft((prev) => {
-      if (prev.grNumber) return prev;
+      if (prev.grNumber === nextGrNumber) return prev;
       const nextDraft = { ...prev, grNumber: nextGrNumber };
       setBaselineSnapshot(studentDraftSnapshot(nextDraft));
       return nextDraft;
@@ -176,7 +176,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     typedDuplicateReason,
     excludeIds,
     isGrAutoAssigned,
-    grInputDisabled: autoGenerateId && isStudentCreate(student) && Boolean(nextGrNumber),
+    grInputDisabled: autoGenerateId && isStudentCreate(student),
+    autoGenerateId,
+    nextGrNumber,
+    isCreate: isStudentCreate(student),
     isDirty,
     isFieldEnabled,
     isFieldRequired,

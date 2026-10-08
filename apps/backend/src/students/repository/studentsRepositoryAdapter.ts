@@ -29,6 +29,7 @@ import { guardStudentSoftDelete } from '../../db/repositories/studentDeleteGuard
 import {
   generateNextGrNumberSql,
   generateNextGrNumberBatchSql,
+  previewNextGrNumberSql,
 } from '../../db/repositories/studentRepositorySequence.js';
 import type { StudentsRepository } from './studentsRepository.js';
 
@@ -55,6 +56,7 @@ function createStudentsRepository(): StudentsRepository {
       listStudentLinkedContactIdsSql(tenant, excludeStudentId),
     countNextGrNumber: (tenant, input) =>
       countStudentsForNextGrNumber(tenant, input.regDate, input.restartAnnually),
+    previewNextGrNumber: (tenant, input) => previewNextGrNumberSql(tenant, input),
     generateNextGrNumber: (tenant, input) => generateNextGrNumberSql(tenant, input),
     generateNextGrNumberBatch: (tenant, count, input) =>
       generateNextGrNumberBatchSql(tenant, count, input),

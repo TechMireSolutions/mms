@@ -160,7 +160,7 @@ describe('parseContactsCsv', () => {
     expect(c.education?.[1].institution).toBe('Inst B');
   });
 
-  it('round-trips export -> CSV -> import across all 10 tabs', () => {
+  it('round-trips export -> CSV -> import across all 13 tables and attributes', () => {
     const original: Contact = {
       id: 'c-test-1',
       firstName: 'Baqir',
@@ -170,17 +170,27 @@ describe('parseContactsCsv', () => {
       dob: '1980-03-01',
       cnic: '35201-9999999-1',
       isSyed: true,
+      avatar: 'https://example.com/baqir.jpg',
       tag: 'Faculty',
       notes: 'Head of Department',
-      phones: [{ label: 'Mobile', number: '+923001234567', isPrimary: true }],
-      emails: [{ label: 'Work', address: 'baqir@madrasa.org', isPrimary: true }],
+      whatsappStatus: 'REGISTERED',
+      lastCheckedAt: '2026-10-01T12:00:00Z',
+      aiSummary: 'Leading Islamic scholar and researcher',
+      phones: [{ label: 'Mobile', number: '+923001234567', countryCode: '+92', isPrimary: true, whatsappStatus: 'REGISTERED' }],
+      emails: [{ label: 'Work', address: 'baqir@madrasa.org', isPrimary: true, isVerified: true }],
       addresses: [{ label: 'Office', line1: '45 Knowledge Way', city: 'Najaf', state: 'Najaf', country: 'Iraq', isPrimary: true }],
       socials: [{ platform: 'X', url: 'https://x.com/baqir' }],
-      education: [{ institution: 'Hawza Najaf', degree: 'Ijtihad', fieldOfStudy: 'Usul al-Fiqh', year: '2005', grade: 'Mumtaz' }],
-      experience: [{ title: 'Professor', organization: 'Hawza', employmentType: 'Full-time', location: 'Najaf', startDate: '2006', endDate: '', isCurrent: true, description: 'Teaching advanced jurisprudence' }],
-      skills: [{ name: 'Arabic', category: 'Languages', proficiency: 'Native', yearsOfExperience: '20', isCertified: true, issuer: 'Board', description: 'Classical and modern standard' }],
-      relationshipContacts: [{ name: 'Ammar Sadr', relationship: 'Son' }],
+      education: [{ institution: 'Hawza Najaf', degree: 'Ijtihad', fieldOfStudy: 'Usul al-Fiqh', year: '2005', grade: 'Mumtaz', isCurrentlyEnrolled: false, label: 'Highest Degree' }],
+      experience: [{ title: 'Professor', organization: 'Hawza', employmentType: 'Full-time', location: 'Najaf', startDate: '2006', endDate: '', isCurrent: true, description: 'Teaching advanced jurisprudence', label: 'Academic' }],
+      skills: [{ name: 'Arabic', category: 'Languages', proficiency: 'Native', yearsOfExperience: '20', isCertified: true, issuer: 'Board', description: 'Classical and modern standard', label: 'Primary' }],
+      relationshipContacts: [{ name: 'Ammar Sadr', relationship: 'Son', phone: '+923007654321', email: 'ammar@test.com', gender: 'Male', contactId: 'c-test-2', inferred: false }],
       bankDetails: [{ bankName: 'Bank of Baghdad', accountTitle: 'Baqir Sadr', accountNumber: 'IQ00112233' }],
+      activities: [{ id: 'act_1', type: 'note', content: 'Reviewed curriculum', date: '2026-10-05', by: 'Dean' }],
+      attachments: [{ id: 'att_1', name: 'cv.pdf', type: 'application/pdf', size: 1048576, url: 'https://files.org/cv.pdf', date: '2026-10-05' }],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-10-05T00:00:00Z',
+      createdBy: 'admin-1',
+      updatedBy: 'admin-2',
     };
 
     const labels = { yes: 'Yes', no: 'No' };
@@ -191,23 +201,78 @@ describe('parseContactsCsv', () => {
     expect(contacts).toHaveLength(1);
     const roundTripped = contacts[0];
 
+    // Core
+    expect(roundTripped.id).toBe(original.id);
     expect(roundTripped.firstName).toBe(original.firstName);
     expect(roundTripped.lastName).toBe(original.lastName);
+    expect(roundTripped.name).toBe(original.name);
     expect(roundTripped.gender).toBe(original.gender);
     expect(roundTripped.dob).toBe(original.dob);
     expect(roundTripped.cnic).toBe(original.cnic);
     expect(roundTripped.isSyed).toBe(original.isSyed);
+    expect(roundTripped.avatar).toBe(original.avatar);
     expect(roundTripped.tag).toBe(original.tag);
     expect(roundTripped.notes).toBe(original.notes);
+    expect(roundTripped.whatsappStatus).toBe(original.whatsappStatus);
+    expect(roundTripped.lastCheckedAt).toBe(original.lastCheckedAt);
+    expect(roundTripped.aiSummary).toBe(original.aiSummary);
+
+    // Phones
     expect(roundTripped.phones?.[0].number).toBe(original.phones?.[0].number);
+    expect(roundTripped.phones?.[0].countryCode).toBe(original.phones?.[0].countryCode);
+    expect(roundTripped.phones?.[0].isPrimary).toBe(true);
+    expect(roundTripped.phones?.[0].whatsappStatus).toBe(original.phones?.[0].whatsappStatus);
+
+    // Emails
     expect(roundTripped.emails?.[0].address).toBe(original.emails?.[0].address);
+    expect(roundTripped.emails?.[0].isPrimary).toBe(true);
+    expect(roundTripped.emails?.[0].isVerified).toBe(true);
+
+    // Addresses
     expect(roundTripped.addresses?.[0].city).toBe(original.addresses?.[0].city);
+    expect(roundTripped.addresses?.[0].country).toBe(original.addresses?.[0].country);
+    expect(roundTripped.addresses?.[0].isPrimary).toBe(true);
+
+    // Socials
     expect(roundTripped.socials?.[0].url).toBe(original.socials?.[0].url);
+
+    // Education
     expect(roundTripped.education?.[0].institution).toBe(original.education?.[0].institution);
+    expect(roundTripped.education?.[0].degree).toBe(original.education?.[0].degree);
+    expect(roundTripped.education?.[0].isCurrentlyEnrolled).toBe(false);
+    expect(roundTripped.education?.[0].label).toBe(original.education?.[0].label);
+
+    // Experience
     expect(roundTripped.experience?.[0].title).toBe(original.experience?.[0].title);
+    expect(roundTripped.experience?.[0].employmentType).toBe(original.experience?.[0].employmentType);
+    expect(roundTripped.experience?.[0].isCurrent).toBe(true);
+    expect(roundTripped.experience?.[0].description).toBe(original.experience?.[0].description);
+
+    // Skills
     expect(roundTripped.skills?.[0].name).toBe(original.skills?.[0].name);
+    expect(roundTripped.skills?.[0].isCertified).toBe(true);
+    expect(roundTripped.skills?.[0].issuer).toBe(original.skills?.[0].issuer);
+
+    // Relationships
     expect(roundTripped.relationshipContacts?.[0].name).toBe(original.relationshipContacts?.[0].name);
+    expect(roundTripped.relationshipContacts?.[0].relationship).toBe(original.relationshipContacts?.[0].relationship);
+    expect(roundTripped.relationshipContacts?.[0].phone).toBe(original.relationshipContacts?.[0].phone);
+    expect(roundTripped.relationshipContacts?.[0].contactId).toBe(original.relationshipContacts?.[0].contactId);
+
+    // Bank Details
     expect(roundTripped.bankDetails?.[0].accountNumber).toBe(original.bankDetails?.[0].accountNumber);
+
+    // Activities & Attachments
+    expect(roundTripped.activities?.[0].type).toBe(original.activities?.[0].type);
+    expect(roundTripped.activities?.[0].content).toBe(original.activities?.[0].content);
+    expect(roundTripped.attachments?.[0].name).toBe(original.attachments?.[0].name);
+    expect(roundTripped.attachments?.[0].url).toBe(original.attachments?.[0].url);
+
+    // Audit
+    expect(roundTripped.createdAt).toBe(original.createdAt);
+    expect(roundTripped.updatedAt).toBe(original.updatedAt);
+    expect(roundTripped.createdBy).toBe(original.createdBy);
+    expect(roundTripped.updatedBy).toBe(original.updatedBy);
   });
 
   it('parses CSV with unified Name column and variations of headers', () => {

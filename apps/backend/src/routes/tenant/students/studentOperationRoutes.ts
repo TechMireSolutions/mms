@@ -72,15 +72,20 @@ export const studentOperationRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const tenantId = request.tenant?.id || getRequestTenant();
+      if (!tenantId) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'This endpoint requires a tenant subdomain' } };
+      }
       try {
-        const grNumber = await withTenant(String(request.tenant?.id), () =>
+        const grNumber = await withTenant(tenantId, () =>
           studentUseCases.computeNextGrNumberForDate(query.registeredDate, {
             grNumberTemplate: query.template ?? '{seq}-{year}',
             grNumberDigits: query.digits ?? 4,
             grNumberRestartAnnually: query.restartAnnually ?? true,
           }), { readOnly: true });
         return { status: 200 as const, body: { grNumber } };
-      } catch {
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to compute next GR number');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to compute next GR number' } };
       }
     },

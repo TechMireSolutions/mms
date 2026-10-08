@@ -46,4 +46,36 @@ describe("StudentRegistrationSection Component", () => {
 
     expect(html).toBe("");
   });
+
+  it("renders auto-assigned badge, hint, and disabled input when GR is auto-assigned", () => {
+    const html = renderToStaticMarkup(
+      <StudentRegistrationSection
+        {...defaultProps}
+        isGrAutoAssigned={true}
+        grInputDisabled={true}
+        autoGenerateId={true}
+        isCreate={true}
+        nextGrNumber="0042-2026"
+      />,
+    );
+
+    expect(html).toContain("students.form.grAutoAssigned");
+    expect(html).toContain("students.form.grNumberHint");
+    expect(html).toContain("disabled");
+  });
+
+  it("renders editable input and no auto-assigned badge when auto-generation is disabled", () => {
+    const html = renderToStaticMarkup(
+      <StudentRegistrationSection
+        {...defaultProps}
+        isGrAutoAssigned={false}
+        grInputDisabled={false}
+        autoGenerateId={false}
+        isCreate={true}
+      />,
+    );
+
+    expect(html).not.toContain("students.form.grAutoAssigned");
+    expect(html).toContain('placeholder="students.form.grNumberPlaceholder"');
+  });
 });

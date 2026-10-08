@@ -24,6 +24,9 @@ export async function computeNextGrNumberForDate(
   if (!tenant) {
     return computeNextGrNumber([], settings, regDate);
   }
+  if (repo.previewNextGrNumber) {
+    return repo.previewNextGrNumber(tenant, { regDate, settings });
+  }
   if (repo.generateNextGrNumber) {
     return repo.generateNextGrNumber(tenant, { regDate, settings });
   }
@@ -35,18 +38,19 @@ export async function computeNextGrNumberForDate(
   const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
 
   let candidateSeq = count + 1;
-  let candidateGr = template
-    .replace('{seq}', String(candidateSeq).padStart(digits, '0'))
-    .replace('{year}', String(year));
+  const renderGr = (s: number) =>
+    template
+      .replace(/\{seq\}/gi, String(s).padStart(digits, '0'))
+      .replace(/\{year\}|\{yyyy\}/gi, String(year))
+      .replace(/\{yy\}/gi, String(year).slice(-2));
+  let candidateGr = renderGr(candidateSeq);
 
   let attempts = 0;
   while (attempts < 100) {
     const conflict = await repo.findRegistrationConflict(tenant, { grNumber: candidateGr });
     if (conflict !== 'grNumber') break;
     candidateSeq += 1;
-    candidateGr = template
-      .replace('{seq}', String(candidateSeq).padStart(digits, '0'))
-      .replace('{year}', String(year));
+    candidateGr = renderGr(candidateSeq);
     attempts += 1;
   }
 

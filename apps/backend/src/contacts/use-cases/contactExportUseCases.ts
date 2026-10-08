@@ -88,6 +88,7 @@ const contactsCsv = createModuleCsvExportService<
       limit,
       afterId,
       skipCount: true,
+      fullHydration: true,
     } as never);
     return {
       rows: pageResult.contacts as Contact[],

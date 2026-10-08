@@ -62,8 +62,6 @@ export function useStudentFormLinkedData({
   const isGrAutoAssigned =
     autoGenerateId
     && isStudentCreate(student)
-    && !!studentDraft.grNumber
-    && studentDraft.grNumber === nextGrNumber
     && !grManuallyEdited.current;
 
   return {

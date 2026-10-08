@@ -25,6 +25,9 @@ export interface StudentRegistrationSectionProps {
   studentDraft: Partial<Student>;
   isGrAutoAssigned: boolean;
   grInputDisabled: boolean;
+  autoGenerateId?: boolean;
+  isCreate?: boolean;
+  nextGrNumber?: string;
   statusSelectOptions: StudentStatusSelectOption[];
   statuses?: string[];
   onUpdateStatuses?: (statuses: string[]) => void | Promise<void>;
@@ -40,6 +43,9 @@ export function StudentRegistrationSection({
   studentDraft,
   isGrAutoAssigned,
   grInputDisabled,
+  autoGenerateId,
+  isCreate,
+  nextGrNumber,
   statusSelectOptions,
   statuses,
   onUpdateStatuses,
@@ -76,6 +82,12 @@ export function StudentRegistrationSection({
   const rawStatuses = statuses ?? statusSelectOptions.map((opt) => opt.value);
   const grError = getFieldError("grNumber");
   const statusError = getFieldError("status");
+  const grHint = isGrAutoAssigned || (autoGenerateId && isCreate)
+    ? t("students.form.grNumberHint")
+    : undefined;
+  const grPlaceholder = isGrAutoAssigned
+    ? (nextGrNumber || t("students.form.grAutoAssigned"))
+    : t("students.form.grNumberPlaceholder");
 
   return (
     <div className="space-y-6">
@@ -91,6 +103,7 @@ export function StudentRegistrationSection({
               label={grLabel}
               required={isFieldRequired("grNumber")}
               error={grError}
+              hint={grHint}
               id="grNumber"
             >
               <div className="relative">
@@ -101,7 +114,7 @@ export function StudentRegistrationSection({
                   required={isFieldRequired("grNumber")}
                   value={studentDraft.grNumber || ""}
                   onChange={(event) => onGrNumberChange(event.target.value)}
-                  placeholder={t("students.form.grNumberPlaceholder")}
+                  placeholder={grPlaceholder}
                   disabled={grInputDisabled}
                   iconPaddingClass={FORM_INPUT}
                   className={cn(

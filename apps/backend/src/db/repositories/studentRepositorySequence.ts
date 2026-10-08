@@ -102,12 +102,7 @@ export async function generateNextGrNumberBatchSql(
 
     const results: string[] = [];
     for (let seq = startSeq; seq <= endSeq; seq++) {
-      results.push(
-        template
-          .replace(/\{seq\}/gi, String(seq).padStart(digits, '0'))
-          .replace(/\{year\}|\{yyyy\}/gi, String(yearToSave))
-          .replace(/\{yy\}/gi, String(yearToSave).slice(-2)),
-      );
+      results.push(formatGrSequence(template, seq, digits, yearToSave));
     }
     return results;
   };
@@ -116,6 +111,70 @@ export async function generateNextGrNumberBatchSql(
     return await execute(txClient);
   }
   return await withTenant(subdomain, execute);
+}
+
+/**
+ * Pure read-only preview of next GR sequence without modifying or locking state.
+ */
+export async function previewNextGrNumberSql(
+  tenant: string,
+  input: GenerateGrNumberInput,
+  txClient?: TenantTransaction,
+): Promise<string> {
+  const subdomain = tenant.trim().toLowerCase();
+  const parsedYear = input.regDate ? new Date(input.regDate).getFullYear() : NaN;
+  const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
+  const template = input.settings.grNumberTemplate || '{seq}-{year}';
+  const digits = input.settings.grNumberDigits || 4;
+  const restartAnnually = input.settings.grNumberRestartAnnually !== false;
+
+  const execute = async (tx: TenantTransaction): Promise<string> => {
+    const [row] = await tx
+      .select({
+        currentSequence: studentSequenceConfig.currentSequence,
+        lastYear: studentSequenceConfig.lastYear,
+      })
+      .from(studentSequenceConfig)
+      .where(eq(studentSequenceConfig.workspaceSubdomain, subdomain));
+
+    let nextSeq: number;
+    if (!row) {
+      await enableIncludeDeleted(tx);
+      const base = eq(students.workspaceSubdomain, subdomain);
+      const yearStr = String(year);
+      const countRows = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(students)
+        .where(
+          restartAnnually
+            ? and(
+                base,
+                sql`(COALESCE(${students.registeredDate}, '') LIKE ${`${yearStr}%`} OR COALESCE(${students.grNumber}, '') LIKE ${`%${yearStr}%`})`,
+              )
+            : base,
+        );
+      const initialCount = Number(countRows[0]?.count ?? 0);
+      nextSeq = initialCount + 1;
+    } else {
+      const lastYear = row.lastYear ?? year;
+      const currentSeq = row.currentSequence ?? 0;
+      nextSeq = restartAnnually && lastYear !== year ? 1 : currentSeq + 1;
+    }
+
+    return formatGrSequence(template, nextSeq, digits, year);
+  };
+
+  if (txClient) {
+    return await execute(txClient);
+  }
+  return await withTenant(subdomain, execute, { readOnly: true });
+}
+
+function formatGrSequence(template: string, seq: number, digits: number, year: number): string {
+  return template
+    .replace(/\{seq\}/gi, String(seq).padStart(digits, '0'))
+    .replace(/\{year\}|\{yyyy\}/gi, String(year))
+    .replace(/\{yy\}/gi, String(year).slice(-2));
 }
 
 /**
@@ -129,3 +188,4 @@ export async function generateNextGrNumberSql(
   const [single] = await generateNextGrNumberBatchSql(tenant, 1, input, txClient);
   return single ?? '';
 }
+

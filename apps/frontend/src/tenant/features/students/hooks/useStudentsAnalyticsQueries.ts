@@ -44,7 +44,9 @@ export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
     staleTime: 15_000,
   });
 
-  return { ...query, data: (query.data?.body as { grNumber?: string } | null)?.grNumber };
+  const rawBody: unknown = query.data?.status === 200 ? query.data.body : undefined;
+  const grNumber = (rawBody as { grNumber?: string } | undefined)?.grNumber;
+  return { ...query, data: grNumber };
 }
 
 export async function checkStudentRegistrationDuplicate(

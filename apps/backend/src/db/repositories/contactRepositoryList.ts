@@ -3,7 +3,7 @@ import { dedupeTrimmedIds, type ContactsListPageResult, type ContactsListQuery }
 import { contacts, students, faculty, facultyEmployments, tenantUsers } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
-import { hydrateContactsSummaryList } from './contactRepositoryCore.js';
+import { hydrateContactsList, hydrateContactsSummaryList } from './contactRepositoryCore.js';
 import { buildListConditions, buildOrderBy } from './contactRepositoryListFilter.js';
 
 export const FACULTY_USER_ROLES_SQL = sql`('faculty', 'teacher', 'assistant_teacher')`;
@@ -96,7 +96,9 @@ export async function listContactsPage(
       rowMapper: (row) => row as typeof contacts.$inferSelect,
     });
 
-    const pageContacts = await hydrateContactsSummaryList(tx, subdomain, result.items);
+    const pageContacts = query.fullHydration
+      ? await hydrateContactsList(tx, subdomain, result.items)
+      : await hydrateContactsSummaryList(tx, subdomain, result.items);
     return {
       contacts: pageContacts,
       total: result.total,
