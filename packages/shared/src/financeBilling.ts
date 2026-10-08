@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  formatDeterministicSequence,
+  financeSettingsToSequenceConfig,
+  type SequenceNumberingConfig,
+} from './sequenceNumberingUtils.js';
+import type { FinanceSettings } from './financeModuleSettings.js';
 
 /** Display number `INV-{YEAR}-{SEQ}` (zero-padded to 4). */
 export const INVOICE_NUMBER_PREFIX = 'INV';
@@ -114,9 +120,31 @@ export function invoiceTotalsFromLines(lines: readonly Pick<InvoiceLine, 'quanti
   return { baseFee, discountAmt, finalAmt: Math.max(0, baseFee - discountAmt) };
 }
 
-/** `INV-2026-0001` from a calendar year and 1-based sequence. */
-export function formatInvoiceNumber(year: number, sequence: number, prefix = INVOICE_NUMBER_PREFIX): string {
-  return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`;
+/** Formats invoice display number using deterministic sequence engine. Defaults to `INV-{YEAR}-{SEQ}` (4 digits). */
+export function formatInvoiceNumber(
+  year: number,
+  sequence: number,
+  prefixOrConfig: string | Partial<FinanceSettings> | Partial<SequenceNumberingConfig> = INVOICE_NUMBER_PREFIX,
+): string {
+  if (typeof prefixOrConfig === 'string') {
+    return formatDeterministicSequence(
+      sequence,
+      { prefix: prefixOrConfig, delimiter: '-', yearFormat: 'YYYY', sequenceDigits: 4 },
+      new Date(year, 0, 1),
+    );
+  }
+  const isFinanceSettings =
+    'invoicePrefix' in prefixOrConfig ||
+    'autoGenerateInvoice' in prefixOrConfig ||
+    'invoiceDelimiter' in prefixOrConfig ||
+    'invoiceYearFormat' in prefixOrConfig ||
+    'invoiceSequenceDigits' in prefixOrConfig;
+
+  const config: Partial<SequenceNumberingConfig> = isFinanceSettings
+    ? financeSettingsToSequenceConfig(prefixOrConfig as Partial<FinanceSettings>)
+    : (prefixOrConfig as Partial<SequenceNumberingConfig>);
+
+  return formatDeterministicSequence(sequence, config, new Date(year, 0, 1));
 }
 
 /** Next sequence for `{prefix}-{year}-NNNN` among existing display numbers. */

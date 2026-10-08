@@ -6,7 +6,7 @@ import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { type Denomination, type Distribution, type StockBatch } from "@/lib/data/hasanatData";
-import { todayISO } from "@mms/shared";
+import { generateClientEntityId, todayISO } from "@mms/shared";
 import { DistributeModalFields } from "@/tenant/features/hasanat/components/DistributeModalFields";
 
 const EMPTY_DIST: Partial<Distribution> = {
@@ -122,7 +122,7 @@ export function DistributeModal({
     const batch = batches.find((candidate) => candidate.denominationId === data.denominationId && candidate.remaining > 0);
     const payload: Distribution = {
       ...data,
-      id: `dist${crypto.randomUUID()}`,
+      id: generateClientEntityId("dist"),
       denominationName: denomination?.name || "",
       batchId: batch?.id || "",
       status: "active",

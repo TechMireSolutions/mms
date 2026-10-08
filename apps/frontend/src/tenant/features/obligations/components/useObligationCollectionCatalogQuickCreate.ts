@@ -1,17 +1,11 @@
 import { useState } from 'react';
+import { generateClientEntityId } from '@mms/shared';
 import type {
   Mujtahid,
   MujtahidRep,
   ObligationType,
   WakalaType,
 } from '@/lib/data/obligationsData';
-
-function generateEntityId(prefix: string): string {
-  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2, 11);
-  return `${prefix}${uuid}`;
-}
 
 export interface ObligationCollectionCatalogQuickCreateArgs {
   obligationTypes: ObligationType[];
@@ -53,7 +47,7 @@ export function useObligationCollectionCatalogQuickCreate({
 
   async function handleSaveObType(newType: Partial<ObligationType>): Promise<void> {
     if (!onChangeTypes) return;
-    const id = generateEntityId('ot');
+    const id = generateClientEntityId('ot');
     const created: ObligationType = {
       ...newType,
       id,
@@ -70,7 +64,7 @@ export function useObligationCollectionCatalogQuickCreate({
 
   async function handleSaveMujtahid(newMujtahid: Partial<Mujtahid>): Promise<void> {
     if (!onChangeMujtahids) return;
-    const id = generateEntityId('m');
+    const id = generateClientEntityId('m');
     await onChangeMujtahids([...mujtahids, { ...newMujtahid, id } as Mujtahid]);
     setPendingMujtahidId(id);
     setIsAddMujtahidOpen(false);
@@ -79,13 +73,13 @@ export function useObligationCollectionCatalogQuickCreate({
 
   async function handleSaveRep(newRep: Partial<MujtahidRep>): Promise<void> {
     if (!onChangeReps || !pendingMujtahidId) return;
-    const id = generateEntityId('mr');
+    const id = generateClientEntityId('mr');
     await onChangeReps([
       ...reps,
       { ...newRep, id, mujtahid_id: pendingMujtahidId } as MujtahidRep,
     ]);
     if (selectedObligationTypeId && onChangeWakala) {
-      const wakalaId = generateEntityId('wt');
+      const wakalaId = generateClientEntityId('wt');
       await onChangeWakala([
         ...wakalaTypes,
         {

@@ -4,7 +4,7 @@ import { ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, type Account, type AccountType } f
 import { useAccountingConfig } from '@/hooks/useStandardModuleConfig';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import { accountRecordSchema, type AppTranslationKey } from '@mms/shared';
+import { accountRecordSchema, generateClientEntityId, type AppTranslationKey } from '@mms/shared';
 import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
 import { AccountModalFields } from '@/tenant/features/accounting/components/AccountModalFields';
 
@@ -52,7 +52,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const saveAccount = async () => {
     const candidate = {
       ...form,
-      id: isEdit ? form.id : `a${crypto.randomUUID()}`,
+      id: isEdit ? form.id : generateClientEntityId('a'),
       code: form.code?.trim() ?? '',
       name: form.name?.trim() ?? '',
       type: form.type ?? 'Asset',

@@ -1,5 +1,5 @@
 import type { Mujtahid, MujtahidRep, ObligationCollection, WakalaType } from '@/lib/data/obligationsData';
-import type { AppTranslationKey } from '@mms/shared';
+import { generateClientEntityId, type AppTranslationKey } from '@mms/shared';
 import type { ObligationCollectionFormState } from './ObligationCollectionFormFields';
 
 export function eligibleRepsForType(
@@ -46,7 +46,7 @@ export function toObligationCollectionPayload(
 ): ObligationCollection {
   return {
     ...form,
-    id: `oc${crypto.randomUUID()}`,
+    id: generateClientEntityId('oc'),
     amount: parseFloat(form.amount),
     reference_id: form.reference_id || null,
     created_at: new Date().toISOString(),

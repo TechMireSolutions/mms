@@ -1,5 +1,5 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
-import type { JournalTemplate } from "@mms/shared";
+import { generateClientEntityId, type JournalTemplate } from "@mms/shared";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
 export type JournalAmountSide = "debit" | "credit";
@@ -9,7 +9,7 @@ interface TemplateLock {
   sides: Record<string, JournalAmountSide>;
 }
 
-const blankLine = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
+const blankLine = (): DraftLine => ({ id: generateClientEntityId("l", "-"), account_id: "", debit: "", credit: "", description: "" });
 
 /** First non-empty amount on the voucher, so applying a template keeps what was typed. */
 function carriedAmount(lines: readonly DraftLine[]): string | number {

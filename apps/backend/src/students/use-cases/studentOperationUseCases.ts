@@ -1,5 +1,6 @@
 import {
   computeNextGrNumber,
+  formatTemplateSequence,
   normalizeStudentModulePreferences,
   todayISO,
   STUDENT_STATUS_VALUES,
@@ -34,15 +35,9 @@ export async function computeNextGrNumberForDate(
   const count = await repo.countNextGrNumber(tenant, { regDate, restartAnnually });
   const template = settings.grNumberTemplate || '{seq}-{year}';
   const digits = settings.grNumberDigits || 4;
-  const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
-  const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
 
   let candidateSeq = count + 1;
-  const renderGr = (s: number) =>
-    template
-      .replace(/\{seq\}/gi, String(s).padStart(digits, '0'))
-      .replace(/\{year\}|\{yyyy\}/gi, String(year))
-      .replace(/\{yy\}/gi, String(year).slice(-2));
+  const renderGr = (s: number) => formatTemplateSequence(template, s, digits, regDate);
   let candidateGr = renderGr(candidateSeq);
 
   let attempts = 0;

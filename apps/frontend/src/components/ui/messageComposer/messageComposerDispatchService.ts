@@ -1,5 +1,6 @@
 import {
   findUnknownPersonalizationTokens,
+  generateClientEntityId,
   MESSAGE_LOG_RECORD_BATCH_MAX,
   personalizeMessage,
   PuppeteerWhatsAppProvider,
@@ -131,10 +132,7 @@ export async function saveDispatchHistory({
   if (!pending.length) return true;
 
   if (!auditIdempotencyKeyRef.current) {
-    auditIdempotencyKeyRef.current =
-      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    auditIdempotencyKeyRef.current = generateClientEntityId('msg', '-');
   }
   const idempotencyKey = auditIdempotencyKeyRef.current;
 

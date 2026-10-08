@@ -1,5 +1,5 @@
 import { Sparkles, Tags } from "lucide-react";
-import { buildSeedJournalTemplates, type Account, type AccountingSettings, type JournalTemplate } from "@mms/shared";
+import { buildSeedJournalTemplates, generateClientEntityId, type Account, type AccountingSettings, type JournalTemplate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormCollectionShell } from "@/components/ui/FormCollectionShell";
@@ -65,7 +65,7 @@ export function AccountingSettingsTemplatesSection({
         isEmpty={templates.length === 0}
         emptyMessage={t("accounting.templates.empty")}
         addLabel={t("accounting.templates.add")}
-        onAdd={() => setTemplates([...templates, { id: `tpl-${crypto.randomUUID()}`, name: "", debitAccountId: "", creditAccountId: "" }])}
+        onAdd={() => setTemplates([...templates, { id: generateClientEntityId("tpl", "-"), name: "", debitAccountId: "", creditAccountId: "" }])}
         listKey="accounting-journal-templates"
       >
         {templates.map((template, index) => (

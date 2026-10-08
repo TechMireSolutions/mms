@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
-import type { StudentGrNumberSettings } from '@mms/shared';
+import { formatTemplateSequence, type StudentGrNumberSettings } from '@mms/shared';
 import { students, studentSequenceConfig } from '../schema.js';
 import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import { enableIncludeDeleted } from '../../lib/softDeleteHelpers.js';
@@ -102,7 +102,7 @@ export async function generateNextGrNumberBatchSql(
 
     const results: string[] = [];
     for (let seq = startSeq; seq <= endSeq; seq++) {
-      results.push(formatGrSequence(template, seq, digits, yearToSave));
+      results.push(formatTemplateSequence(template, seq, digits, new Date(yearToSave, 0, 1)));
     }
     return results;
   };
@@ -161,20 +161,13 @@ export async function previewNextGrNumberSql(
       nextSeq = restartAnnually && lastYear !== year ? 1 : currentSeq + 1;
     }
 
-    return formatGrSequence(template, nextSeq, digits, year);
+    return formatTemplateSequence(template, nextSeq, digits, new Date(year, 0, 1));
   };
 
   if (txClient) {
     return await execute(txClient);
   }
   return await withTenant(subdomain, execute, { readOnly: true });
-}
-
-function formatGrSequence(template: string, seq: number, digits: number, year: number): string {
-  return template
-    .replace(/\{seq\}/gi, String(seq).padStart(digits, '0'))
-    .replace(/\{year\}|\{yyyy\}/gi, String(year))
-    .replace(/\{yy\}/gi, String(year).slice(-2));
 }
 
 /**

@@ -1,3 +1,5 @@
+import { generateClientEntityId } from './clientEntityIdUtils.js';
+
 export interface ParseContactsRowContext {
   getVal: (key: string) => string;
   defaultPhoneLabel?: string;
@@ -25,8 +27,5 @@ export function cleanCell(val: string): string {
 }
 
 export function generateId(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID();
-  }
-  return `c_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return generateClientEntityId('c', '_');
 }

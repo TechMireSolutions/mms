@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { generateClientEntityId } from "@mms/shared";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -42,12 +43,7 @@ export function useWakalaTypeManager({
   const totalPct = ((wakalaTypeId: string) =>
     getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0));
 
-  const generateId = (prefix: string) => {
-    const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : Math.random().toString(36).substring(2, 11);
-    return `${prefix}${uuid}`;
-  };
+  const generateId = (prefix: string) => generateClientEntityId(prefix, "-");
 
   const handleSaveWakala = async (form: Partial<WakalaType>, initialDistributions?: Partial<ObligationDistribution>[]) => {
     let wakalaId = form.id;

@@ -47,7 +47,6 @@ export interface Currency {
  * Journal tags offered by the entry form and the tag filter.
  */
 export const JOURNAL_TAGS = ["Payroll", "Fees", "Donation", "Obligation", "Utilities", "Rent", "Capital", "Expense", "Adjustment", "Reversal", "Opening"];
-
 /** True when another entry already reverses `entry` (guards double reversal). */
 export function hasReversalEntry(entry: JournalEntry, allEntries: JournalEntry[]): boolean {
   return allEntries.some(

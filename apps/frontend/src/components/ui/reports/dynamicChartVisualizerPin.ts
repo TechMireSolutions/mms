@@ -1,3 +1,4 @@
+import { generateClientEntityId } from '@mms/shared';
 import type { ChartOperation, ChartType, CustomWidget, FilterRule } from './dynamicChartVisualizerTypes';
 import { resolveWidgetPinColor } from './dynamicChartVisualizerHelpers';
 import type { CollectionMeta } from './dynamicChartVisualizerTypes';
@@ -69,7 +70,7 @@ export function toggleVisualizerWidgetPin(input: {
     };
   } else {
     const newWidget: CustomWidget = {
-      id: 'widget-' + crypto.randomUUID(),
+      id: generateClientEntityId('widget', '-'),
       title: input.title,
       category: resolveWidgetCategory(input.collectionKey),
       collection: input.collectionKey as CustomWidget['collection'],
@@ -89,7 +90,7 @@ export function toggleVisualizerWidgetPin(input: {
 
 export function createFilterRule(defaultField: string): FilterRule {
   return {
-    id: 'filter-' + Date.now() + Math.random().toString(36).slice(2, 5),
+    id: generateClientEntityId('filter', '-'),
     field: defaultField,
     operator: 'equals',
     value: '',

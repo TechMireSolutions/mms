@@ -1,4 +1,5 @@
 import type { Contact } from './contactTypes.js';
+import { generateClientEntityId } from './clientEntityIdUtils.js';
 import { normalizeToE164, parsePhoneNumber } from './utils.js';
 import { todayISO } from './utils.js';
 
@@ -55,7 +56,7 @@ export function parseVCard(text: string, options?: ParseVCardOptions): Contact[]
     const bday = get('BDAY');
 
     const contact: Contact = {
-      id: Date.now() + Math.random(),
+      id: generateClientEntityId('vcard', '_'),
       name,
       firstName,
       lastName,

@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { accountingErrorMessage } from "@/tenant/features/accounting/hooks/useAccountingSetupSaveActions";
+import { generateClientEntityId } from "@mms/shared";
 import type { FiscalYear } from "@/lib/data/accountingData";
 
 interface AccountingFiscalYearModalProps {
@@ -82,7 +83,7 @@ export function AccountingFiscalYearModal({
         // A closed year keeps the status the server already stored; sending any
         // other value is rejected outright.
         status: isClosed ? "closed" : (form.status ?? "upcoming"),
-        id: isEdit ? form.id : `fy${crypto.randomUUID()}`,
+        id: isEdit ? form.id : generateClientEntityId("fy"),
       } as FiscalYear);
     } catch (error) {
       // Surface what the server actually said (closed-year guards, overlapping

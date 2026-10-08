@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/tenant/components/selectors/UserActorSelect";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { todayISO } from "@mms/shared";
+import { generateClientEntityId, todayISO } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
@@ -86,7 +86,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
     try {
       await onSave({
         ...data,
-        id: `red${crypto.randomUUID()}`,
+        id: generateClientEntityId("red"),
         pointsUsed: Number(data.pointsUsed),
         studentName: selectedDistribution?.recipientName || "",
         approvedBy,

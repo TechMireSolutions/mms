@@ -1,4 +1,5 @@
 import type { StudentsSettings } from './settingsTypes.js';
+import { formatTemplateSequence } from './sequenceNumberingUtils.js';
 
 export type StudentGrNumberSettings = Pick<
   StudentsSettings,
@@ -52,13 +53,7 @@ export function computeNextGrNumber(
     nextSeq = students.length + 1;
   }
 
-  const seqStr = String(nextSeq).padStart(digits, '0');
-  const fullYear = String(year);
-  const shortYear = fullYear.slice(-2);
-  return template
-    .replace(/\{seq\}/gi, seqStr)
-    .replace(/\{year\}|\{yyyy\}/gi, fullYear)
-    .replace(/\{yy\}/gi, shortYear);
+  return formatTemplateSequence(template, nextSeq, digits, regDate);
 }
 
 
@@ -154,8 +149,7 @@ export function backfillMissingStudentGrNumbers<T extends StudentGrBackfillRow>(
         nextSeq = studentIndex + 1;
       }
 
-      const seqStr = String(nextSeq).padStart(digits, '0');
-      studentRecord.grNumber = template.replace('{seq}', seqStr).replace('{year}', yearStr);
+      studentRecord.grNumber = formatTemplateSequence(template, nextSeq, digits, registeredDate);
       updated.push(studentRecord);
     }
 

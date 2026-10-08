@@ -1,7 +1,6 @@
 import {
   todayISO,
-  financeSettingsToSequenceConfig,
-  formatDeterministicSequence,
+  formatInvoiceNumber,
   type FinanceSettings,
   type FeeStructure,
   type InvoiceCreateInput,
@@ -21,14 +20,10 @@ export interface InvoiceDraft {
 
 export function nextInvoiceId(
   prefixOrSettings: string | Partial<FinanceSettings>,
-  currentSeq: number = 1
+  currentSeq = 1,
 ): string {
-  if (typeof prefixOrSettings === "object" && prefixOrSettings !== null) {
-    const config = financeSettingsToSequenceConfig(prefixOrSettings);
-    return formatDeterministicSequence(currentSeq, config);
-  }
-  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
-  return `${prefixOrSettings || "INV"}-${stamp}`;
+  const currentYear = new Date().getFullYear();
+  return formatInvoiceNumber(currentYear, currentSeq, prefixOrSettings);
 }
 
 export function createInitialDraft(dueDays: string): InvoiceDraft {
