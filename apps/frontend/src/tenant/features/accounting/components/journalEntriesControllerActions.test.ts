@@ -4,7 +4,6 @@ import {
   createJournalSaveHandler,
   exportJournalEntriesCsv,
   formatJournalAmount,
-  reverseJournalEntry,
 } from "./journalEntriesControllerActions";
 import type { JournalEntry } from "@/lib/data/accountingData";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
@@ -97,38 +96,6 @@ describe("journalEntriesControllerActions", () => {
 
       expect(state.find((e) => e.id === "entry-1")?.status).toBe("posted");
       expect(state.find((e) => e.id === "entry-2")?.status).toBe("posted");
-    });
-  });
-
-  describe("reverseJournalEntry", () => {
-    it("creates reversal entry and appends to entries list", async () => {
-      let state = [mockEntry1];
-      const onChange = vi.fn(async (updater: (prev: JournalEntry[]) => JournalEntry[]) => {
-        state = updater(state);
-      });
-
-      const reversal = await reverseJournalEntry(mockEntry1, state, onChange);
-
-      expect(reversal).toBeDefined();
-      expect(reversal.ref).toContain("REV-JE-001");
-      expect(state).toHaveLength(2);
-      expect(state[1]?.id).toBe(reversal.id);
-    });
-
-    it("does not duplicate reversal if already exists", async () => {
-      let state = [mockEntry1];
-      const onChange = vi.fn(async (updater: (prev: JournalEntry[]) => JournalEntry[]) => {
-        state = updater(state);
-      });
-
-      const reversal1 = await reverseJournalEntry(mockEntry1, state, onChange);
-      expect(state).toHaveLength(2);
-
-      // Attempting same reversal with candidate already present in prev
-      await onChange((prev) =>
-        prev.some((candidate) => candidate.id === reversal1.id) ? prev : [...prev, reversal1],
-      );
-      expect(state).toHaveLength(2);
     });
   });
 

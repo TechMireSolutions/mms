@@ -1,5 +1,5 @@
 import { formatMoney } from '@mms/shared';
-import { createReversalEntry, type JournalEntry } from '@/lib/data/accountingData';
+import type { JournalEntry } from '@/lib/data/accountingData';
 import { runGridCsvExportJob } from '@/lib/backgroundJobs/runGridCsvExportJob';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { getJournalEntryLineTotals } from '@/tenant/features/accounting/components/journalEntriesListShared';
@@ -45,27 +45,6 @@ export function createJournalPostHandler(deps: Pick<JournalEntryActionDeps, 'onC
       ),
     );
   };
-}
-
-/**
- * Append the correcting entry for `entry` and resolve with it.
- *
- * Resolving with the created reversal (instead of `void`) lets the caller name
- * the new reference in a toast — the reversal is posted immediately, so the
- * user must be told which entry just moved the ledger. Failures propagate to the
- * caller's error handling (the ts-rest result object, not an `Error`).
- */
-export async function reverseJournalEntry(
-  entry: JournalEntry,
-  entries: JournalEntry[],
-  onChange: JournalEntryActionDeps['onChange'],
-  date?: string,
-): Promise<JournalEntry> {
-  const reversal = createReversalEntry(entry, entries, date);
-  await onChange((prev) =>
-    prev.some((candidate) => candidate.id === reversal.id) ? prev : [...prev, reversal],
-  );
-  return reversal;
 }
 
 export function exportJournalEntriesCsv(

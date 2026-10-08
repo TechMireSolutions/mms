@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { JournalReversalRequest } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
 import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
@@ -62,7 +63,7 @@ export interface JournalEntriesAdvancedModeProps {
   onEditSelected: () => void;
   onViewEntry: (entry: JournalEntry) => void;
   onRequestReverse: (entry: JournalEntry) => void;
-  onConfirmReverse: (date: string) => void | Promise<void>;
+  onConfirmReverse: (request: JournalReversalRequest) => Promise<boolean>;
   pendingTrashId: string | null;
   confirmBulkOpen: boolean;
   pendingReverseEntry: JournalEntry | null;

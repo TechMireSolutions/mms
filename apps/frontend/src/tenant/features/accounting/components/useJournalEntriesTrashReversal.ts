@@ -1,10 +1,9 @@
 import { useRef, useState } from "react";
-import type { AppTranslationKey } from "@mms/shared";
+import { isManuallyReversibleJournalSource, type AppTranslationKey, type JournalReversalRequest } from "@mms/shared";
 import { hasReversalEntry, type JournalEntry } from "@/lib/data/accountingData";
 import { notify } from "@/lib/notify";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
-import { reverseJournalEntry } from "./journalEntriesControllerActions";
-import type { JournalEntriesChange } from "./journalEntriesTypes";
+import { useReverseJournalEntry } from "@/tenant/features/accounting/hooks/useReverseJournalEntry";
 
 export interface UseJournalEntriesTrashReversalOptions {
   entries: JournalEntry[];
@@ -15,18 +14,15 @@ export interface UseJournalEntriesTrashReversalOptions {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  onChange?: JournalEntriesChange;
   t: (key: AppTranslationKey, args?: Record<string, string | number>) => string;
 }
 
 /**
  * Reason a reversal write was refused, as the bookkeeper must read it.
  *
- * ts-rest React Query hooks reject with the raw `{ status, body, headers }`
- * result rather than an `Error`, so the previous `String(error)` produced
- * "[object Object]" and hid the server's own explanation (closed fiscal year,
- * posted-entry immutability, unknown/archived account). `getApiValidationMessage`
- * unwraps exactly that shape.
+ * `getApiValidationMessage` unwraps the API error envelope so the server's own
+ * explanation (closed period, already reversed, archived account, ineligible
+ * source) reaches the bookkeeper instead of "[object Object]".
  */
 function describeReverseFailure(error: unknown): string | undefined {
   const apiMessage = getApiValidationMessage(error);
@@ -44,9 +40,9 @@ export function useJournalEntriesTrashReversal({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  onChange,
   t,
 }: UseJournalEntriesTrashReversalOptions) {
+  const reverseMutation = useReverseJournalEntry();
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [pendingBulkIds, setPendingBulkIds] = useState<string[]>([]);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
@@ -130,6 +126,10 @@ export function useJournalEntriesTrashReversal({
      * clicks used to accumulate competing correction entries that could both be
      * posted later, silently reversing the same figure twice.
      */
+    if (!isManuallyReversibleJournalSource(entry.source_type)) {
+      notify.warning(t("accounting.journal.alerts.notReversible", { ref: entry.ref }));
+      return;
+    }
     if (hasReversalEntry(entry, entries)) {
       notify.warning(t("accounting.journal.alerts.alreadyReversed", { ref: entry.ref }));
       return;
@@ -137,28 +137,28 @@ export function useJournalEntriesTrashReversal({
     setPendingReverseEntry(entry);
   };
 
-  const confirmReverse = async (date?: string): Promise<void> => {
+  /**
+   * Resolves `false` on failure so the dialog stays open with the user's reason
+   * and date, letting them pick another open-period date after a refusal.
+   */
+  const confirmReverse = async (request: JournalReversalRequest): Promise<boolean> => {
     const entry = pendingReverseEntry;
-    if (!entry || !onChange) return;
-    /**
-     * A double confirmation must not create two competing correction entries:
-     * the pending entry is state, so two clicks before the re-render would both
-     * see the same value. The ref makes the write single-flight.
-     */
-    if (reverseInFlightRef.current) return;
+    if (!entry) return false;
+    // A double confirmation must not send two reversal requests; the server
+    // refuses the second, but the user should not see a spurious error.
+    if (reverseInFlightRef.current) return false;
     reverseInFlightRef.current = true;
-    setPendingReverseEntry(null);
     try {
-      const reversal = await reverseJournalEntry(entry, entries, (updater) => onChange(updater), date);
-      // The reversal is posted immediately, so name the reference: without it
-      // the user cannot tell which row in the list now offsets the entry.
-      notify.success(t("accounting.journal.alerts.reversalPosted", { ref: reversal.ref }));
+      const result = await reverseMutation.mutateAsync({ id: entry.id, request });
+      notify.success(t("accounting.journal.alerts.reversalPosted", { ref: result.entry.ref }));
+      return true;
     } catch (error: unknown) {
       const description = describeReverseFailure(error);
       notify.error(
         t("accounting.journal.alerts.reverseFailed", { ref: entry.ref }),
         description ? { description } : undefined,
       );
+      return false;
     } finally {
       reverseInFlightRef.current = false;
     }

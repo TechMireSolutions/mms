@@ -1,9 +1,11 @@
 import {
+  dedupeTrimmedIds,
   findFiscalYearForDate,
   isFiscalYearClosed,
   isJournalEntryBalanced,
   isValidIsoDate,
   resolveFiscalYearRef,
+  type Account,
   type FiscalYear,
   type JournalEntry,
 } from '@mms/shared';
@@ -91,6 +93,30 @@ export function assertJournalEntryPeriodOpen(
     throw ledgerError(
       `Cannot write journal entries dated inside a closed fiscal year${containing?.label ? ` (${containing.label})` : ''}`,
     );
+  }
+}
+
+/**
+ * Active foreign-key guard: a journal line may not reference an unknown,
+ * archived or deactivated account. The FK only enforces existence and archiving
+ * is a soft delete, so both flags have to be honoured here.
+ */
+export async function assertJournalAccountsWritable(
+  tenant: string,
+  entries: readonly JournalEntry[],
+  findAccountsByIds: (tenant: string, ids: string[]) => Promise<Account[]>,
+): Promise<void> {
+  const accountIds = dedupeTrimmedIds(
+    entries.flatMap((entry) => (entry.lines ?? []).map((line) => line.account_id)),
+  );
+  if (accountIds.length === 0) return;
+  const byId = new Map((await findAccountsByIds(tenant, accountIds)).map((account) => [account.id, account]));
+  const blocked = accountIds.filter((id) => {
+    const account = byId.get(id);
+    return !account || account.isActive === false;
+  });
+  if (blocked.length > 0) {
+    throw ledgerError(`Journal lines reference unknown, archived or deactivated accounts: ${blocked.join(', ')}`);
   }
 }
 

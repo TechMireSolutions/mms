@@ -7,7 +7,6 @@ import {
   type FiscalYear,
   type AccountingSettings,
   DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS,
-  todayISO,
 } from "@mms/shared";
 import {
   computeLedger,
@@ -48,40 +47,6 @@ export interface Currency {
  * Journal tags offered by the entry form and the tag filter.
  */
 export const JOURNAL_TAGS = ["Payroll", "Fees", "Donation", "Obligation", "Utilities", "Rent", "Capital", "Expense", "Adjustment", "Reversal", "Opening"];
-
-/**
- * Build the correcting entry for `entry`.
- */
-export function createReversalEntry(
-  entry: JournalEntry,
-  allEntries: JournalEntry[],
-  date: string = todayISO(),
-): JournalEntry {
-  const count = allEntries.filter(e => e.ref.startsWith("REV-")).length + 1;
-  const nextRef = `REV-${entry.ref}-${count}`;
-  const reversedLines = entry.lines.map(line => ({
-    id: `line_${Math.random().toString(36).substring(2, 9)}`,
-    account_id: line.account_id,
-    debit: line.credit,
-    credit: line.debit,
-    description: `Reversal of line in entry ${entry.ref}`
-  }));
-  return {
-    id: `je_${Math.random().toString(36).substring(2, 9)}`,
-    date,
-    ref: nextRef,
-    description: `Reversal of Entry ${entry.ref}: ${entry.description}`,
-    status: "posted",
-    source_type: "reversal",
-    created_by: "System",
-    tags: ["Reversal"],
-    attachments: [],
-    fiscal_year: "",
-    fiscal_year_id: undefined,
-    lines: reversedLines,
-    reversed_ref: entry.ref
-  };
-}
 
 /** True when another entry already reverses `entry` (guards double reversal). */
 export function hasReversalEntry(entry: JournalEntry, allEntries: JournalEntry[]): boolean {

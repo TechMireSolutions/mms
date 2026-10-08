@@ -10,6 +10,11 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+const mockReverseMutate = vi.fn();
+vi.mock("@/tenant/features/accounting/hooks/useReverseJournalEntry", () => ({
+  useReverseJournalEntry: () => ({ mutateAsync: mockReverseMutate }),
+}));
+
 vi.mock("@/lib/notify", () => ({
   notify: {
     warning: vi.fn(),
@@ -64,6 +69,8 @@ const mockReversalOfPosted: JournalEntry = {
   ],
   reversed_ref: "JE-002",
 };
+
+const REQUEST = { date: "2026-09-01", reason: "Posted to the wrong account" };
 
 function TestHarness(props: Parameters<typeof useJournalEntriesTrashReversal>[0] & {
   onController: (c: ReturnType<typeof useJournalEntriesTrashReversal>) => void;
@@ -256,12 +263,10 @@ describe("useJournalEntriesTrashReversal", () => {
     expect(onBulkDelete).not.toHaveBeenCalled();
   });
 
-  it("posts the reversal entry and names its reference in the success toast", async () => {
+  it("given a confirmed reversal, should send the date and reason to the server and name the new reference", async () => {
+    // Arrange
     let controller!: ReturnType<typeof useJournalEntriesTrashReversal>;
-    const onChange = vi.fn<
-      (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void
-    >();
-
+    mockReverseMutate.mockResolvedValue({ entry: { ...mockReversalOfPosted, ref: "REV-JE-002" } });
     await act(async () => {
       root.render(
         <TestHarness
@@ -269,7 +274,6 @@ describe("useJournalEntriesTrashReversal", () => {
           showDeleted={false}
           selectedIds={[]}
           setSelectedIds={vi.fn()}
-          onChange={onChange}
           t={t}
           onController={(c) => {
             controller = c;
@@ -277,39 +281,26 @@ describe("useJournalEntriesTrashReversal", () => {
         />,
       );
     });
-
     act(() => {
       controller.requestReverse(mockEntryPosted);
     });
-    expect(controller.pendingReverseEntry?.id).toBe("entry-2");
 
+    // Act
+    let accepted = false;
     await act(async () => {
-      await controller.confirmReverse();
+      accepted = await controller.confirmReverse(REQUEST);
     });
 
-    const updater = onChange.mock.calls[0]?.[0] as
-      | ((prev: JournalEntry[]) => JournalEntry[])
-      | undefined;
-    expect(updater).toBeTypeOf("function");
-    const next = updater!([mockEntryPosted]);
-    const reversal = next[1];
-    // Posted, not a draft: every ledger/report view counts posted rows only.
-    expect(reversal.status).toBe("posted");
-    expect(reversal.reversed_ref).toBe("JE-002");
-    expect(reversal.source_type).toBe("reversal");
-    expect(notify.success).toHaveBeenCalledWith(
-      expect.stringContaining("accounting.journal.alerts.reversalPosted"),
-    );
-    expect(String(vi.mocked(notify.success).mock.calls[0]?.[0])).toContain(reversal.ref);
-    expect(controller.pendingReverseEntry).toBeNull();
+    // Assert
+    expect(accepted).toBe(true);
+    expect(mockReverseMutate).toHaveBeenCalledWith({ id: "entry-2", request: REQUEST });
+    expect(String(vi.mocked(notify.success).mock.calls[0]?.[0])).toContain("REV-JE-002");
   });
 
-  it("creates only one reversal when the confirmation fires twice", async () => {
+  it("given a double confirmation, should send only one reversal request", async () => {
+    // Arrange
     let controller!: ReturnType<typeof useJournalEntriesTrashReversal>;
-    const onChange = vi.fn<
-      (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void
-    >();
-
+    mockReverseMutate.mockResolvedValue({ entry: mockReversalOfPosted });
     await act(async () => {
       root.render(
         <TestHarness
@@ -317,7 +308,6 @@ describe("useJournalEntriesTrashReversal", () => {
           showDeleted={false}
           selectedIds={[]}
           setSelectedIds={vi.fn()}
-          onChange={onChange}
           t={t}
           onController={(c) => {
             controller = c;
@@ -325,23 +315,23 @@ describe("useJournalEntriesTrashReversal", () => {
         />,
       );
     });
-
     act(() => {
       controller.requestReverse(mockEntryPosted);
     });
 
+    // Act
     await act(async () => {
-      await Promise.all([controller.confirmReverse(), controller.confirmReverse()]);
+      await Promise.all([controller.confirmReverse(REQUEST), controller.confirmReverse(REQUEST)]);
     });
 
-    expect(onChange).toHaveBeenCalledTimes(1);
+    // Assert
+    expect(mockReverseMutate).toHaveBeenCalledTimes(1);
     expect(notify.success).toHaveBeenCalledTimes(1);
   });
 
-  it("refuses to reverse an entry that already has a reversal", async () => {
+  it("given an entry that already has a reversal, should refuse to open the reverse dialog", async () => {
+    // Arrange
     let controller!: ReturnType<typeof useJournalEntriesTrashReversal>;
-    const onChange = vi.fn();
-
     await act(async () => {
       root.render(
         <TestHarness
@@ -349,7 +339,6 @@ describe("useJournalEntriesTrashReversal", () => {
           showDeleted={false}
           selectedIds={[]}
           setSelectedIds={vi.fn()}
-          onChange={onChange}
           t={t}
           onController={(c) => {
             controller = c;
@@ -358,33 +347,60 @@ describe("useJournalEntriesTrashReversal", () => {
       );
     });
 
+    // Act
     act(() => {
       controller.requestReverse(mockEntryPosted);
     });
+    let accepted = true;
+    await act(async () => {
+      accepted = await controller.confirmReverse(REQUEST);
+    });
 
+    // Assert
     expect(notify.warning).toHaveBeenCalledWith(
       expect.stringContaining("accounting.journal.alerts.alreadyReversed"),
     );
     expect(controller.pendingReverseEntry).toBeNull();
-
-    await act(async () => {
-      await controller.confirmReverse();
-    });
-    expect(onChange).not.toHaveBeenCalled();
+    expect(accepted).toBe(false);
+    expect(mockReverseMutate).not.toHaveBeenCalled();
   });
 
-  it("reports the server validation message when the reversal write is refused", async () => {
+  it("given a Finance-owned invoice posting, should refuse to open the reverse dialog", async () => {
+    // Arrange
     let controller!: ReturnType<typeof useJournalEntriesTrashReversal>;
-    // ts-rest hooks reject with the raw result object, not an Error.
-    const onChange = vi.fn().mockRejectedValue({
-      status: 422,
-      body: {
-        type: "validation_error",
-        message: "The fiscal year containing 2026-09-01 is closed",
-      },
-      headers: new Headers(),
+    const invoicePosting: JournalEntry = { ...mockEntryPosted, id: "je-inv", ref: "invoice:inv-1", source_type: "invoice", source_id: "inv-1" };
+    await act(async () => {
+      root.render(
+        <TestHarness
+          entries={[invoicePosting]}
+          showDeleted={false}
+          selectedIds={[]}
+          setSelectedIds={vi.fn()}
+          t={t}
+          onController={(c) => {
+            controller = c;
+          }}
+        />,
+      );
     });
 
+    // Act
+    act(() => {
+      controller.requestReverse(invoicePosting);
+    });
+
+    // Assert
+    expect(notify.warning).toHaveBeenCalledWith(expect.stringContaining("accounting.journal.alerts.notReversible"));
+    expect(controller.pendingReverseEntry).toBeNull();
+  });
+
+  it("given a server refusal, should report the server message and keep the dialog open", async () => {
+    // Arrange
+    let controller!: ReturnType<typeof useJournalEntriesTrashReversal>;
+    mockReverseMutate.mockRejectedValue({
+      status: 422,
+      body: { type: "validation_error", message: "Reversal date falls in a closed accounting period" },
+    });
     await act(async () => {
       root.render(
         <TestHarness
@@ -392,7 +408,6 @@ describe("useJournalEntriesTrashReversal", () => {
           showDeleted={false}
           selectedIds={[]}
           setSelectedIds={vi.fn()}
-          onChange={onChange}
           t={t}
           onController={(c) => {
             controller = c;
@@ -400,18 +415,21 @@ describe("useJournalEntriesTrashReversal", () => {
         />,
       );
     });
-
     act(() => {
       controller.requestReverse(mockEntryPosted);
     });
 
+    // Act
+    let accepted = true;
     await act(async () => {
-      await controller.confirmReverse();
+      accepted = await controller.confirmReverse(REQUEST);
     });
 
+    // Assert
     const [title, options] = vi.mocked(notify.error).mock.calls[0] ?? [];
     expect(String(title)).toContain("accounting.journal.alerts.reverseFailed");
-    expect(options?.description).toBe("The fiscal year containing 2026-09-01 is closed");
-    expect(options?.description).not.toBe("[object Object]");
+    expect(options?.description).toBe("Reversal date falls in a closed accounting period");
+    expect(accepted).toBe(false);
+    expect(controller.pendingReverseEntry?.id).toBe("entry-2");
   });
 });
