@@ -23,7 +23,11 @@ import {
   journalEntryRecordSchema,
   accountRecordSchema,
 } from '@mms/shared';
-import { prepareJournalEntryForPersist, assertJournalEntryPeriodOpen } from './accountingLedgerGuards.js';
+import {
+  prepareJournalEntryForPersist,
+  assertJournalAccountsWritable,
+  assertJournalEntryPeriodOpen,
+} from './accountingLedgerGuards.js';
 import { getPostingRules } from '../../db/repositories/accountingLedgerOpsRepository.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { ConflictError } from '../../lib/httpErrors.js';
@@ -177,7 +181,9 @@ export function createAccountingUseCases(
    * server-owned: a client able to set them could pre-claim a source and
    * silently suppress the real system posting, or forge a reversal/closing
    * marker. Existing rows keep their stored keys; new rows written through a
-   * client route are always `manual`.
+   * client route are always `manual`. `reversed_ref` is owned the same way: a
+   * reversal link is only created by `POST /entries/:id/reverse`, which checks
+   * eligibility, period and duplicate reversal under a lock.
    */
   const withServerOwnedSourceKeys = (
     entry: JournalEntry,
@@ -186,6 +192,7 @@ export function createAccountingUseCases(
     ...entry,
     source_type: stored ? stored.source_type : 'manual',
     source_id: stored ? stored.source_id : undefined,
+    reversed_ref: stored ? stored.reversed_ref : undefined,
   });
 
   /**
@@ -220,29 +227,10 @@ export function createAccountingUseCases(
    * the server disagree about what removal means: the picker hides an account
    * while invoice posting, imports and the API keep writing to it.
    */
-  const assertEntryAccountsWritable = async (
+  const assertEntryAccountsWritable = (
     tenant: string,
     entries: readonly JournalEntry[],
-  ): Promise<void> => {
-    const accountIds = dedupeTrimmedIds(
-      entries.flatMap((entry) => (entry.lines ?? []).map((line) => line.account_id)),
-    );
-    if (accountIds.length === 0) return;
-    const accounts = await repo.findAccountsByIds(tenant, accountIds);
-    const byId = new Map(accounts.map((account) => [account.id, account]));
-    const blocked = accountIds.filter((id) => {
-      const account = byId.get(id);
-      return !account || account.isActive === false;
-    });
-    if (blocked.length > 0) {
-      throw Object.assign(
-        new Error(
-          `Journal lines reference unknown, archived or deactivated accounts: ${blocked.join(', ')}`,
-        ),
-        { statusCode: 422, type: 'validation_error' },
-      );
-    }
-  };
+  ): Promise<void> => assertJournalAccountsWritable(tenant, entries, repo.findAccountsByIds);
 
   /**
    * Period lock plus account guard, applied to **new-or-changed** entries only.

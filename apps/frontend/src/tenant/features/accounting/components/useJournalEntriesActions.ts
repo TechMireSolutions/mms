@@ -93,7 +93,6 @@ export function useJournalEntriesActions({
     onRestore,
     onBulkDelete,
     onBulkRestore,
-    onChange,
     t,
   });
 

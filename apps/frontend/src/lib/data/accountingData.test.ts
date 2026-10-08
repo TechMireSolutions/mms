@@ -5,7 +5,6 @@ import {
   computeFinancials,
   computeLedger,
   computeTrialBalance,
-  createReversalEntry,
   hasReversalEntry,
   isJournalRefUnique,
   type Account,
@@ -80,35 +79,10 @@ describe('computeFinancials', () => {
   });
 });
 
-describe('createReversalEntry', () => {
-  it('creates a posted reversal so ledger views actually change', () => {
-    const original = balancedEntry();
-    const reversal = createReversalEntry(original, [original]);
-    expect(reversal.status).toBe('posted');
-    expect(reversal.source_type).toBe('reversal');
-    expect(reversal.reversed_ref).toBe('JE-0001');
-    expect(reversal.ref).toBe('REV-JE-0001-1');
-    expect(reversal.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(reversal.lines.map((line) => [line.debit, line.credit])).toEqual([
-      [0, 0.1],
-      [0, 0.2],
-      [0.3, 0],
-    ]);
-  });
-
-  it('uses the chosen date and lets the server resolve the fiscal year from it', () => {
-    const original = balancedEntry();
-    const reversal = createReversalEntry(original, [original], '2027-01-15');
-    expect(reversal.date).toBe('2027-01-15');
-    expect(reversal.fiscal_year_id).toBeUndefined();
-    expect(reversal.fiscal_year).toBe('');
-  });
-});
-
 describe('hasReversalEntry', () => {
   it('detects an existing reversal of the same reference', () => {
     const original = balancedEntry();
-    const reversal = createReversalEntry(original, [original]);
+    const reversal: JournalEntry = { ...original, id: 'je-rev', ref: 'REV-JE-0001', reversed_ref: 'JE-0001' };
     expect(hasReversalEntry(original, [original])).toBe(false);
     expect(hasReversalEntry(original, [original, reversal])).toBe(true);
     expect(hasReversalEntry(reversal, [original, reversal])).toBe(false);

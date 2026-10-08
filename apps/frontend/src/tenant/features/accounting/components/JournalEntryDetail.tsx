@@ -18,6 +18,8 @@ import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 interface JournalEntryDetailProps {
   entry: JournalEntry;
   accounts: Account[];
+  /** Reference of the journal that reverses this one, when loaded. */
+  reversedByRef?: string;
   onClose: () => void;
   onEdit?: () => void;
   onReverse?: () => void;
@@ -33,6 +35,7 @@ interface JournalEntryDetailProps {
 export function JournalEntryDetail({
   entry,
   accounts,
+  reversedByRef,
   onClose,
   onEdit,
   onReverse,
@@ -86,6 +89,11 @@ export function JournalEntryDetail({
             {entry.reversed_ref && (
               <Badge pill tone="warning" className="px-2 font-semibold border-warning/30">
                 ↩ {t("accounting.journal.detail.reversalOf", { ref: entry.reversed_ref })}
+              </Badge>
+            )}
+            {reversedByRef && (
+              <Badge pill tone="warning" className="px-2 font-semibold border-warning/30">
+                {t("accounting.journal.detail.reversedBy", { ref: reversedByRef })}
               </Badge>
             )}
           </div>
