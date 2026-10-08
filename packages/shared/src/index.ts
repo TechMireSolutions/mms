@@ -383,6 +383,8 @@ export * from './sequenceNumberingTypes.js';
 export * from './sequenceNumberingAdapters.js';
 export * from './sequenceNumberingUtils.js';
 export * from './obligationsModuleSettings.js';
+export * from './obligationsReceiptNumberingUtils.js';
 export * from './tasksModuleManifest.js';
+export * from './clientEntityIdUtils.js';
 export * from './industryTypes.js';
 export * from './industryProfiles.js';

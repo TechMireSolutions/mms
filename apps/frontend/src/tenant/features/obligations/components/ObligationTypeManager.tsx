@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import type { ObligationType } from "@mms/shared";
+import { generateClientEntityId, type ObligationType } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
@@ -45,10 +45,8 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
 
   const handleSave = async (form: Partial<ObligationType>) => {
     if (modal?.mode === "add") {
-      const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : Math.random().toString(36).substring(2, 11);
-      await onChange([...types, { ...form, id: `ot${uuid}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
+      const id = generateClientEntityId("ot");
+      await onChange([...types, { ...form, id, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
     } else if (modal?.mode === "edit") {
       await onChange(types.map((obligationType) => obligationType.id === form.id ? { ...obligationType, ...form, updated_at: new Date().toISOString() } : obligationType));
     }

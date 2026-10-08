@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { isJournalEntryBalanced, journalEntryRecordSchema, moneyToCents, todayISO } from "@mms/shared";
+import { generateClientEntityId, isJournalEntryBalanced, journalEntryRecordSchema, moneyToCents, todayISO } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 import type { JournalEntrySave } from "./journalEntriesTypes";
@@ -13,7 +13,7 @@ import {
   isJournalRefUnique,
 } from "./journalEntryFormValidation";
 
-const EMPTY_LINE = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
+const EMPTY_LINE = (): DraftLine => ({ id: generateClientEntityId("l", "-"), account_id: "", debit: "", credit: "", description: "" });
 
 interface UseJournalEntryFormOptions {
   accounts: Account[];
@@ -140,7 +140,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     }
     const candidate = {
       ...form,
-      id: isEdit ? form.id : `je${crypto.randomUUID()}`,
+      id: isEdit ? form.id : generateClientEntityId("je"),
       ref: journalReference,
       status: targetStatus,
       created_by: form.created_by || user?.name || "system",

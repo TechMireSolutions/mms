@@ -8,7 +8,7 @@ import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
-import { todayISO } from '@mms/shared';
+import { generateClientEntityId, todayISO } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DenominationModal } from './DenominationModal';
 
@@ -88,7 +88,7 @@ export function StockAddBatchModal({
     try {
       await onSave({
         ...data,
-        id: `bat${crypto.randomUUID()}`,
+        id: generateClientEntityId('bat'),
         quantity: Number(data.quantity),
         remaining: Number(data.quantity),
         denominationName: denomination?.name || '',

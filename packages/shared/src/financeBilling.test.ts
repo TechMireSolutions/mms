@@ -13,6 +13,17 @@ describe('financeBilling', () => {
     expect(formatInvoiceNumber(2026, 42)).toBe('INV-2026-0042');
   });
 
+  it('formats invoice number according to tenant FinanceSettings', () => {
+    expect(
+      formatInvoiceNumber(2026, 5, {
+        invoicePrefix: 'BILL',
+        invoiceDelimiter: '/',
+        invoiceYearFormat: 'YY',
+        invoiceSequenceDigits: 5,
+      }),
+    ).toBe('BILL/26/00005');
+  });
+
   it('increments the highest sequence for the requested year', () => {
     expect(nextInvoiceSequence(['INV-2026-0003', 'INV-2025-0099', 'inv-2026-0012'], 2026)).toBe(13);
     expect(nextInvoiceNumber([], 2026)).toBe('INV-2026-0001');

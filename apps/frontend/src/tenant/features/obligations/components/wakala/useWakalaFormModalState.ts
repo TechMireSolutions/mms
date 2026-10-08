@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { generateClientEntityId } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import type {
   Mujtahid,
@@ -9,11 +10,6 @@ import type {
   InitialDistRow,
   WakalaFormModalProps,
 } from "./wakalaFormModalTypes";
-
-function generateEntityId(prefix: string): string {
-  const uuid = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 11);
-  return `${prefix}${uuid}`;
-}
 
 export function useWakalaFormModalState(props: WakalaFormModalProps) {
   const { initial, reps, mujtahids, obligationTypes, onSave, onChangeMujtahids, onChangeReps, onChangeTypes } = props;
@@ -88,7 +84,7 @@ export function useWakalaFormModalState(props: WakalaFormModalProps) {
 
   const handleSaveMujtahid = async (newMujtahid: Partial<Mujtahid>) => {
     if (onChangeMujtahids) {
-      const id = generateEntityId("m");
+      const id = generateClientEntityId("m");
       await onChangeMujtahids([...mujtahids, { ...newMujtahid, id } as Mujtahid]);
       setSelectedMujtahidId(id);
       setSelectedRepId("");
@@ -98,7 +94,7 @@ export function useWakalaFormModalState(props: WakalaFormModalProps) {
 
   const handleSaveRep = async (newRep: Partial<MujtahidRep>) => {
     if (onChangeReps && selectedMujtahidId) {
-      const id = generateEntityId("mr");
+      const id = generateClientEntityId("mr");
       await onChangeReps([...reps, { ...newRep, id, mujtahid_id: selectedMujtahidId } as MujtahidRep]);
       setSelectedRepId(id);
     }
@@ -107,7 +103,7 @@ export function useWakalaFormModalState(props: WakalaFormModalProps) {
 
   const handleSaveObType = async (newType: Partial<ObligationType>) => {
     if (onChangeTypes) {
-      const id = generateEntityId("ot");
+      const id = generateClientEntityId("ot");
       const created: ObligationType = {
         ...newType,
         id,
@@ -126,7 +122,7 @@ export function useWakalaFormModalState(props: WakalaFormModalProps) {
   const addDistributionRow = () => {
     setInitialDistributions((prev) => [
       ...prev,
-      { id: generateEntityId("dist"), name: "", percentage: 0, type: "Income" },
+      { id: generateClientEntityId("dist"), name: "", percentage: 0, type: "Income" },
     ]);
   };
 

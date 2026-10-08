@@ -1,7 +1,14 @@
 import type {
   SequenceNumberingConfig,
   SequenceYearFormat,
+  SequenceRolloverPolicy,
 } from "./sequenceNumberingTypes.js";
+
+export type {
+  SequenceNumberingConfig,
+  SequenceYearFormat,
+  SequenceRolloverPolicy,
+};
 
 /** Formats a deterministic sequence ID given a sequence number, configuration, and reference date. */
 export function formatDeterministicSequence(
@@ -55,4 +62,38 @@ export function buildSequenceFormulaTemplate(
   return tokens.join(delimiter);
 }
 
+/** Formats a sequence ID using a tokenized template string (e.g. {seq}-{year}, {PREFIX}-{YYYY}-{SEQ}). */
+export function formatTemplateSequence(
+  template: string,
+  sequenceNumber: number,
+  digits = 4,
+  dateInput?: Date | string,
+  prefix = "",
+): string {
+  const parsedDate = dateInput
+    ? dateInput instanceof Date
+      ? dateInput
+      : new Date(dateInput)
+    : new Date();
+  const validDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  const fullYear = String(validDate.getFullYear());
+  const shortYear = fullYear.slice(-2);
+  const month = String(validDate.getMonth() + 1).padStart(2, "0");
+  const safeDigits = Math.max(1, Math.min(8, Number(digits) || 4));
+  const seqStr = String(Math.max(1, Math.floor(sequenceNumber))).padStart(safeDigits, "0");
+
+  let result = template
+    .replace(/\{seq\}/gi, seqStr)
+    .replace(/\{year\}|\{yyyy\}/gi, fullYear)
+    .replace(/\{yy\}/gi, shortYear)
+    .replace(/\{mm\}/gi, month);
+
+  if (prefix) {
+    result = result.replace(/\{prefix\}/gi, prefix);
+  }
+
+  return result;
+}
+
 export * from "./sequenceNumberingAdapters.js";
+

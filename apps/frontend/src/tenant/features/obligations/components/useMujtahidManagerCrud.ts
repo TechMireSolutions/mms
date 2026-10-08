@@ -1,16 +1,10 @@
 import { useState } from "react";
+import { generateClientEntityId } from "@mms/shared";
 import type {
   ModalState,
   Mujtahid,
   MujtahidRep,
 } from "./mujtahidManagerTypes";
-
-function generateEntityId(prefix: string): string {
-  const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : Math.random().toString(36).substring(2, 11);
-  return `${prefix}${uuid}`;
-}
 
 export interface UseMujtahidManagerCrudProps {
   mujtahids: Mujtahid[];
@@ -31,7 +25,7 @@ export function useMujtahidManagerCrud({
 
   const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
     if (modal?.mode === "add") {
-      await onChangeMujtahids([...mujtahids, { ...form, id: generateEntityId("m") } as Mujtahid]);
+      await onChangeMujtahids([...mujtahids, { ...form, id: generateClientEntityId("m") } as Mujtahid]);
     } else if (modal?.mode === "edit") {
       await onChangeMujtahids(
         mujtahids.map((mujtahid) => (mujtahid.id === form.id ? (form as Mujtahid) : mujtahid)),
@@ -50,7 +44,7 @@ export function useMujtahidManagerCrud({
 
   const handleSaveRep = async (form: Partial<MujtahidRep>) => {
     if (modal?.mode === "add-rep") {
-      await onChangeReps([...reps, { ...form, id: generateEntityId("mr") } as MujtahidRep]);
+      await onChangeReps([...reps, { ...form, id: generateClientEntityId("mr") } as MujtahidRep]);
     } else if (modal?.mode === "edit-rep") {
       await onChangeReps(
         reps.map((representative) =>

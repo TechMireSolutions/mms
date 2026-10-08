@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { type Account, type FiscalYear, moneyToCents } from "@mms/shared";
+import { generateClientEntityId, type Account, type FiscalYear, moneyToCents } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import {
@@ -112,7 +112,7 @@ export function useAccountingOpeningBalancesState({
         balances: [
           ...payloadRows(),
           {
-            id: `ob-${crypto.randomUUID()}`,
+            id: generateClientEntityId("ob", "-"),
             fiscalYearId,
             accountId,
             debit: debitValue,

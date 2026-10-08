@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   formatDeterministicSequence,
   buildSequenceFormulaTemplate,
+  formatTemplateSequence,
   facultySettingsToSequenceConfig,
   studentSettingsToSequenceConfig,
   financeSettingsToSequenceConfig,
@@ -10,6 +11,23 @@ import {
 
 
 describe("sequenceNumberingUtils", () => {
+  describe("formatTemplateSequence", () => {
+    it("formats standard {seq}-{year} template", () => {
+      const result = formatTemplateSequence("{seq}-{year}", 42, 4, new Date(2026, 0, 15));
+      expect(result).toBe("0042-2026");
+    });
+
+    it("formats short year and prefix in template", () => {
+      const result = formatTemplateSequence("GR{yy}{seq}", 1, 3, new Date(2026, 0, 15));
+      expect(result).toBe("GR26001");
+    });
+
+    it("formats month {mm} in template", () => {
+      const result = formatTemplateSequence("{prefix}-{year}-{mm}-{seq}", 7, 3, new Date(2026, 4, 15), "DOC");
+      expect(result).toBe("DOC-2026-05-007");
+    });
+  });
+
   describe("formatDeterministicSequence", () => {
     it("formats standard employee ID with default options", () => {
       const result = formatDeterministicSequence(1, {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isJournalRefUnique, type JournalEntry } from "@/lib/data/accountingData";
-import { isJournalEntryBalanced, journalEntryRecordSchema } from "@mms/shared";
+import { generateClientEntityId, isJournalEntryBalanced, journalEntryRecordSchema } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { validateWizardForm } from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
@@ -104,7 +104,7 @@ export function useSimpleTransactionWizard({
       const candidateTags =
         form.tags && form.tags.length > 0 ? form.tags : selectedType.tag ? [selectedType.tag] : [];
       const candidate: JournalEntry = {
-        id: `je${crypto.randomUUID()}`,
+        id: generateClientEntityId("je"),
         ref: userRef,
         date: form.date,
         description,
@@ -120,14 +120,14 @@ export function useSimpleTransactionWizard({
         transaction_type: selectedType.id,
         lines: [
           {
-            id: `l-${crypto.randomUUID()}`,
+            id: generateClientEntityId("l", "-"),
             account_id: validation.debitAccount.id,
             debit: validation.amount,
             credit: 0,
             description,
           },
           {
-            id: `l-${crypto.randomUUID()}`,
+            id: generateClientEntityId("l", "-"),
             account_id: validation.creditAccount.id,
             debit: 0,
             credit: validation.amount,

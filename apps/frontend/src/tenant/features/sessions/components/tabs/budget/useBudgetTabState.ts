@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { generateClientEntityId } from "@mms/shared";
 import type { Session, SessionClassBudget } from "@/lib/data/sessionsData";
 import type { BudgetItemWithClass, DeleteBudgetTarget } from "./budgetTabShared";
 
@@ -42,7 +43,7 @@ export function useBudgetTabState(
       const updatedClasses = classes.map((c) => {
         if (c.id === targetClassId) {
           const newBudget: SessionClassBudget = {
-            id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 11),
+            id: generateClientEntityId("bgt", "-"),
             classId: c.id,
             budgetType,
             detail: detail.trim(),

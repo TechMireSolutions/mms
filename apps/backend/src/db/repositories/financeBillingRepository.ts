@@ -241,6 +241,7 @@ export async function allocateNextInvoiceNumber(
   tenant: string,
   year: number,
   prefix = 'INV',
+  delimiter = '-',
 ): Promise<string> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
@@ -250,7 +251,7 @@ export async function allocateNextInvoiceNumber(
       .where(
         and(
           eq(financeInvoices.workspaceSubdomain, subdomain),
-          like(financeInvoices.invoiceNumber, `${prefix}-${year}-%`),
+          like(financeInvoices.invoiceNumber, `${prefix}${delimiter}${year}${delimiter}%`),
         ),
       )
       .orderBy(desc(financeInvoices.invoiceNumber))
@@ -268,9 +269,10 @@ export async function allocateInvoiceNumberBatch(
   year: number,
   count: number,
   prefix = 'INV',
+  delimiter = '-',
 ): Promise<string[]> {
   if (count <= 0) return [];
-  const first = await allocateNextInvoiceNumber(tenant, year, prefix);
+  const first = await allocateNextInvoiceNumber(tenant, year, prefix, delimiter);
   const start = nextInvoiceSequence([first], year, prefix) - 1;
   return Array.from({ length: count }, (_, index) => formatInvoiceNumber(year, start + index, prefix));
 }

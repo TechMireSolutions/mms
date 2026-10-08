@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import { type Denomination } from '@/lib/data/hasanatData';
+import { generateClientEntityId } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
@@ -65,7 +66,7 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
     setSubmitError(null);
     setSubmitting(true);
     try {
-      await onSave({ ...data, id: denom?.id || `den${crypto.randomUUID()}` });
+      await onSave({ ...data, id: denom?.id || generateClientEntityId('den') });
     } finally {
       setSubmitting(false);
     }
