@@ -35,6 +35,32 @@ describe('normalizeStudentModulePreferences', () => {
       grNumberRestartAnnually: false,
     });
   });
+
+  it('preserves fine-grained sequence numbering configuration', () => {
+    expect(
+      normalizeStudentModulePreferences({
+        autoGenerateId: true,
+        grNumberTemplate: 'STD-{seq}-{year}',
+        grNumberDigits: 5,
+        grNumberRestartAnnually: true,
+        grNumberPrefix: 'STD',
+        grNumberYearFormat: 'YYYY',
+        grNumberDelimiter: '-',
+        grNumberStartSeq: 100,
+        grNumberRolloverPolicy: 'annual_calendar',
+      }),
+    ).toEqual({
+      autoGenerateId: true,
+      grNumberTemplate: 'STD-{seq}-{year}',
+      grNumberDigits: 5,
+      grNumberRestartAnnually: true,
+      grNumberPrefix: 'STD',
+      grNumberYearFormat: 'YYYY',
+      grNumberDelimiter: '-',
+      grNumberStartSeq: 100,
+      grNumberRolloverPolicy: 'annual_calendar',
+    });
+  });
 });
 
 describe('splitStudentsSettingsBlob / stripStudentFieldConfigForPersist', () => {

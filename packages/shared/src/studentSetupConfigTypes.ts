@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import {
-  DEFAULT_STUDENTS_SETTINGS,
   type StudentsSettings,
 } from './studentsModuleSettings.js';
 import { STUDENT_TAB_REGISTRY, STUDENT_LOCKED_ENABLED_TABS } from './moduleFieldSetupPersons.js';
@@ -30,63 +29,28 @@ export const studentPreferencesPutBodySchema = z.object({
   grNumberRestartAnnually: z.boolean().optional(),
 }).passthrough();
 
-export type StudentModulePreferences = Pick<
-  StudentsSettings,
-  'autoGenerateId' | 'grNumberTemplate' | 'grNumberDigits' | 'grNumberRestartAnnually'
->;
+import {
+  type StudentModulePreferences,
+  STUDENT_MODULE_PREFERENCE_KEYS,
+  normalizeStudentModulePreferences,
+} from './studentPreferencesNormalization.js';
 
-const PREF_KEYS = [
-  'autoGenerateId',
-  'grNumberTemplate',
-  'grNumberDigits',
-  'grNumberRestartAnnually',
-] as const;
-
-/** Normalize GR / auto-id preferences (typed `student_module_preferences`). */
-export function normalizeStudentModulePreferences(
-  partial?: Partial<StudentModulePreferences> | Record<string, unknown> | null,
-): StudentModulePreferences {
-  const defaults: StudentModulePreferences = {
-    autoGenerateId: DEFAULT_STUDENTS_SETTINGS.autoGenerateId,
-    grNumberTemplate: DEFAULT_STUDENTS_SETTINGS.grNumberTemplate,
-    grNumberDigits: DEFAULT_STUDENTS_SETTINGS.grNumberDigits,
-    grNumberRestartAnnually: DEFAULT_STUDENTS_SETTINGS.grNumberRestartAnnually,
-  };
-  if (!partial || typeof partial !== 'object') return { ...defaults };
-
-  return {
-    autoGenerateId:
-      typeof partial.autoGenerateId === 'boolean'
-        ? partial.autoGenerateId
-        : defaults.autoGenerateId,
-    grNumberTemplate:
-      typeof partial.grNumberTemplate === 'string' && partial.grNumberTemplate.trim()
-        ? partial.grNumberTemplate
-        : defaults.grNumberTemplate,
-    grNumberDigits:
-      typeof partial.grNumberDigits === 'number' && Number.isFinite(partial.grNumberDigits)
-        ? Math.max(1, Math.floor(partial.grNumberDigits))
-        : defaults.grNumberDigits,
-    grNumberRestartAnnually:
-      typeof partial.grNumberRestartAnnually === 'boolean'
-        ? partial.grNumberRestartAnnually
-        : defaults.grNumberRestartAnnually,
-  };
-}
+export {
+  type StudentModulePreferences,
+  STUDENT_MODULE_PREFERENCE_KEYS,
+  normalizeStudentModulePreferences,
+};
 
 /** Field-config slice persisted on `student_field_configs` (never formTabs / GR prefs). */
 export function stripStudentFieldConfigForPersist(
   config: StudentsSettings | Record<string, unknown>,
 ): Record<string, unknown> {
-  const {
-    formTabs: _formTabs,
-    autoGenerateId: _autoGenerateId,
-    grNumberTemplate: _grNumberTemplate,
-    grNumberDigits: _grNumberDigits,
-    grNumberRestartAnnually: _grNumberRestartAnnually,
-    ...rest
-  } = config as StudentsSettings & Record<string, unknown>;
-  return rest;
+  const copy = { ...config } as Record<string, unknown>;
+  delete copy.formTabs;
+  for (const key of STUDENT_MODULE_PREFERENCE_KEYS) {
+    delete copy[key];
+  }
+  return copy;
 }
 
 /** Split a legacy `students_settings` blob into typed field-config + preferences rows. */
@@ -194,5 +158,3 @@ export function resolveStudentEnabledTabIds(
       : defaultStudentEnabledTabIds();
   return withStudentLockedEnabledTabs(source);
 }
-
-export { PREF_KEYS as STUDENT_MODULE_PREFERENCE_KEYS };

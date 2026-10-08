@@ -122,6 +122,7 @@ export * from './enrollmentSoftDelete.js';
 export * from './softDelete.js';
 export * from './contactSyncDiff.js';
 export * from './contactTypes.js';
+export * from './contactColumnFieldMapping.js';
 export * from './contactUtils.js';
 export * from './contactValidation.js';
 export * from './contactsDuplicatesQuery.js';
@@ -145,6 +146,8 @@ export * from './socialPlatformUtils.js';
 export * from './contactNestedSchemas.js';
 export * from './csvParserCore.js';
 export * from './contactsCsvParser.js';
+export * from './contactsCsvHeaderMap.js';
+export * from './contactsCsvRowParser.js';
 
 
 // ---------------------------------------------------------------------------
@@ -156,6 +159,7 @@ export * from './studentFieldDependencies.js';
 export * from './studentFormCustomFields.js';
 export * from './studentGuardianFromContacts.js';
 export * from './studentLookupTypes.js';
+export * from './studentPreferencesNormalization.js';
 export * from './studentRegistrationUtils.js';
 export * from './studentSettingsUtils.js';
 export * from './studentSetupConfigTypes.js';

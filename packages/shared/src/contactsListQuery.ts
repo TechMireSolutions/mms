@@ -119,7 +119,10 @@ export interface ContactsListQuery {
   afterId?: string;
   /** Performance optimization: skip counting total rows when only iterating pages */
   skipCount?: boolean;
+  /** Full child table hydration (education, experience, skills, bank details, activities, attachments) for exports */
+  fullHydration?: boolean;
 }
+
 
 export interface ContactsListPageResult {
   contacts: Contact[];

@@ -66,6 +66,10 @@ export interface StudentsRepository {
     tenant: string,
     input: StudentGrSequenceInput,
   ): Promise<number>;
+  previewNextGrNumber?(
+    tenant: string,
+    input: { regDate: string; settings: StudentGrNumberSettings },
+  ): Promise<string>;
   generateNextGrNumber?(
     tenant: string,
     input: { regDate: string; settings: StudentGrNumberSettings },

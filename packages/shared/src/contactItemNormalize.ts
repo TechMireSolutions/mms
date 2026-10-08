@@ -1,7 +1,5 @@
 /** Contact draft cleaning — strips blank rows from built-in and custom collections. */
-import {
-  type Contact,
-} from "./contactTypes.js";
+import type { Contact } from "./contactTypes.js";
 import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
@@ -19,22 +17,10 @@ import {
   BANK_DETAIL_SYSTEM_KEYS,
 } from "./contactItemNormalizeKeys.js";
 
-/** Built-in contact array keys — never treated as tenant custom-tab collections. */
 const CONTACT_ENTITY_ARRAY_KEYS = new Set([
-  "phones",
-  "emails",
-  "addresses",
-  "socials",
-  "education",
-  "experience",
-  "skills",
-  "bankDetails",
-  "relationshipContacts",
-  "relationships",
-  "activities",
-  "attachments",
-  "emergencyContacts",
-  "tags",
+  "phones", "emails", "addresses", "socials", "education", "experience",
+  "skills", "bankDetails", "relationshipContacts", "relationships",
+  "activities", "attachments", "emergencyContacts", "tags",
 ]);
 
 function valueHasContent(value: unknown): boolean {
@@ -54,8 +40,7 @@ function isBlankContactListRow(
 ): boolean {
   if (!row || typeof row !== "object" || Array.isArray(row)) return true;
   const obj = row as Record<string, unknown>;
-  const hasContent = requiredContentKeys.some((k) => valueHasContent(obj[k]));
-  if (hasContent) return false;
+  if (requiredContentKeys.some((k) => valueHasContent(obj[k]))) return false;
   for (const [k, v] of Object.entries(obj)) {
     if (systemKeys.has(k)) continue;
     if (valueHasContent(v)) return false;
@@ -65,7 +50,7 @@ function isBlankContactListRow(
 
 function isBlankCustomCollectionRow(row: unknown): boolean {
   if (!row || typeof row !== "object" || Array.isArray(row)) return true;
-  return Object.values(row as Record<string, unknown>).every((value) => !valueHasContent(value));
+  return Object.values(row as Record<string, unknown>).every((val) => !valueHasContent(val));
 }
 
 /** Ensures exactly one `isPrimary` flag among list items (first when none set). */
@@ -76,9 +61,7 @@ export function ensureSinglePrimaryFlag<T extends { isPrimary?: boolean }>(items
   return items.map((item, index) => ({ ...item, isPrimary: index === keepIndex }));
 }
 
-/**
- * Strips blank phones, emails, addresses, socials, relationship contacts, and custom-tab rows.
- */
+/** Strips blank phones, emails, addresses, socials, relationship contacts, and custom-tab rows. */
 export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   const result = hydrateContactRelationshipFields(
     stripContactClientSoftDeleteFields({ ...draft } as Record<string, unknown>) as Partial<Contact>,
@@ -89,138 +72,82 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     result.cnic = trimmed ? formatCnic(trimmed) : "";
   }
   if (typeof (result as Record<string, unknown>).email === "string") {
-    (result as Record<string, unknown>).email = String(
-      (result as Record<string, unknown>).email,
-    )
-      .trim()
-      .toLowerCase();
+    (result as Record<string, unknown>).email = String((result as Record<string, unknown>).email).trim().toLowerCase();
   }
 
   if (result.tags !== undefined || result.tag !== undefined) {
-    const normalizedTags = getContactTags(result);
-    result.tags = normalizedTags;
-    // `tag` is a UI/input string mirror — normalized into `tags` array on persistence
+    result.tags = getContactTags(result);
     delete (result as Record<string, unknown>).tag;
   }
 
   if (Array.isArray(result.phones)) {
     result.phones = ensureSinglePrimaryFlag(
       result.phones
-        .filter(
-          (phone) => !isBlankContactListRow(phone, ["number"], PHONE_SYSTEM_KEYS),
-        )
+        .filter((phone) => !isBlankContactListRow(phone, ["number"], PHONE_SYSTEM_KEYS))
         .map((phone) => ({
           ...phone,
           number: (phone.number || "").trim(),
-          countryCode:
-            typeof phone.countryCode === "string"
-              ? phone.countryCode.trim()
-              : phone.countryCode,
+          countryCode: typeof phone.countryCode === "string" ? phone.countryCode.trim() : phone.countryCode,
         })),
     );
   }
   if (Array.isArray(result.emails)) {
     result.emails = ensureSinglePrimaryFlag(
       result.emails
-        .filter(
-          (email) => !isBlankContactListRow(email, ["address"], EMAIL_SYSTEM_KEYS),
-        )
-        .map((email) => ({
-          ...email,
-          address: (email.address || "").trim().toLowerCase(),
-        })),
+        .filter((email) => !isBlankContactListRow(email, ["address"], EMAIL_SYSTEM_KEYS))
+        .map((email) => ({ ...email, address: (email.address || "").trim().toLowerCase() })),
     );
   }
   if (Array.isArray(result.addresses)) {
     result.addresses = ensureSinglePrimaryFlag(
-      result.addresses.filter(
-        (address) =>
-          !isBlankContactListRow(
-            address,
-            ["line1", "city", "state"],
-            ADDRESS_SYSTEM_KEYS,
-          ),
-      ),
+      result.addresses.filter((a) => !isBlankContactListRow(a, ["line1", "city", "state", "country"], ADDRESS_SYSTEM_KEYS)),
     );
   }
   if (Array.isArray(result.socials)) {
-    result.socials = result.socials.filter(
-      (social) => !isBlankContactListRow(social, ["url"], SOCIAL_SYSTEM_KEYS),
-    );
+    result.socials = result.socials.filter((s) => !isBlankContactListRow(s, ["url"], SOCIAL_SYSTEM_KEYS));
   }
   if (Array.isArray(result.education)) {
     result.education = result.education.filter(
-      (edu) =>
-        !isBlankContactListRow(
-          edu,
-          ["institution", "fieldOfStudy"],
-          EDUCATION_SYSTEM_KEYS,
-        ),
+      (edu) => !isBlankContactListRow(edu, ["institution", "degree", "fieldOfStudy"], EDUCATION_SYSTEM_KEYS),
     );
   }
   if (Array.isArray(result.experience)) {
     result.experience = result.experience.filter(
-      (exp) =>
-        !isBlankContactListRow(
-          exp,
-          ["title", "organization"],
-          EXPERIENCE_SYSTEM_KEYS,
-        ),
+      (exp) => !isBlankContactListRow(exp, ["title", "organization"], EXPERIENCE_SYSTEM_KEYS),
     );
   }
   if (Array.isArray(result.skills)) {
-    result.skills = result.skills.filter(
-      (skill) =>
-        !isBlankContactListRow(
-          skill,
-          ["name"],
-          SKILL_SYSTEM_KEYS,
-        ),
-    );
+    result.skills = result.skills.filter((sk) => !isBlankContactListRow(sk, ["name"], SKILL_SYSTEM_KEYS));
   }
   if (Array.isArray(result.bankDetails)) {
     result.bankDetails = result.bankDetails
-      .filter(
-        (bank) =>
-          !isBlankContactListRow(
-            bank,
-            ["bankName", "accountTitle", "accountNumber"],
-            BANK_DETAIL_SYSTEM_KEYS,
-          ),
-      )
-      .map((bank) => ({
-        ...bank,
-        bankName: typeof bank.bankName === "string" ? bank.bankName.trim() : (bank.bankName ?? ""),
-        accountTitle: typeof bank.accountTitle === "string" ? bank.accountTitle.trim() : ((bank as Record<string, unknown>).title as string ?? ""),
-        accountNumber: typeof bank.accountNumber === "string" ? bank.accountNumber.trim() : ((bank as Record<string, unknown>).iban as string ?? (bank.accountNumber ?? "")),
+      .filter((b) => !isBlankContactListRow(b, ["bankName", "accountTitle", "accountNumber"], BANK_DETAIL_SYSTEM_KEYS))
+      .map((b) => ({
+        ...b,
+        bankName: typeof b.bankName === "string" ? b.bankName.trim() : (b.bankName ?? ""),
+        accountTitle: typeof b.accountTitle === "string" ? b.accountTitle.trim() : ((b as Record<string, unknown>).title as string ?? ""),
+        accountNumber: typeof b.accountNumber === "string" ? b.accountNumber.trim() : ((b as Record<string, unknown>).iban as string ?? (b.accountNumber ?? "")),
       }));
   }
   if (Array.isArray(result.relationshipContacts)) {
     result.relationshipContacts = result.relationshipContacts
-      .filter(
-        (link) => !isBlankContactListRow(link, ["contactId"], RELATIONSHIP_SYSTEM_KEYS),
-      )
+      .filter((link) => !isBlankContactListRow(link, ["contactId", "name"], RELATIONSHIP_SYSTEM_KEYS))
       .map((link) => ({
         ...link,
-        contactId: String(link.contactId).trim(),
-        relationship:
-          typeof link.relationship === "string" ? link.relationship.trim() : link.relationship,
+        contactId: link.contactId !== undefined && link.contactId !== null && String(link.contactId).trim() ? String(link.contactId).trim() : undefined,
+        relationship: typeof link.relationship === "string" ? link.relationship.trim() : link.relationship,
       }));
-    if (result.relationshipContacts.length === 0) {
-      result.relationships = [];
-    }
+    if (result.relationshipContacts.length === 0) result.relationships = [];
   }
 
   for (const key of Object.keys(result)) {
     if (CONTACT_ENTITY_ARRAY_KEYS.has(key) || !isContactCustomCollectionTab(key)) continue;
     const rows = result[key];
-    if (!Array.isArray(rows)) continue;
-    result[key] = rows.filter((row) => !isBlankCustomCollectionRow(row));
+    if (Array.isArray(rows)) result[key] = rows.filter((r) => !isBlankCustomCollectionRow(r));
   }
 
   return result;
 }
 
-// Per-item row normalizers (split for file-size; same public surface as before).
 export * from './contactItemNormalizeRows.js';
 export * from './contactItemNormalizeBankRows.js';

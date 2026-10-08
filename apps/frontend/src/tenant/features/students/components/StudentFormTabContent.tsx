@@ -21,6 +21,9 @@ export interface StudentFormTabContentProps {
   excludeIds: string[];
   isGrAutoAssigned: boolean;
   grInputDisabled: boolean;
+  autoGenerateId?: boolean;
+  isCreate?: boolean;
+  nextGrNumber?: string;
   statusSelectOptions: StudentStatusSelectOption[];
   statuses?: string[];
   onUpdateStatuses?: (statuses: string[]) => void | Promise<void>;
@@ -44,6 +47,9 @@ export const StudentFormTabContent = (function StudentFormTabContent({
   excludeIds,
   isGrAutoAssigned,
   grInputDisabled,
+  autoGenerateId,
+  isCreate,
+  nextGrNumber,
   statusSelectOptions,
   statuses,
   onUpdateStatuses,
@@ -89,6 +95,9 @@ export const StudentFormTabContent = (function StudentFormTabContent({
         studentDraft={studentDraft}
         isGrAutoAssigned={isGrAutoAssigned}
         grInputDisabled={grInputDisabled}
+        autoGenerateId={autoGenerateId}
+        isCreate={isCreate}
+        nextGrNumber={nextGrNumber}
         statusSelectOptions={statusSelectOptions}
         statuses={statuses}
         onUpdateStatuses={onUpdateStatuses}

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   generateNextGrNumberSql,
   generateNextGrNumberBatchSql,
+  previewNextGrNumberSql,
 } from '../db/repositories/studentRepositorySequence.js';
 import { syncStudentEnrolledSessionsTx } from '../db/repositories/studentRepositoryEnrollOps.js';
 import type { AppDb } from '../db/tenant-context.js';
@@ -12,10 +13,11 @@ function createFakeSequenceTx(initialSeq: number, initialYear: number) {
   const fakeTx = {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          for: vi.fn().mockImplementation(() =>
-            Promise.resolve([{ currentSequence: storedSeq, lastYear: storedYear }]),
-          ),
+        where: vi.fn().mockImplementation(() => {
+          const rows = [{ currentSequence: storedSeq, lastYear: storedYear }];
+          return Object.assign(Promise.resolve(rows), {
+            for: vi.fn().mockImplementation(() => Promise.resolve(rows)),
+          });
         }),
       }),
     }),
@@ -90,6 +92,26 @@ describe('studentSequenceGenerator', () => {
 
     expect(grs).toEqual(['GR-0006/2026', 'GR-0007/2026', 'GR-0008/2026']);
     expect(getStored()).toEqual({ storedSeq: 8, storedYear: 2026 });
+  });
+
+  it('previews next sequence without mutating sequence configuration', async () => {
+    const { fakeTx, getStored } = createFakeSequenceTx(10, 2026);
+    const gr = await previewNextGrNumberSql(
+      'demo',
+      {
+        regDate: '2026-08-10',
+        settings: {
+          grNumberTemplate: 'GR-{seq}/{year}',
+          grNumberDigits: 4,
+          grNumberRestartAnnually: true,
+        },
+      },
+      fakeTx as unknown as Parameters<typeof previewNextGrNumberSql>[2],
+    );
+
+    expect(gr).toBe('GR-0011/2026');
+    expect(getStored()).toEqual({ storedSeq: 10, storedYear: 2026 });
+    expect(fakeTx.update).not.toHaveBeenCalled();
   });
 });
 

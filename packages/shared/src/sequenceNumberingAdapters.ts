@@ -50,8 +50,10 @@ export function studentSettingsToSequenceConfig(settings: {
   grNumberYearFormat?: SequenceYearFormat;
   grNumberDelimiter?: string;
   grNumberStartingSequence?: number;
+  grNumberStartSeq?: number;
   grNumberRolloverPolicy?: SequenceRolloverPolicy;
   grNumberCurrentSequence?: number;
+  grNumberCurrentSeq?: number;
 }): SequenceNumberingConfig {
   let prefix = settings.grNumberPrefix ?? "GR";
   let yearFormat: SequenceYearFormat = settings.grNumberYearFormat ?? "YY";
@@ -77,7 +79,7 @@ export function studentSettingsToSequenceConfig(settings: {
   }
 
   const sequenceDigits = Math.max(2, Math.min(8, Number(settings.grNumberDigits) || 4));
-  const startingSequence = settings.grNumberStartingSequence ?? 1;
+  const startingSequence = settings.grNumberStartingSequence ?? settings.grNumberStartSeq ?? 1;
   const rolloverPolicy: SequenceRolloverPolicy =
     settings.grNumberRolloverPolicy ??
     (settings.grNumberRestartAnnually === false ? "never" : "annual_calendar");
@@ -90,7 +92,7 @@ export function studentSettingsToSequenceConfig(settings: {
     delimiter,
     startingSequence,
     rolloverPolicy,
-    currentSequence: settings.grNumberCurrentSequence ?? 0,
+    currentSequence: settings.grNumberCurrentSequence ?? settings.grNumberCurrentSeq ?? 0,
   };
 }
 

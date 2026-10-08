@@ -14,6 +14,7 @@ import {
 } from './studentNormalizeUseCases.js';
 import { recordRestoreEvents } from './studentAuditEvents.js';
 import { restoreCascadedEnrollmentsForStudents } from '../../db/repositories/studentEnrollmentCascade.js';
+import { loadStudentModulePreferences } from './studentPreferencesService.js';
 
 interface CreateStudentResult {
   record: StudentRecord;
@@ -90,6 +91,24 @@ export async function createStudent(
         );
         await recordRestoreEvents(tenant, merged, restoredAt, userId);
         return { record: merged, restored: true };
+      }
+    }
+
+    if (!normalized.grNumber?.trim() && repo.generateNextGrNumber) {
+      const prefs = await loadStudentModulePreferences();
+      if (!prefs || prefs.autoGenerateId !== false) {
+        const regDateStr =
+          typeof normalized.registeredDate === 'string' && normalized.registeredDate.trim()
+            ? normalized.registeredDate.trim()
+            : new Date().toISOString().slice(0, 10);
+        normalized.grNumber = await repo.generateNextGrNumber(tenant, {
+          regDate: regDateStr,
+          settings: {
+            grNumberTemplate: prefs?.grNumberTemplate ?? '{seq}-{year}',
+            grNumberDigits: prefs?.grNumberDigits ?? 4,
+            grNumberRestartAnnually: prefs?.grNumberRestartAnnually ?? true,
+          },
+        });
       }
     }
 
