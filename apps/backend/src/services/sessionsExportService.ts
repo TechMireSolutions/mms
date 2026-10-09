@@ -1,10 +1,11 @@
 import {
-  DEFAULT_SESSION_EXPORT_COLUMNS,
   SESSIONS_MODULE_MANIFEST,
   buildCsvContent,
   buildSessionsExportRows,
   extractSessionCell,
   filterSessionExportColumnsForViewer,
+  resolveAllSessionExportColumns,
+  mergeCustomSessionExportColumns,
   type Session,
   type SessionExportColumn,
   type SessionsListQuery,
@@ -19,8 +20,6 @@ import {
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadSessionsSettingsCombined } from './sessionConfigService.js';
 import { loadSessionsByIds, loadSessionsPage } from './sessionService.js';
-
-const DEFAULT_EXPORT_COLUMNS = DEFAULT_SESSION_EXPORT_COLUMNS as SessionExportColumn[];
 
 export type SessionsExportQueryInput = ModuleExportQueryInput<SessionsListQuery>;
 export type SessionsExportOptions = ModuleExportOptions<SessionExportColumn>;
@@ -39,9 +38,11 @@ async function loadSessionsFieldSettings(): Promise<SessionsSettings | null> {
 async function prepareSessionsExport(
   options: SessionsExportOptions,
 ): Promise<{ columns: SessionExportColumn[]; context: undefined }> {
-  const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
   const settings = await loadSessionsFieldSettings();
+  const requestedColumns =
+    options.columns && options.columns.length > 0
+      ? mergeCustomSessionExportColumns(options.columns, settings)
+      : resolveAllSessionExportColumns(settings);
   const columns = filterSessionExportColumnsForViewer(requestedColumns, settings);
   return { columns, context: undefined };
 }

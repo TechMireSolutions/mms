@@ -4,7 +4,7 @@ import {
   isRelationshipContactColumnKey,
   isRelationshipTypeColumnKey,
 } from './contactEmergencyTabMigration.js';
-import { getPrimaryPhone, hasWhatsApp } from './utils.js';
+import { formatHijriDate, getPrimaryPhone, hasWhatsApp } from './utils.js';
 
 /** Formats a multi-item array, preserving positional alignment across related columns. */
 function joinCompoundItems<T>(items: T[] | undefined, fn: (item: T) => string): string {
@@ -30,6 +30,8 @@ export function compileContactColumnExtractor(
   if (columnId === 'lastName') return (c) => c.lastName || '';
   if (columnId === 'gender') return (c) => c.gender || '';
   if (columnId === 'dob') return (c) => c.dob || '';
+  if (columnId === 'solarDob') return (c) => c.dob || '';
+  if (columnId === 'lunarDob') return (c) => (c.dob ? formatHijriDate(c.dob) : '');
   if (columnId === 'cnic') return (c) => c.cnic || '';
   if (columnId === 'tag') return (c) => c.tag || (Array.isArray(c.tags) ? c.tags.join('; ') : '');
   if (columnId === 'notes') return (c) => c.notes || '';
@@ -157,6 +159,12 @@ export function compileContactColumnExtractor(
     const cellVal = c[columnId as keyof Contact];
     if (cellVal === undefined || cellVal === null) return '';
     if (typeof cellVal === 'boolean') return cellVal ? labels.yes : labels.no;
+    if (Array.isArray(cellVal)) {
+      if (cellVal.every((item) => typeof item === 'string' || typeof item === 'number')) {
+        return cellVal.join('; ');
+      }
+      return JSON.stringify(cellVal);
+    }
     if (typeof cellVal === 'object') return JSON.stringify(cellVal);
     return String(cellVal);
   };

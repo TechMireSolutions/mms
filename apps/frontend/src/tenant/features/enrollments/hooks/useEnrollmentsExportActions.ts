@@ -1,4 +1,9 @@
-import type { EnrollmentExportColumn, EnrollmentsListQuery } from "@mms/shared";
+import {
+  mergeCustomEnrollmentExportColumns,
+  type AppTranslationKey,
+  type EnrollmentExportColumn,
+  type EnrollmentsListQuery,
+} from "@mms/shared";
 import { startServerEnrollmentsCsvExport } from "@/lib/backgroundJobs/startServerEnrollmentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -71,24 +76,26 @@ export function useEnrollmentsExportActions({
 
 /** Default Work export columns when registry is unavailable. */
 export function defaultEnrollmentsExportColumns(
-  t: (
-    key:
-      | "enrollments.columns.student"
-      | "enrollments.columns.session"
-      | "enrollments.columns.class"
-      | "enrollments.columns.enrolledDate"
-      | "enrollments.columns.finalFee"
-      | "enrollments.columns.status"
-      | "enrollments.columns.payment",
-  ) => string,
+  t: (key: AppTranslationKey) => string,
+  customColumns?: EnrollmentExportColumn[] | null,
 ): EnrollmentExportColumn[] {
-  return [
-    { id: "studentName", label: t("enrollments.columns.student") },
-    { id: "sessionName", label: t("enrollments.columns.session") },
-    { id: "className", label: t("enrollments.columns.class") },
-    { id: "enrolledDate", label: t("enrollments.columns.enrolledDate") },
-    { id: "finalFee", label: t("enrollments.columns.finalFee") },
-    { id: "status", label: t("enrollments.columns.status") },
-    { id: "paymentStatus", label: t("enrollments.columns.payment") },
+  const base: EnrollmentExportColumn[] = [
+    { id: "studentName", label: t("enrollments.columns.student" as AppTranslationKey) },
+    { id: "studentId", label: t("enrollments.columns.studentId" as AppTranslationKey) || "Student ID" },
+    { id: "sessionName", label: t("enrollments.columns.session" as AppTranslationKey) },
+    { id: "sessionId", label: t("enrollments.columns.sessionId" as AppTranslationKey) || "Session ID" },
+    { id: "className", label: t("enrollments.columns.class" as AppTranslationKey) },
+    { id: "classId", label: t("enrollments.columns.classId" as AppTranslationKey) || "Class ID" },
+    { id: "enrolledDate", label: t("enrollments.columns.enrolledDate" as AppTranslationKey) },
+    { id: "baseFee", label: t("enrollments.columns.baseFee" as AppTranslationKey) || "Base Fee" },
+    { id: "discountType", label: t("enrollments.columns.discountType" as AppTranslationKey) || "Discount Type" },
+    { id: "discountPct", label: t("enrollments.columns.discountPct" as AppTranslationKey) || "Discount %" },
+    { id: "discountAmt", label: t("enrollments.columns.discountAmt" as AppTranslationKey) || "Discount Amount" },
+    { id: "finalFee", label: t("enrollments.columns.finalFee" as AppTranslationKey) },
+    { id: "status", label: t("enrollments.columns.status" as AppTranslationKey) },
+    { id: "paymentStatus", label: t("enrollments.columns.payment" as AppTranslationKey) },
+    { id: "invoiceId", label: t("enrollments.columns.invoiceId" as AppTranslationKey) || "Invoice ID" },
+    { id: "notes", label: t("enrollments.columns.notes" as AppTranslationKey) || "Notes" },
   ];
+  return mergeCustomEnrollmentExportColumns(base, customColumns);
 }

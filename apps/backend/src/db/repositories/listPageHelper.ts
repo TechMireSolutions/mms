@@ -44,8 +44,12 @@ export async function runListPage<Row, Record>(
   table: AnyPgTable,
   options: RunListPageOptions<Row, Record>,
 ): Promise<ListPageResult<Record>> {
-  const page = Math.max(1, options.page ?? 1);
-  const limit = Math.min(Math.max(1, options.limit ?? options.defaultPageSize ?? 50), 100);
+  const rawPage = typeof options.page === 'number' && Number.isFinite(options.page) ? options.page : 1;
+  const page = Math.max(1, Math.floor(rawPage));
+  const rawLimit = typeof options.limit === 'number' && Number.isFinite(options.limit)
+    ? options.limit
+    : (options.defaultPageSize ?? 50);
+  const limit = Math.min(Math.max(1, Math.floor(rawLimit)), 100);
   const isCursorPaging = Boolean(options.afterId?.trim());
   const offset = isCursorPaging ? 0 : (page - 1) * limit;
 

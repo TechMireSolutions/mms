@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import {
-  DEFAULT_CONTACT_EXPORT_COLUMNS,
+  resolveAllContactExportColumns,
   type ContactExportColumn,
   type ContactsListQuery,
   type ContactsQuickFilter,
   type AppTranslationKey,
+  type FieldConfig,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import { notify } from "@/lib/notify";
@@ -15,6 +17,7 @@ import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 
 interface UseContactsExportActionsOptions {
   tableColumns: Array<{ id?: string; key?: string; label?: string; labelKey?: AppTranslationKey }>;
+  fieldConfig?: Partial<FieldConfig> | null;
   canExport: boolean;
   /** Debounced directory search — the same value the visible list was filtered by. */
   search: string;
@@ -39,6 +42,7 @@ interface UseContactsExportActionsOptions {
 
 export function useContactsExportActions({
   tableColumns: _tableColumns,
+  fieldConfig,
   canExport,
   search,
   filterGender,
@@ -52,9 +56,15 @@ export function useContactsExportActions({
   t,
   tenantName,
 }: UseContactsExportActionsOptions) {
+  const contactConfig = useContactConfig();
+  const effectiveConfig: Partial<FieldConfig> = fieldConfig ?? {
+    fields: contactConfig.fields,
+    formTabs: contactConfig.formTabs,
+  };
+
   const resolvedColumns = useMemo(
-    () => defaultContactsExportColumns(t),
-    [t],
+    () => defaultContactsExportColumns(t, effectiveConfig),
+    [t, effectiveConfig],
   );
 
   /** Mirrors `buildContactsPageUrl` so the export scope matches the visible list. */
@@ -93,11 +103,13 @@ export function useContactsExportActions({
   });
 }
 
-/** Default Work export columns when registry is unavailable. */
+/** Default Work export columns including custom fields when fieldConfig is present. */
 export function defaultContactsExportColumns(
   t: (key: AppTranslationKey) => string,
+  fieldConfig?: Partial<FieldConfig> | null,
 ): ContactExportColumn[] {
-  return DEFAULT_CONTACT_EXPORT_COLUMNS.map((column) => {
+  const allColumns = resolveAllContactExportColumns(fieldConfig);
+  return allColumns.map((column) => {
     const key = `contacts.columns.${column.id}` as AppTranslationKey;
     const translated = t(key);
     return {
@@ -111,6 +123,7 @@ export function defaultContactsExportColumns(
 export function resolveContactsExportColumns(
   columns: Array<{ id?: string; key?: string; label?: string; labelKey?: AppTranslationKey }>,
   t: (key: AppTranslationKey) => string,
+  fieldConfig?: Partial<FieldConfig> | null,
 ): ContactExportColumn[] {
   const mapped = columns
     .map((col) => {
@@ -121,7 +134,7 @@ export function resolveContactsExportColumns(
     .filter((col) => col.id.length > 0 && col.id.length <= 64 && col.label.length > 0);
 
   if (mapped.length === 0) {
-    return defaultContactsExportColumns(t);
+    return defaultContactsExportColumns(t, fieldConfig);
   }
   return mapped.slice(0, 200);
 }

@@ -83,6 +83,8 @@ export async function findContactDuplicateCandidateIds(
     matchClauses.push(sql`${nameKeySql(prefixRegex)} = ${name}`);
   }
 
+  if (matchClauses.length === 0) return [];
+
   const whereParts: SQL[] = [
     activeWorkspaceWhere(subdomain),
     sql`(${sql.join(matchClauses, sql` OR `)})`,

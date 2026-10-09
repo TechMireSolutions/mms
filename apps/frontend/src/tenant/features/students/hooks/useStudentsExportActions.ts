@@ -1,9 +1,11 @@
 import {
   DEFAULT_STUDENT_EXPORT_COLUMNS,
+  mergeCustomStudentExportColumns,
   studentColumnLabelKey,
   type AppTranslationKey,
   type StudentExportColumn,
   type StudentsListQuery,
+  type StudentsSettings,
 } from "@mms/shared";
 import { startServerStudentsCsvExport } from "@/lib/backgroundJobs/startServerStudentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
@@ -87,9 +89,11 @@ export function useStudentsExportActions({
 /** Default Work export columns when registry is unavailable. */
 export function defaultStudentsExportColumns(
   t: (key: AppTranslationKey) => string,
+  settings?: StudentsSettings | null,
 ): StudentExportColumn[] {
-  return DEFAULT_STUDENT_EXPORT_COLUMNS.map((column) => ({
+  const base = DEFAULT_STUDENT_EXPORT_COLUMNS.map((column) => ({
     id: column.id,
     label: t(studentColumnLabelKey(column.id)),
   }));
+  return mergeCustomStudentExportColumns(base, settings);
 }

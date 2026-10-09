@@ -2,7 +2,8 @@ import type { Contact } from './contactTypes.js';
 import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
 
 /** Normalizes a string for search comparison by stripping diacritics/accents and standardizing common Arabic/Urdu/Persian letters. */
-export function normalizeSearchString(val: string): string {
+export function normalizeSearchString(val?: string | null): string {
+  if (typeof val !== 'string') return '';
   return val
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // remove English/Latin diacritics
@@ -13,21 +14,27 @@ export function normalizeSearchString(val: string): string {
 }
 
 /** Approved Work-tab search haystack (globle1 §3.2). */
-export function getContactSearchHaystack(contact: Contact): string {
+export function getContactSearchHaystack(contact?: Contact | null): string {
+  if (!contact || typeof contact !== 'object') return '';
   const parts: Array<string | null | undefined> = [
     contact.name,
     contact.firstName,
     contact.lastName,
+    contact.cnic,
     getPrimaryPhone(contact),
+    contact.phone,
+    ...((contact.phones || []).map((p) => p?.number)),
     getPrimaryEmail(contact),
-    ...((contact.emails || []).map((email) => email.address)),
-    ...((contact.addresses || []).map((address) => [address.city, address.state, address.country, address.line1].filter(Boolean).join(' '))),
+    contact.email,
+    ...((contact.emails || []).map((email) => email?.address)),
+    ...((contact.addresses || []).map((address) => address ? [address.city, address.state, address.country, address.line1].filter(Boolean).join(' ') : '')),
   ];
   return normalizeSearchString(parts.filter((part): part is string => Boolean(part)).join(' '));
 }
 
-export function contactMatchesSearch(contact: Contact, query: string): boolean {
-  const normalizedQuery = normalizeSearchString(query.trim());
+export function contactMatchesSearch(contact?: Contact | null, query?: string | null): boolean {
+  if (!contact || typeof contact !== 'object') return false;
+  const normalizedQuery = normalizeSearchString(typeof query === 'string' ? query.trim() : '');
   if (!normalizedQuery) return true;
   return getContactSearchHaystack(contact).includes(normalizedQuery);
 }

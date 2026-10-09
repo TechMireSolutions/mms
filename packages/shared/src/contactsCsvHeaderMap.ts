@@ -15,6 +15,8 @@ const BASE_HEADER_ALIASES: Record<string, string[]> = {
   lastName: ['lastname', 'last', 'last_name', 'surname', 'familyname'],
   gender: ['gender', 'sex'],
   dob: ['dob', 'dateofbirth', 'birthdate', 'birthday'],
+  solarDob: ['solardob', 'solar_dob', 'solardateofbirth'],
+  lunarDob: ['lunardob', 'lunar_dob', 'hijridob', 'hijridateofbirth', 'lunardateofbirth'],
   cnic: ['cnic', 'nationalid', 'cnicnationalid', 'idnumber'],
   isSyed: ['issyed', 'syed'],
   avatar: ['avatar', 'avatarurl', 'photo', 'picture', 'image'],

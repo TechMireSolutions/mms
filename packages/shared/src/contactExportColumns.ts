@@ -33,6 +33,8 @@ export const ALL_CONTACT_FORM_EXPORT_COLUMNS: readonly ContactExportColumn[] = [
   { id: 'lastName', label: 'Last Name' },
   { id: 'gender', label: 'Gender' },
   { id: 'dob', label: 'Date of Birth' },
+  { id: 'solarDob', label: 'Solar Date of Birth' },
+  { id: 'lunarDob', label: 'Lunar (Hijri) Date of Birth' },
   { id: 'cnic', label: 'CNIC / National ID' },
   { id: 'isSyed', label: 'Is Syed' },
   { id: 'avatar', label: 'Avatar URL' },
