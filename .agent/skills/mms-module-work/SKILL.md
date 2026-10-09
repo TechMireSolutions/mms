@@ -25,6 +25,7 @@ metadata:
 - **Filters SSOT**: Single filter menu via `ModuleFilterDropdown` / `ModuleFiltersMenuButton`. Active state indicated by count badge + Clear CTA; never duplicate active filters in a permanent pill bar.
 - **Selection SSOT**: Page controller owns row selection via `useWorkSelection`; list-local selection state is banned.
 - **Virtualization**: Mandatory `@tanstack/react-virtual` row virtualization whenever collection items > 30.
+- **Data Transfer & Import/Export**: Form module CSV import dialogs wrap `ModuleImportDialog` via `useModuleCsvImportActions` consuming the module's SSOT `ModuleTransferSchema` from `@mms/shared`. Exports enforce Field Whitelist metadata stripping and 1:1 bidirectional header symmetry.
 
 ## 2. Implementation map
 
@@ -36,6 +37,8 @@ metadata:
 | Card actions | `useWorkCardAction` |
 | Toolbar / trash | `ModuleWorkToolbar`, `ModuleTrashToggle` |
 | Panel IO row | `ModuleEntityIoToolbar` (Export / Import / Add; Faculty wraps via `FacultyTabIoToolbar`) |
+| Data Transfer / Import | `ModuleImportDialog`, `useModuleCsvImportActions`, `ModuleTransferSchema` (`@mms/shared`) |
+| Data Transfer / Export | `useModuleServerCsvExportActions`, `buildExportGrid`, `runGridCsvExportJob` |
 | Bulk | `ModuleUniversalBulkActionBar`, `ModuleWorkBulkActionBar`, `BulkSelectionDeleteAction`, `BulkSelectionRestoreAction` |
 | Archive chrome | `@/components/ui/DetailDrawerArchiveChrome` (`EntityArchivedBanner`, `DetailDrawerArchivedBanner`) |
 

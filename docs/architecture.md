@@ -78,6 +78,7 @@ can be reorganized **without changing consumers**. Recommended target structure
 ```
 packages/shared/src/
   contacts/        # contact DTOs, normalization, dedupe, validation
+  dataTransfer/    # module transfer schemas, import/export SSOT, system metadata stripping
   branding/        # theme tokens, color math, css variable builders
   backup/          # backup envelope/crypto/validation
   messaging/       # messaging types, template helpers

@@ -17,6 +17,7 @@ import { hasanatUseCases } from '../../hasanat/use-cases/hasanatUseCases.js';
 import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
 import { hasanatSetupConfigRoutes } from './hasanatSetupConfigRoutes.js';
 import { hasanatContractRouter } from './hasanat/hasanatContractRouter.js';
+import { hasanatExportRoutes } from './hasanat/hasanatExportRoutes.js';
 
 const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.collectionKey;
 const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_MANIFEST.denomCollectionKey;
@@ -37,6 +38,7 @@ export default async function hasanatRoutes(
     async (sub) => {
       await sub.register(hasanatReportRoutes);
       await sub.register(hasanatSetupConfigRoutes);
+      await sub.register(hasanatExportRoutes);
 
       registerMetricsRoute(sub, {
         collection: HASANAT_DISTRIBUTIONS_COLLECTION,

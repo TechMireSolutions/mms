@@ -22,6 +22,7 @@ const StudentIdCardModal = lazy(() =>
     default: m.StudentIdCardModal,
   })),
 );
+import { StudentsCsvImportDialog } from "@/tenant/features/students/components/StudentsCsvImportDialog";
 
 export const StudentsPageOverlays = (function StudentsPageOverlays({
   showStudentForm,
@@ -53,6 +54,8 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
   onPrintIdCard,
   onViewStudent,
   onViewContact,
+  importOpen = false,
+  onCloseImport,
 }: StudentsPageOverlaysProps): React.JSX.Element {
   const sessions = useSessionsCollection();
 
@@ -139,6 +142,14 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
             />
           </Suspense>
         </ErrorBoundary>
+      ) : null}
+
+      {importOpen && onCloseImport ? (
+        <StudentsCsvImportDialog
+          open={importOpen}
+          onClose={onCloseImport}
+          canWrite={canWrite}
+        />
       ) : null}
     </>
   );

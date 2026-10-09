@@ -1,10 +1,11 @@
 import React, { Suspense } from 'react';
-import { UserCog, Download, Mail, Plus, UserPlus } from 'lucide-react';
+import { UserCog, Download, Mail, Plus, UserPlus, Upload } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { UsersModalLayer } from '@/tenant/features/users/components/UsersModalLayer';
+import { UsersCsvImportDialog } from '@/tenant/features/users/components/UsersCsvImportDialog';
 import { UsersWorkTier } from '@/tenant/features/users/components/UsersWorkTier';
 import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCommandMetrics';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -29,6 +30,8 @@ const UsersSetupTier = React.lazy(() =>
 export default function UsersPage(): React.JSX.Element {
   const controller = useUsersPageController();
 
+  const [importOpen, setImportOpen] = React.useState(false);
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${controller.t('page.users.title')}`}
@@ -50,6 +53,13 @@ export default function UsersPage(): React.JSX.Element {
             ) : null}
             {controller.canWrite && !controller.showDeleted ? (
               <>
+                <ActionButton
+                  variant="secondary"
+                  icon={Upload}
+                  onClick={() => setImportOpen(true)}
+                >
+                  {controller.t('common.import')}
+                </ActionButton>
                 <ActionButton
                   variant="secondary"
                   icon={Mail}
@@ -117,6 +127,11 @@ export default function UsersPage(): React.JSX.Element {
       </ResponsiveAccordionTabs>
 
       <UsersModalLayer {...controller.modalLayerProps} />
+      <UsersCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={controller.canWrite}
+      />
     </ModulePageShell>
   );
 }

@@ -292,6 +292,12 @@ The shared package maintains single sources of truth for both frontend and backe
 - **[`stripFacultyWriteNoise`](file:///Users/syedaalin/Documents/mms/packages/shared/src/facultyUtils.ts):** Strips personal contact fields (`firstName`, `lastName`, `phone`, `email`, `nationalId`, `avatarUrl`) from writes before they hit the faculty table.
 - **[`resolveFacultyDisplayName`](file:///Users/syedaalin/Documents/mms/apps/frontend/src/tenant/features/faculty/components/facultyFieldDisplay.ts):** Gracefully resolves a display name across linked Contact models, legacy profile names, or localized placeholder fallbacks.
 
+### 5.3 Standardized Data Transfer & Symmetrical CSV Schemas (`@mms/shared`)
+Faculty data transfer implements the monorepo's DRY, symmetric SSOT transfer architecture:
+- **[`facultyTransferSchema`](file:///Users/syedaalin/Documents/mms/packages/shared/src/dataTransfer/schemas/facultyTransferSchema.ts):** Unified schema for Faculty Member CSV export and import. Enforces strict Field Whitelist by stripping internal metadata (`id`, `tenantId`, `createdAt`, `updatedAt`, `deletedAt`). Guaranteed 1:1 header symmetry between exported columns and import mappings.
+- **[`facultyDesignationTransferSchema`](file:///Users/syedaalin/Documents/mms/packages/shared/src/dataTransfer/schemas/facultyDesignationTransferSchema.ts):** Unified SSOT schema for Faculty Designation CSV export, import mappings, and template generation.
+- **Frontend Dialog Integration ([`FacultyCsvImportDialog.tsx`](file:///Users/syedaalin/Documents/mms/apps/frontend/src/tenant/features/faculty/components/FacultyCsvImportDialog.tsx)):** Employs the generic [`ModuleImportDialog`](file:///Users/syedaalin/Documents/mms/apps/frontend/src/components/ui/ModuleImportDialog.tsx) driven by `useModuleCsvImportActions`, consuming schemas without ad-hoc mapping duplication.
+
 ---
 
 ## 6. Frontend Architecture (React 19 & TanStack Query v5)

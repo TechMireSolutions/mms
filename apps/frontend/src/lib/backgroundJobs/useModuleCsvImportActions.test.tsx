@@ -117,4 +117,51 @@ describe("useModuleCsvImportActions", () => {
     expect(hookResult.missingHeaders).toContain("Name");
     expect(hookResult.parsedRows).toHaveLength(0);
   });
+
+  it("supports passing ModuleTransferSchema directly", async () => {
+    const { contactsTransferSchema } = await import("@mms/shared");
+    const { triggerFileDownload } = await import("@/lib/download");
+
+    let schemaHookResult: ReturnType<typeof useModuleCsvImportActions> = undefined as unknown as ReturnType<
+      typeof useModuleCsvImportActions
+    >;
+
+    function SchemaHookTester() {
+      schemaHookResult = useModuleCsvImportActions({
+        apiPath: "/api/contacts/import",
+        schema: contactsTransferSchema,
+      });
+      return null;
+    }
+
+    act(() => {
+      root.render(<SchemaHookTester />);
+    });
+
+    act(() => {
+      schemaHookResult.handleDownloadTemplate();
+    });
+
+    expect(triggerFileDownload).toHaveBeenCalledWith(
+      expect.any(Blob),
+      "contacts.csv",
+    );
+
+    const contactCsv = new File(
+      ['Full Name,Phone Number,Is Syed\n"Ammar Yasir",+923001234567,Yes'],
+      "contacts.csv",
+      { type: "text/csv" },
+    );
+
+    await act(async () => {
+      await schemaHookResult.handleFileSelect(contactCsv);
+    });
+
+    expect(schemaHookResult.parsedRows).toHaveLength(1);
+    expect(schemaHookResult.parsedRows[0]).toMatchObject({
+      name: "Ammar Yasir",
+      phone: "+923001234567",
+      isSyed: true,
+    });
+  });
 });

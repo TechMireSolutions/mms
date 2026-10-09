@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { buildTenantExportFilename, type BackgroundJobRecord } from "@mms/shared";
+import {
+  buildTenantExportFilename,
+  isSystemMetadataKey,
+  type BackgroundJobRecord,
+} from "@mms/shared";
 import { useOptionalTenant } from "@/lib/contexts/TenantContext";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import {
@@ -59,7 +63,9 @@ export interface UseModuleServerCsvExportActionsOptions<
 }
 
 const sanitizeColumns = (cols: ModuleServerCsvExportColumn[]) =>
-  cols.map((c) => ({ id: c.id, label: c.label }));
+  cols
+    .filter((c) => !isSystemMetadataKey(c.id) && !isSystemMetadataKey(c.label))
+    .map((c) => ({ id: c.id, label: c.label }));
 
 /**
  * Shared filtered + selection server CSV export flow (Contacts / Students / Teachers / Enrollments).

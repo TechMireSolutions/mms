@@ -7,70 +7,40 @@ import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { accountingTransferSchema } from "@mms/shared";
+import { useGenericModuleExport } from "@/lib/backgroundJobs/useGenericModuleExport";
 import { AccountingPageHeaderActions } from "@/tenant/features/accounting/components/AccountingPageHeaderActions";
+import { AccountingCsvImportDialog } from "@/tenant/features/accounting/components/AccountingCsvImportDialog";
 import { AccountingWorkTier } from "@/tenant/features/accounting/components/AccountingWorkTier";
 import { AccountingCommandMetrics } from "@/tenant/features/accounting/components/AccountingCommandMetrics";
 import { ACCOUNTING_PAGE_ICON } from "@/tenant/features/accounting/accountingPageSubTabs";
 import { JOURNAL_PAGE_SIZE } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { useAccountingPageController } from "@/tenant/features/accounting/hooks/useAccountingPageController";
 
-const AccountingReportsTier = React.lazy(() =>
-  import("@/tenant/features/accounting/components/AccountingReportsTier").then((m) => ({
-    default: m.AccountingReportsTier,
-  }))
-);
-const AccountingSetupTier = React.lazy(() =>
-  import("@/tenant/features/accounting/components/AccountingSetupTier").then((m) => ({
-    default: m.AccountingSetupTier,
-  }))
-);
+const AccountingReportsTier = React.lazy(() => import("@/tenant/features/accounting/components/AccountingReportsTier").then((m) => ({ default: m.AccountingReportsTier })));
+const AccountingSetupTier = React.lazy(() => import("@/tenant/features/accounting/components/AccountingSetupTier").then((m) => ({ default: m.AccountingSetupTier })));
 
 /**
  * Accounting and bookkeeping — Work | Reports | Setup.
  */
 export default function Accounting() {
+  const c = useAccountingPageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: "/api/accounting/export/csv",
+    filename: "accounting-journals.csv",
+    auditPath: "/api/accounting/export-audit",
+    columns: accountingTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
   const {
-    t,
-    canWrite,
-    canDelete,
-    pageTabs,
-    subTabs,
-    activeTab,
-    setActiveTab,
-    activeSubTab,
-    setActiveSubTab,
-    showDeleted,
-    setShowDeleted,
-    createJournalRequestKey,
-    createAccountRequestKey,
-    accounts,
-    journalEntries,
-    aggregateEntries,
-    fiscalYears,
-    accountsResult,
-    entriesResult,
-    aggregateEntriesResult,
-    journalTotal,
-    filteredCount,
-    setFilteredCount,
-    settings,
-    activeFiscalYear,
-    activeCurrency,
-    listLoadFailed,
-    journalList,
-    journalColumnLayout,
-    accountColumnLayout,
-    setAccounts,
-    setEntries,
-    setFiscalYears,
-    handleDeleteEntry,
-    handleRestoreEntry,
-    handleBulkDeleteEntries,
-    handleBulkRestoreEntries,
-    handleShortcutStateChange,
-    openJournalCreate,
-    openAccountCreate,
-  } = useAccountingPageController();
+    t, canWrite, canDelete, pageTabs, subTabs, activeTab, setActiveTab, activeSubTab, setActiveSubTab, showDeleted,
+    setShowDeleted, createJournalRequestKey, createAccountRequestKey, accounts, journalEntries, aggregateEntries,
+    fiscalYears, accountsResult, entriesResult, aggregateEntriesResult, journalTotal, filteredCount, setFilteredCount,
+    settings, activeFiscalYear, activeCurrency, listLoadFailed, journalList, journalColumnLayout, accountColumnLayout,
+    setAccounts, setEntries, setFiscalYears, handleDeleteEntry, handleRestoreEntry, handleBulkDeleteEntries,
+    handleBulkRestoreEntries, handleShortcutStateChange, openJournalCreate, openAccountCreate,
+  } = c;
 
   return (
     <ModulePageShell
@@ -82,9 +52,13 @@ export default function Accounting() {
       headerActions={
         <AccountingPageHeaderActions
           canWrite={canWrite}
+          canExport={canWrite}
+          isExporting={isExporting}
           showDeleted={showDeleted}
           activeFiscalYear={activeFiscalYear}
           onCreateJournal={openJournalCreate}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
         />
       }
       metricsStrip={
@@ -212,6 +186,12 @@ export default function Accounting() {
           </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
+
+      <AccountingCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={canWrite}
+      />
     </ModulePageShell>
   );
 }

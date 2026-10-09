@@ -25,6 +25,21 @@ describe("StudentsPageHeaderActions Component", () => {
     expect(html).toContain("action.addStudent");
   });
 
+  it("renders import button when onImport is provided and canWrite is true", () => {
+    const html = renderToStaticMarkup(
+      <StudentsPageHeaderActions
+        canExport={true}
+        canWrite={true}
+        viewingDeleted={false}
+        onExport={vi.fn()}
+        onAddStudent={vi.fn()}
+        onImport={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("common.import");
+  });
+
   it("hides buttons when viewingDeleted is true", () => {
     const html = renderToStaticMarkup(
       <StudentsPageHeaderActions

@@ -24,6 +24,7 @@ import {
 import { getEligibleTaskAssignees } from '../../services/taskEligibleAssigneesService.js';
 import { getTenantTaskSettings, updateTenantTaskSettings } from '../../services/taskSettingsService.js';
 import { registerTasksSoftDeleteRoutes } from './tasksSoftDeleteRoutes.js';
+import { tasksExportRoutes } from './tasksExportRoutes.js';
 
 export default async function tasksRoutes(
   fastify: FastifyInstance,
@@ -178,4 +179,5 @@ export default async function tasksRoutes(
   });
 
   await registerTasksSoftDeleteRoutes(fastify);
+  await fastify.register(tasksExportRoutes, { prefix: '/api/tasks' });
 }

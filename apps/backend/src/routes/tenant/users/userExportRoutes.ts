@@ -4,13 +4,16 @@ import { registerModuleCsvExportRoutes } from '../../../lib/registerModuleCsvExp
 import {
   canDeleteCollection,
   canReadCollection,
+  canWriteCollection,
 } from '../../../services/rbacService.js';
 import {
   moduleExportAuditBodySchema as userExportAuditSchema,
   usersCsvExportBodySchema,
+  usersImportBodySchema,
 } from '@mms/shared';
+import { registerModuleCsvImportRoutes } from '../../../lib/registerModuleCsvImportRoutes.js';
 
-/** Users CSV export queue and export audit logging. */
+/** Users CSV export queue, import queue, and export audit logging. */
 export const userExportRoutes: FastifyPluginAsync = async (fastify) => {
   registerModuleCsvExportRoutes(fastify, {
     canRead: (user) => canReadCollection(user, 'users'),
@@ -22,5 +25,14 @@ export const userExportRoutes: FastifyPluginAsync = async (fastify) => {
     exportAuditAction: 'user.export',
     queueAuditAction: 'user.export.queue',
     exportAuditSchema: userExportAuditSchema,
+  });
+
+  registerModuleCsvImportRoutes(fastify, {
+    canWrite: (user) => canWriteCollection(user, 'users'),
+    bodySchema: usersImportBodySchema,
+    moduleId: USERS_MODULE_MANIFEST.moduleId,
+    defaultLabel: 'Importing users…',
+    entityNoun: 'user',
+    queueAuditAction: 'user.import',
   });
 };

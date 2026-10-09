@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Download, Send, Upload } from "lucide-react";
 import type { AppTranslationKey } from '@mms/shared';
 import { ActionButton } from "@/components/ui/ActionButton";
 import {
@@ -13,21 +13,45 @@ import { MESSAGING_CHANNEL_CONFIG } from "../config";
 
 interface MessagingPageHeaderActionsProps {
   canWrite: boolean;
+  canExport?: boolean;
+  isExporting?: boolean;
   startingCampaign: boolean;
   onStartCampaign: (channel: "whatsapp" | "sms" | "email") => void;
+  onImport?: () => void;
+  onExport?: () => void;
 }
 
 export function MessagingPageHeaderActions({
   canWrite,
+  canExport = true,
+  isExporting = false,
   startingCampaign,
   onStartCampaign,
+  onImport,
+  onExport,
 }: MessagingPageHeaderActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
   if (!canWrite) return null;
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-2">
+      {canExport && onExport ? (
+        <ActionButton
+          variant="ghost"
+          icon={Download}
+          onClick={onExport}
+          loading={isExporting}
+          disabled={isExporting}
+        >
+          {t("common.export")}
+        </ActionButton>
+      ) : null}
+      {onImport ? (
+        <ActionButton variant="secondary" icon={Upload} onClick={onImport}>
+          {t("common.import")}
+        </ActionButton>
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ActionButton

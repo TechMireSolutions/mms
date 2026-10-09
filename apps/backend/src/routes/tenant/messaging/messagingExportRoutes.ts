@@ -1,7 +1,12 @@
 import crypto from 'node:crypto';
 import type { FastifyPluginAsync } from 'fastify';
 import type { BackgroundJobRecord, User } from '@mms/shared';
-import { MESSAGING_MODULE_MANIFEST, messagingCsvExportBodySchema } from '@mms/shared';
+import {
+  MESSAGING_MODULE_MANIFEST,
+  messagingCsvExportBodySchema,
+  messagingImportBodySchema,
+} from '@mms/shared';
+import { registerModuleCsvImportRoutes } from '../../../lib/registerModuleCsvImportRoutes.js';
 import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
@@ -94,6 +99,15 @@ export const messagingExportRoutes: FastifyPluginAsync = async (fastify) => {
       );
 
       return reply.status(202).send({ job });
+    });
+
+    registerModuleCsvImportRoutes(scoped, {
+      canWrite: (user) => canWriteMessaging(user),
+      bodySchema: messagingImportBodySchema,
+      moduleId: MESSAGING_MODULE_MANIFEST.moduleId,
+      defaultLabel: 'Importing messaging templates…',
+      entityNoun: 'template',
+      queueAuditAction: 'messaging.import',
     });
   });
 };

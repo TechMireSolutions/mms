@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { GraduationCap, UserPlus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
@@ -39,6 +39,7 @@ export function StudentsPageView({
   pageOverlaysProps,
 }: StudentsPageViewProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [importOpen, setImportOpen] = useState(false);
 
   return (
     <ModulePageShell
@@ -55,6 +56,7 @@ export function StudentsPageView({
           onExport={() => {
             void handleExportCSV();
           }}
+          onImport={() => setImportOpen(true)}
           onAddStudent={openCreateForm}
         />
       }
@@ -108,7 +110,11 @@ export function StudentsPageView({
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <StudentsPageOverlays {...pageOverlaysProps} />
+      <StudentsPageOverlays
+        {...pageOverlaysProps}
+        importOpen={importOpen}
+        onCloseImport={() => setImportOpen(false)}
+      />
     </ModulePageShell>
   );
 }

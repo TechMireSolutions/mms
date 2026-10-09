@@ -10,6 +10,7 @@ import { financeReportRoutes } from './finance/financeReportRoutes.js';
 import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js';
 import { financeBillingRoutes } from './finance/financeBillingRoutes.js';
 import { financeCollectRoutes } from './finance/financeCollectRoutes.js';
+import { financeExportRoutes } from './finance/financeExportRoutes.js';
 import { financeContractRouter } from './finance/financeContractRouter.js';
 
 const FINANCE_COLLECTION = FINANCE_MODULE_MANIFEST.collectionKey;
@@ -29,6 +30,7 @@ export default async function financeRoutes(
   await fastify.register(financeSetupConfigRoutes, { prefix: '/api/finance' });
   await fastify.register(financeBillingRoutes, { prefix: '/api/finance' });
   await fastify.register(financeCollectRoutes, { prefix: '/api/finance' });
+  await fastify.register(financeExportRoutes, { prefix: '/api/finance' });
 
   await fastify.register(
     async (sub) => {

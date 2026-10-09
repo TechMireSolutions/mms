@@ -11,6 +11,7 @@
  *   - buildUsersExportRows
  */
 import type { ExportColumn, ExportCellExtractor } from '../core/exportTypes.js';
+import { filterNonMetadataColumns } from '../core/systemMetadata.js';
 
 // ---------------------------------------------------------------------------
 // Primary export
@@ -23,6 +24,7 @@ import type { ExportColumn, ExportCellExtractor } from '../core/exportTypes.js';
  * - Rows 1…N are entity data: one cell per column, derived via `extractCell`.
  * - `null` / `undefined` cell values become empty strings here so serialisers
  *   receive a clean `unknown[][]` with no missing entries.
+ * - System metadata columns are strictly stripped per Field Whitelist invariant.
  *
  * @param rows        - Entity records to export.
  * @param columns     - Columns to include (already filtered by visibility).
@@ -33,9 +35,10 @@ export function buildExportGrid<TRow>(
   columns: ExportColumn[],
   extractCell: ExportCellExtractor<TRow>,
 ): unknown[][] {
-  const header = columns.map((col) => col.label);
+  const safeColumns = filterNonMetadataColumns(columns);
+  const header = safeColumns.map((col) => col.label);
   const dataRows = rows.map((row) =>
-    columns.map((col) => {
+    safeColumns.map((col) => {
       const val = extractCell(row, col.id);
       return val === null || val === undefined ? '' : val;
     }),
@@ -53,6 +56,7 @@ export function buildExportGrid<TRow>(
  * serialiser without materialising the full result in memory.
  *
  * The header row is yielded first.
+ * System metadata columns are strictly stripped per Field Whitelist invariant.
  */
 export function* yieldExportGridChunks<TRow>(
   rows: TRow[],
@@ -60,14 +64,16 @@ export function* yieldExportGridChunks<TRow>(
   extractCell: ExportCellExtractor<TRow>,
   chunkSize = 100,
 ): Generator<unknown[][], void, undefined> {
-  yield [columns.map((col) => col.label)];
+  const safeColumns = filterNonMetadataColumns(columns);
+  yield [safeColumns.map((col) => col.label)];
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
     yield chunk.map((row) =>
-      columns.map((col) => {
+      safeColumns.map((col) => {
         const val = extractCell(row, col.id);
         return val === null || val === undefined ? '' : val;
       }),
     );
   }
 }
+

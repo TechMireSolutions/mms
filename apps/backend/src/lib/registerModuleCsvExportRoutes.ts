@@ -1,11 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeAny } from 'zod';
 import type { User } from '@mms/shared';
+import { isSystemMetadataKey, moduleExportAuditBodySchema } from '@mms/shared';
 import { getRequestTenant } from './tenantContext.js';
 import { enqueueCsvExportJob, normalizeExportQuery } from './csvExportEnqueue.js';
 import { sendForbidden, sendServiceUnavailable } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
-import { moduleExportAuditBodySchema } from '@mms/shared';
 import { recordModernAuditEvent, mapActionStringToAuditType } from '../services/auditTrailService.js';
 import { logger } from './logger.js';
 import { QueueUnavailableError } from '../services/backgroundJobWorkerService.js';
@@ -56,6 +56,10 @@ export function registerModuleCsvExportRoutes(
       query.includeIds = data.ids.map(String);
     }
 
+    const safeColumns = data.columns
+      ? data.columns.filter((c) => !isSystemMetadataKey(c.id) && !isSystemMetadataKey(c.label))
+      : undefined;
+
     const label = data.label?.trim() || options.defaultLabel;
     let job;
     try {
@@ -65,7 +69,7 @@ export function registerModuleCsvExportRoutes(
         moduleId: options.moduleId,
         label,
         query,
-        columns: data.columns,
+        columns: safeColumns,
         filename: data.filename,
         viewerRole: user.role,
         allowDeleted,

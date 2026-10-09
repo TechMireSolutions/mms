@@ -6,10 +6,13 @@ import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { obligationsTransferSchema } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { ObligationsModalLayer } from '@/tenant/features/obligations/components/ObligationsModalLayer';
 import { ObligationsPageActions } from '@/tenant/features/obligations/components/ObligationsPageActions';
 import { ObligationsWorkTier } from '@/tenant/features/obligations/components/ObligationsWorkTier';
 import { ObligationsCommandMetrics } from '@/tenant/features/obligations/components/ObligationsCommandMetrics';
+import { ObligationsCsvImportDialog } from '@/tenant/features/obligations/components/ObligationsCsvImportDialog';
 import { useObligationsPageController } from '@/tenant/features/obligations/hooks/useObligationsPageController';
 
 const ObligationsReportsTier = lazy(() =>
@@ -28,6 +31,14 @@ const ObligationsSetupTier = lazy(() =>
  */
 export default function Obligations() {
   const c = useObligationsPageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/obligations/export/csv',
+    filename: 'obligations.csv',
+    auditPath: '/api/obligations/export-audit',
+    columns: obligationsTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
 
   return (
     <ModulePageShell
@@ -39,8 +50,12 @@ export default function Obligations() {
       headerActions={
         <ObligationsPageActions
           canWrite={c.canWrite}
+          canExport={c.canWrite}
+          isExporting={isExporting}
           showDeleted={c.showDeleted}
           onCreate={() => c.setShowForm(true)}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
         />
       }
       metricsStrip={
@@ -69,6 +84,7 @@ export default function Obligations() {
                 <ModuleEntityIoToolbar
                   canWrite={c.canWrite}
                   viewingDeleted={c.showDeleted}
+                  onImport={() => setImportOpen(true)}
                   onAdd={() => c.setShowForm(true)}
                   addLabel={c.t('obligations.newCollection')}
                   addIcon={Plus}
@@ -148,6 +164,12 @@ export default function Obligations() {
         onCloseForm={() => c.setShowForm(false)}
         onCloseDetail={() => c.setViewCollection(null)}
         onCloseComposer={c.closeComposer}
+      />
+
+      <ObligationsCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWrite}
       />
     </ModulePageShell>
   );

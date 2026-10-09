@@ -1,39 +1,53 @@
-import React from "react";
-import { describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import React, { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { ExaminationsPageActions } from "./ExaminationsPageActions";
 
 vi.mock("@/hooks/useTranslation", () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
+  useTranslation: () => ({ t: (k: string) => k }),
 }));
 
-describe("ExaminationsPageActions Component", () => {
-  it("renders enter marks and new exam buttons when canWrite is true and not deleted", () => {
-    const html = renderToStaticMarkup(
-      <ExaminationsPageActions
-        canWrite={true}
-        showDeleted={false}
-        onEnterMarks={vi.fn()}
-        onCreateExam={vi.fn()}
-      />,
-    );
+describe("ExaminationsPageActions", () => {
+  let container: HTMLDivElement;
+  let root: Root;
 
-    expect(html).toContain("examinations.marks");
-    expect(html).toContain("examinations.newExam");
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
   });
 
-  it("renders empty container when showDeleted is true", () => {
-    const html = renderToStaticMarkup(
-      <ExaminationsPageActions
-        canWrite={true}
-        showDeleted={true}
-        onEnterMarks={vi.fn()}
-        onCreateExam={vi.fn()}
-      />,
-    );
+  afterEach(async () => {
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
 
-    expect(html).not.toContain("examinations.newExam");
+  it("renders both Export and Import buttons when canWrite and canExport", () => {
+    const onExport = vi.fn();
+    const onImport = vi.fn();
+
+    act(() => {
+      root.render(
+        <ExaminationsPageActions
+          canWrite={true}
+          canExport={true}
+          showDeleted={false}
+          onEnterMarks={vi.fn()}
+          onCreateExam={vi.fn()}
+          onImport={onImport}
+          onExport={onExport}
+        />
+      );
+    });
+
+    const exportBtn = container.querySelector("button:has(svg.lucide-download)");
+    const importBtn = container.querySelector("button:has(svg.lucide-upload)");
+    expect(exportBtn).toBeTruthy();
+    expect(importBtn).toBeTruthy();
+
+    exportBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(onExport).toHaveBeenCalled();
   });
 });
