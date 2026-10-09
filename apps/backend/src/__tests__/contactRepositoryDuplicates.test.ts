@@ -70,6 +70,19 @@ describe('contactRepositoryDuplicates (SQL)', () => {
     expect(mockTxExecute).not.toHaveBeenCalled();
   });
 
+  it('findContactDuplicateCandidateIds returns empty when only an invalid-length cnic is provided without erroring', async () => {
+    const ids = await findContactDuplicateCandidateIds('Demo', {
+      phones: [],
+      emails: [],
+      name: '',
+      cnic: '12345',
+      namePrefixes: [],
+    });
+
+    expect(ids).toEqual([]);
+    expect(mockWithTenantTransaction).not.toHaveBeenCalled();
+  });
+
   it('findContactDuplicateCandidateIds selects matching ids through the tenant transaction', async () => {
     const { select } = createSelectMock([{ id: 'peer-1' }, { id: 'peer-2' }]);
     mockWithTenantTransaction.mockImplementation(

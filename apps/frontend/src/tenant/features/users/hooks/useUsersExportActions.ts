@@ -1,4 +1,9 @@
-import type { UserExportColumn, UsersListQuery } from '@mms/shared';
+import {
+  mergeCustomUserExportColumns,
+  type AppTranslationKey,
+  type UserExportColumn,
+  type UsersListQuery,
+} from '@mms/shared';
 import { startServerUsersCsvExport } from '@/lib/backgroundJobs/startServerUsersCsvExport';
 import { useModuleServerCsvExportActions } from '@/lib/backgroundJobs/useModuleServerCsvExportActions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -67,26 +72,23 @@ export function useUsersExportActions({
 
 /** Default Work export columns. */
 export function defaultUsersExportColumns(
-  t: (
-    key:
-      | 'users.colUser'
-      | 'users.fieldContactEmail'
-      | 'users.colRole'
-      | 'users.colStatus'
-      | 'users.fieldPhone'
-      | 'users.colLastLogin'
-      | 'users.colCreated'
-      | 'users.col2fa',
-  ) => string,
+  t: (key: AppTranslationKey) => string,
+  customColumns?: UserExportColumn[] | null,
 ): UserExportColumn[] {
-  return [
-    { id: 'name', label: t('users.colUser') },
-    { id: 'email', label: t('users.fieldContactEmail') },
-    { id: 'role', label: t('users.colRole') },
-    { id: 'status', label: t('users.colStatus') },
-    { id: 'phone', label: t('users.fieldPhone') },
-    { id: 'lastLogin', label: t('users.colLastLogin') },
-    { id: 'createdDate', label: t('users.colCreated') },
-    { id: 'twoFactorEnabled', label: t('users.col2fa') },
+  const base: UserExportColumn[] = [
+    { id: 'name', label: t('users.colUser' as AppTranslationKey) },
+    { id: 'email', label: t('users.fieldContactEmail' as AppTranslationKey) },
+    { id: 'loginEmail', label: t('users.fieldLoginEmail' as AppTranslationKey) || 'Login Email' },
+    { id: 'role', label: t('users.colRole' as AppTranslationKey) },
+    { id: 'roleSource', label: t('users.colRoleSource' as AppTranslationKey) || 'Role Source' },
+    { id: 'status', label: t('users.colStatus' as AppTranslationKey) },
+    { id: 'phone', label: t('users.fieldPhone' as AppTranslationKey) },
+    { id: 'twoFactorEnabled', label: t('users.col2fa' as AppTranslationKey) },
+    { id: 'mustChangePassword', label: t('users.colPasswordReset' as AppTranslationKey) || 'Password Reset' },
+    { id: 'lastLogin', label: t('users.colLastLogin' as AppTranslationKey) },
+    { id: 'createdDate', label: t('users.colCreated' as AppTranslationKey) },
+    { id: 'failedLoginAttempts', label: t('users.colFailedLogins' as AppTranslationKey) || 'Failed Logins' },
+    { id: 'activeSessions', label: t('users.colActiveSessions' as AppTranslationKey) || 'Active Sessions' },
   ];
+  return mergeCustomUserExportColumns(base, customColumns);
 }

@@ -101,7 +101,8 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
     (typeof withScalars.id === 'string' && withScalars.id.trim()) ||
     (typeof withScalars.id === 'number' && String(withScalars.id)) ||
     undefined;
-  const resolvedId = rawId ?? `temp-${Date.now()}`;
+  const resolvedId =
+    rawId ?? `temp-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`}`;
   const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId });
   return stripContactRetiredClassificationFields({ ...titled });
 }

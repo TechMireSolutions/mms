@@ -65,4 +65,12 @@ describe('contactSoftDelete', () => {
   it('filterActiveContacts excludes soft-deleted rows', () => {
     expect(filterActiveContacts([active, deleted])).toEqual([active]);
   });
+
+  it('safely handles null and undefined inputs', () => {
+    expect(isContactDeleted(null)).toBe(false);
+    expect(isContactDeleted(undefined)).toBe(false);
+    expect(filterActiveContacts(null)).toEqual([]);
+    expect(filterActiveContacts(undefined)).toEqual([]);
+    expect(filterActiveContacts([active, null as unknown as Contact, deleted])).toEqual([active]);
+  });
 });

@@ -121,5 +121,55 @@ describe('contactsExportUtils', () => {
       '2026-01-01T00:00:00.000Z',
     ]);
   });
+
+  it('resolves and merges custom fields and tabs in contact export columns', () => {
+    const fieldConfig = {
+      version: 1,
+      fields: {
+        basic: [
+          { key: 'bloodGroup', label: 'Blood Group', type: 'text' as const, enabled: true, order: 8, required: false },
+        ],
+      },
+      formTabs: [
+        { key: 'custom_medical', label: 'Medical History', enabled: true, order: 10 },
+      ],
+      enabledTabs: ['basic', 'custom_medical'],
+      requiredTabs: ['basic'],
+    };
+
+    const allColumns = filterContactExportColumnsForViewer([], fieldConfig, 'admin');
+    const ids = allColumns.map((c) => c.id);
+    expect(ids).toContain('bloodGroup');
+    expect(ids).toContain('custom_medical');
+    expect(ids).toContain('solarDob');
+    expect(ids).toContain('lunarDob');
+  });
+
+  it('extracts solarDob, lunarDob, and dynamic custom field types', () => {
+    const customColumns: ContactExportColumn[] = [
+      { id: 'solarDob', label: 'Solar DOB' },
+      { id: 'lunarDob', label: 'Lunar DOB' },
+      { id: 'bloodGroup', label: 'Blood Group' },
+      { id: 'isVaccinated', label: 'Vaccinated' },
+      { id: 'allergies', label: 'Allergies' },
+    ];
+
+    const contact = {
+      id: 'c-custom',
+      dob: '2000-01-01',
+      bloodGroup: 'B+',
+      isVaccinated: true,
+      allergies: ['Peanuts', 'Pollen'],
+    } as unknown as Contact;
+
+    const rows = buildContactsExportRows([contact], customColumns, labels);
+    expect(rows[1]).toEqual([
+      '2000-01-01',
+      expect.stringContaining('1420'), // Hijri conversion for 2000-01-01
+      'B+',
+      'Yes',
+      'Peanuts; Pollen',
+    ]);
+  });
 });
 

@@ -212,4 +212,41 @@ describe('contactsExportService', () => {
 
     expect(result.filename).toBe('al-huda_contacts.csv');
   });
+
+  it('exports custom fields and custom tabs when field config is present', async () => {
+    const fieldConfig = {
+      version: 1,
+      fields: {
+        basic: [
+          { key: 'bloodGroup', label: 'Blood Group', type: 'text', enabled: true, order: 8, required: false },
+        ],
+      },
+      formTabs: [
+        { key: 'custom_medical', label: 'Medical History', enabled: true, order: 10 },
+      ],
+      enabledTabs: ['basic', 'custom_medical'],
+      requiredTabs: ['basic'],
+    } as unknown as FieldConfig;
+    mockLoadContactFieldConfig.mockResolvedValue(fieldConfig);
+    mockLoadContactsPage.mockResolvedValueOnce({
+      contacts: [
+        fakeContact('c1', {
+          firstName: 'Fatima',
+          bloodGroup: 'O+',
+          custom_medical: [{ allergy: 'Penicillin' }],
+        } as Partial<Contact>),
+      ],
+      total: 1,
+      page: 1,
+      limit: 100,
+      hasMore: false,
+    });
+
+    const result = await buildContactsCsvExport({}, { viewerRole: 'admin' });
+
+    expect(result.count).toBe(1);
+    expect(result.csv).toContain('"Blood Group"');
+    expect(result.csv).toContain('"Medical History"');
+    expect(result.csv).toContain('O+');
+  });
 });

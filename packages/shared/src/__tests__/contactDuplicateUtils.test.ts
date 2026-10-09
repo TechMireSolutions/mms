@@ -3,7 +3,8 @@ import {
   findContactDuplicatePairs,
   getContactDuplicateCandidateKeys,
 } from '../contactDuplicateUtils.js';
-import { buildNamePrefixRegex } from '../contactDisplayUtils.js';
+import { buildNamePrefixRegex, getEmails } from '../contactDisplayUtils.js';
+import { getPhoneNumbers } from '../phoneUtils.js';
 import type { Contact } from '../contactTypes.js';
 
 function contact(id: string, name: string, phone?: string, email?: string): Contact {
@@ -51,6 +52,23 @@ describe('getContactDuplicateCandidateKeys', () => {
       name: 'ahmed',
       cnic: '',
     });
+  });
+
+  it('extracts scalar phone and email as candidate keys and handles null safely', () => {
+    const scalarContact: Contact = {
+      id: 'scalar-1',
+      name: 'Usman',
+      phone: '+92 300 9876543',
+      email: 'Usman@Example.com',
+    } as Contact;
+    const keys = getContactDuplicateCandidateKeys(scalarContact, {});
+    expect(keys.phones).toEqual(['3009876543']);
+    expect(keys.emails).toEqual(['usman@example.com']);
+
+    expect(getPhoneNumbers(null)).toEqual([]);
+    expect(getPhoneNumbers(undefined)).toEqual([]);
+    expect(getEmails(null)).toEqual([]);
+    expect(getEmails(undefined)).toEqual([]);
   });
 
   it('collapses internal whitespace in name keys', () => {

@@ -200,4 +200,21 @@ describe("useContactsCrudWriteActions.importContacts", () => {
     expect(onProgress).toHaveBeenCalledWith({ imported: 502, total: 600 });
     expect(onProgress).toHaveBeenLastCalledWith({ imported: 600, total: 600 });
   });
+
+  it("calculates exact failed count when a later batch throws without double-counting", async () => {
+    let callCount = 0;
+    startServerContactsImport.mockImplementation(async (options: { contacts: Contact[] }) => {
+      callCount++;
+      if (callCount === 1) return completedJob(480, options.contacts.length);
+      throw new Error("Batch 2 network failure");
+    });
+    renderHook();
+
+    await act(async () => {
+      await actions.importContacts(contacts(600));
+    });
+
+    expect(notifyBulkResult).toHaveBeenCalledWith(480, 120, "contacts.importSuccessOne", "contacts.importSuccess");
+    expect(invalidateContacts).toHaveBeenCalledTimes(1);
+  });
 });

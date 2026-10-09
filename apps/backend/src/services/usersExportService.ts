@@ -1,10 +1,10 @@
 import {
   USERS_MODULE_MANIFEST,
-  DEFAULT_USER_EXPORT_COLUMNS,
   buildCsvContent,
   buildUsersExportRows,
   extractUserCell,
   filterUserExportColumnsForViewer,
+  resolveAllUserExportColumns,
   type UserExportColumn,
   type UsersListQuery,
   type WorkspaceUser,
@@ -18,8 +18,6 @@ import {
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadUsersByIds, loadUsersPage } from './usersService.js';
 
-const DEFAULT_EXPORT_COLUMNS = DEFAULT_USER_EXPORT_COLUMNS as UserExportColumn[];
-
 export type UsersExportQueryInput = ModuleExportQueryInput<UsersListQuery>;
 export type UsersExportOptions = ModuleExportOptions<UserExportColumn>;
 export type UsersExportResult = ModuleExportResult;
@@ -30,7 +28,9 @@ async function prepareUsersExport(
   options: UsersExportOptions,
 ): Promise<{ columns: UserExportColumn[]; context: undefined }> {
   const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
+    options.columns && options.columns.length > 0
+      ? options.columns
+      : resolveAllUserExportColumns();
   const columns = filterUserExportColumnsForViewer(requestedColumns);
   return { columns, context: undefined };
 }

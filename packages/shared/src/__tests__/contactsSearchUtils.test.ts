@@ -40,4 +40,35 @@ describe('contactsSearchUtils', () => {
     // Matching Arabic query 'علي' against Urdu name 'عَلِی'
     expect(contactMatchesSearch(contact, 'علي')).toBe(true);
   });
+
+  it('safely handles null and undefined without throwing', () => {
+    expect(normalizeSearchString(null)).toBe('');
+    expect(normalizeSearchString(undefined)).toBe('');
+    expect(getContactSearchHaystack(null)).toBe('');
+    expect(getContactSearchHaystack(undefined)).toBe('');
+    expect(contactMatchesSearch(null, 'test')).toBe(false);
+    expect(contactMatchesSearch(undefined, 'test')).toBe(false);
+    expect(contactMatchesSearch({ id: '1', name: 'Test' } as Contact, null)).toBe(true);
+    expect(contactMatchesSearch({ id: '1', name: 'Test' } as Contact, undefined)).toBe(true);
+    expect(contactMatchesSearch({ id: '1', name: 'Test' } as Contact, '')).toBe(true);
+  });
+
+  it('includes CNIC, secondary phones, and scalar fields in haystack', () => {
+    const contact = {
+      id: '3',
+      name: 'Ahmed',
+      cnic: '42201-1234567-1',
+      phones: [
+        { label: 'work', number: '+92 300 1111111', isPrimary: true },
+        { label: 'home', number: '+92 321 2222222', isPrimary: false },
+      ],
+      phone: '+92 333 3333333',
+      email: 'ahmed@scalar.com',
+    } as Contact;
+
+    expect(contactMatchesSearch(contact, '42201-1234567-1')).toBe(true);
+    expect(contactMatchesSearch(contact, '2222222')).toBe(true);
+    expect(contactMatchesSearch(contact, '3333333')).toBe(true);
+    expect(contactMatchesSearch(contact, 'ahmed@scalar.com')).toBe(true);
+  });
 });
