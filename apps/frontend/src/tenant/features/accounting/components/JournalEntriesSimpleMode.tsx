@@ -9,7 +9,7 @@ import type { QuickActionType } from "@/tenant/features/accounting/components/jo
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
 import type { JournalEntrySave } from "./journalEntriesTypes";
-import { isPaymentVoucherEligible } from "@/tenant/features/accounting/components/paymentVoucherModel";
+import { isVoucherPrintable } from "@/tenant/features/accounting/components/paymentVoucherKind";
 import { usePaymentVoucherPrint } from "@/tenant/features/accounting/hooks/usePaymentVoucherPrint";
 
 /** Quick-action ids that open the dedicated cross-module entry modal instead of the generic wizard. */
@@ -75,7 +75,7 @@ export function JournalEntriesSimpleMode({
   const printVoucher = usePaymentVoucherPrint(accounts);
   const voucher = useMemo(
     () => ({
-      canPrint: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
+      canPrint: (entry: JournalEntry) => isVoucherPrintable(entry, accounts),
       onPrint: (entry: JournalEntry) => void printVoucher(entry),
     }),
     [accounts, printVoucher],

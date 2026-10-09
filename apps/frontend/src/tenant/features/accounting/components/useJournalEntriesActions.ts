@@ -13,7 +13,7 @@ import { useJournalEntriesTrashReversal } from '@/tenant/features/accounting/com
 import { createJournalEntryActionsRenderer } from '@/tenant/features/accounting/components/journalEntriesControllerSelection';
 import { ENTITY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/entityCardChrome';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
-import { isPaymentVoucherEligible } from '@/tenant/features/accounting/components/paymentVoucherModel';
+import { isVoucherPrintable } from '@/tenant/features/accounting/components/paymentVoucherKind';
 import { usePaymentVoucherPrint } from '@/tenant/features/accounting/hooks/usePaymentVoucherPrint';
 
 export interface UseJournalEntriesActionsOptions {
@@ -107,7 +107,7 @@ export function useJournalEntriesActions({
       requestRowTrash: trashReversal.requestRowTrash,
       handleReverse: trashReversal.requestReverse,
       printVoucher,
-      canPrintVoucher: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
+      canPrintVoucher: (entry: JournalEntry) => isVoucherPrintable(entry, accounts),
     },
     { triggerClassName: MODULE_ROW_ACTIONS_TRIGGER_CLASS },
   );
@@ -123,7 +123,7 @@ export function useJournalEntriesActions({
       requestRowTrash: trashReversal.requestRowTrash,
       handleReverse: trashReversal.requestReverse,
       printVoucher,
-      canPrintVoucher: (entry: JournalEntry) => isPaymentVoucherEligible(entry, accounts),
+      canPrintVoucher: (entry: JournalEntry) => isVoucherPrintable(entry, accounts),
     },
     { triggerClassName: ENTITY_CARD_OVERFLOW_TRIGGER_CLASS, hideViewItem: true },
   );

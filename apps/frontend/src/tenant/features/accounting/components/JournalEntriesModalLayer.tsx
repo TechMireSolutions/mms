@@ -8,7 +8,7 @@ import { JournalEntryForm } from "@/tenant/features/accounting/components/Journa
 import { JournalReverseDialog } from "@/tenant/features/accounting/components/JournalReverseDialog";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { isPaymentVoucherEligible } from "@/tenant/features/accounting/components/paymentVoucherModel";
+import { isVoucherPrintable } from "@/tenant/features/accounting/components/paymentVoucherKind";
 import { usePaymentVoucherPrint } from "@/tenant/features/accounting/hooks/usePaymentVoucherPrint";
 
 export type JournalModalMode = "new" | "edit" | "view" | null;
@@ -103,7 +103,7 @@ export function JournalEntriesModalLayer({
               onReverse={canReverse ? () => onRequestReverse(entry) : undefined}
               onRestore={canDelete && entry.deletedAt && onRestoreEntry ? () => onRestoreEntry?.(entry.id) : undefined}
               canRestore={canDelete}
-              onPrintVoucher={isPaymentVoucherEligible(entry, accounts) ? () => void printVoucher(entry) : undefined}
+              onPrintVoucher={isVoucherPrintable(entry, accounts) ? () => void printVoucher(entry) : undefined}
             />
           );
         })()}

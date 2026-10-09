@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { isJournalRefUnique, type JournalEntry } from "@/lib/data/accountingData";
 import { generateClientEntityId, isJournalEntryBalanced, journalEntryRecordSchema } from "@mms/shared";
 import { notify } from "@/lib/notify";
@@ -33,6 +34,7 @@ export function useSimpleTransactionWizard({
   transactionGroups,
 }: UseSimpleTransactionWizardParams) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [submittingStatus, setSubmittingStatus] = useState<
     "draft" | "posted" | "posted_and_new" | null
   >(null);
@@ -109,7 +111,7 @@ export function useSimpleTransactionWizard({
         date: form.date,
         description,
         status,
-        created_by: "system",
+        created_by: user?.name?.trim() || "system",
         tags: candidateTags,
         attachments: [],
         fiscal_year: form.fiscal_year,

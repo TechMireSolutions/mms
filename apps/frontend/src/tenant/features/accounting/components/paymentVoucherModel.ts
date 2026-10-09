@@ -1,6 +1,12 @@
 import { moneyToCents } from "@mms/shared";
 import type { Account, JournalEntry } from "@/lib/data/accountingData";
-import { resolveCashAccountIds } from "@/tenant/features/accounting/components/cashbookViewShared";
+import {
+  isCashInstrumentAccount,
+  resolveVoucherPrintKind,
+  voucherPrintLayout,
+  type VoucherPrintKind,
+  type VoucherPrintLayout,
+} from "@/tenant/features/accounting/components/paymentVoucherKind";
 
 export interface SalaryVoucherRef {
   staffId: string;
@@ -12,12 +18,25 @@ export interface PaymentVoucherLine {
   amount: number;
 }
 
+export interface VoucherJournalLine {
+  account: string;
+  debit: number;
+  credit: number;
+}
+
 export interface PaymentVoucherModel {
+  kind: VoucherPrintKind;
+  layout: VoucherPrintLayout;
   amount: number;
-  /** Expense / payable accounts debited — what the money was spent on. */
+  /** Money-out: accounts debited. Receipts: accounts credited. */
   particulars: PaymentVoucherLine[];
-  /** Cash / bank accounts credited — where the money was paid from. */
+  /** Money-out: cash or bank the money left from. Receipts: where cash arrived. */
   paidFrom: string[];
+  /** Non-cash credits on a payment, such as a salary late deduction. */
+  deductions: PaymentVoucherLine[];
+  /** Cash or bank actually paid. Matches `amount` when nothing was deducted. */
+  netAmount: number;
+  journalLines: VoucherJournalLine[];
   salary: SalaryVoucherRef | null;
 }
 
@@ -41,34 +60,45 @@ function accountLabel(accountsById: Map<string, Account>, accountId: string): st
   return account ? `${account.code} — ${account.name}` : accountId;
 }
 
-/**
- * Posted, live entries decided by their heads, never by tags: salary payments,
- * anything charged to an Expense head, or money paid out of a cash/bank head to
- * a non-cash head (supplier, payable, advance). Cash↔bank transfers and
- * receipts do not qualify.
- */
-export function isPaymentVoucherEligible(entry: JournalEntry, accounts: readonly Account[]): boolean {
-  if (entry.status !== "posted" || entry.deletedAt) return false;
-  if (entry.transaction_type === "salary") return true;
-  const expenseIds = new Set(accounts.filter((account) => account.type === "Expense").map((account) => account.id));
-  if (entry.lines.some((line) => line.debit > 0 && expenseIds.has(line.account_id))) return true;
-  const cashIds = resolveCashAccountIds(accounts);
-  const paidFromCash = entry.lines.some((line) => line.credit > 0 && cashIds.has(line.account_id));
-  return paidFromCash && entry.lines.some((line) => line.debit > 0 && !cashIds.has(line.account_id));
-}
-
 export function buildPaymentVoucherModel(entry: JournalEntry, accounts: readonly Account[]): PaymentVoucherModel {
   const accountsById = new Map(accounts.map((account) => [account.id, account]));
+  const kind = resolveVoucherPrintKind(entry, accounts) ?? "journal";
+  const layout = voucherPrintLayout(kind);
   const debitLines = entry.lines.filter((line) => line.debit > 0);
   const creditLines = entry.lines.filter((line) => line.credit > 0);
+  const detailLines = layout === "receipt" ? creditLines : debitLines;
+  const deductionLines = layout === "payment"
+    ? creditLines.filter((line) => !isCashInstrumentAccount(accountsById.get(line.account_id)))
+    : [];
+  const cashCredits = creditLines.filter((line) => isCashInstrumentAccount(accountsById.get(line.account_id)));
+  const sourceLines = layout === "receipt"
+    ? debitLines
+    : deductionLines.length > 0
+      ? cashCredits
+      : creditLines;
   const amountCents = debitLines.reduce((sum, line) => sum + moneyToCents(line.debit), 0);
+  const netCents = deductionLines.length > 0
+    ? cashCredits.reduce((sum, line) => sum + moneyToCents(line.credit), 0)
+    : amountCents;
   return {
+    kind,
+    layout,
     amount: amountCents / 100,
-    particulars: debitLines.map((line) => ({
+    particulars: detailLines.map((line) => ({
       account: accountLabel(accountsById, line.account_id),
-      amount: line.debit,
+      amount: layout === "receipt" ? line.credit : line.debit,
     })),
-    paidFrom: [...new Set(creditLines.map((line) => accountLabel(accountsById, line.account_id)))],
+    deductions: deductionLines.map((line) => ({
+      account: accountLabel(accountsById, line.account_id),
+      amount: line.credit,
+    })),
+    netAmount: netCents / 100,
+    paidFrom: [...new Set(sourceLines.map((line) => accountLabel(accountsById, line.account_id)))],
+    journalLines: entry.lines.map((line) => ({
+      account: accountLabel(accountsById, line.account_id),
+      debit: line.debit,
+      credit: line.credit,
+    })),
     salary: parseSalaryVoucherRef(entry),
   };
 }

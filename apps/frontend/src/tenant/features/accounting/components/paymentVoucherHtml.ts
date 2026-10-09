@@ -1,13 +1,16 @@
 import { escapeHtml } from "@/lib/escapeHtml";
 import { PRINT_COLORS } from "@/lib/printTemplateStyles";
+import type { VoucherPrintLayout } from "@/tenant/features/accounting/components/paymentVoucherKind";
 
 /** A5 portrait at 96 dpi — two vouchers per A4 sheet when printed 2-up. */
 export const PAYMENT_VOUCHER_PAGE = { width: 559, height: 794 } as const;
 
 export const PAYMENT_VOUCHER_LABEL_KEYS = [
   "title", "voucherNo", "date", "fiscalYear", "paidTo", "employeeId", "designation", "payPeriod",
-  "purpose", "paidFrom", "particulars", "amount", "total", "amountInWords", "preparedBy", "approvedBy",
-  "paidBy", "receivedBy", "receiverName", "receiverIdNo", "signature", "thumbImpression", "receiptDeclaration",
+  "purpose", "paidFrom", "particulars", "account", "debit", "credit", "deduction", "amount", "total",
+  "netPaid", "amountInWords",
+  "preparedBy", "checkedBy", "approvedBy", "paidBy", "receivedBy", "receiverName", "receiverIdNo",
+  "signature", "thumbImpression", "receiptDeclaration",
 ] as const;
 
 export type PaymentVoucherLabels = Record<(typeof PAYMENT_VOUCHER_LABEL_KEYS)[number], string>;
@@ -25,8 +28,16 @@ export interface PaymentVoucherPrintInput {
   payPeriod: string | null;
   paidFrom: string[];
   particulars: { account: string; amount: string }[];
+  /** Non-cash credits (salary deductions and similar). Empty when the whole amount was paid in cash. */
+  deductions: { account: string; amount: string }[];
+  /** Formatted net cash paid. Empty when there are no deductions. */
+  netPaid: string;
   amount: string;
   amountInWords: string;
+  layout: VoucherPrintLayout;
+  /** Logged-in user who entered the voucher, printed on the Prepared By line. */
+  preparedByName: string;
+  journalLines: { account: string; debit: string; credit: string }[];
 }
 
 const C = PRINT_COLORS;
@@ -52,7 +63,7 @@ function voucherStyles(primary: string): string {
   .pv-t tfoot td { font-weight: 700; }
   .pv-words { border: 1px dashed ${C.borderGray}; border-radius: 4px; padding: 6px 8px; font-style: italic; }
   .pv-signs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 26px; }
-  .pv-sign { text-align: center; } .pv-sign-line { height: 34px; border-bottom: 1px solid ${C.black}; margin-bottom: 4px; }
+  .pv-sign { text-align: center; } .pv-sign-line { height: 34px; border-bottom: 1px solid ${C.black}; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; font-weight: 600; }
   .pv-recv { margin-top: 18px; border: 1.5px solid ${primary}; border-radius: 6px; padding: 10px 12px; display: flex; gap: 12px; }
   .pv-recv-body { flex: 1; } .pv-recv h2 { font-size: 11px; font-weight: 700; color: ${primary}; text-transform: uppercase; letter-spacing: .04em; }
   .pv-recv .pv-decl { color: ${C.mediumGray}; font-size: 10px; margin: 2px 0 6px; }
@@ -69,8 +80,36 @@ function line(label: string, value = ""): string {
   return `<div class="pv-row"><span class="pv-k">${escapeHtml(label)}</span><span class="pv-v">${escapeHtml(value)}</span></div>`;
 }
 
-function sign(label: string): string {
-  return `<div class="pv-sign"><div class="pv-sign-line"></div>${escapeHtml(label)}</div>`;
+function sign(label: string, name = ""): string {
+  return `<div class="pv-sign"><div class="pv-sign-line">${escapeHtml(name)}</div>${escapeHtml(label)}</div>`;
+}
+
+function paymentTable(input: PaymentVoucherPrintInput): string {
+  const rows = input.particulars
+    .map((row) => `<tr><td>${escapeHtml(row.account)}</td><td class="num">${escapeHtml(row.amount)}</td></tr>`)
+    .join("");
+  const deductions = input.deductions
+    .map((row) => `<tr><td>${escapeHtml(input.labels.deduction)}: ${escapeHtml(row.account)}</td><td class="num">${escapeHtml(row.amount)}</td></tr>`)
+    .join("");
+  const net = input.netPaid
+    ? `<tr><td>${escapeHtml(input.labels.netPaid)}</td><td class="num">${escapeHtml(input.netPaid)}</td></tr>`
+    : "";
+  return `<table class="pv-t">
+    <thead><tr><th>${escapeHtml(input.labels.particulars)}</th><th class="num">${escapeHtml(input.labels.amount)}</th></tr></thead>
+    <tbody>${rows}${deductions}</tbody>
+    <tfoot><tr><td>${escapeHtml(input.labels.total)}</td><td class="num">${escapeHtml(input.amount)}</td></tr>${net}</tfoot>
+  </table>`;
+}
+
+function journalTable(input: PaymentVoucherPrintInput): string {
+  const rows = input.journalLines
+    .map((row) => `<tr><td>${escapeHtml(row.account)}</td><td class="num">${escapeHtml(row.debit)}</td><td class="num">${escapeHtml(row.credit)}</td></tr>`)
+    .join("");
+  return `<table class="pv-t">
+    <thead><tr><th>${escapeHtml(input.labels.account)}</th><th class="num">${escapeHtml(input.labels.debit)}</th><th class="num">${escapeHtml(input.labels.credit)}</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><td>${escapeHtml(input.labels.total)}</td><td class="num">${escapeHtml(input.amount)}</td><td class="num">${escapeHtml(input.amount)}</td></tr></tfoot>
+  </table>`;
 }
 
 /** Body markup for {@link buildPrintWindowHtml}; every interpolated value is HTML-escaped. */
@@ -79,9 +118,25 @@ export function buildPaymentVoucherBody(input: PaymentVoucherPrintInput): string
   const logo = institution.logoUrl
     ? `<img class="pv-logo" src="${escapeHtml(institution.logoUrl)}" alt="" />`
     : "";
-  const rows = input.particulars
-    .map((row) => `<tr><td>${escapeHtml(row.account)}</td><td class="num">${escapeHtml(row.amount)}</td></tr>`)
-    .join("");
+  const party = input.layout === "journal" ? "" : `
+  ${line(L.paidTo, payee?.name ?? "")}
+  ${payee ? line(L.employeeId, payee.employeeId) + line(L.designation, payee.designation) : ""}
+  ${input.payPeriod ? line(L.payPeriod, input.payPeriod) : ""}
+  ${line(L.purpose, input.narration)}
+  ${line(L.paidFrom, input.paidFrom.join(", "))}`;
+  const narration = input.layout === "journal" ? line(L.purpose, input.narration) : "";
+  const signs = input.layout === "journal"
+    ? `${sign(L.preparedBy, input.preparedByName)}${sign(L.checkedBy)}${sign(L.approvedBy)}`
+    : `${sign(L.preparedBy, input.preparedByName)}${sign(L.approvedBy)}${sign(L.paidBy)}`;
+  const receiver = input.layout === "payment" ? `
+  <section class="pv-recv">
+    <div class="pv-recv-body">
+      <h2>${escapeHtml(L.receivedBy)}</h2>
+      <p class="pv-decl">${escapeHtml(L.receiptDeclaration)}</p>
+      ${line(L.receiverName)}${line(L.receiverIdNo)}${line(L.signature)}${line(L.date)}
+    </div>
+    <div class="pv-thumb">${escapeHtml(L.thumbImpression)}</div>
+  </section>` : "";
 
   return `${voucherStyles(input.primaryColor)}
 <div class="pv">
@@ -92,25 +147,11 @@ export function buildPaymentVoucherBody(input: PaymentVoucherPrintInput): string
   <section class="pv-meta">
     ${cell(L.voucherNo, input.voucherNo)}${cell(L.date, input.date)}${cell(L.fiscalYear, input.fiscalYear)}
   </section>
-  ${line(L.paidTo, payee?.name ?? "")}
-  ${payee ? line(L.employeeId, payee.employeeId) + line(L.designation, payee.designation) : ""}
-  ${input.payPeriod ? line(L.payPeriod, input.payPeriod) : ""}
-  ${line(L.purpose, input.narration)}
-  ${line(L.paidFrom, input.paidFrom.join(", "))}
-  <table class="pv-t">
-    <thead><tr><th>${escapeHtml(L.particulars)}</th><th class="num">${escapeHtml(L.amount)}</th></tr></thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr><td>${escapeHtml(L.total)}</td><td class="num">${escapeHtml(input.amount)}</td></tr></tfoot>
-  </table>
+  ${party}
+  ${narration}
+  ${input.layout === "journal" ? journalTable(input) : paymentTable(input)}
   <div class="pv-words"><span class="pv-k">${escapeHtml(L.amountInWords)}</span>${escapeHtml(input.amountInWords)}</div>
-  <section class="pv-signs">${sign(L.preparedBy)}${sign(L.approvedBy)}${sign(L.paidBy)}</section>
-  <section class="pv-recv">
-    <div class="pv-recv-body">
-      <h2>${escapeHtml(L.receivedBy)}</h2>
-      <p class="pv-decl">${escapeHtml(L.receiptDeclaration)}</p>
-      ${line(L.receiverName)}${line(L.receiverIdNo)}${line(L.signature)}${line(L.date)}
-    </div>
-    <div class="pv-thumb">${escapeHtml(L.thumbImpression)}</div>
-  </section>
+  <section class="pv-signs">${signs}</section>
+  ${receiver}
 </div>`;
 }
