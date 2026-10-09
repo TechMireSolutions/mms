@@ -1,8 +1,16 @@
+/**
+ * @file studentsExportService.ts
+ * @description Students module export service — wired to `createModuleExportService`.
+ *
+ * Uses the format-aware factory so JSON/XLSX exports are available alongside
+ * the existing CSV streaming path.
+ */
 import {
   DEFAULT_STUDENT_EXPORT_COLUMNS,
   STUDENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildStudentsExportRows,
+  extractStudentCell,
   filterStudentExportColumnsForViewer,
   type Student,
   type StudentExportColumn,
@@ -10,11 +18,11 @@ import {
   type StudentsSettings,
 } from '@mms/shared';
 import {
-  createModuleCsvExportService,
+  createModuleExportService,
   type ModuleExportQueryInput,
-  type ModuleCsvExportOptions,
-  type ModuleCsvExportResult,
-} from '../lib/createModuleCsvExportService.js';
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../lib/createModuleExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadStudentFieldConfig } from './studentConfigService.js';
 import { loadStudentsByIds, loadStudentsPage } from '../students/use-cases/studentUseCases.js';
@@ -22,8 +30,8 @@ import { loadStudentsByIds, loadStudentsPage } from '../students/use-cases/stude
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_STUDENT_EXPORT_COLUMNS as StudentExportColumn[];
 
 export type StudentsExportQueryInput = ModuleExportQueryInput<StudentsListQuery>;
-export type StudentsCsvExportOptions = ModuleCsvExportOptions<StudentExportColumn>;
-export type StudentsCsvExportResult = ModuleCsvExportResult;
+export type StudentsCsvExportOptions = ModuleExportOptions<StudentExportColumn>;
+export type StudentsCsvExportResult = ModuleExportResult;
 
 async function prepareStudentsExport(
   options: StudentsCsvExportOptions,
@@ -39,7 +47,7 @@ async function prepareStudentsExport(
   return { columns, context: undefined };
 }
 
-const studentsCsv = createModuleCsvExportService<
+const studentsCsv = createModuleExportService<
   Student,
   StudentsExportQueryInput,
   StudentExportColumn
@@ -78,6 +86,8 @@ const studentsCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  // Enables JSON and XLSX export paths via createModuleExportService.buildExport
+  extractCell: extractStudentCell,
 });
 
 export const generateStudentsCsvStreamChunks = studentsCsv.generateStreamChunks;

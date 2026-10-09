@@ -1,9 +1,27 @@
+/**
+ * @file usersExportUtils.ts
+ * @description Users module export utilities.
+ *
+ * MIGRATION (T10): `buildUsersExportRows` now delegates to `buildExportGrid`.
+ * `filterUserExportColumnsForViewer` uses a simple always-visible set
+ * (no tab/field registry), retained as-is.
+ */
 import type { WorkspaceUser } from './userEntityTypes.js';
+import { buildExportGrid } from './dataTransfer/export/buildExportGrid.js';
+import type { ExportColumn } from './dataTransfer/core/exportTypes.js';
+
+// ---------------------------------------------------------------------------
+// Column type
+// ---------------------------------------------------------------------------
 
 export interface UserExportColumn {
   id: string;
   label: string;
 }
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const USER_EXPORT_ALWAYS_VISIBLE = new Set([
   'name',
@@ -27,7 +45,11 @@ export const DEFAULT_USER_EXPORT_COLUMNS: readonly UserExportColumn[] = [
   { id: 'twoFactorEnabled', label: '2FA enabled' },
 ] as const;
 
-/** Users Work CSV uses simple always-visible core columns. */
+// ---------------------------------------------------------------------------
+// Column filter
+// ---------------------------------------------------------------------------
+
+/** Users Work CSV uses simple always-visible core columns (no tab/field registry). */
 export function filterUserExportColumnsForViewer(
   columns: UserExportColumn[],
 ): UserExportColumn[] {
@@ -39,34 +61,36 @@ export function filterUserExportColumnsForViewer(
   );
 }
 
-function compileUserColumnExtractor(columnId: string): (user: WorkspaceUser) => string {
-  if (columnId === 'name') return (u) => u.name || '';
-  if (columnId === 'email') return (u) => u.email || u.loginEmail || '';
-  if (columnId === 'role') return (u) => u.role || '';
-  if (columnId === 'status') return (u) => String(u.status || 'active');
-  if (columnId === 'phone') return (u) => u.phone || '';
-  if (columnId === 'lastLogin') return (u) => u.lastLogin || '';
-  if (columnId === 'createdDate') return (u) => u.createdDate || '';
-  if (columnId === 'twoFactorEnabled') return (u) => (u.twoFactorEnabled ? 'yes' : 'no');
+// ---------------------------------------------------------------------------
+// Cell extractor
+// ---------------------------------------------------------------------------
+
+/** Pure cell extractor for WorkspaceUser entities. Compatible with ExportCellExtractor<WorkspaceUser>. */
+export function extractUserCell(user: WorkspaceUser, columnId: string): string | boolean | null {
+  if (columnId === 'name') return user.name || '';
+  if (columnId === 'email') return user.email || user.loginEmail || '';
+  if (columnId === 'role') return user.role || '';
+  if (columnId === 'status') return String(user.status || 'active');
+  if (columnId === 'phone') return user.phone || '';
+  if (columnId === 'lastLogin') return user.lastLogin || '';
+  if (columnId === 'createdDate') return user.createdDate || '';
+  if (columnId === 'twoFactorEnabled') return user.twoFactorEnabled ? 'yes' : 'no';
   const propKey = columnId.startsWith('custom:') ? columnId.slice('custom:'.length) : columnId;
-  return (user) => {
-    const cellVal = user[propKey as keyof WorkspaceUser];
-    if (cellVal === undefined || cellVal === null) return '';
-    if (Array.isArray(cellVal)) return cellVal.map(String).filter(Boolean).join('; ');
-    if (typeof cellVal === 'object') return '';
-    return String(cellVal);
-  };
+  const cellVal = user[propKey as keyof WorkspaceUser];
+  if (cellVal === undefined || cellVal === null) return '';
+  if (Array.isArray(cellVal)) return cellVal.map(String).filter(Boolean).join('; ');
+  if (typeof cellVal === 'object') return '';
+  return String(cellVal);
 }
 
-/** Builds CSV rows (header + data) for the given users and visible columns. */
+// ---------------------------------------------------------------------------
+// Grid builder — delegates to generic utility
+// ---------------------------------------------------------------------------
+
+/** Builds a 2D grid [header, ...rows] for the given users and columns. */
 export function buildUsersExportRows(
   users: WorkspaceUser[],
   columns: UserExportColumn[],
 ): unknown[][] {
-  const header = columns.map((column) => column.label);
-  const extractors = columns.map((column) => compileUserColumnExtractor(column.id));
-  const rows = users.map((user) =>
-    extractors.map((extract) => extract(user)),
-  );
-  return [header, ...rows];
+  return buildExportGrid(users, columns as ExportColumn[], extractUserCell);
 }

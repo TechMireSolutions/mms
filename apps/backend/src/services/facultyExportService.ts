@@ -3,6 +3,7 @@ import {
   DEFAULT_FACULTY_EXPORT_COLUMNS,
   buildCsvContent,
   buildFacultyExportRows,
+  createFacultyCellExtractor,
   filterFacultyExportColumnsForViewer,
   type Faculty,
   type FacultyExportColumn,
@@ -10,21 +11,23 @@ import {
   type FacultySettings,
 } from '@mms/shared';
 import {
-  createModuleCsvExportService,
+  createModuleExportService,
   type ModuleExportQueryInput,
-  type ModuleCsvExportOptions,
-  type ModuleCsvExportResult,
-} from '../lib/createModuleCsvExportService.js';
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../lib/createModuleExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadFacultyFieldConfig } from './facultyConfigService.js';
 import { loadFacultyByIds, loadFacultyPage } from './facultyService.js';
 
 export type FacultyExportQueryInput = ModuleExportQueryInput<FacultyListQuery>;
-export type FacultyCsvExportOptions = ModuleCsvExportOptions<FacultyExportColumn>;
-export type FacultyCsvExportResult = ModuleCsvExportResult;
+export type FacultyExportOptions = ModuleExportOptions<FacultyExportColumn>;
+export type FacultyExportResult = ModuleExportResult;
+export type FacultyCsvExportOptions = FacultyExportOptions;
+export type FacultyCsvExportResult = FacultyExportResult;
 
 async function prepareFacultyExport(
-  options: FacultyCsvExportOptions,
+  options: FacultyExportOptions,
 ): Promise<{ columns: FacultyExportColumn[]; context: undefined }> {
   const requestedColumns =
     options.columns && options.columns.length > 0
@@ -39,7 +42,7 @@ async function prepareFacultyExport(
   return { columns, context: undefined };
 }
 
-const facultyCsv = createModuleCsvExportService<
+const facultyCsv = createModuleExportService<
   Faculty,
   FacultyExportQueryInput,
   FacultyExportColumn
@@ -79,10 +82,12 @@ const facultyCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  extractCell: (faculty, columnId) =>
+    createFacultyCellExtractor()(faculty as never, columnId),
 });
 
 export const generateFacultyCsvStreamChunks = facultyCsv.generateStreamChunks;
 export const buildFacultyCsvExport = facultyCsv.buildExport as (
   query: FacultyExportQueryInput,
-  options: FacultyCsvExportOptions,
-) => Promise<FacultyCsvExportResult>;
+  options: FacultyExportOptions,
+) => Promise<FacultyExportResult>;

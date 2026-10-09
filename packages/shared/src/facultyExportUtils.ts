@@ -1,5 +1,12 @@
+/**
+ * @file facultyExportUtils.ts
+ * @description Faculty module export utilities.
+ *
+ * MIGRATION (T10): `filterFacultyExportColumnsForViewer` now delegates to
+ * `filterExportColumnsByVisibility`. `buildFacultyExportRows` delegates to
+ * `buildExportGrid`. All existing public exports are preserved.
+ */
 import type { FieldDefinition } from './contactTypes.js';
-import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
 import type { FacultyMember } from './facultyTypes.js';
 import type { FacultySettings } from './facultyModuleSettings.js';
 import { isFacultyLockedEnabledTab } from './moduleFieldSetupPersons.js';
@@ -12,6 +19,15 @@ import { resolveFacultyEnabledTabIds } from './facultyEnabledTabs.js';
 import { customFieldKeyFromColumnKey } from './moduleColumnCore.js';
 import { resolveFacultyFieldsMapForColumnSync } from './facultyFormCustomFields.js';
 import { formatFacultyFieldCellValue } from './facultyFieldCellFormat.js';
+import {
+  filterExportColumnsByVisibility,
+} from './dataTransfer/export/filterExportColumns.js';
+import { buildExportGrid } from './dataTransfer/export/buildExportGrid.js';
+import type { ExportColumn, ExportCellExtractor } from './dataTransfer/core/exportTypes.js';
+
+// ---------------------------------------------------------------------------
+// Column type
+// ---------------------------------------------------------------------------
 
 export interface FacultyExportColumn {
   id: string;
@@ -20,8 +36,16 @@ export interface FacultyExportColumn {
 
 export { DEFAULT_FACULTY_EXPORT_COLUMNS };
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
 /** CSV identity columns always exported regardless of Setup field registry. */
 const FACULTY_EXPORT_ALWAYS_VISIBLE = new Set(['name', 'employeeId']);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function resolveExportFieldKey(columnId: string): string {
   const customFieldId = customFieldKeyFromColumnKey(columnId);
@@ -30,20 +54,13 @@ function resolveExportFieldKey(columnId: string): string {
   return mapping?.fieldId ?? columnId;
 }
 
-function isFacultyExportTabEnabled(
-  tabId: string,
-  enabledTabs: ReadonlySet<string>,
-  enabledTabsLower: ReadonlySet<string>,
-): boolean {
-  if (isFacultyLockedEnabledTab(tabId)) return true;
-  if (enabledTabs.has(tabId)) return true;
-  return enabledTabsLower.has(tabId.toLowerCase());
-}
+// ---------------------------------------------------------------------------
+// Column filter — delegates to generic utility
+// ---------------------------------------------------------------------------
 
 /**
  * Filters export columns by Setup field/tab enablement + viewer role.
- * Always-visible: `name`, `employeeId`. Disabled or role-hidden Setup fields are
- * dropped; unregistered custom keys and always-visible identity columns survive.
+ * Uses `filterExportColumnsByVisibility` from the shared data-transfer pipeline.
  */
 export function filterFacultyExportColumnsForViewer(
   columns: FacultyExportColumn[],
@@ -55,89 +72,88 @@ export function filterFacultyExportColumnsForViewer(
 
   const fields = resolveFacultyFieldsMapForColumnSync(settings.fields);
   const enabledTabs = new Set(resolveFacultyEnabledTabIds(settings));
-  const enabledTabsLower = new Set(Array.from(enabledTabs, (tab) => tab.toLowerCase()));
   const formTabs = settings.formTabs ?? [];
-  const tabMap = new Map<string, (typeof formTabs)[number]>();
-  for (const t of formTabs) {
-    if (t.key) tabMap.set(t.key.toLowerCase(), t);
+
+  // Build a field alias map: column id → field key in registry
+  const columnAliases: Record<string, string> = {};
+  for (const col of source) {
+    const fieldKey = resolveExportFieldKey(col.id);
+    if (fieldKey !== col.id) columnAliases[col.id] = fieldKey;
   }
 
-  const fieldLocationMap = new Map<string, { tabId: string; field: FieldDefinition }>();
-  for (const [tabId, tabFields] of Object.entries(fields)) {
+  // Locked tabs: faculty uses isFacultyLockedEnabledTab
+  const allTabIds = new Set([
+    ...enabledTabs,
+    ...formTabs.map((t) => t.key),
+    ...Object.keys(fields),
+  ]);
+  const lockedTabIds = new Set<string>();
+  for (const tabId of allTabIds) {
+    if (isFacultyLockedEnabledTab(tabId)) lockedTabIds.add(tabId);
+  }
+
+  return filterExportColumnsByVisibility(source as ExportColumn[], {
+    fieldsByTab: fields,
+    formTabs,
+    viewerRole: viewerRole ?? '',
+    alwaysVisible: FACULTY_EXPORT_ALWAYS_VISIBLE,
+    columnAliases,
+    lockedTabIds,
+  }) as FacultyExportColumn[];
+}
+
+// ---------------------------------------------------------------------------
+// Cell extractor
+// ---------------------------------------------------------------------------
+
+/** Builds a field-type lookup from faculty settings. */
+function buildFieldTypeMap(
+  fields: Record<string, FieldDefinition[]> | undefined,
+): Map<string, FieldDefinition['type']> {
+  const map = new Map<string, FieldDefinition['type']>();
+  if (!fields) return map;
+  for (const tabFields of Object.values(fields)) {
     for (const field of tabFields) {
-      if (field.key && !fieldLocationMap.has(field.key)) {
-        fieldLocationMap.set(field.key, { tabId, field });
+      if (field.key && !map.has(field.key)) {
+        map.set(field.key, field.type);
       }
     }
   }
-
-  return source.filter((column) => {
-    if (FACULTY_EXPORT_ALWAYS_VISIBLE.has(column.id)) return true;
-
-    const fieldKey = resolveExportFieldKey(column.id);
-    const found = fieldLocationMap.get(fieldKey);
-    if (!found) {
-      // Unknown / unmapped custom with no Setup row — keep (compat).
-      return true;
-    }
-    if (found.field.enabled === false) return false;
-    if (!isFacultyExportTabEnabled(found.tabId, enabledTabs, enabledTabsLower)) return false;
-    if (viewerRole) {
-      if (!canViewContactField(viewerRole, found.field)) return false;
-      const tab = tabMap.get((found.tabId || '').toLowerCase());
-      if (tab && !canViewContactTab(viewerRole, tab)) return false;
-    }
-    return true;
-  });
+  return map;
 }
 
-function compileFacultyColumnExtractor(
-  columnId: string,
-  fieldTypeMap: Map<string, FieldDefinition['type']>,
-): (faculty: FacultyMember) => unknown {
-  const propKey = resolveExportFieldKey(columnId) as keyof FacultyMember;
-  const fieldType = fieldTypeMap.get(propKey as string);
-  const options = {
-    fieldType,
-    propKey: propKey as string,
-    arraySeparator: '; ',
-  };
+/**
+ * Creates a pure cell extractor for FacultyMember entities.
+ * The fieldTypeMap enables rich formatting (e.g. currency, boolean).
+ */
+export function createFacultyCellExtractor(
+  settings?: FacultySettings | null,
+): ExportCellExtractor<FacultyMember> {
+  const fields = settings ? resolveFacultyFieldsMapForColumnSync(settings.fields) : undefined;
+  const fieldTypeMap = buildFieldTypeMap(fields);
 
-  return (faculty: FacultyMember) => {
+  return (faculty: FacultyMember, columnId: string): string | number | null => {
+    const propKey = resolveExportFieldKey(columnId) as keyof FacultyMember;
+    const fieldType = fieldTypeMap.get(propKey as string);
     const cellVal = faculty[propKey];
-    return (
-      formatFacultyFieldCellValue(cellVal, options) ?? ''
-    );
+    return formatFacultyFieldCellValue(cellVal, {
+      fieldType,
+      propKey: propKey as string,
+      arraySeparator: '; ',
+    }) ?? '';
   };
 }
 
-/** Builds CSV rows (header + data) for the given faculty and visible columns. */
+// ---------------------------------------------------------------------------
+// Grid builder — delegates to generic utility
+// ---------------------------------------------------------------------------
+
+/** Builds a 2D grid [header, ...rows] for the given faculty and columns. */
 export function buildFacultyExportRows(
   faculty: FacultyMember[],
   columns: FacultyExportColumn[],
   settings?: FacultySettings | null,
 ): unknown[][] {
-  const fields = settings
-    ? resolveFacultyFieldsMapForColumnSync(settings.fields)
-    : undefined;
-
-  const fieldTypeMap = new Map<string, FieldDefinition['type']>();
-  if (fields) {
-    for (const tabFields of Object.values(fields)) {
-      for (const field of tabFields) {
-        if (field.key && !fieldTypeMap.has(field.key)) {
-          fieldTypeMap.set(field.key, field.type);
-        }
-      }
-    }
-  }
-
-  const extractors = columns.map((col) =>
-    compileFacultyColumnExtractor(col.id, fieldTypeMap),
-  );
-  const header = columns.map((column) => column.label);
-  const rows = faculty.map((member) =>
-    extractors.map((extractor) => extractor(member)),
-  );
-  return [header, ...rows];
+  const extractCell = createFacultyCellExtractor(settings);
+  return buildExportGrid(faculty, columns as ExportColumn[], extractCell);
 }

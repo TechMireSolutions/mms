@@ -3,6 +3,7 @@ import {
   SESSIONS_MODULE_MANIFEST,
   buildCsvContent,
   buildSessionsExportRows,
+  extractSessionCell,
   filterSessionExportColumnsForViewer,
   type Session,
   type SessionExportColumn,
@@ -10,11 +11,11 @@ import {
   type SessionsSettings,
 } from '@mms/shared';
 import {
-  createModuleCsvExportService,
+  createModuleExportService,
   type ModuleExportQueryInput,
-  type ModuleCsvExportOptions,
-  type ModuleCsvExportResult,
-} from '../lib/createModuleCsvExportService.js';
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../lib/createModuleExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadSessionsSettingsCombined } from './sessionConfigService.js';
 import { loadSessionsByIds, loadSessionsPage } from './sessionService.js';
@@ -22,8 +23,10 @@ import { loadSessionsByIds, loadSessionsPage } from './sessionService.js';
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_SESSION_EXPORT_COLUMNS as SessionExportColumn[];
 
 export type SessionsExportQueryInput = ModuleExportQueryInput<SessionsListQuery>;
-export type SessionsCsvExportOptions = ModuleCsvExportOptions<SessionExportColumn>;
-export type SessionsCsvExportResult = ModuleCsvExportResult;
+export type SessionsExportOptions = ModuleExportOptions<SessionExportColumn>;
+export type SessionsExportResult = ModuleExportResult;
+export type SessionsCsvExportOptions = SessionsExportOptions;
+export type SessionsCsvExportResult = SessionsExportResult;
 
 async function loadSessionsFieldSettings(): Promise<SessionsSettings | null> {
   try {
@@ -34,7 +37,7 @@ async function loadSessionsFieldSettings(): Promise<SessionsSettings | null> {
 }
 
 async function prepareSessionsExport(
-  options: SessionsCsvExportOptions,
+  options: SessionsExportOptions,
 ): Promise<{ columns: SessionExportColumn[]; context: undefined }> {
   const requestedColumns =
     options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
@@ -43,7 +46,7 @@ async function prepareSessionsExport(
   return { columns, context: undefined };
 }
 
-const sessionsCsv = createModuleCsvExportService<
+const sessionsCsv = createModuleExportService<
   Session,
   SessionsExportQueryInput,
   SessionExportColumn
@@ -82,11 +85,12 @@ const sessionsCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  extractCell: extractSessionCell,
 });
 
 export const generateSessionsCsvStreamChunks = sessionsCsv.generateStreamChunks;
 export const streamSessionsCsvExport = sessionsCsv.streamExport;
 export const buildSessionsCsvExport = sessionsCsv.buildExport as (
   query: SessionsExportQueryInput,
-  options: SessionsCsvExportOptions,
-) => Promise<SessionsCsvExportResult>;
+  options: SessionsExportOptions,
+) => Promise<SessionsExportResult>;

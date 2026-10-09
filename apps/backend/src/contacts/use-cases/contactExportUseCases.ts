@@ -3,6 +3,7 @@ import {
   DEFAULT_CONTACT_EXPORT_COLUMNS,
   buildContactsExportRows,
   buildCsvContent,
+  compileContactColumnExtractor,
   filterContactExportColumnsForViewer,
   resolveContactFieldConfigSnapshot,
   sanitizeContactsForViewer,
@@ -12,7 +13,11 @@ import {
   type ContactsListQuery,
   type FieldConfig,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../../lib/createModuleCsvExportService.js';
+import {
+  createModuleExportService,
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../../lib/createModuleExportService.js';
 import { CsvExportLimitError, normalizeIncludeDeletedFlag } from '../../lib/csvExportStreamFactory.js';
 import { loadContactsByIds, loadContactsPage } from './contactLoadUseCases.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
@@ -26,20 +31,10 @@ type ContactsExportQueryInput = Omit<ContactsListQuery, 'includeDeleted'> & {
 };
 
 export type { ContactsExportQueryInput };
-
-interface ContactsCsvExportOptions {
-  columns?: ContactExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-interface ContactsCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type ContactsExportOptions = ModuleExportOptions<ContactExportColumn>;
+export type ContactsExportResult = ModuleExportResult;
+export type ContactsCsvExportOptions = ContactsExportOptions;
+export type ContactsCsvExportResult = ContactsExportResult;
 
 type ContactsExportContext = {
   viewerRole: string;
@@ -47,7 +42,7 @@ type ContactsExportContext = {
 };
 
 async function prepareContactsExport(
-  options: ContactsCsvExportOptions,
+  options: ContactsExportOptions,
 ): Promise<{ columns: ContactExportColumn[]; context: ContactsExportContext }> {
   const requestedColumns =
     options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
@@ -68,7 +63,7 @@ async function prepareContactsExport(
   };
 }
 
-const contactsCsv = createModuleCsvExportService<
+const contactsCsv = createModuleExportService<
   Contact,
   ContactsExportQueryInput,
   ContactExportColumn,
@@ -114,13 +109,15 @@ const contactsCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  extractCell: (contact, columnId) =>
+    compileContactColumnExtractor(columnId, EXPORT_LABELS)(contact),
 });
 
 export const generateContactsCsvStreamChunks = contactsCsv.generateStreamChunks;
 export const buildContactsCsvExport = contactsCsv.buildExport as (
   query: ContactsExportQueryInput,
-  options: ContactsCsvExportOptions,
-) => Promise<ContactsCsvExportResult>;
+  options: ContactsExportOptions,
+) => Promise<ContactsExportResult>;
 
 const VCF_PAGE_SIZE = 500;
 

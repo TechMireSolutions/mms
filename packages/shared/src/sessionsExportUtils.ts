@@ -1,10 +1,28 @@
+/**
+ * @file sessionsExportUtils.ts
+ * @description Sessions module export utilities.
+ *
+ * MIGRATION (T10): `buildSessionsExportRows` now delegates to `buildExportGrid`.
+ * `filterSessionExportColumnsForViewer` uses a flat enabled-field map (no tab
+ * registry), so it is kept as a simple predicate filter.
+ */
 import type { Session } from './sessionTypes.js';
 import type { SessionsSettings } from './sessionsModuleSettings.js';
+import { buildExportGrid } from './dataTransfer/export/buildExportGrid.js';
+import type { ExportColumn } from './dataTransfer/core/exportTypes.js';
+
+// ---------------------------------------------------------------------------
+// Column type
+// ---------------------------------------------------------------------------
 
 export interface SessionExportColumn {
   id: string;
   label: string;
 }
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const SESSION_EXPORT_ALWAYS_VISIBLE = new Set([
   'name',
@@ -13,13 +31,6 @@ const SESSION_EXPORT_ALWAYS_VISIBLE = new Set([
   'startDate',
   'endDate',
 ]);
-
-/** Maps retired Setup preference `list` → Work SSOT `table`. */
-export function normalizeSessionsViewLayout(layout?: string): 'table' | 'cards' {
-  if (layout === 'cards') return 'cards';
-  if (layout === 'list' || layout === 'table') return 'table';
-  return 'table';
-}
 
 export const DEFAULT_SESSION_EXPORT_COLUMNS: readonly SessionExportColumn[] = [
   { id: 'name', label: 'Session Name' },
@@ -31,7 +42,22 @@ export const DEFAULT_SESSION_EXPORT_COLUMNS: readonly SessionExportColumn[] = [
   { id: 'currency', label: 'Currency' },
 ] as const;
 
-/** Filters export columns by Sessions Setup field toggles. */
+// ---------------------------------------------------------------------------
+// View layout normalizer (no change)
+// ---------------------------------------------------------------------------
+
+/** Maps retired Setup preference `list` → Work SSOT `table`. */
+export function normalizeSessionsViewLayout(layout?: string): 'table' | 'cards' {
+  if (layout === 'cards') return 'cards';
+  if (layout === 'list' || layout === 'table') return 'table';
+  return 'table';
+}
+
+// ---------------------------------------------------------------------------
+// Column filter
+// ---------------------------------------------------------------------------
+
+/** Filters export columns by Sessions Setup field toggles (flat map, no tab registry). */
 export function filterSessionExportColumnsForViewer(
   columns: SessionExportColumn[],
   settings: SessionsSettings | null | undefined,
@@ -47,47 +73,45 @@ export function filterSessionExportColumnsForViewer(
   });
 }
 
-function compileSessionColumnExtractor(columnId: string): (session: Session) => string {
-  if (columnId === 'name') return (s) => s.name || '';
-  if (columnId === 'type') return (s) => s.type || '';
-  if (columnId === 'status') return (s) => s.status || '';
-  if (columnId === 'startDate') return (s) => s.startDate || '';
-  if (columnId === 'endDate') return (s) => s.endDate || '';
-  if (columnId === 'baseFee') return (s) => String(s.baseFee ?? '');
-  if (columnId === 'currency') return (s) => s.currency || '';
-  if (columnId === 'description') return (s) => s.description || '';
+// ---------------------------------------------------------------------------
+// Cell extractor
+// ---------------------------------------------------------------------------
+
+/** Pure cell extractor for Session entities. Compatible with ExportCellExtractor<Session>. */
+export function extractSessionCell(session: Session, columnId: string): string | number | null {
+  if (columnId === 'name') return session.name || '';
+  if (columnId === 'type') return session.type || '';
+  if (columnId === 'status') return session.status || '';
+  if (columnId === 'startDate') return session.startDate || '';
+  if (columnId === 'endDate') return session.endDate || '';
+  if (columnId === 'baseFee') return String(session.baseFee ?? '');
+  if (columnId === 'currency') return session.currency || '';
+  if (columnId === 'description') return session.description || '';
   if (columnId === 'duration') {
-    return (s) => {
-      const start = s.startDate || '';
-      const end = s.endDate || '';
-      return start && end ? `${start} → ${end}` : start || end;
-    };
+    const start = session.startDate || '';
+    const end = session.endDate || '';
+    return start && end ? `${start} → ${end}` : start || end;
   }
   if (columnId === 'enrolled') {
-    return (s) => {
-      const classes = s.classes ?? [];
-      return String(classes.reduce((sum, cls) => sum + (cls.enrolled ?? 0), 0));
-    };
+    const classes = session.classes ?? [];
+    return String(classes.reduce((sum, cls) => sum + (cls.enrolled ?? 0), 0));
   }
   const propKey = columnId.startsWith('custom:') ? columnId.slice('custom:'.length) : columnId;
-  return (session) => {
-    const value = session[propKey as keyof Session];
-    if (value === undefined || value === null) return '';
-    if (Array.isArray(value)) return value.map(String).filter(Boolean).join('; ');
-    if (typeof value === 'object') return '';
-    return String(value);
-  };
+  const value = session[propKey as keyof Session];
+  if (value === undefined || value === null) return '';
+  if (Array.isArray(value)) return value.map(String).filter(Boolean).join('; ');
+  if (typeof value === 'object') return '';
+  return String(value);
 }
 
-/** Builds CSV rows (header + data) for the given sessions and visible columns. */
+// ---------------------------------------------------------------------------
+// Grid builder — delegates to generic utility
+// ---------------------------------------------------------------------------
+
+/** Builds a 2D grid [header, ...rows] for the given sessions and columns. */
 export function buildSessionsExportRows(
   sessions: Session[],
   columns: SessionExportColumn[],
 ): unknown[][] {
-  const header = columns.map((column) => column.label);
-  const extractors = columns.map((column) => compileSessionColumnExtractor(column.id));
-  const rows = sessions.map((session) =>
-    extractors.map((extract) => extract(session)),
-  );
-  return [header, ...rows];
+  return buildExportGrid(sessions, columns as ExportColumn[], extractSessionCell);
 }

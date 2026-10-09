@@ -123,6 +123,6 @@ export function resolveContactsExportColumns(
   if (mapped.length === 0) {
     return defaultContactsExportColumns(t);
   }
-  return mapped.slice(0, 50);
+  return mapped.slice(0, 200);
 }
 

@@ -39,12 +39,12 @@ describe("contacts export column helpers", () => {
     expect(result).toEqual(defaultContactsExportColumns(fakeT));
   });
 
-  it("resolveContactsExportColumns caps columns at 50", () => {
-    const input = Array.from({ length: 60 }, (_, i) => ({
+  it("resolveContactsExportColumns caps columns at 200", () => {
+    const input = Array.from({ length: 250 }, (_, i) => ({
       id: `col_${i}`,
       label: `Col ${i}`,
     }));
     const result = resolveContactsExportColumns(input, fakeT);
-    expect(result).toHaveLength(50);
+    expect(result).toHaveLength(200);
   });
 });
