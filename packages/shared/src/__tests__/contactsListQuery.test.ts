@@ -209,4 +209,10 @@ describe('filterContactsForQuery soft deletion', () => {
       'deleted',
     ]);
   });
+
+  it('safely handles null and undefined inputs', () => {
+    expect(filterContactsForQuery(null, {})).toEqual([]);
+    expect(filterContactsForQuery(undefined, {})).toEqual([]);
+    expect(filterContactsForQuery(rows, null)).toEqual([]);
+  });
 });

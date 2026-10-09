@@ -1,10 +1,10 @@
 import {
-  DEFAULT_ENROLLMENT_EXPORT_COLUMNS,
   ENROLLMENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildEnrollmentsExportRows,
   extractEnrollmentCell,
   filterEnrollmentExportColumnsForViewer,
+  resolveAllEnrollmentExportColumns,
   type Enrollment,
   type EnrollmentExportColumn,
   type EnrollmentsListQuery,
@@ -18,8 +18,6 @@ import {
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadEnrollmentsByIds, loadEnrollmentsPage } from './enrollmentService.js';
 
-const DEFAULT_EXPORT_COLUMNS = DEFAULT_ENROLLMENT_EXPORT_COLUMNS as EnrollmentExportColumn[];
-
 export type EnrollmentsExportQueryInput = ModuleExportQueryInput<EnrollmentsListQuery>;
 export type EnrollmentsExportOptions = ModuleExportOptions<EnrollmentExportColumn>;
 export type EnrollmentsExportResult = ModuleExportResult;
@@ -30,7 +28,9 @@ async function prepareEnrollmentsExport(
   options: EnrollmentsExportOptions,
 ): Promise<{ columns: EnrollmentExportColumn[]; context: undefined }> {
   const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
+    options.columns && options.columns.length > 0
+      ? options.columns
+      : resolveAllEnrollmentExportColumns();
   const columns = filterEnrollmentExportColumnsForViewer(requestedColumns);
   return { columns, context: undefined };
 }

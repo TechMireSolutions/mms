@@ -6,12 +6,13 @@
  * the existing CSV streaming path.
  */
 import {
-  DEFAULT_STUDENT_EXPORT_COLUMNS,
   STUDENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildStudentsExportRows,
   extractStudentCell,
   filterStudentExportColumnsForViewer,
+  resolveAllStudentExportColumns,
+  mergeCustomStudentExportColumns,
   type Student,
   type StudentExportColumn,
   type StudentsListQuery,
@@ -27,8 +28,6 @@ import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadStudentFieldConfig } from './studentConfigService.js';
 import { loadStudentsByIds, loadStudentsPage } from '../students/use-cases/studentUseCases.js';
 
-const DEFAULT_EXPORT_COLUMNS = DEFAULT_STUDENT_EXPORT_COLUMNS as StudentExportColumn[];
-
 export type StudentsExportQueryInput = ModuleExportQueryInput<StudentsListQuery>;
 export type StudentsCsvExportOptions = ModuleExportOptions<StudentExportColumn>;
 export type StudentsCsvExportResult = ModuleExportResult;
@@ -36,9 +35,11 @@ export type StudentsCsvExportResult = ModuleExportResult;
 async function prepareStudentsExport(
   options: StudentsCsvExportOptions,
 ): Promise<{ columns: StudentExportColumn[]; context: undefined }> {
-  const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
   const settings = (await loadStudentFieldConfig()) as StudentsSettings | null;
+  const requestedColumns =
+    options.columns && options.columns.length > 0
+      ? mergeCustomStudentExportColumns(options.columns, settings)
+      : resolveAllStudentExportColumns(settings);
   const columns = filterStudentExportColumnsForViewer(
     requestedColumns,
     settings,

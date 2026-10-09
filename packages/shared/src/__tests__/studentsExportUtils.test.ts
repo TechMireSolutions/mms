@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterStudentExportColumnsForViewer,
   buildStudentsExportRows,
+  extractStudentCell,
   type StudentExportColumn,
 } from '../studentsExportUtils.js';
 import type { Student } from '../studentTypes.js';
@@ -106,4 +107,72 @@ describe('studentsExportUtils', () => {
     expect(rows[0]).toEqual(['Name', 'GR Number', 'Gender']);
     expect(rows[1]).toEqual(['Aisha Siddiqui', '0001-2026', 'female']);
   });
+
+  it('resolves all columns and includes custom fields and custom tabs when columns array is empty', () => {
+    const settings: StudentsSettings = {
+      autoGenerateId: true,
+      grNumberTemplate: '{seq}',
+      grNumberDigits: 4,
+      grNumberRestartAnnually: false,
+      formTabs: [{ key: 'medical', label: 'Medical Info', enabled: true, order: 2 }],
+      fields: {
+        registration: [
+          { key: 'bloodGroup', label: 'Blood Group', type: 'text', enabled: true, order: 10 },
+        ],
+      },
+    };
+    const resolved = filterStudentExportColumnsForViewer([], settings, 'admin');
+    const ids = resolved.map((c) => c.id);
+    expect(ids).toContain('name');
+    expect(ids).toContain('grNumber');
+    expect(ids).toContain('studentId');
+    expect(ids).toContain('fatherName');
+    expect(ids).toContain('bloodGroup');
+    expect(ids).toContain('medical');
+  });
+
+  it('extracts cells from all tabs, customFields, and complex values non-destructively', () => {
+    const fullStudent: Student = {
+      id: 's-2',
+      contactId: 'c-2',
+      name: 'Bilal Khan',
+      grNumber: '0002-2026',
+      studentId: 'STU-99',
+      gender: 'male',
+      dob: '2016-05-15',
+      solarDob: '2016-05-15',
+      lunarDob: '1437-08-08',
+      phone: '+1234567890',
+      email: 'bilal@test.local',
+      city: 'Karachi',
+      cnic: '42101-1234567-1',
+      fatherName: 'Tariq Khan',
+      motherName: 'Fatima Khan',
+      guardianName: 'Tariq Khan',
+      status: 'active',
+      registeredDate: '2026-01-10',
+      enrollmentDate: '2026-02-01',
+      enrolledSessions: ['Session A', 'Session B'],
+      discountType: 'sibling',
+      discountPct: 15,
+      registrationType: 'regular',
+      notes: 'Excellent student',
+      createdAt: '2026-01-10T00:00:00Z',
+      updatedAt: '2026-01-12T00:00:00Z',
+      customFields: {
+        emergencyContact: '0987654321',
+        metadata: { allergies: ['peanuts'] },
+      },
+    };
+
+    expect(extractStudentCell(fullStudent, 'studentId')).toBe('STU-99');
+    expect(extractStudentCell(fullStudent, 'fatherName')).toBe('Tariq Khan');
+    expect(extractStudentCell(fullStudent, 'motherName')).toBe('Fatima Khan');
+    expect(extractStudentCell(fullStudent, 'city')).toBe('Karachi');
+    expect(extractStudentCell(fullStudent, 'enrolledSessions')).toBe('Session A; Session B');
+    expect(extractStudentCell(fullStudent, 'discountPct')).toBe(15);
+    expect(extractStudentCell(fullStudent, 'emergencyContact')).toBe('0987654321');
+    expect(extractStudentCell(fullStudent, 'metadata')).toBe('{"allergies":["peanuts"]}');
+  });
 });
+

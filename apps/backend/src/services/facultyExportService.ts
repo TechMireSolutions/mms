@@ -1,10 +1,11 @@
 import {
   FACULTY_MODULE_MANIFEST,
-  DEFAULT_FACULTY_EXPORT_COLUMNS,
   buildCsvContent,
   buildFacultyExportRows,
   createFacultyCellExtractor,
   filterFacultyExportColumnsForViewer,
+  resolveAllFacultyExportColumns,
+  mergeCustomFacultyExportColumns,
   type Faculty,
   type FacultyExportColumn,
   type FacultyListQuery,
@@ -26,26 +27,29 @@ export type FacultyExportResult = ModuleExportResult;
 export type FacultyCsvExportOptions = FacultyExportOptions;
 export type FacultyCsvExportResult = FacultyExportResult;
 
+type FacultyExportContext = { settings: FacultySettings | null };
+
 async function prepareFacultyExport(
   options: FacultyExportOptions,
-): Promise<{ columns: FacultyExportColumn[]; context: undefined }> {
+): Promise<{ columns: FacultyExportColumn[]; context: FacultyExportContext }> {
+  const settings = (await loadFacultyFieldConfig()) as FacultySettings | null;
   const requestedColumns =
     options.columns && options.columns.length > 0
-      ? options.columns
-      : DEFAULT_FACULTY_EXPORT_COLUMNS;
-  const settings = (await loadFacultyFieldConfig()) as FacultySettings | null;
+      ? mergeCustomFacultyExportColumns(options.columns, settings)
+      : resolveAllFacultyExportColumns(settings);
   const columns = filterFacultyExportColumnsForViewer(
     requestedColumns,
     settings,
     options.viewerRole,
   );
-  return { columns, context: undefined };
+  return { columns, context: { settings } };
 }
 
 const facultyCsv = createModuleExportService<
   Faculty,
   FacultyExportQueryInput,
-  FacultyExportColumn
+  FacultyExportColumn,
+  FacultyExportContext
 >({
   manifest: FACULTY_MODULE_MANIFEST,
   normalizeQuery: (query, allowDeleted) => ({
@@ -69,11 +73,11 @@ const facultyCsv = createModuleExportService<
       nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
-  yieldDataChunks: (facultyList, columns, chunkSize) => {
+  yieldDataChunks: (facultyList, columns, chunkSize, context) => {
     function* gen(): Generator<string, void, undefined> {
       for (let i = 0; i < facultyList.length; i += chunkSize) {
         const chunk = facultyList.slice(i, i + chunkSize);
-        const chunkExportRows = buildFacultyExportRows(chunk, columns);
+        const chunkExportRows = buildFacultyExportRows(chunk, columns, context?.settings);
         const dataRows = chunkExportRows.slice(1);
         if (dataRows.length > 0) {
           yield '\n' + buildCsvContent(dataRows);

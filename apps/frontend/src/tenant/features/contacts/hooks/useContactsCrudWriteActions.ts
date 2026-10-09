@@ -101,7 +101,7 @@ export function useContactsCrudWriteActions({
           options?.onProgress?.({ imported: succeeded + failed, total: list.length });
         }
       } catch (err) {
-        failed += list.length - succeeded;
+        failed = list.length - succeeded;
         reportClientError(err, { scope: "contacts.import_job" });
       } finally {
         if (succeeded > 0) invalidateContacts();

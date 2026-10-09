@@ -47,4 +47,25 @@ describe("contacts export column helpers", () => {
     const result = resolveContactsExportColumns(input, fakeT);
     expect(result).toHaveLength(200);
   });
+
+  it("defaultContactsExportColumns merges custom fields when fieldConfig is passed", () => {
+    const fieldConfig = {
+      version: 1,
+      fields: {
+        basic: [
+          { key: "bloodGroup", label: "Blood Group", type: "text" as const, enabled: true, order: 8, required: false },
+        ],
+      },
+      formTabs: [
+        { key: "custom_medical", label: "Medical History", enabled: true, order: 10 },
+      ],
+    };
+
+    const columns = defaultContactsExportColumns(fakeT, fieldConfig);
+    const ids = columns.map((c) => c.id);
+    expect(ids).toContain("bloodGroup");
+    expect(ids).toContain("custom_medical");
+    expect(ids).toContain("solarDob");
+    expect(ids).toContain("lunarDob");
+  });
 });

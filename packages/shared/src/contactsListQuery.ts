@@ -152,10 +152,9 @@ function matchesContactsQuickFilter(
   return true;
 }
 
-export function filterContactsForQuery(contacts: Contact[], query: ContactsListQuery): Contact[] {
-  let rows = query.includeDeleted
-    ? contacts.filter(isContactDeleted)
-    : filterActiveContacts(contacts);
+export function filterContactsForQuery(contacts?: Contact[] | null, query?: ContactsListQuery | null): Contact[] {
+  if (!Array.isArray(contacts) || !query) return [];
+  let rows = (query.includeDeleted ? contacts.filter(isContactDeleted) : filterActiveContacts(contacts)).filter(Boolean);
   if (query.gender) {
     const genderFilter = query.gender.trim().toLowerCase();
     rows = rows.filter((contact) => {

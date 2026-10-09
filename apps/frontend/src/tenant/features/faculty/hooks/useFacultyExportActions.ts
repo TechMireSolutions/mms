@@ -1,10 +1,12 @@
 import {
   DEFAULT_FACULTY_EXPORT_COLUMNS,
   facultyColumnLabelKey,
+  mergeCustomFacultyExportColumns,
   type AppTranslationKey,
   type FacultyExportColumn,
   type FacultyListQuery,
   type FacultyQuickFilter,
+  type FacultySettings,
   type FacultySortField,
 } from "@mms/shared";
 import { startServerFacultyCsvExport } from "@/lib/backgroundJobs/startServerFacultyCsvExport";
@@ -103,11 +105,13 @@ export function useFacultyExportActions({
 /** Default Work export columns when registry is unavailable. */
 export function defaultFacultyExportColumns(
   t: (key: AppTranslationKey) => string,
+  settings?: FacultySettings | null,
 ): FacultyExportColumn[] {
-  return DEFAULT_FACULTY_EXPORT_COLUMNS.map((column) => ({
+  const base = DEFAULT_FACULTY_EXPORT_COLUMNS.map((column) => ({
     id: column.id,
     label: t(facultyColumnLabelKey(column.id)),
   }));
+  return mergeCustomFacultyExportColumns(base, settings);
 }
 
 /** Resolves active export columns from column registry and visibility state. */
@@ -115,9 +119,10 @@ export function resolveFacultyExportColumns(
   columnRegistry: Array<{ key: string; label?: string }>,
   isColumnVisible: (key: string) => boolean,
   t: (key: AppTranslationKey) => string,
+  settings?: FacultySettings | null,
 ): FacultyExportColumn[] {
   const visible = columnRegistry.filter((col) => isColumnVisible(col.key));
-  if (visible.length === 0) return defaultFacultyExportColumns(t);
+  if (visible.length === 0) return defaultFacultyExportColumns(t, settings);
   const columns = visible.map((col) => ({
     id: col.key,
     label: col.label || col.key,
@@ -129,5 +134,5 @@ export function resolveFacultyExportColumns(
       label: t(facultyColumnLabelKey("employeeId")),
     });
   }
-  return columns;
+  return mergeCustomFacultyExportColumns(columns, settings);
 }

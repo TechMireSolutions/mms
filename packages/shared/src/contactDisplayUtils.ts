@@ -114,14 +114,18 @@ const normalizeEmail = (email: unknown): string => {
   return String(email).trim().toLowerCase();
 };
 
-export const getEmails = (contact: Contact): string[] => {
+export const getEmails = (contact?: Contact | null): string[] => {
+  if (!contact) return [];
   const emails: string[] = [];
-  if (contact.emails) {
+  if (Array.isArray(contact.emails)) {
     contact.emails.forEach((email) => {
-      if (email.address) {
+      if (email?.address) {
         emails.push(normalizeEmail(email.address));
       }
     });
+  }
+  if (contact.email) {
+    emails.push(normalizeEmail(contact.email));
   }
   return Array.from(new Set(emails.filter(Boolean)));
 };

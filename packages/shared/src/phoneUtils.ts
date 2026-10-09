@@ -151,14 +151,18 @@ const normalizePhoneForComparison = (phoneNumber: unknown): string => {
 /**
  * Collect normalized phone comparison keys from a contact.
  */
-export const getPhoneNumbers = (contact: Contact): string[] => {
+export const getPhoneNumbers = (contact?: Contact | null): string[] => {
+  if (!contact) return [];
   const phoneNumbers: string[] = [];
-  if (contact.phones) {
+  if (Array.isArray(contact.phones)) {
     contact.phones.forEach((phone) => {
-      if (phone.number) {
+      if (phone?.number) {
         phoneNumbers.push(normalizePhoneForComparison(phone.number));
       }
     });
+  }
+  if (contact.phone) {
+    phoneNumbers.push(normalizePhoneForComparison(contact.phone));
   }
   return Array.from(new Set(phoneNumbers.filter(Boolean)));
 };

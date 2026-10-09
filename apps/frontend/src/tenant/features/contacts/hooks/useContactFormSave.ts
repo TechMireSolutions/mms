@@ -77,9 +77,11 @@ export function useContactFormSave({
       const lastName = cleanedDraft.lastName || "";
 
       const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
-        const digits = (phone.number || "").replace(/\D/g, "");
-        const e164 = normalizeToE164(phone.countryCode || defaultCountryCode, digits);
-        const parsed = parsePhoneNumber(e164, phone.countryCode || defaultCountryCode);
+        const fallbackCode = phone.countryCode || defaultCountryCode;
+        const trimmedNumber = (phone.number || "").trim();
+        const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode);
+        const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
+        const parsed = parsePhoneNumber(e164, parsedRaw.countryCode);
         const prevDigits = (phone.number || "").replace(/\D/g, "");
         const nextDigits = (parsed.number || "").replace(/\D/g, "");
         const whatsappStatus = phone.whatsappStatus;

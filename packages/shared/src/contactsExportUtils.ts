@@ -7,6 +7,7 @@ import {
   isContactLockedEnabledTab,
   resolveContactEnabledTabIds,
 } from './contactEnabledTabs.js';
+import { listEnabledCustomContactFormFields } from './contactFormCustomFields.js';
 import type { ContactExportColumn } from './contactExportColumns.js';
 import { DEFAULT_CONTACT_EXPORT_COLUMNS } from './contactExportColumns.js';
 
@@ -93,7 +94,64 @@ export function isExportableContactColumn(
       columnFieldContext.isTabFieldEnabled(mapping.tabId, mapping.fieldId)
     );
   }
+  if (columnFieldContext.enabledTabIds.has(columnKey.toLowerCase())) {
+    return true;
+  }
   return resolveContactColumnField(columnKey, columnFieldContext) != null;
+}
+
+/**
+ * Resolves all exportable columns for a tenant, combining the comprehensive
+ * standard form columns with any enabled custom fields or tabs in fieldConfig.
+ */
+export function resolveAllContactExportColumns(
+  fieldConfig?: Partial<FieldConfig> | null,
+): ContactExportColumn[] {
+  const columns: ContactExportColumn[] = [...DEFAULT_CONTACT_EXPORT_COLUMNS];
+  if (!fieldConfig?.fields) return columns;
+
+  const existingIds = new Set(columns.map((c) => c.id.toLowerCase()));
+  const customFields = listEnabledCustomContactFormFields(fieldConfig.fields);
+  for (const field of customFields) {
+    const keyLower = field.key.toLowerCase();
+    if (!existingIds.has(keyLower)) {
+      existingIds.add(keyLower);
+      columns.push({ id: field.key, label: field.label || field.key });
+    }
+  }
+
+  if (fieldConfig.formTabs) {
+    for (const tab of fieldConfig.formTabs) {
+      const keyLower = tab.key.toLowerCase();
+      if (tab.enabled !== false && !existingIds.has(keyLower)) {
+        const isStandard = DEFAULT_FORM_TABS.some((dt) => dt.key.toLowerCase() === keyLower);
+        if (!isStandard) {
+          existingIds.add(keyLower);
+          columns.push({ id: tab.key, label: tab.label || tab.key });
+        }
+      }
+    }
+  }
+  return columns;
+}
+
+/** Merges any enabled custom fields from fieldConfig into the given columns list. */
+export function mergeCustomContactExportColumns(
+  columns: ContactExportColumn[],
+  fieldConfig?: Partial<FieldConfig> | null,
+): ContactExportColumn[] {
+  if (!fieldConfig?.fields || columns.length === 0) return columns;
+  const existingIds = new Set(columns.map((c) => c.id.toLowerCase()));
+  const merged = [...columns];
+  const customFields = listEnabledCustomContactFormFields(fieldConfig.fields);
+  for (const field of customFields) {
+    const keyLower = field.key.toLowerCase();
+    if (!existingIds.has(keyLower)) {
+      existingIds.add(keyLower);
+      merged.push({ id: field.key, label: field.label || field.key });
+    }
+  }
+  return merged;
 }
 
 /** Filters export columns by the same field/tab visibility rules as Work columns. */
@@ -102,7 +160,12 @@ export function filterContactExportColumnsForViewer(
   fieldConfig: FieldConfig | null | undefined,
   viewerRole: string,
 ): ContactExportColumn[] {
-  const source = columns.length > 0 ? columns : [...DEFAULT_CONTACT_EXPORT_COLUMNS];
+  const source =
+    columns.length > 0
+      ? (columns.length >= DEFAULT_CONTACT_EXPORT_COLUMNS.length
+          ? mergeCustomContactExportColumns(columns, fieldConfig)
+          : columns)
+      : resolveAllContactExportColumns(fieldConfig);
   const columnFieldContext = fieldConfig?.fields
     ? buildColumnFieldContext(fieldConfig, viewerRole)
     : null;

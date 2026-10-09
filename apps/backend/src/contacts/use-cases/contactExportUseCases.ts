@@ -1,6 +1,5 @@
 import {
   CONTACTS_MODULE_MANIFEST,
-  DEFAULT_CONTACT_EXPORT_COLUMNS,
   buildContactsExportRows,
   buildCsvContent,
   compileContactColumnExtractor,
@@ -22,8 +21,6 @@ import { CsvExportLimitError, normalizeIncludeDeletedFlag } from '../../lib/csvE
 import { loadContactsByIds, loadContactsPage } from './contactLoadUseCases.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 
-const DEFAULT_EXPORT_COLUMNS = DEFAULT_CONTACT_EXPORT_COLUMNS as ContactExportColumn[];
-
 const EXPORT_LABELS = { yes: 'Yes', no: 'No' };
 
 type ContactsExportQueryInput = Omit<ContactsListQuery, 'includeDeleted'> & {
@@ -44,8 +41,7 @@ type ContactsExportContext = {
 async function prepareContactsExport(
   options: ContactsExportOptions,
 ): Promise<{ columns: ContactExportColumn[]; context: ContactsExportContext }> {
-  const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
+  const requestedColumns = options.columns && options.columns.length > 0 ? options.columns : [];
   const config = await loadContactFieldConfig();
   const fieldConfig: FieldConfig | null = config?.fields
     ? (config.formTabs

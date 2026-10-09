@@ -1,7 +1,7 @@
 import { sql, type SQL } from 'drizzle-orm';
 import { normalizeSearchString } from '@mms/shared';
 import {
-  contacts, students, faculty, facultyEmployments, tenantUsers, contactEmails, contactAddresses,
+  contacts, students, faculty, facultyEmployments, tenantUsers, contactEmails, contactAddresses, contactPhones,
 } from '../schema.js';
 import { primaryPhoneDigitsSql } from './contactRepositorySql.js';
 
@@ -70,14 +70,21 @@ export function sqlNormalizeSearchExpr(expr: SQL): SQL {
 }
 
 export function buildSearchSql(search: string): SQL | null {
-  const normalized = normalizeSearchString(search.trim());
+  const normalized = normalizeSearchString(typeof search === 'string' ? search.trim() : '');
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   const haystack = sql`concat_ws(' ',
       COALESCE(${contacts.name}, ''),
       COALESCE(${contacts.firstName}, ''),
       COALESCE(${contacts.lastName}, ''),
+      COALESCE(${contacts.cnic}, ''),
       NULLIF(${primaryPhoneDigitsSql()}, ''),
+      COALESCE((
+        SELECT string_agg(NULLIF(trim(p.number), ''), ' ')
+        FROM ${contactPhones} p
+        WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND p.contact_id = ${contacts.id}
+      ), ''),
       COALESCE((
         SELECT string_agg(NULLIF(trim(e.address), ''), ' ')
         FROM ${contactEmails} e
