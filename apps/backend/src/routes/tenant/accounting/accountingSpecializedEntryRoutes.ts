@@ -26,7 +26,7 @@ export const accountingSpecializedEntryRoutes: FastifyPluginAsync = async (fasti
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     try {
-      const result = await processSpecializedEntryUseCase(parsed.data);
+      const result = await processSpecializedEntryUseCase(parsed.data, { name: user.name });
       return reply.status(201).send(result);
     } catch (error) {
       return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to process entry', error);

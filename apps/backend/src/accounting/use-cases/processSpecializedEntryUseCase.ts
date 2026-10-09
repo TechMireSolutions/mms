@@ -71,7 +71,7 @@ async function processFeeEntry(input: FeeEntryInput): Promise<SpecializedEntryRe
   };
 }
 
-async function processSalaryEntry(input: SalaryEntryInput): Promise<SpecializedEntryResult> {
+async function processSalaryEntry(input: SalaryEntryInput, preparerName: string): Promise<SpecializedEntryResult> {
   const amount = Number(input.amount);
   const description = `Salary payment — staff ${input.staffId} (${input.payPeriod})`;
   const entry = await accountingUseCases.createJournalEntry({
@@ -80,7 +80,7 @@ async function processSalaryEntry(input: SalaryEntryInput): Promise<SpecializedE
     ref: `SAL-${input.payPeriod}-${input.staffId}`,
     description: input.note || description,
     status: 'posted',
-    created_by: 'system',
+    created_by: preparerName,
     tags: ['Payroll'],
     attachments: [],
     fiscal_year: '',
@@ -107,8 +107,10 @@ async function processSalaryEntry(input: SalaryEntryInput): Promise<SpecializedE
  */
 export async function processSpecializedEntryUseCase(
   input: SpecializedEntryInput,
+  actor: { name: string },
 ): Promise<SpecializedEntryResult> {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
-  return withTenant(tenant, () => (input.type === 'fee' ? processFeeEntry(input) : processSalaryEntry(input)));
+  const preparerName = (actor.name.trim() || 'system').slice(0, 120);
+  return withTenant(tenant, () => (input.type === 'fee' ? processFeeEntry(input) : processSalaryEntry(input, preparerName)));
 }

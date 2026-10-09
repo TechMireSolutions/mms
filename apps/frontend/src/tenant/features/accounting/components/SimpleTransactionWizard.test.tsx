@@ -28,6 +28,10 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
+vi.mock("@/lib/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { name: "Amina Accountant" } }),
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -166,6 +170,7 @@ describe("SimpleTransactionWizard", () => {
       ["a4000", 0, 12.5],
     ]);
     expect(posted.status).toBe("posted");
+    expect(posted.created_by).toBe("Amina Accountant");
     // Nothing the shared contract would reject may reach the append-only ledger.
     expect(journalEntryRecordSchema.safeParse(posted).success).toBe(true);
     expect(notify.error).not.toHaveBeenCalled();

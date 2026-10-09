@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { JournalEntry } from "@/lib/data/accountingData";
 
-/** Icon button that prints a payment voucher for one entry (Simple-mode lists, Cashbook). */
+/** Icon button that prints a voucher for one entry (Simple-mode lists, Cashbook). */
 export function PaymentVoucherPrintButton({ entry, onPrint }: { entry: JournalEntry; onPrint: (entry: JournalEntry) => void }) {
   const { t } = useTranslation();
   return (

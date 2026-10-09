@@ -17,7 +17,7 @@ interface JournalEntryRowActionsProps {
   onPost: (entry: JournalEntry) => void;
   onReverse: (entry: JournalEntry) => void;
   onTrashAction: (id: string) => void;
-  /** Present only for entries that can print a payment voucher (posted money-out). */
+  /** Present for posted vouchers that can be printed. */
   onPrintVoucher?: (entry: JournalEntry) => void;
   triggerClassName?: string;
 }
