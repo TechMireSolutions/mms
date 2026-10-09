@@ -68,7 +68,6 @@ export function usePaymentVoucherPrint(accounts: readonly Account[]) {
       if (model.layout === "receipt") {
         labels.paidTo = t("accounting.journal.voucher.receivedFrom");
         labels.paidFrom = t("accounting.journal.voucher.receivedIn");
-        labels.paidBy = t("accounting.journal.voucher.receivedBy");
       }
       const contactLine = [branding.addressLine1, branding.city, branding.phone].filter(Boolean).join(" · ");
       const money = (amount: number) => (amount > 0 ? formatCurrency(amount) : "");

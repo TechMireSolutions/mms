@@ -9,7 +9,7 @@ export const PAYMENT_VOUCHER_LABEL_KEYS = [
   "title", "voucherNo", "date", "fiscalYear", "paidTo", "employeeId", "designation", "payPeriod",
   "purpose", "paidFrom", "particulars", "account", "debit", "credit", "deduction", "amount", "total",
   "netPaid", "amountInWords",
-  "preparedBy", "checkedBy", "approvedBy", "paidBy", "receivedBy", "receiverName", "receiverIdNo",
+  "preparedBy", "approvedBy", "paidBy", "receivedBy", "receiverName", "receiverIdNo",
   "signature", "thumbImpression", "receiptDeclaration",
 ] as const;
 
@@ -125,9 +125,7 @@ export function buildPaymentVoucherBody(input: PaymentVoucherPrintInput): string
   ${line(L.purpose, input.narration)}
   ${line(L.paidFrom, input.paidFrom.join(", "))}`;
   const narration = input.layout === "journal" ? line(L.purpose, input.narration) : "";
-  const signs = input.layout === "journal"
-    ? `${sign(L.preparedBy, input.preparedByName)}${sign(L.checkedBy)}${sign(L.approvedBy)}`
-    : `${sign(L.preparedBy, input.preparedByName)}${sign(L.approvedBy)}${sign(L.paidBy)}`;
+  const signs = `${sign(L.preparedBy, input.preparedByName)}${sign(L.approvedBy)}${sign(L.paidBy)}`;
   const receiver = input.layout === "payment" ? `
   <section class="pv-recv">
     <div class="pv-recv-body">
