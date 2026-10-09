@@ -1,6 +1,8 @@
 import { parseCsvRows } from './csvParserCore.js';
+import { facultyTransferSchema } from './dataTransfer/schemas/facultyTransferSchema.js';
 
 export interface FacultyCsvImportRow {
+  name?: string;
   employeeId?: string;
   contactId?: string;
   specialization?: string;
@@ -10,6 +12,9 @@ export interface FacultyCsvImportRow {
   qualification?: string;
   employmentStartDate?: string;
   employmentEndDate?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
 }
 
 const ALIASES: Record<string, keyof FacultyCsvImportRow | 'skip'> = {
@@ -30,14 +35,22 @@ const ALIASES: Record<string, keyof FacultyCsvImportRow | 'skip'> = {
   employmentenddate: 'employmentEndDate',
   employment_end_date: 'employmentEndDate',
   enddate: 'employmentEndDate',
+  name: 'name',
+  phone: 'phone',
+  email: 'email',
 };
 
 function normHeader(h: string): string {
   return h.trim().toLowerCase().replace(/\s+/g, '');
 }
 
-/** Parse faculty member CSV (upsert by employeeId; create needs contactId). */
+/** Parse faculty member CSV using SSOT facultyTransferSchema with legacy fallback. */
 export function parseFacultyMembersCsv(csvText: string): FacultyCsvImportRow[] {
+  const schemaResult = facultyTransferSchema.fromImportCsv(csvText);
+  if (schemaResult.rows.length > 0 && schemaResult.missingHeaders.length === 0) {
+    return schemaResult.rows as FacultyCsvImportRow[];
+  }
+
   const grid = parseCsvRows(csvText);
   if (grid.length < 2) return [];
   const headers = grid[0].map(normHeader);
@@ -59,3 +72,4 @@ export function parseFacultyMembersCsv(csvText: string): FacultyCsvImportRow[] {
   }
   return out;
 }
+

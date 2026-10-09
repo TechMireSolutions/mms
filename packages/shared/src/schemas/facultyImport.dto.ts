@@ -14,6 +14,7 @@ const importIdempotencyKeySchema = z
 
 const facultyImportRowSchema = z
   .object({
+    name: z.string().trim().max(200).optional(),
     employeeId: z.string().trim().max(100).optional(),
     contactId: z.string().trim().max(100).optional(),
     specialization: z.string().trim().max(200).optional(),
@@ -25,8 +26,11 @@ const facultyImportRowSchema = z
     employmentEndDate: calendarDate.optional(),
     /** @deprecated Legacy alias of `employmentStartDate`. */
     joinDate: calendarDate.optional(),
+    phone: z.string().trim().max(50).optional(),
+    email: z.string().trim().max(255).optional(),
+    notes: z.string().trim().max(2000).optional(),
   })
-  .strict();
+  .passthrough();
 
 export const facultyImportBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;

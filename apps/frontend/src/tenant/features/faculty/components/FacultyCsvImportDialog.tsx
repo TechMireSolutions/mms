@@ -1,18 +1,13 @@
-import React, { useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import React from "react";
 import {
-  parseFacultyDesignationsCsv,
-  parseFacultyMembersCsv,
+  facultyTransferSchema,
+  facultyDesignationTransferSchema,
+  type FacultyTransferEntity,
+  type FacultyDesignationCsvRow,
 } from "@mms/shared";
-import { DashedFileDropZone } from "@/components/ui/DashedFileDropZone";
-import { Modal } from "@/components/ui/Modal";
-import { ActionButton } from "@/components/ui/ActionButton";
+import { ModuleImportDialog } from "@/components/ui/ModuleImportDialog";
+import { useModuleCsvImportActions } from "@/lib/backgroundJobs/useModuleCsvImportActions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-import {
-  startServerFacultyDesignationsImport,
-  startServerFacultyMembersImport,
-} from "@/lib/backgroundJobs/startServerFacultyImport";
 import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 export interface FacultyCsvImportDialogProps {
@@ -22,7 +17,7 @@ export interface FacultyCsvImportDialogProps {
   canWrite: boolean;
 }
 
-/** CSV import dialog for Faculties / Designations. */
+/** Standardized CSV import dialog for Faculties and Designations using SSOT schema. */
 export function FacultyCsvImportDialog({
   open,
   entity,
@@ -30,84 +25,45 @@ export function FacultyCsvImportDialog({
   canWrite,
 }: FacultyCsvImportDialogProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [fileError, setFileError] = useState<string | null>(null);
+
+  const facultyActions = useModuleCsvImportActions<FacultyTransferEntity>({
+    apiPath: "/api/faculty/import",
+    schema: facultyTransferSchema,
+    defaultLabel: t("faculty.io.importFacultiesJob"),
+    onSuccess: onClose,
+  });
+
+  const designationActions = useModuleCsvImportActions<FacultyDesignationCsvRow>({
+    apiPath: "/api/faculty/designations/import",
+    schema: facultyDesignationTransferSchema,
+    defaultLabel: t("faculty.io.importDesignationsJob"),
+    onSuccess: onClose,
+  });
 
   if (!open || !entity || !canWrite) return null;
 
-  const title =
-    entity === "faculties"
-      ? t("faculty.io.importFaculties")
-      : t("faculty.io.importDesignations");
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return;
-    setFileError(null);
-    setPending(true);
-    try {
-      const text = await file.text();
-      if (entity === "faculties") {
-        const rows = parseFacultyMembersCsv(text);
-        if (rows.length === 0) throw new Error(t("faculty.io.importEmpty"));
-        await startServerFacultyMembersImport({
-          rows,
-          label: t("faculty.io.importFacultiesJob"),
-        });
-      } else {
-        const rows = parseFacultyDesignationsCsv(text);
-        if (rows.length === 0) throw new Error(t("faculty.io.importEmpty"));
-        await startServerFacultyDesignationsImport({
-          rows,
-          label: t("faculty.io.importDesignationsJob"),
-        });
-      }
-      notify.success(t("faculty.io.importQueued"));
-      onClose();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setFileError(message);
-      notify.error(t("faculty.io.importFailed"), { description: message });
-    } finally {
-      setPending(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
+  if (entity === "faculties") {
+    return (
+      <ModuleImportDialog<FacultyTransferEntity>
+        open={open}
+        onClose={onClose}
+        title={t("faculty.io.importFaculties")}
+        subtitle={t("faculty.io.csvHint")}
+        canWrite={canWrite}
+        actions={facultyActions}
+      />
+    );
+  }
 
   return (
-    <Modal open onClose={onClose} icon={Upload} title={title} size="md">
-      <div className="space-y-4 text-start">
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="sr-only"
-          onChange={(e) => void handleFile(e.target.files?.[0] ?? null)}
-        />
-        {fileError ? (
-          <p role="alert" className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-2.5">
-            {fileError}
-          </p>
-        ) : null}
-        <DashedFileDropZone
-          isDragging={isDragging}
-          onOpenPicker={() => fileRef.current?.click()}
-          onDraggingChange={setIsDragging}
-          onFiles={(files) => void handleFile(files?.[0] ?? null)}
-          disabled={pending}
-          isUploading={pending}
-          title={t("faculty.io.dropCsv")}
-          description={t("faculty.io.csvHint")}
-          inputAriaLabel={t("faculty.io.dropCsv")}
-          accept=".csv,text/csv"
-        />
-        <div className="flex justify-end">
-          <ActionButton variant="ghost" onClick={onClose} disabled={pending}>
-            {t("common.cancel")}
-          </ActionButton>
-        </div>
-      </div>
-    </Modal>
+    <ModuleImportDialog<FacultyDesignationCsvRow>
+      open={open}
+      onClose={onClose}
+      title={t("faculty.io.importDesignations")}
+      subtitle={t("faculty.io.csvHint")}
+      canWrite={canWrite}
+      actions={designationActions}
+    />
   );
 }
+

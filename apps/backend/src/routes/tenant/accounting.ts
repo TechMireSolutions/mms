@@ -30,6 +30,7 @@ import { accountingVoucherNumberingRoutes } from './accounting/accountingVoucher
 import { accountingSpecializedEntryRoutes } from './accounting/accountingSpecializedEntryRoutes.js';
 import { accountingSeedChartRoutes } from './accounting/accountingSeedChartRoutes.js';
 import { accountingReversalRoutes } from './accounting/accountingReversalRoutes.js';
+import { accountingExportRoutes } from './accounting/accountingExportRoutes.js';
 
 const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
 const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.accountCollectionKey;
@@ -48,6 +49,7 @@ export default async function accountingRoutes(
   await fastify.register(
     async (sub) => {
       await sub.register(accountingSetupConfigRoutes);
+      await sub.register(accountingExportRoutes);
 
       registerIncludableBulkRoutes(sub, {
         path: '/accounts',

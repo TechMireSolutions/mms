@@ -1,12 +1,15 @@
 import React, { Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Star, Send } from 'lucide-react';
+import { Send, Star } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { ActionButton } from '@/components/ui/ActionButton';
+import { hasanatTransferSchema } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { HasanatCommandMetrics } from '@/tenant/features/hasanat/components/HasanatCommandMetrics';
+import { HasanatCsvImportDialog } from '@/tenant/features/hasanat/components/HasanatCsvImportDialog';
+import { HasanatPageHeaderActions } from '@/tenant/features/hasanat/components/HasanatPageHeaderActions';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { HasanatWorkTier } from '@/tenant/features/hasanat/components/HasanatWorkTier';
 import { useHasanatCardsPageController } from '@/tenant/features/hasanat/hooks/useHasanatCardsPageController';
@@ -31,6 +34,14 @@ import { DistributionDetail } from '@/tenant/features/hasanat/components/Distrib
 
 export default function HasanatCards() {
   const c = useHasanatCardsPageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/hasanat/export/csv',
+    filename: 'hasanat-cards.csv',
+    auditPath: '/api/hasanat/export-audit',
+    columns: hasanatTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
 
   return (
     <>
@@ -41,11 +52,15 @@ export default function HasanatCards() {
       headerTitle={c.t('nav.hasanatCards')}
       headerSubtitle={c.t('page.hasanat.subtitle')}
       headerActions={
-        c.canWrite && !c.showDeleted ? (
-          <ActionButton variant="primary" icon={Send} onClick={c.openDistribute}>
-            {c.t('hasanat.distributeCards')}
-          </ActionButton>
-        ) : undefined
+        <HasanatPageHeaderActions
+          canWrite={c.canWrite}
+          canExport={c.canWrite}
+          showDeleted={c.showDeleted}
+          isExporting={isExporting}
+          onDistribute={c.openDistribute}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
+        />
       }
       metricsStrip={
         <HasanatCommandMetrics shown={c.filteredCount} />
@@ -86,6 +101,7 @@ export default function HasanatCards() {
                 <ModuleEntityIoToolbar
                   canWrite={c.canWrite}
                   viewingDeleted={c.showDeleted}
+                  onImport={() => setImportOpen(true)}
                   onAdd={c.openDistribute}
                   addLabel={c.t('hasanat.distributeCards')}
                   addIcon={Send}
@@ -142,6 +158,12 @@ export default function HasanatCards() {
           />
         </Suspense>
       )}
+
+      <HasanatCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWrite}
+      />
     </ModulePageShell>
 
       <AnimatePresence>

@@ -5,6 +5,7 @@ import { attendanceUseCases } from '../../attendance/use-cases/attendanceUseCase
 import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudRouter.js';
 import { attendanceContractRouter } from './attendance/attendanceContractRouter.js';
+import { attendanceExportRoutes } from './attendance/attendanceExportRoutes.js';
 
 const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
 
@@ -22,6 +23,8 @@ export default async function attendanceRoutes(
 
   await fastify.register(
     async (sub) => {
+      await sub.register(attendanceExportRoutes);
+
       registerStandardExtendedRoutes(sub, {
         collection: COLLECTION,
         errorMessagePrefix: 'attendance',

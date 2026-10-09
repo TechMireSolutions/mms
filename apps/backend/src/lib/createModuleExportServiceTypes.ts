@@ -3,6 +3,7 @@
  * @description Types for the generic module export service factory.
  */
 import type { ExportFormat, ExportColumn } from '@mms/shared';
+import { isSystemMetadataKey } from '@mms/shared';
 
 export type ModuleCsvExportColumn = { id?: string; label: string };
 
@@ -71,12 +72,14 @@ export type CreateModuleExportServiceOptions<
   extractCell?: (row: TRow, columnId: string) => string | number | boolean | null | undefined;
 };
 
-/** Normalizes module columns to standard ExportColumn format. */
+/** Normalizes module columns to standard ExportColumn format, enforcing Field Whitelist. */
 export function normalizeExportColumns<TCol extends ModuleCsvExportColumn>(
   columns: TCol[],
 ): ExportColumn[] {
-  return columns.map((col) => ({
-    id: col.id ?? col.label,
-    label: col.label,
-  }));
+  return columns
+    .filter((col) => !isSystemMetadataKey(col.id ?? '') && !isSystemMetadataKey(col.label))
+    .map((col) => ({
+      id: col.id ?? col.label,
+      label: col.label,
+    }));
 }

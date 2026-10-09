@@ -13,12 +13,16 @@ const SessionForm = lazy(() =>
     default: m.SessionForm,
   }))
 );
+import { SessionsCsvImportDialog } from "@/tenant/features/sessions/components/SessionsCsvImportDialog";
 
 interface SessionsDialogLayerProps {
   showForm: boolean;
   editSession: Session | null;
   detailSession: Session | null;
   canDelete: boolean;
+  canWrite?: boolean;
+  importOpen?: boolean;
+  onCloseImport?: () => void;
   pendingDeleteId: string | null;
   confirmBulkDeleteOpen: boolean;
   confirmBulkRestoreOpen: boolean;
@@ -46,6 +50,9 @@ export function SessionsDialogLayer({
   confirmBulkDeleteOpen,
   confirmBulkRestoreOpen,
   selectedCount,
+  importOpen = false,
+  onCloseImport,
+  canWrite = false,
   onCloseForm,
   onSave,
   onCloseDetail,
@@ -98,6 +105,14 @@ export function SessionsDialogLayer({
         onConfirmBulkRestore={onConfirmBulkRestore}
         onConfirmDelete={onConfirmDelete}
       />
+
+      {importOpen && onCloseImport ? (
+        <SessionsCsvImportDialog
+          open={importOpen}
+          onClose={onCloseImport}
+          canWrite={canWrite}
+        />
+      ) : null}
     </>
   );
 }

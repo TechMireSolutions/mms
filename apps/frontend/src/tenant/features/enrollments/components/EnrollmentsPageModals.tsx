@@ -1,12 +1,19 @@
 import React from "react";
 import { EnrollmentsModalLayer } from "./EnrollmentsModalLayer";
+import { EnrollmentsCsvImportDialog } from "./EnrollmentsCsvImportDialog";
 import type { useEnrollmentsPageState } from "../hooks/useEnrollmentsPageState";
 
 interface EnrollmentsPageModalsProps {
   pageState: ReturnType<typeof useEnrollmentsPageState>;
+  importOpen?: boolean;
+  onCloseImport?: () => void;
 }
 
-export function EnrollmentsPageModals({ pageState }: EnrollmentsPageModalsProps) {
+export function EnrollmentsPageModals({
+  pageState,
+  importOpen = false,
+  onCloseImport,
+}: EnrollmentsPageModalsProps) {
   const {
     t,
     canWriteEnrollments,
@@ -39,7 +46,8 @@ export function EnrollmentsPageModals({ pageState }: EnrollmentsPageModalsProps)
   } = pageActions;
 
   return (
-    <EnrollmentsModalLayer
+    <>
+      <EnrollmentsModalLayer
       viewing={viewing}
       canWrite={canWriteEnrollments}
       canDelete={canDelete}
@@ -74,5 +82,14 @@ export function EnrollmentsPageModals({ pageState }: EnrollmentsPageModalsProps)
         clearSelection();
       }}
     />
+
+    {importOpen && onCloseImport ? (
+      <EnrollmentsCsvImportDialog
+        open={importOpen}
+        onClose={onCloseImport}
+        canWrite={canWriteEnrollments}
+      />
+    ) : null}
+  </>
   );
 }
