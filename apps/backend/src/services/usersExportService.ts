@@ -3,28 +3,31 @@ import {
   DEFAULT_USER_EXPORT_COLUMNS,
   buildCsvContent,
   buildUsersExportRows,
+  extractUserCell,
   filterUserExportColumnsForViewer,
   type UserExportColumn,
   type UsersListQuery,
   type WorkspaceUser,
 } from '@mms/shared';
 import {
-  createModuleCsvExportService,
+  createModuleExportService,
   type ModuleExportQueryInput,
-  type ModuleCsvExportOptions,
-  type ModuleCsvExportResult,
-} from '../lib/createModuleCsvExportService.js';
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../lib/createModuleExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadUsersByIds, loadUsersPage } from './usersService.js';
 
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_USER_EXPORT_COLUMNS as UserExportColumn[];
 
 export type UsersExportQueryInput = ModuleExportQueryInput<UsersListQuery>;
-export type UsersCsvExportOptions = ModuleCsvExportOptions<UserExportColumn>;
-export type UsersCsvExportResult = ModuleCsvExportResult;
+export type UsersExportOptions = ModuleExportOptions<UserExportColumn>;
+export type UsersExportResult = ModuleExportResult;
+export type UsersCsvExportOptions = UsersExportOptions;
+export type UsersCsvExportResult = UsersExportResult;
 
 async function prepareUsersExport(
-  options: UsersCsvExportOptions,
+  options: UsersExportOptions,
 ): Promise<{ columns: UserExportColumn[]; context: undefined }> {
   const requestedColumns =
     options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
@@ -32,7 +35,7 @@ async function prepareUsersExport(
   return { columns, context: undefined };
 }
 
-const usersCsv = createModuleCsvExportService<
+const usersCsv = createModuleExportService<
   WorkspaceUser,
   UsersExportQueryInput,
   UserExportColumn
@@ -71,10 +74,11 @@ const usersCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  extractCell: extractUserCell,
 });
 
 export const generateUsersCsvStreamChunks = usersCsv.generateStreamChunks;
 export const buildUsersCsvExport = usersCsv.buildExport as (
   query: UsersExportQueryInput,
-  options: UsersCsvExportOptions,
-) => Promise<UsersCsvExportResult>;
+  options: UsersExportOptions,
+) => Promise<UsersExportResult>;

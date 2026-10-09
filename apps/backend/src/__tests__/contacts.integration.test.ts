@@ -182,6 +182,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 import { buildApp } from '../app.js';
 import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { accountantToken, adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
+import { DEFAULT_CONTACT_EXPORT_COLUMNS } from '@mms/shared';
 
 
 const sampleContact = {
@@ -845,6 +846,32 @@ describe('contacts REST routes', () => {
       action: 'contact.export.queue',
       entityId: expect.any(String),
     }));
+    await app.close();
+  });
+
+  it('POST /api/contacts/export/csv accepts DEFAULT_CONTACT_EXPORT_COLUMNS (>50 columns)', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: {
+        label: 'Full Contacts CSV',
+        columns: DEFAULT_CONTACT_EXPORT_COLUMNS,
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-accountant',
+      expect.objectContaining({ moduleId: 'contacts', kind: 'export', label: 'Full Contacts CSV' }),
+      expect.objectContaining({
+        columns: DEFAULT_CONTACT_EXPORT_COLUMNS,
+      }),
+    );
     await app.close();
   });
 

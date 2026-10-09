@@ -3,28 +3,31 @@ import {
   ENROLLMENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildEnrollmentsExportRows,
+  extractEnrollmentCell,
   filterEnrollmentExportColumnsForViewer,
   type Enrollment,
   type EnrollmentExportColumn,
   type EnrollmentsListQuery,
 } from '@mms/shared';
 import {
-  createModuleCsvExportService,
+  createModuleExportService,
   type ModuleExportQueryInput,
-  type ModuleCsvExportOptions,
-  type ModuleCsvExportResult,
-} from '../lib/createModuleCsvExportService.js';
+  type ModuleExportOptions,
+  type ModuleExportResult,
+} from '../lib/createModuleExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadEnrollmentsByIds, loadEnrollmentsPage } from './enrollmentService.js';
 
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_ENROLLMENT_EXPORT_COLUMNS as EnrollmentExportColumn[];
 
 export type EnrollmentsExportQueryInput = ModuleExportQueryInput<EnrollmentsListQuery>;
-export type EnrollmentsCsvExportOptions = ModuleCsvExportOptions<EnrollmentExportColumn>;
-export type EnrollmentsCsvExportResult = ModuleCsvExportResult;
+export type EnrollmentsExportOptions = ModuleExportOptions<EnrollmentExportColumn>;
+export type EnrollmentsExportResult = ModuleExportResult;
+export type EnrollmentsCsvExportOptions = EnrollmentsExportOptions;
+export type EnrollmentsCsvExportResult = EnrollmentsExportResult;
 
 async function prepareEnrollmentsExport(
-  options: EnrollmentsCsvExportOptions,
+  options: EnrollmentsExportOptions,
 ): Promise<{ columns: EnrollmentExportColumn[]; context: undefined }> {
   const requestedColumns =
     options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
@@ -32,7 +35,7 @@ async function prepareEnrollmentsExport(
   return { columns, context: undefined };
 }
 
-const enrollmentsCsv = createModuleCsvExportService<
+const enrollmentsCsv = createModuleExportService<
   Enrollment,
   EnrollmentsExportQueryInput,
   EnrollmentExportColumn
@@ -71,11 +74,12 @@ const enrollmentsCsv = createModuleCsvExportService<
     }
     return gen();
   },
+  extractCell: extractEnrollmentCell,
 });
 
 export const generateEnrollmentsCsvStreamChunks = enrollmentsCsv.generateStreamChunks;
 export const streamEnrollmentsCsvExport = enrollmentsCsv.streamExport;
 export const buildEnrollmentsCsvExport = enrollmentsCsv.buildExport as (
   query: EnrollmentsExportQueryInput,
-  options: EnrollmentsCsvExportOptions,
-) => Promise<EnrollmentsCsvExportResult>;
+  options: EnrollmentsExportOptions,
+) => Promise<EnrollmentsExportResult>;

@@ -169,7 +169,10 @@ export * from './schemas/students.dto.js';
 export * from './schemas/contacts.dto.js';
 export * from './schemas/auth.dto.js';
 export * from './schemas/common.dto.js';
+export * from './csvImportMapper.js';
+export * from './csvTemplateGenerator.js';
 export * from './schemas/csvExport.dto.js';
+export * from './schemas/csvImport.dto.js';
 export * from './schemas/contactsImport.dto.js';
 export * from './schemas/faculty.dto.js';
 export * from './schemas/finance.dto.js';
@@ -358,6 +361,7 @@ export * from './whatsappProvider.js';
 // ---------------------------------------------------------------------------
 // 12. Cross-Cutting Utilities & Seed Builders
 // ---------------------------------------------------------------------------
+export * from './dataTransfer/index.js';
 export * from './ageUtils.js';
 export * from './blueprintVersionUtils.js';
 export * from './contactSanitization.js';

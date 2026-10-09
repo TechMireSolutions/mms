@@ -21,7 +21,7 @@ export function csvExportBodySchema<TQuery extends z.ZodType>(listQuerySchema: T
     query: listQuerySchema.optional(),
     /** Explicit id selection — prefer over page-local FE filtering. */
     ids: z.array(z.union([z.string(), z.number()])).min(1).max(500).optional(),
-    columns: z.array(exportColumnSchema).max(50).optional(),
+    columns: z.array(exportColumnSchema).max(200).optional(),
     filename: z.string().min(1).max(200).optional(),
     label: z.string().min(1).max(500).optional(),
     /** Client retry key — reused as the background job id when provided. */

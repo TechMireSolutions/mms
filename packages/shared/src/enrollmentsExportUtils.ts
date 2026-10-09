@@ -1,9 +1,27 @@
+/**
+ * @file enrollmentsExportUtils.ts
+ * @description Enrollments module export utilities.
+ *
+ * MIGRATION (T10): `buildEnrollmentsExportRows` now delegates to `buildExportGrid`.
+ * `filterEnrollmentExportColumnsForViewer` is simple (no tab/field registry),
+ * so it retains its own logic but is kept as the single public entry point.
+ */
 import type { Enrollment } from './enrollmentsModuleManifest.js';
+import { buildExportGrid } from './dataTransfer/export/buildExportGrid.js';
+import type { ExportColumn } from './dataTransfer/core/exportTypes.js';
+
+// ---------------------------------------------------------------------------
+// Column type
+// ---------------------------------------------------------------------------
 
 export interface EnrollmentExportColumn {
   id: string;
   label: string;
 }
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const ENROLLMENT_EXPORT_ALWAYS_VISIBLE = new Set([
   'studentName',
@@ -25,7 +43,11 @@ export const DEFAULT_ENROLLMENT_EXPORT_COLUMNS: readonly EnrollmentExportColumn[
   { id: 'paymentStatus', label: 'Payment' },
 ] as const;
 
-/** Enrollments Work CSV uses simple always-visible core columns. */
+// ---------------------------------------------------------------------------
+// Column filter
+// ---------------------------------------------------------------------------
+
+/** Enrollments Work CSV uses simple always-visible core columns (no tab registry). */
 export function filterEnrollmentExportColumnsForViewer(
   columns: EnrollmentExportColumn[],
 ): EnrollmentExportColumn[] {
@@ -37,33 +59,38 @@ export function filterEnrollmentExportColumnsForViewer(
   );
 }
 
-function compileEnrollmentColumnExtractor(columnId: string): (enrollment: Enrollment) => string {
-  if (columnId === 'studentName') return (e) => e.studentName || '';
-  if (columnId === 'sessionName') return (e) => e.sessionName || '';
-  if (columnId === 'className') return (e) => e.className || '';
-  if (columnId === 'enrolledDate') return (e) => e.enrolledDate || '';
-  if (columnId === 'finalFee') return (e) => String(e.finalFee ?? '');
-  if (columnId === 'status') return (e) => String(e.status || '');
-  if (columnId === 'paymentStatus') return (e) => String(e.paymentStatus || '');
+// ---------------------------------------------------------------------------
+// Cell extractor
+// ---------------------------------------------------------------------------
+
+/** Pure cell extractor for Enrollment entities. Compatible with ExportCellExtractor<Enrollment>. */
+export function extractEnrollmentCell(
+  enrollment: Enrollment,
+  columnId: string,
+): string | number | null {
+  if (columnId === 'studentName') return enrollment.studentName || '';
+  if (columnId === 'sessionName') return enrollment.sessionName || '';
+  if (columnId === 'className') return enrollment.className || '';
+  if (columnId === 'enrolledDate') return enrollment.enrolledDate || '';
+  if (columnId === 'finalFee') return String(enrollment.finalFee ?? '');
+  if (columnId === 'status') return String(enrollment.status || '');
+  if (columnId === 'paymentStatus') return String(enrollment.paymentStatus || '');
   const propKey = columnId.startsWith('custom:') ? columnId.slice('custom:'.length) : columnId;
-  return (enrollment) => {
-    const cellVal = Reflect.get(enrollment, propKey);
-    if (cellVal === undefined || cellVal === null) return '';
-    if (Array.isArray(cellVal)) return cellVal.map(String).filter(Boolean).join('; ');
-    if (typeof cellVal === 'object') return '';
-    return String(cellVal);
-  };
+  const cellVal = Reflect.get(enrollment, propKey);
+  if (cellVal === undefined || cellVal === null) return '';
+  if (Array.isArray(cellVal)) return cellVal.map(String).filter(Boolean).join('; ');
+  if (typeof cellVal === 'object') return '';
+  return String(cellVal);
 }
 
-/** Builds CSV rows (header + data) for the given enrollments and visible columns. */
+// ---------------------------------------------------------------------------
+// Grid builder — delegates to generic utility
+// ---------------------------------------------------------------------------
+
+/** Builds a 2D grid [header, ...rows] for the given enrollments and columns. */
 export function buildEnrollmentsExportRows(
   enrollments: Enrollment[],
   columns: EnrollmentExportColumn[],
 ): unknown[][] {
-  const header = columns.map((column) => column.label);
-  const extractors = columns.map((column) => compileEnrollmentColumnExtractor(column.id));
-  const rows = enrollments.map((enrollment) =>
-    extractors.map((extract) => extract(enrollment)),
-  );
-  return [header, ...rows];
+  return buildExportGrid(enrollments, columns as ExportColumn[], extractEnrollmentCell);
 }
