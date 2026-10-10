@@ -45,7 +45,6 @@ export const ModuleTableSelectionCell = React.memo(function ModuleTableSelection
         checked={checked}
         onCheckedChange={(val) => onCheckedChange(val === true)}
         aria-label={ariaLabel}
-        className="h-6 w-6 min-h-6 min-w-6 cursor-pointer"
       />
     </TableCell>
   );

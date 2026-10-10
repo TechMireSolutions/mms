@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserCheck, ClipboardEdit } from 'lucide-react';
+import { UserCheck } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { AttendanceCommandMetrics } from '@/tenant/features/attendance/components/AttendanceCommandMetrics';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -65,17 +64,6 @@ export default function Attendance() {
 
     return (
       <div className="space-y-5">
-        <ModuleEntityIoToolbar
-          canWrite={c.canWriteAttendance}
-          viewingDeleted={c.showDeleted}
-          onImport={() => setImportOpen(true)}
-          onAdd={() => {
-            c.setActiveTab('work');
-            c.setActiveOpsTab('mark');
-          }}
-          addLabel={c.t('attendance.tabs.mark')}
-          addIcon={ClipboardEdit}
-        />
         <AttendanceWorkTier
           filters={c.filters}
           role={c.role}

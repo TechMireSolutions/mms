@@ -106,25 +106,25 @@ describe("FacultyPageView Component", () => {
     pageOverlaysProps: {} as never,
   };
 
-  it("shows dashboard IO and scoped tab IO on faculties", () => {
+  it("shows dashboard IO without duplicate tab IO on faculties", () => {
     const html = renderToStaticMarkup(
       <FacultyPageView {...baseProps} activeTab="faculties" />,
     );
 
     expect(html).toContain("Faculty Team");
     expect(html).toContain("Dashboard IO");
-    expect(html).toContain("Tab IO faculties");
+    expect(html).not.toContain("Tab IO");
     expect(html).toContain("Faculty Directory");
     expect(html).toContain("Faculty Overlays");
   });
 
-  it("shows dashboard IO and scoped tab IO on designations", () => {
+  it("shows dashboard IO without duplicate tab IO on designations", () => {
     const html = renderToStaticMarkup(
       <FacultyPageView {...baseProps} activeTab="designations" />,
     );
 
     expect(html).toContain("Dashboard IO");
-    expect(html).toContain("Tab IO designations");
+    expect(html).not.toContain("Tab IO");
     expect(html).toContain("Designations Section");
     expect(html).not.toContain("Faculty Directory");
   });
@@ -138,3 +138,4 @@ describe("FacultyPageView Component", () => {
     expect(html).not.toContain("Tab IO");
   });
 });
+

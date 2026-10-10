@@ -43,4 +43,26 @@ describe("ModuleTableSelectionCell", () => {
 
     expect(html).toContain("bg-primary/5");
   });
+
+  it("renders checkbox with standard 16px (h-4 w-4) sizing matching table header", () => {
+    const html = renderToStaticMarkup(
+      <Table>
+        <TableBody>
+          <TableRow>
+            <ModuleTableSelectionCell
+              checked={false}
+              onCheckedChange={vi.fn()}
+              ariaLabel="Select Row"
+            />
+          </TableRow>
+        </TableBody>
+      </Table>
+    );
+
+    expect(html).toContain("h-4");
+    expect(html).toContain("w-4");
+    expect(html).not.toContain("h-6");
+    expect(html).not.toContain("w-6");
+  });
 });
+

@@ -1,8 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Scale, Plus } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -81,14 +80,6 @@ export default function Obligations() {
 
             {c.effectiveTab === 'work' && (
               <div className="space-y-5">
-                <ModuleEntityIoToolbar
-                  canWrite={c.canWrite}
-                  viewingDeleted={c.showDeleted}
-                  onImport={() => setImportOpen(true)}
-                  onAdd={() => c.setShowForm(true)}
-                  addLabel={c.t('obligations.newCollection')}
-                  addIcon={Plus}
-                />
                 <ObligationsWorkTier
                 collections={c.collections}
                 obligationTypes={c.obligationTypes}

@@ -2,7 +2,6 @@ import React from "react";
 import { AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
-import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -85,22 +84,6 @@ export default function Accounting() {
 
               {activeTab === "work" && (
                 <div className="space-y-5">
-                  {activeSubTab === "journal" ? (
-                    <ModuleEntityIoToolbar
-                      canWrite={canWrite}
-                      viewingDeleted={showDeleted}
-                      onAdd={openJournalCreate}
-                      addLabel={t("accounting.journal.dashboard.newEntry")}
-                      addIcon={Plus}
-                    />
-                  ) : activeSubTab === "coa" ? (
-                    <ModuleEntityIoToolbar
-                      canWrite={canWrite}
-                      onAdd={openAccountCreate}
-                      addLabel={t("accounting.coa.addAccount")}
-                      addIcon={Plus}
-                    />
-                  ) : null}
                   <AccountingWorkTier
                   accounts={accounts}
                   accountsLoaded={accountsResult.isSuccess}
