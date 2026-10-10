@@ -312,12 +312,17 @@ jobs:
         if: needs.changes.outputs.test_scope == 'changed'
         run: pnpm --filter mms-frontend exec vitest run --changed HEAD^1 --passWithNoTests --reporter=default --reporter=github-actions
 
+      # The matrix is built from a job output, so it reaches the shell through
+      # env rather than inline template expansion (zizmor template-injection).
       - name: Run Frontend Test Shard & Generate Blob Report
         if: needs.changes.outputs.test_scope == 'full'
+        env:
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
         run: |
           mkdir -p apps/frontend/.vitest-reports
           pnpm --filter mms-frontend exec vitest run \
-            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} \
+            --shard="${SHARD_INDEX}/${SHARD_TOTAL}" \
             --coverage \
             --coverage.thresholds.lines=0 \
             --coverage.thresholds.statements=0 \
@@ -326,7 +331,7 @@ jobs:
             --reporter=default \
             --reporter=github-actions \
             --reporter=blob \
-            --outputFile=.vitest-reports/blob-${{ matrix.shardIndex }}.json
+            --outputFile=".vitest-reports/blob-${SHARD_INDEX}.json"
 
       - name: Upload Shard Report Artifact
         if: always() && needs.changes.outputs.test_scope == 'full'
@@ -409,7 +414,10 @@ jobs:
 
       - name: Run Backend Unit Tests Shard
         if: needs.changes.outputs.test_scope == 'full'
-        run: pnpm --filter mms-backend exec vitest run --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
+        run: pnpm --filter mms-backend exec vitest run --shard="${SHARD_INDEX}/${SHARD_TOTAL}"
 
   test-backend-db:
     name: Backend DB Integration Tests
