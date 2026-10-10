@@ -19,8 +19,10 @@ import {
 
 type ObligationCollectionsListDesktopTableProps = Omit<
   ObligationCollectionListContentProps,
-  "search" | "typeFilter" | "onAddNew"
->;
+  "search" | "typeFilter" | "onAddNew" | "viewMode"
+> & {
+  viewMode?: ObligationCollectionListContentProps["viewMode"];
+};
 
 export function ObligationCollectionsListDesktopTable(props: ObligationCollectionsListDesktopTableProps): React.JSX.Element {
   const {

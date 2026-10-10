@@ -49,6 +49,7 @@ const mockCollectionWithUnknownUser: ObligationCollection = {
 
 const baseProps = {
   selectedIds: [],
+  viewMode: "table" as const,
   isColumnVisible: () => true,
   allVisibleSelected: false,
   someVisibleSelected: false,
@@ -56,8 +57,8 @@ const baseProps = {
   canDelete: true,
   showDeleted: false,
   paymentModeConfig: {
-    cash: { label: "Cash", tone: "success" },
-  } as unknown as Record<string, { label: string; tone: string }>,
+    cash: { label: "Cash", tone: "success", cls: "bg-success" },
+  },
   getContact: () => undefined,
   getRep: () => undefined,
   getMujtahid: () => undefined,
