@@ -194,6 +194,9 @@ describe("buildPaymentVoucherBody", () => {
     expect(html).toContain("debit");
     expect(html).toContain("credit");
     expect(html).toContain("Amina");
+    expect(html).toContain("approvedBy");
+    expect(html).toContain("paidBy");
+    expect(html).not.toContain("checkedBy");
     expect(html).not.toContain("thumbImpression");
   });
 });
