@@ -80,8 +80,8 @@ export function PrintInvoiceModal({
         aria-hidden="true"
         style={{
           position: "fixed",
-          top: 0,
-          left: 0,
+          top: -99999,
+          left: -99999,
           width: size.width,
           height: size.height,
           zIndex: -9999,

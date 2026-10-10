@@ -62,6 +62,10 @@ export function useTemplateMarquee({
   const onPointerDownBackground = (event: React.PointerEvent | React.MouseEvent) => {
     if (event.button !== 0 || isPreviewMode || isSpacePressed) return;
     if (!canvasRef.current) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target !== canvasRef.current && target.closest("[role='button'], [data-resize-handle], .group")) {
+      return;
+    }
     const rect = canvasRef.current.getBoundingClientRect();
     const startX = (event.clientX - rect.left) / canvasScale;
     const startY = (event.clientY - rect.top) / canvasScale;
