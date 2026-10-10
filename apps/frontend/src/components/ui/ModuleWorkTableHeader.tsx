@@ -41,7 +41,7 @@ export function ModuleWorkTableHeader<
   setColumnWidth,
   selection,
   actionsLabel,
-  actionsClassName = "w-56 min-w-56 text-end",
+  actionsClassName = "w-28 min-w-28 text-end",
   stickyColumnId = "name",
 }: ModuleWorkTableHeaderProps<TCol>): JSX.Element {
   return (

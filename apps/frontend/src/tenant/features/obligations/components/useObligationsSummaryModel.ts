@@ -90,7 +90,7 @@ export function useObligationsSummaryModel(
 
   const userOptions = (() => [
     { value: "all", label: t("obligations.summary.filters.allCollectors") },
-    ...users.map((user) => ({ value: user.id, label: user.name || "" }))
+    ...users.map((user) => ({ value: user.id, label: user.name || user.loginEmail || String(user.id) }))
   ])();
 
   const clearFilters = () => {

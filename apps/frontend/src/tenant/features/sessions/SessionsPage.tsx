@@ -2,7 +2,6 @@ import React, { Suspense, lazy, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Plus, Calendar, Download, Upload } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -65,15 +64,6 @@ export default function Sessions() {
         <AnimatePresence mode="wait">
           {c.activeTab === 'work' ? (
             <div className="space-y-5">
-              <ModuleEntityIoToolbar
-                canExport={c.canExport}
-                canWrite={c.canWrite}
-                viewingDeleted={c.showDeleted}
-                onExport={() => void c.handleExportCSV()}
-                onAdd={c.openCreateForm}
-                addLabel={c.t('sessions.action.new')}
-                addIcon={Plus}
-              />
               <SessionsWorkTier
               search={c.search}
               filterStatus={c.filterStatus}

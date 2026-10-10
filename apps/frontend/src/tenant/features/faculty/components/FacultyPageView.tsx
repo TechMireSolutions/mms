@@ -8,7 +8,6 @@ import { FacultyCommandMetrics } from "@/tenant/features/faculty/components/Facu
 import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 import { FacultyPageHeaderActions } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 import { FacultyPageOverlays } from "@/tenant/features/faculty/components/FacultyPageOverlays";
-import { FacultyTabIoToolbar } from "@/tenant/features/faculty/components/FacultyTabIoToolbar";
 import { FacultyWorkTier } from "@/tenant/features/faculty/components/FacultyWorkTier";
 import { AnimatePresence } from "framer-motion";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -29,13 +28,6 @@ const FacultySetupTier = lazy(() =>
 export type FacultyPageViewProps = ReturnType<typeof useFacultyPageController>;
 
 function EntityTabPanel({
-  entity,
-  canWrite,
-  canExport,
-  viewingDeleted,
-  onExportEntity,
-  onImportEntity,
-  onAdd,
   children,
 }: {
   entity: FacultyIoEntity;
@@ -49,15 +41,6 @@ function EntityTabPanel({
 }): React.JSX.Element {
   return (
     <div className="space-y-5">
-      <FacultyTabIoToolbar
-        entity={entity}
-        canExport={canExport}
-        canWrite={canWrite}
-        viewingDeleted={viewingDeleted}
-        onExportEntity={onExportEntity}
-        onImportEntity={onImportEntity}
-        onAdd={onAdd}
-      />
       {children}
     </div>
   );

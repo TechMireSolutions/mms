@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useState } from "react";
-import { GraduationCap, UserPlus } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
-import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { StudentsPageHeaderActions } from "@/tenant/features/students/components/StudentsPageHeaderActions";
@@ -77,21 +76,6 @@ export function StudentsPageView({
         <AnimatePresence mode="wait">
           {activeTab === "work" ? (
             <div className="space-y-5">
-          {/* NOTE: Export is intentionally reachable from two entry points:
-              1. StudentsPageHeaderActions (persistent top-right — always visible regardless of active tab)
-              2. ModuleEntityIoToolbar below (tab-level, visible only within the Work tab for contextual proximity)
-              Both call the same handleExportCSV action. This is a deliberate UX pattern, not a duplication bug. */}
-              <ModuleEntityIoToolbar
-                canExport={canExport}
-                canWrite={canWrite}
-                viewingDeleted={viewingDeleted}
-                onExport={() => {
-                  void handleExportCSV();
-                }}
-                onAdd={openCreateForm}
-                addLabel={t("action.addStudent")}
-                addIcon={UserPlus}
-              />
               <StudentsWorkTier {...tabPanelProps.workTierProps} />
             </div>
           ) : activeTab === "reports" ? (

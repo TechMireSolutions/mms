@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState } from "react";
-import { MessageSquare, Send, type LucideIcon } from "lucide-react";
+import { MessageSquare, type LucideIcon } from "lucide-react";
 import {
   type Message,
   type MessageTemplate,
@@ -9,7 +9,6 @@ import {
 import { useGenericModuleExport } from "@/lib/backgroundJobs/useGenericModuleExport";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -106,13 +105,6 @@ export function MessagingPageView(p: MessagingPageViewProps): React.JSX.Element 
         >
           {p.activeTab === "work" && (
             <div className="space-y-5">
-              <ModuleEntityIoToolbar
-                canWrite={p.canWrite}
-                onImport={() => setImportOpen(true)}
-                onAdd={() => p.startCampaign("whatsapp")}
-                addLabel={t("messaging.newCampaign")}
-                addIcon={Send}
-              />
               <MessagingWorkTier
                 canWrite={p.canWrite}
                 canClearLogs={p.canClearLogs}

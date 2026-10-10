@@ -1,8 +1,7 @@
 import React, { Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Send, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { hasanatTransferSchema } from '@mms/shared';
@@ -98,14 +97,6 @@ export default function HasanatCards() {
 
             {c.effectiveTab === 'work' && (
               <div className="space-y-5">
-                <ModuleEntityIoToolbar
-                  canWrite={c.canWrite}
-                  viewingDeleted={c.showDeleted}
-                  onImport={() => setImportOpen(true)}
-                  onAdd={c.openDistribute}
-                  addLabel={c.t('hasanat.distributeCards')}
-                  addIcon={Send}
-                />
                 <HasanatWorkTier
                 tabs={c.SUB_TABS}
                 activeSubTab={c.effectiveSubTab}
