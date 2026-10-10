@@ -14,6 +14,7 @@ export * from "./table/TableHead";
 export * from "./table/TableCell";
 export * from "./table/TableSkeleton";
 export * from "./table/TableEmpty";
+export * from "./table/useTableSort";
 
 const TableContext = React.createContext<{ stickyHeader?: boolean }>({});
 
