@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createStudent } from '../students/use-cases/studentUseCases.js';
 
 const mockGetRequestTenant = vi.fn(() => 'demo');
 const mockSave = vi.fn();
@@ -60,7 +61,6 @@ describe('createStudent GR unique violation', () => {
 
   it('maps Postgres unique_violation to statusCode 409', async () => {
     mockSave.mockRejectedValue(Object.assign(new Error('duplicate key'), { code: '23505' }));
-    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
     await expect(
       createStudent({
         contactId: 'c-1',

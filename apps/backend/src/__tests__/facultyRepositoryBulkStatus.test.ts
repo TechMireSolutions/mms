@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { bulkUpdateFacultyStatusSql } from '../db/repositories/facultyRepositoryList.js';
 
 const mockWithTenantTransaction = vi.fn();
 
@@ -32,10 +33,6 @@ describe('bulkUpdateFacultyStatusSql', () => {
         fn: (tx: { update: typeof update; select: typeof select }) => Promise<unknown>,
       ) => fn({ update, select }),
     );
-
-    const { bulkUpdateFacultyStatusSql } = await import(
-      '../db/repositories/facultyRepositoryList.js'
-    );
     const succeeded = await bulkUpdateFacultyStatusSql('Demo', ['t-1', 't-2', 't-1'], 'inactive');
 
     expect(mockWithTenantTransaction).toHaveBeenCalledWith('demo', expect.any(Function));
@@ -51,9 +48,6 @@ describe('bulkUpdateFacultyStatusSql', () => {
   });
 
   it('returns 0 when ids are empty', async () => {
-    const { bulkUpdateFacultyStatusSql } = await import(
-      '../db/repositories/facultyRepositoryList.js'
-    );
     const succeeded = await bulkUpdateFacultyStatusSql('demo', ['  ', ''], 'active');
     expect(succeeded).toBe(0);
     expect(mockWithTenantTransaction).not.toHaveBeenCalled();
