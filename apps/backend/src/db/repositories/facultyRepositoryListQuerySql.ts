@@ -9,6 +9,7 @@ import {
   DEFAULT_FACULTY_STATUS,
   FACULTY_SORT_FIELD_SET,
   facultyQuickFilterStatusValue,
+  toSqlSearchPattern,
   type FacultyListQuery,
 } from '@mms/shared';
 import { faculty } from '../schema.js';
@@ -41,7 +42,7 @@ export function employeeIdExpr(): SQL {
 function buildSearchSql(search: string): SQL | null {
   const normalized = search.trim().toLowerCase();
   if (!normalized) return null;
-  const pattern = `%${normalized}%`;
+  const pattern = toSqlSearchPattern(normalized);
   return sql`(
     lower(COALESCE(fe_emp.employee_id, '')) LIKE ${pattern}
     OR lower(${joinedPrimaryDesignationNameExpr()}) LIKE ${pattern}

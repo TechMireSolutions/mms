@@ -396,3 +396,4 @@ export * from './tasksModuleManifest.js';
 export * from './clientEntityIdUtils.js';
 export * from './industryTypes.js';
 export * from './industryProfiles.js';
+export * from './searchPatternUtils.js';

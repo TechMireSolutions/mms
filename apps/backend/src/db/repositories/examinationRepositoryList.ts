@@ -15,6 +15,7 @@ import {
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
+  toSqlSearchPattern,
   type Exam,
   type ExaminationsCommandMetricsSnapshot,
   type ExaminationsListQuery,
@@ -37,7 +38,7 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
 
   const search = query.search?.trim();
   if (search) {
-    const pattern = `%${search}%`;
+    const pattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(exams.name, pattern),

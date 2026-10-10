@@ -21,10 +21,10 @@ export const EntityCardMetaTile = (function EntityCardMetaTile({
         className,
       )}
     >
-      <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
+      <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight text-wrap break-words leading-none">
         {label}
       </span>
-      <div className="text-xs font-semibold text-foreground truncate mt-0.5">{children}</div>
+      <div className="text-xs font-semibold text-foreground text-wrap break-words mt-0.5">{children}</div>
     </div>
   );
 });

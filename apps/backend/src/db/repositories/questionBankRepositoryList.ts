@@ -14,6 +14,7 @@ import {
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
+  toSqlSearchPattern,
   type QuestionBankCommandMetricsSnapshot,
   type QuestionBankListQuery,
   type QuestionBankListPageResult,
@@ -42,7 +43,7 @@ function buildQuestionsListConditions(subdomain: string, query: QuestionBankList
 
   const search = query.search?.trim();
   if (search) {
-    conditions.push(ilike(questions.text, `%${search}%`));
+    conditions.push(ilike(questions.text, toSqlSearchPattern(search)));
   }
 
   const categoryIds = dedupeTrimmedIds(query.categoryId);

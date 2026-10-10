@@ -95,12 +95,11 @@ describe("ObligationsSetupTier Component", () => {
 
   const defaultProps = {
     tabs: [
-      { id: "types", label: "Types" },
-      { id: "mujtahids", label: "Mujtahids" },
       { id: "wakala", label: "Wakala" },
+      { id: "numbering", label: "Receipt Numbering" },
       { id: "invoice_template", label: "Invoice Template" },
     ],
-    activeTab: "types",
+    activeTab: "wakala",
     canEditSetup: true,
     obligationTypes: [{ id: "type-1", name: "Khums" } as any],
     mujtahids: [{ id: "muj-1", name: "Sistani" } as any],
@@ -119,7 +118,7 @@ describe("ObligationsSetupTier Component", () => {
     const html = renderToStaticMarkup(<ObligationsSetupTier {...defaultProps} />);
     expect(html).toContain("module-tier-motion");
     expect(html).toContain("SubTabBar");
-    expect(html).toContain("obligation-type-manager");
+    expect(html).toContain("wakala-type-manager");
   });
 
   it("renders invoice template editor with lookups when activeTab is invoice_template", () => {

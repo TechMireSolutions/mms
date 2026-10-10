@@ -2,6 +2,7 @@ import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQ
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
+  toSqlSearchPattern,
   type SessionsCommandMetricsSnapshot,
   type SessionsListPageResult,
   type SessionsListQuery,
@@ -24,7 +25,7 @@ const SESSION_SORT_FIELDS = new Set([
 function buildSearchSql(search: string): SQL | null {
   const normalized = search.trim();
   if (!normalized) return null;
-  const pattern = `%${normalized}%`;
+  const pattern = toSqlSearchPattern(normalized);
   return or(
     ilike(sessions.name, pattern),
     ilike(sessions.type, pattern),

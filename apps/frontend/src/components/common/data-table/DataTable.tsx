@@ -111,6 +111,7 @@ export function DataTable<TData extends { id: string | number }>({
         />
       ) : (
         <WorkBatchTable
+          sort={tableProps.sort ?? { field: state.sortField, dir: state.sortDir, onSort: state.handleSort }}
           {...tableProps}
           data={[...state.rows]}
           columns={tableColumns}

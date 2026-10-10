@@ -3,6 +3,7 @@ import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+  toSqlSearchPattern,
   type EnrollmentsCommandMetricsSnapshot,
   type EnrollmentsListPageResult,
   type EnrollmentsListQuery,
@@ -83,7 +84,7 @@ function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQ
 
   const search = query.search?.trim();
   if (search) {
-    const pattern = `%${search}%`;
+    const pattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(enrollments.studentName, pattern),

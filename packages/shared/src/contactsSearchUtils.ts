@@ -36,5 +36,17 @@ export function contactMatchesSearch(contact?: Contact | null, query?: string | 
   if (!contact || typeof contact !== 'object') return false;
   const normalizedQuery = normalizeSearchString(typeof query === 'string' ? query.trim() : '');
   if (!normalizedQuery) return true;
-  return getContactSearchHaystack(contact).includes(normalizedQuery);
+  const haystack = getContactSearchHaystack(contact);
+  if (normalizedQuery.includes('*') || normalizedQuery.includes('?')) {
+    const regexPattern = normalizedQuery
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+    try {
+      return new RegExp(regexPattern, 'i').test(haystack);
+    } catch {
+      return haystack.includes(normalizedQuery);
+    }
+  }
+  return haystack.includes(normalizedQuery);
 }

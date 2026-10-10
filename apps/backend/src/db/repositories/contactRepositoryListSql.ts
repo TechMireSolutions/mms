@@ -1,5 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { normalizeSearchString } from '@mms/shared';
+import { normalizeSearchString, toSqlSearchPattern } from '@mms/shared';
 import {
   contacts, students, faculty, facultyEmployments, tenantUsers, contactEmails, contactAddresses, contactPhones,
 } from '../schema.js';
@@ -72,7 +72,7 @@ export function sqlNormalizeSearchExpr(expr: SQL): SQL {
 export function buildSearchSql(search: string): SQL | null {
   const normalized = normalizeSearchString(typeof search === 'string' ? search.trim() : '');
   if (!normalized) return null;
-  const pattern = `%${normalized}%`;
+  const pattern = toSqlSearchPattern(normalized);
   const haystack = sql`concat_ws(' ',
       COALESCE(${contacts.name}, ''),
       COALESCE(${contacts.firstName}, ''),

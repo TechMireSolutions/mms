@@ -22,6 +22,7 @@ export type DataTableSearchValue =
 export interface DataTableColumn<TData> {
   id: string;
   label: string;
+  sortField?: string;
   render: (row: TData, index: number) => React.ReactNode;
   /** Text matched by search while the column is visible. Defaults to `row[id]` when primitive. */
   searchValue?: (row: TData) => DataTableSearchValue;

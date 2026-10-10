@@ -3,6 +3,7 @@ import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+  toSqlSearchPattern,
   type AttendanceCommandMetricsSnapshot,
   type AttendanceListQuery,
   type AttendanceListPageResult,
@@ -26,7 +27,7 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
 
   const search = query.search?.trim();
   if (search) {
-    const pattern = `%${search}%`;
+    const pattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(attendance.studentName, pattern),

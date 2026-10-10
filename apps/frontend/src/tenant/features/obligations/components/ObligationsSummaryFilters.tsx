@@ -65,9 +65,9 @@ export function ObligationsSummaryFilters({
           </Button>
         )}
       </header>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <div className="relative col-span-2 sm:col-span-1">
-          <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+        <div className="relative sm:col-span-2 lg:col-span-3">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input
             id="obligations-summary-search"
             name="search"
@@ -76,7 +76,7 @@ export function ObligationsSummaryFilters({
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("obligations.summary.filters.searchPlaceholder")}
-            className="w-full ps-8 pe-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full ps-9 pe-3 min-h-11 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <DateRangeFilterBar
@@ -87,36 +87,42 @@ export function ObligationsSummaryFilters({
           onDateToChange={onDateToChange}
           fromPlaceholder={t("obligations.summary.filters.fromDate")}
           toPlaceholder={t("obligations.summary.filters.toDate")}
-          className="col-span-2"
-          pickerClassName="w-full min-w-0 flex-1 text-xs"
+          className="sm:col-span-2 lg:col-span-3 flex items-center gap-2"
+          pickerClassName="w-full min-w-0 flex-1 min-h-11 text-xs"
         />
-        <FormSelect
-          id="obligations-summary-rep"
-          name="repFilter"
-          aria-label={t("obligations.summary.filters.byRepresentativeAria")}
-          value={repFilter}
-          onChange={onRepFilterChange}
-          options={repOptions}
-          className="text-xs rounded-lg border border-border bg-background"
-        />
-        <FormSelect
-          id="obligations-summary-type"
-          name="typeFilter"
-          aria-label={t("obligations.summary.filters.byTypeAria")}
-          value={typeFilter}
-          onChange={onTypeFilterChange}
-          options={typeOptions}
-          className="text-xs rounded-lg border border-border bg-background"
-        />
-        <FormSelect
-          id="obligations-summary-user"
-          name="userFilter"
-          aria-label={t("obligations.summary.filters.byCollectorAria")}
-          value={userFilter}
-          onChange={onUserFilterChange}
-          options={userOptions}
-          className="text-xs rounded-lg border border-border bg-background"
-        />
+        <div className="sm:col-span-1 lg:col-span-2">
+          <FormSelect
+            id="obligations-summary-rep"
+            name="repFilter"
+            aria-label={t("obligations.summary.filters.byRepresentativeAria")}
+            value={repFilter}
+            onChange={onRepFilterChange}
+            options={repOptions}
+            className="w-full min-h-11 text-xs rounded-lg border border-border bg-background"
+          />
+        </div>
+        <div className="sm:col-span-1 lg:col-span-2">
+          <FormSelect
+            id="obligations-summary-type"
+            name="typeFilter"
+            aria-label={t("obligations.summary.filters.byTypeAria")}
+            value={typeFilter}
+            onChange={onTypeFilterChange}
+            options={typeOptions}
+            className="w-full min-h-11 text-xs rounded-lg border border-border bg-background"
+          />
+        </div>
+        <div className="sm:col-span-2 lg:col-span-2">
+          <FormSelect
+            id="obligations-summary-user"
+            name="userFilter"
+            aria-label={t("obligations.summary.filters.byCollectorAria")}
+            value={userFilter}
+            onChange={onUserFilterChange}
+            options={userOptions}
+            className="w-full min-h-11 text-xs rounded-lg border border-border bg-background"
+          />
+        </div>
       </div>
     </Card>
   );

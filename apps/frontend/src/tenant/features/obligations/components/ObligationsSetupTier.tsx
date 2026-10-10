@@ -14,20 +14,6 @@ import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 
-const ObligationTypeManager = lazy(
-  () =>
-    import(
-      "@/tenant/features/obligations/components/ObligationTypeManager"
-    ).then((m) => ({ default: m.ObligationTypeManager })),
-);
-
-const MujtahidManager = lazy(
-  () =>
-    import("@/tenant/features/obligations/components/MujtahidManager").then(
-      (m) => ({ default: m.MujtahidManager }),
-    ),
-);
-
 const WakalaTypeManager = lazy(
   () =>
     import(
@@ -90,7 +76,7 @@ export function ObligationsSetupTier({
   const { t } = useTranslation();
 
   const subTabs = useModuleSetupSubTabs({
-    initialKey: activeTab || "types",
+    initialKey: activeTab || "wakala",
     isDirty: () => false,
     onDiscard: () => {},
     onChange: onTabChange,
@@ -115,22 +101,6 @@ export function ObligationsSetupTier({
             <SetupReadOnlyMessage title={t("obligations.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              {subTabs.sub === "types" && (
-                <ObligationTypeManager
-                  types={obligationTypes}
-                  onChange={onChangeTypes}
-                />
-              )}
-
-              {subTabs.sub === "mujtahids" && (
-                <MujtahidManager
-                  mujtahids={mujtahids}
-                  reps={reps}
-                  onChangeMujtahids={onChangeMujtahids}
-                  onChangeReps={onChangeReps}
-                />
-              )}
-
               {subTabs.sub === "wakala" && (
                 <WakalaTypeManager
                   wakalaTypes={wakalaTypes}
@@ -156,7 +126,7 @@ export function ObligationsSetupTier({
                   obligationTypes={obligationTypes}
                   reps={reps}
                   mujtahids={mujtahids}
-                  onClose={() => subTabs.handleSubTabChange("types")} 
+                  onClose={() => subTabs.handleSubTabChange("wakala")} 
                 />
               )}
             </Suspense>

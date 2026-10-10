@@ -12,6 +12,7 @@ import type {
   WorkBatchTableProps,
 } from "./workBatchTableTypes";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
+import { useWorkBatchTableInternalState } from "./useWorkBatchTableInternalState";
 import { cn } from "@/lib/utils";
 
 export type { WorkBatchTableColumn, WorkBatchTableProps };
@@ -50,6 +51,13 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   tableBodyClassName,
   containerClassName,
 }: WorkBatchTableProps<TData>): JSX.Element {
+  const { sortedData, sortConfig, columnResizeConfig } = useWorkBatchTableInternalState({
+    data,
+    columns,
+    sort,
+    columnResize,
+  });
+
   const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -61,9 +69,9 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   }, [selection]);
 
   const activeRows = React.useMemo(() => {
-    if (!optimisticDeletedIds || optimisticDeletedIds.size === 0) return data;
-    return data.filter((row) => !optimisticDeletedIds.has(row.id));
-  }, [data, optimisticDeletedIds]);
+    if (!optimisticDeletedIds || optimisticDeletedIds.size === 0) return sortedData;
+    return sortedData.filter((row) => !optimisticDeletedIds.has(row.id));
+  }, [sortedData, optimisticDeletedIds]);
 
   const isVirtualized = Boolean(virtualize ?? activeRows.length > 30);
 
@@ -104,11 +112,11 @@ export function WorkBatchTable<TData extends { id: string | number }>({
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <ModuleWorkTableHeader
             columns={headerColumns}
-            sortField={sort?.field}
-            sortDir={sort?.dir}
-            onSort={sort?.onSort}
-            getColumnWidth={(key) => columnResize?.getColumnWidth?.(key)}
-            setColumnWidth={(key, width) => columnResize?.onColumnResize?.(key, width)}
+            sortField={sortConfig.field}
+            sortDir={sortConfig.dir}
+            onSort={sortConfig.onSort}
+            getColumnWidth={(key) => columnResizeConfig.getColumnWidth(key)}
+            setColumnWidth={(key, width) => columnResizeConfig.onColumnResize(key, width)}
             selection={
               selection
                 ? {
