@@ -20,12 +20,18 @@
  *
  *   node scripts/check-code-norms.mjs
  *   node scripts/check-code-norms.mjs --json
+ *   node scripts/check-code-norms.mjs --changed   # changed files vs merge-base only
  *
  * Norms: mms-dry.md §4 (no `any`), mms-ui-ux-design.md §2 (semantic tokens only),
  * mms-structure-naming.md §3 (~300 hard / ~220 soft line bands).
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { runChangedCheck } from './lib/code-norms-changed.mjs';
+import { HARD_LIMIT, IGNORED, SCAN_DIRS, SOURCE_EXT, measureCss, measureSource } from './lib/code-norms-measure.mjs';
+
+// `--changed`: per-file comparison against the merge-base (local CI fast path).
+if (process.argv.includes('--changed')) process.exit(runChangedCheck());
 
 const ROOT = process.cwd();
 
@@ -37,24 +43,14 @@ const BASELINE = {
   filesOverHardLimit: 53,
 };
 
-const SCAN_DIRS = ['apps/frontend/src', 'apps/backend/src', 'packages/shared/src'];
-const IGNORED = /(^|\/)(node_modules|dist|coverage|\.turbo)\//;
-const SOURCE_EXT = /\.(ts|tsx)$/;
-const TEST_FILE = /\.(test|spec)\.(ts|tsx)$/;
-/** The hard ceiling from mms-structure-naming.md §3. */
-const HARD_LIMIT = 300;
-/** 6-digit hex literals; design tokens live in index.css `@theme`. */
-const HEX_COLOUR = /#[0-9a-fA-F]{6}\b/;
 /**
- * Tailwind arbitrary-colour bracket expressions:
- *   text-[#abc], bg-[rgb(...)], border-[hsl(...)] etc.
- * Zero are allowed — use semantic tokens from index.css @theme instead.
+ * Collects repo-relative files under `dir` whose name matches `include`.
+ * `@theme` tokens live in CSS, which the `.ts/.tsx` walk deliberately skips
+ * (adding CSS to it would also drag `index.css` into the 300-line ratchet), so the
+ * inert-token check runs its own CSS walk. An earlier version filtered `files`
+ * for `.css` and therefore inspected nothing while reporting a clean zero.
  */
-const ARBITRARY_COLOUR = /\[#[0-9a-fA-F]|\[rgb[a]?\(|\[hsl[a]?\(/;
-/** `any` annotations, but not the words "any" in prose. */
-const ANY_ANNOTATION = /:\s*any\b|<any>|\bas\s+any\b/;
-
-function walk(dir, out = []) {
+function walk(dir, include, out = []) {
   let entries;
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -65,68 +61,31 @@ function walk(dir, out = []) {
     const full = path.join(dir, entry.name);
     const rel = path.relative(ROOT, full).split(path.sep).join('/');
     if (IGNORED.test(`${rel}/`)) continue;
-    if (entry.isDirectory()) walk(full, out);
-    else if (SOURCE_EXT.test(entry.name)) out.push(rel);
+    if (entry.isDirectory()) walk(full, include, out);
+    else if (include.test(entry.name)) out.push(rel);
   }
   return out;
 }
 
-/**
- * `@theme` tokens live in CSS, which the main `.ts/.tsx` walk deliberately skips
- * (adding CSS to it would also drag `index.css` into the 300-line ratchet). So the
- * inert-token check does its own scan. It must not be folded into `walk()` above —
- * an earlier version filtered `files` for `.css` and therefore inspected nothing
- * while reporting a clean zero.
- */
-function walkCss(dir, out = []) {
-  let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return out;
-  }
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    const rel = path.relative(ROOT, full).split(path.sep).join('/');
-    if (IGNORED.test(`${rel}/`)) continue;
-    if (entry.isDirectory()) walkCss(full, out);
-    else if (entry.name.endsWith('.css')) out.push(rel);
-  }
-  return out;
-}
+const files = SCAN_DIRS.flatMap((dir) => walk(path.join(ROOT, dir), SOURCE_EXT));
+const cssFiles = SCAN_DIRS.flatMap((dir) => walk(path.join(ROOT, dir), /\.css$/));
 
-const files = SCAN_DIRS.flatMap((dir) => walk(path.join(ROOT, dir)));
-const cssFiles = SCAN_DIRS.flatMap((dir) => walkCss(path.join(ROOT, dir)));
-
-let anyCount = 0;
 const anySites = [];
 const hexFiles = [];
-let arbitraryColourCount = 0;
 const arbitraryColourSites = [];
 const oversized = [];
 
 for (const rel of files) {
-  const content = fs.readFileSync(path.join(ROOT, rel), 'utf8');
-  const lines = content.split('\n');
-
-  if (!TEST_FILE.test(rel)) {
-    lines.forEach((line, index) => {
-      if (ANY_ANNOTATION.test(line) && !line.trimStart().startsWith('//') && !line.trimStart().startsWith('*')) {
-        anyCount++;
-        if (anySites.length < 5) anySites.push(`${rel}:${index + 1}`);
-      }
-      if (ARBITRARY_COLOUR.test(line) && !line.trimStart().startsWith('//') && !line.trimStart().startsWith('*')) {
-        arbitraryColourCount++;
-        if (arbitraryColourSites.length < 5) arbitraryColourSites.push(`${rel}:${index + 1}`);
-      }
-    });
-    if (!rel.endsWith('.css') && HEX_COLOUR.test(content)) hexFiles.push(rel);
-  }
-
-  if (lines.length > HARD_LIMIT && !TEST_FILE.test(rel)) {
-    oversized.push(`${lines.length}  ${rel}`);
+  const measured = measureSource(rel, fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+  anySites.push(...measured.anySites);
+  arbitraryColourSites.push(...measured.arbitrarySites);
+  if (measured.hasHex) hexFiles.push(rel);
+  if (measured.lineCount > HARD_LIMIT && !/\.(test|spec)\.(ts|tsx)$/.test(rel)) {
+    oversized.push(`${measured.lineCount}  ${rel}`);
   }
 }
+const anyCount = anySites.length;
+const arbitraryColourCount = arbitraryColourSites.length;
 
 /**
  * Inert `@theme` tokens: a token declared under a Tailwind v3 config name that
@@ -139,36 +98,14 @@ for (const rel of files) {
  * no CSS at all across **217** call sites. It survived because nothing fails — a
  * class that emits nothing looks exactly like a class that works.
  *
- * The pairs below were verified empirically against Tailwind 4.3.3 by compiling a
+ * The namespace pairs (in scripts/lib/code-norms-measure.mjs) were verified empirically against Tailwind 4.3.3 by compiling a
  * probe stylesheet per namespace and checking whether the utility was emitted:
  * the left-hand name produced nothing while the v4 equivalent on the right did.
  * Only pairs with an unambiguous intended utility are listed, so there are no
  * false positives — `--font-weight-*` and `--container-*` are valid in v4 and are
  * deliberately NOT here.
  */
-const INERT_THEME_NAMESPACES = [
-  { prefix: '--font-size-', use: '--text-' },
-  { prefix: '--line-height-', use: '--leading-' },
-  { prefix: '--letter-spacing-', use: '--tracking-' },
-  { prefix: '--box-shadow-', use: '--shadow-' },
-  { prefix: '--border-radius-', use: '--radius-' },
-];
-
-const inertThemeTokens = [];
-for (const rel of cssFiles) {
-  const content = fs.readFileSync(path.join(ROOT, rel), 'utf8');
-  content.split('\n').forEach((line, index) => {
-    const declaration = /^\s*(--[a-z0-9-]+)\s*:/.exec(line);
-    if (!declaration) return;
-    for (const { prefix, use } of INERT_THEME_NAMESPACES) {
-      if (declaration[1].startsWith(prefix)) {
-        inertThemeTokens.push(
-          `${rel}:${index + 1}  ${declaration[1]} declares no utility — use ${use}* instead`,
-        );
-      }
-    }
-  });
-}
+const inertThemeTokens = cssFiles.flatMap((rel) => measureCss(rel, fs.readFileSync(path.join(ROOT, rel), 'utf8')));
 
 const results = [
   {
@@ -176,7 +113,7 @@ const results = [
     norm: 'mms-dry.md §4',
     count: anyCount,
     baseline: BASELINE.anyAnnotations,
-    sample: anySites,
+    sample: anySites.slice(0, 5),
   },
   {
     name: 'Raw hex colours outside @theme',
@@ -192,7 +129,7 @@ const results = [
     norm: 'mms-ui-ux-design.md §2',
     count: arbitraryColourCount,
     baseline: BASELINE.arbitraryColourExpressions,
-    sample: arbitraryColourSites,
+    sample: arbitraryColourSites.slice(0, 5),
   },
   {
     name: `Files over the ${HARD_LIMIT}-line hard ceiling`,
