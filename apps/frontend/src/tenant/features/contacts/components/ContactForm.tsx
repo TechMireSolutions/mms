@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useId } from "react";
 import { User } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -46,6 +46,7 @@ export function ContactForm({
 }: ContactFormProps): React.JSX.Element {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
+  const formDomId = `contact-form-${useId().replace(/:/g, "")}`;
   const { enabledTabIds } = useContactConfig();
   const [tab, setTab] = useState("basic");
 
@@ -115,7 +116,7 @@ export function ContactForm({
       tabs={visibleTabs}
       activeTab={activeTab}
       onTabChange={setTab}
-      tabPanelIdPrefix="contact-form-tab"
+      tabPanelIdPrefix={`${formDomId}-tab`}
       lang={language}
       dir={dir}
       cancelLabel={t("common.cancel")}
@@ -139,10 +140,10 @@ export function ContactForm({
           t={t}
         />
       }
-      formId="contact-form"
+      formId={formDomId}
     >
       <form
-        id="contact-form"
+        id={formDomId}
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
