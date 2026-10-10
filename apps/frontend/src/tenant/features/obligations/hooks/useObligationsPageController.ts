@@ -27,8 +27,6 @@ import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { useObligationsPageActions } from './useObligationsPageActions';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  types: 'obligations.types',
-  mujtahids: 'obligations.mujtahids',
   wakala: 'obligations.wakala',
   numbering: 'obligations.setup.tabs.numbering',
   invoice_template: 'obligations.setup.tabs.invoiceTemplate',
