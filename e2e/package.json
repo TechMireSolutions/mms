@@ -8,9 +8,9 @@
     "test:e2e:prod": "E2E_TARGET=production playwright test --grep @smoke",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:local": "playwright test --grep-invert @local-only",
-    "lint": "node -r ../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js . --quiet",
+    "lint": "node -r ../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js --cache --cache-location node_modules/.cache/eslint/ . --quiet",
     "merge-reports": "playwright merge-reports",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/typecheck.tsbuildinfo"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

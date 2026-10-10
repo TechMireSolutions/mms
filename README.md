@@ -347,6 +347,6 @@ Start with [`AGENTS.md`](AGENTS.md) for the full skill/rule index and workspace 
 See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full connect → commit → push → PR → deploy flow.
 
 1. Branch off `main` (`feat/`, `fix/`, `chore/`) and use Conventional Commits for commit messages and PR titles.
-2. Prefer `pnpm ci:local` before opening a PR (`pnpm ci:local:full` / `--with-db` / `--with-e2e` when those buckets changed). Pre-commit already runs `ci:local`; pre-push only blocks direct pushes to `main`.
+2. Prefer `pnpm ci:local` before opening a PR (`pnpm ci:local:full` / `--with-db` / `--with-e2e` when those buckets changed). Pre-commit checks secrets and lints staged files; pre-push blocks direct pushes to `main` and runs the affected-only `ci:local`.
 3. Never commit `.env` files, secrets, or credentials.
 4. When changing rules or skills, run `bash .agent/scripts/sync-all.sh` to keep Antigravity, Cursor, and Claude Code in sync.
