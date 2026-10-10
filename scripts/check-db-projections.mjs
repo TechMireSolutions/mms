@@ -23,19 +23,26 @@
  * burned down deliberately.
  *
  * Usage:
- *   node scripts/check-db-projections.mjs [--json]
+ *   node scripts/check-db-projections.mjs [--json] [--changed]
+ *
+ * `--changed` scans only the changed backend sources (vs the merge-base). With a
+ * zero baseline that is equivalent to the full scan for catching regressions.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { changedFiles } from './lib/changed-files.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = path.join(rootDir, 'apps', 'backend', 'src');
 
 /** Measured 2026-09-19. Zero wildcard projections across apps/backend. */
 const BASELINE = 0;
+
+const isBackendSource = (rel) =>
+  rel.endsWith('.ts') && !/\.(test|spec)\.ts$/.test(rel) && !rel.includes('/__tests__/');
 
 /** Recursively collects non-test TypeScript sources. */
 function collectSourceFiles(dir) {
@@ -79,8 +86,15 @@ if (!fs.existsSync(srcDir)) {
   process.exit(1);
 }
 
+const sources = process.argv.includes('--changed')
+  ? changedFiles()
+      .filter((rel) => rel.startsWith('apps/backend/src/') && isBackendSource(rel))
+      .map((rel) => path.join(rootDir, rel))
+      .filter((file) => fs.existsSync(file))
+  : collectSourceFiles(srcDir);
+
 const offenders = [];
-for (const file of collectSourceFiles(srcDir)) {
+for (const file of sources) {
   const hits = findWildcardProjections(fs.readFileSync(file, 'utf8'));
   for (const hit of hits) {
     offenders.push({

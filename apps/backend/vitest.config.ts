@@ -25,6 +25,15 @@ export default defineConfig({
     // mocked unit suite stays green without a database and their global pool
     // lifecycle cannot interfere with other tests.
     exclude: ['src/__tests__/db-integration/**'],
+    // Pre-bundle @mms/shared (~500 dist modules) so isolated test files evaluate
+    // one file instead of re-walking the whole graph. `force` re-bundles once per
+    // run: Vite's cache key ignores linked workspace builds, so a cached bundle
+    // would serve a stale @mms/shared after a rebuild.
+    deps: {
+      optimizer: {
+        ssr: { enabled: true, include: ['@mms/shared'], force: true },
+      },
+    },
     pool: 'threads',
     isolate: true,
     maxWorkers: process.env.CI ? 4 : undefined,
