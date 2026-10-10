@@ -51,6 +51,9 @@ function PaperQuestion({ question, number }: { question: Question; number: numbe
         </div>
       )}
 
+      {/* intentional: print layout table — uses qpaper-matching CSS print styles.
+          Do NOT migrate to WorkBatchTable or Table primitive; it must remain a raw
+          <table> so the qpaper-matching ruleset (margin, border, column sizing) applies. */}
       {question.type === "matching" && options.length > 0 && (
         <table className="qpaper-matching">
           <tbody>

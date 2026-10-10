@@ -103,7 +103,9 @@ export function PermissionMatrixDesktopTable({
               <ModuleTableHeaderCell
                 key={permissionAction}
                 columnKey={permissionAction}
-                className="w-16 px-1 py-1.5 text-center"
+                variant="action"
+                noWrap
+                className="w-16 px-1 py-1.5"
               >
                 {!readOnly ? (
                   <Button
@@ -122,7 +124,7 @@ export function PermissionMatrixDesktopTable({
               </ModuleTableHeaderCell>
             ))}
             {!readOnly ? (
-              <ModuleTableHeaderCell columnKey="all" className="px-2 py-2.5 text-center">
+              <ModuleTableHeaderCell columnKey="all" variant="action" noWrap className="px-2 py-2.5">
                 <Button
                   type="button"
                   variant="ghost"

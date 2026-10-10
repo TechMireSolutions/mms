@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -91,25 +92,21 @@ export function EnrollmentReports({
             <TableHeader>
               <TableRow className="border-b border-border/60 hover:bg-muted/30">
                 <TableHead className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.columns.session")}</TableHead>
-                <TableHead className="px-4 py-2.5 font-bold text-foreground text-center">{t("enrollments.metrics.total")}</TableHead>
-                <TableHead className="px-4 py-2.5 font-bold text-foreground text-end">{t("enrollments.columns.finalFee")}</TableHead>
+                <TableHead variant="badge" className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.metrics.total")}</TableHead>
+                <TableHead variant="currency" className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.columns.finalFee")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border/50">
               {bySession.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
-                    {t("enrollments.reports.noData")}
-                  </TableCell>
-                </TableRow>
+                <TableEmpty colSpan={3} title={t("enrollments.reports.noData")} />
               ) : (
                 bySession.map((sessionStats) => (
                   <TableRow key={`${sessionStats.sessionId}:${sessionStats.name}`} className="transition-colors hover:bg-muted/20">
                     <TableCell className="px-4 py-3 font-semibold text-foreground">{sessionStats.name}</TableCell>
-                    <TableCell className="px-4 py-3 text-center text-muted-foreground font-mono">
+                    <TableCell variant="badge" noWrap className="px-4 py-3 text-muted-foreground">
                       {sessionStats.count}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-end font-bold text-primary font-mono">
+                    <TableCell variant="currency" noWrap className="px-4 py-3 font-bold text-primary">
                       {formatCurrency(sessionStats.revenue)}
                     </TableCell>
                   </TableRow>

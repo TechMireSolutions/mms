@@ -7,10 +7,7 @@ import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { WorkBatchTableRow } from "./WorkBatchTableRow";
 import { WorkBatchTableVirtualizedRows } from "./WorkBatchTableVirtualizedRows";
 import { WorkBatchTableFooter } from "./WorkBatchTableFooter";
-import type {
-  WorkBatchTableColumn,
-  WorkBatchTableProps,
-} from "./workBatchTableTypes";
+import type { WorkBatchTableColumn, WorkBatchTableProps } from "./workBatchTableTypes";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { useWorkBatchTableInternalState } from "./useWorkBatchTableInternalState";
 import { cn } from "@/lib/utils";
@@ -96,6 +93,10 @@ export function WorkBatchTable<TData extends { id: string | number }>({
     sortField: col.sortField,
     width: col.width,
     headerClassName: col.headerClassName,
+    noWrap: col.noWrap,
+    truncate: col.truncate,
+    align: col.align,
+    variant: col.variant,
   }));
 
   return (

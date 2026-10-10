@@ -125,14 +125,14 @@ export const SessionReportTable = (function SessionReportTable({
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {[
-                { key: "session", label: t("sessions.report.colSession") },
-                { key: "class", label: t("sessions.report.colClass") },
-                { key: "enrolled", label: t("sessions.report.colEnrolled") },
-                { key: "capacity", label: t("sessions.report.colCapacity") },
-                { key: "utilisation", label: t("sessions.report.colUtilisation") },
-                { key: "status", label: t("sessions.report.colStatus") },
+                { key: "session", label: t("sessions.report.colSession"), variant: "text" as const },
+                { key: "class", label: t("sessions.report.colClass"), variant: "text" as const },
+                { key: "enrolled", label: t("sessions.report.colEnrolled"), variant: "number" as const },
+                { key: "capacity", label: t("sessions.report.colCapacity"), variant: "number" as const },
+                { key: "utilisation", label: t("sessions.report.colUtilisation"), variant: "text" as const },
+                { key: "status", label: t("sessions.report.colStatus"), variant: "badge" as const },
               ].map((header) => (
-                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} variant={header.variant} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
@@ -149,12 +149,12 @@ export const SessionReportTable = (function SessionReportTable({
                     {sessionCapacity.class}
                   </TableCellLink>
                 </TableCell>
-                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</TableCell>
                 <TableCell className="px-3 py-2.5 w-36">
                   <UtilisationBar rate={sessionCapacity.rate} />
                 </TableCell>
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
                 </TableCell>
               </TableRow>

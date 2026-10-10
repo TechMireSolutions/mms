@@ -91,7 +91,7 @@ export function WorkspaceTableView({
       const cellClassName = cn(
         pad,
         'align-middle',
-        col.id === 'madrasaName' ? 'min-w-72' : col.id === 'enabled' ? 'w-44 min-w-44' : col.id === 'requireEmailVerification' ? 'w-60 min-w-60' : col.id === 'createdAt' ? cn('font-medium text-muted-foreground whitespace-nowrap w-40 min-w-40', textSz) : '',
+        col.id === 'madrasaName' ? 'min-w-72' : col.id === 'enabled' ? 'w-44 min-w-44' : col.id === 'requireEmailVerification' ? 'w-60 min-w-60' : col.id === 'createdAt' ? cn('font-medium text-muted-foreground w-40 min-w-40', textSz) : '',
       );
 
       const render = (workspace: WorkspaceTableRow) => {
@@ -120,7 +120,8 @@ export function WorkspaceTableView({
         return String(Reflect.get(workspace, col.id) ?? '—');
       };
 
-      return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, render };
+      const noWrap = col.id === 'createdAt' || col.id === 'enabled' || col.id === 'requireEmailVerification';
+      return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, noWrap, render };
     });
   }, [descriptor, columnLayout, t, appDomain, busy, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
 

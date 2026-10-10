@@ -156,10 +156,10 @@ export function TrialBalance({ fiscalYears }: TrialBalanceProps) {
                 <TableFooter>
                   <TableRow>
                     <TableCell colSpan={3} className="px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info text-base">
+                    <TableCell variant="currency" noWrap className="px-3 py-2.5 text-info text-base font-bold">
                       {formatCurrency(grandDebit)}
                     </TableCell>
-                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-base">
+                    <TableCell variant="currency" noWrap className="px-3 py-2.5 text-success text-base font-bold">
                       {formatCurrency(grandCredit)}
                     </TableCell>
                   </TableRow>

@@ -94,10 +94,10 @@ export function ObligationCollectionDistributionsSection({
                     <ModuleTableHeaderCell columnKey="type" className="px-4 py-2">
                       {t("obligations.detail.colType")}
                     </ModuleTableHeaderCell>
-                    <ModuleTableHeaderCell columnKey="pct" className="px-4 py-2 text-end">
+                    <ModuleTableHeaderCell columnKey="pct" variant="number" className="px-4 py-2">
                       {t("obligations.detail.colPct")}
                     </ModuleTableHeaderCell>
-                    <ModuleTableHeaderCell columnKey="amount" className="px-5 py-2 text-end">
+                    <ModuleTableHeaderCell columnKey="amount" variant="currency" className="px-5 py-2">
                       {t("obligations.columns.amount")}
                     </ModuleTableHeaderCell>
                   </MutedTableHeaderRow>
@@ -111,24 +111,24 @@ export function ObligationCollectionDistributionsSection({
                       <TableCell className="px-4 py-2.5">
                         <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
                       </TableCell>
-                      <TableCell className="px-4 py-2.5 text-end font-mono text-xs font-semibold">
+                      <TableCell variant="number" noWrap className="px-4 py-2.5 text-xs font-semibold">
                         {distribution.percentage}%
                       </TableCell>
-                      <TableCell className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
+                      <TableCell variant="currency" noWrap className="px-5 py-2.5 text-xs font-semibold text-foreground">
                         {formatMoney((collection.amount * distribution.percentage) / 100, currency?.code)}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-                <TableFooter className="bg-muted/40 font-semibold border-t border-border">
+                <TableFooter sticky className="bg-muted/40 font-semibold border-t border-border">
                   <TableRow>
                     <TableCell colSpan={2} className="px-5 py-2.5 text-foreground">
                       {t("reports.fields.total")}
                     </TableCell>
-                    <TableCell className="px-4 py-2.5 text-end font-mono text-xs font-bold">
+                    <TableCell variant="number" noWrap className="px-4 py-2.5 text-xs font-bold">
                       {totalPct}%
                     </TableCell>
-                    <TableCell className="px-5 py-2.5 text-end font-mono text-xs font-bold text-foreground">
+                    <TableCell variant="currency" noWrap className="px-5 py-2.5 text-xs font-bold text-foreground">
                       {formatMoney(totalAmount, currency?.code)}
                     </TableCell>
                   </TableRow>

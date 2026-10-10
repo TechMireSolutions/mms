@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import type { TableCellAlign, TableCellVariant } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 /** Canonical Work-table header cell chrome — SSOT for header typography/padding across module tables. */
@@ -19,6 +20,10 @@ export interface ModuleTableHeaderCellProps {
   activeSortField?: string | null;
   sortDir?: "asc" | "desc";
   onSort?: (field: string) => void;
+  noWrap?: boolean;
+  truncate?: boolean;
+  align?: TableCellAlign;
+  variant?: TableCellVariant;
 }
 
 export const ModuleTableHeaderCell = (function ModuleTableHeaderCell({
@@ -31,10 +36,16 @@ export const ModuleTableHeaderCell = (function ModuleTableHeaderCell({
   activeSortField,
   sortDir = "asc",
   onSort,
+  noWrap,
+  truncate,
+  align,
+  variant,
 }: ModuleTableHeaderCellProps): React.JSX.Element {
   const sortable = Boolean(sortKey);
   const isSorted = sortable && activeSortField === sortKey;
   const ariaSort = isSorted ? (sortDir === "asc" ? "ascending" : "descending") : "none";
+  const isEnd = align === "end" || align === "right" || variant === "number" || variant === "currency";
+  const isCenter = align === "center" || variant === "badge" || variant === "action";
 
   return (
     <ResizableTableHead
@@ -42,13 +53,20 @@ export const ModuleTableHeaderCell = (function ModuleTableHeaderCell({
       width={width}
       onResize={onResize}
       aria-sort={ariaSort}
+      noWrap={noWrap}
+      truncate={truncate}
+      align={align}
+      variant={variant}
       className={cn(MODULE_TABLE_HEAD_CLASS, className)}
     >
       {sortable && onSort ? (
         <button
           type="button"
           onClick={() => onSort(sortKey as string)}
-          className="flex w-full items-center gap-1 text-start cursor-pointer select-none hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          className={cn(
+            "flex w-full items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm",
+            isEnd ? "justify-end text-end" : isCenter ? "justify-center text-center" : "justify-start text-start",
+          )}
         >
           {children}
           {isSorted ? (

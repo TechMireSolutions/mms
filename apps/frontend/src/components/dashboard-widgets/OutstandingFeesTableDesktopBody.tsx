@@ -60,14 +60,14 @@ export function OutstandingFeesTableDesktopBody({
             <ModuleTableHeaderCell columnKey="class" className="px-3 py-3 hidden sm:table-cell select-none">
               {t("sessions.report.colClass")}
             </ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="amount" className="px-3 py-3 select-none">
+            <ModuleTableHeaderCell columnKey="amount" noWrap variant="currency" className="px-3 py-3 select-none">
               {t("finance.columns.amount")}
             </ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="overdue" className="px-3 py-3 hidden md:table-cell select-none">
+            <ModuleTableHeaderCell columnKey="overdue" noWrap variant="badge" className="px-3 py-3 hidden md:table-cell select-none">
               {t("finance.metrics.overdue")}
             </ModuleTableHeaderCell>
             {canWriteMessaging && (
-              <ModuleTableHeaderCell columnKey="actions" className="px-3 py-3 text-end select-none">
+              <ModuleTableHeaderCell columnKey="actions" noWrap variant="action" className="px-3 py-3 select-none">
                 {t("hasanat.columns.actions")}
               </ModuleTableHeaderCell>
             )}
@@ -83,9 +83,12 @@ export function OutstandingFeesTableDesktopBody({
           ) : isVirtualized ? (
             <>
               {rowVirtualizer.getVirtualItems().length > 0 && (
-                <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
-                  <td colSpan={canWriteMessaging ? 5 : 4} />
-                </tr>
+                <TableRow
+                  style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}
+                  className="border-0 hover:bg-transparent"
+                >
+                  <TableCell colSpan={canWriteMessaging ? 5 : 4} className="p-0 border-0" />
+                </TableRow>
               )}
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const outstandingFee = rows[virtualRow.index];
@@ -105,17 +108,17 @@ export function OutstandingFeesTableDesktopBody({
                         <span className="text-sm font-semibold text-foreground truncate">{outstandingFee.student}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell truncate max-w-36">
+                    <TableCell truncate className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell max-w-36">
                       {outstandingFee.class}
                     </TableCell>
-                    <TableCell className="px-3 py-3">
-                      <span className="text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
+                    <TableCell variant="currency" noWrap className="px-3 py-3">
+                      <span className="text-sm font-bold text-destructive">{formatCurrency(outstandingFee.amount)}</span>
                     </TableCell>
-                    <TableCell className="px-3 py-3 hidden md:table-cell">
+                    <TableCell variant="badge" noWrap className="px-3 py-3 hidden md:table-cell">
                       <OutstandingFeeOverdueBadge months={outstandingFee.months} t={t} />
                     </TableCell>
                     {canWriteMessaging && (
-                      <TableCell className="px-3 py-3 text-end">
+                      <TableCell variant="action" noWrap className="px-3 py-3">
                         <OutstandingFeeMessagingActions row={outstandingFee} openComposer={openComposer} t={t} />
                       </TableCell>
                     )}
@@ -123,16 +126,17 @@ export function OutstandingFeesTableDesktopBody({
                 );
               })}
               {rowVirtualizer.getVirtualItems().length > 0 && (
-                <tr
+                <TableRow
                   style={{
                     height: `${
                       rowVirtualizer.getTotalSize() -
                       rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
                     }px`,
                   }}
+                  className="border-0 hover:bg-transparent"
                 >
-                  <td colSpan={canWriteMessaging ? 5 : 4} />
-                </tr>
+                  <TableCell colSpan={canWriteMessaging ? 5 : 4} className="p-0 border-0" />
+                </TableRow>
               )}
             </>
           ) : (
@@ -155,17 +159,17 @@ export function OutstandingFeesTableDesktopBody({
                     <span className="text-sm font-semibold text-foreground truncate">{outstandingFee.student}</span>
                   </div>
                 </TableCell>
-                <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell truncate max-w-36">
+                <TableCell truncate className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell max-w-36">
                   {outstandingFee.class}
                 </TableCell>
-                <TableCell className="px-3 py-3">
-                  <span className="text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
+                <TableCell variant="currency" noWrap className="px-3 py-3">
+                  <span className="text-sm font-bold text-destructive">{formatCurrency(outstandingFee.amount)}</span>
                 </TableCell>
-                <TableCell className="px-3 py-3 hidden md:table-cell">
+                <TableCell variant="badge" noWrap className="px-3 py-3 hidden md:table-cell">
                   <OutstandingFeeOverdueBadge months={outstandingFee.months} t={t} />
                 </TableCell>
                 {canWriteMessaging && (
-                  <TableCell className="px-3 py-3 text-end">
+                  <TableCell variant="action" noWrap className="px-3 py-3">
                     <OutstandingFeeMessagingActions row={outstandingFee} openComposer={openComposer} t={t} />
                   </TableCell>
                 )}

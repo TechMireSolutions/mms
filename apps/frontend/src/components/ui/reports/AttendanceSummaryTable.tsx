@@ -94,10 +94,10 @@ export function AttendanceSummaryTable({
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               <ModuleTableHeaderCell columnKey="class" className="px-3 py-2.5">{t("attendance.report.colClass")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="totalStudents" className="px-3 py-2.5">{t("attendance.report.colTotalStudents")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="totalStudents" variant="number" className="px-3 py-2.5">{t("attendance.report.colTotalStudents")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="avgRate" className="px-3 py-2.5">{t("attendance.report.colAvgRate")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="perfectAttendance" className="px-3 py-2.5">{t("attendance.report.colPerfectAttendance")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="belowThreshold" className="px-3 py-2.5">{t("attendance.report.colBelowThreshold")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="perfectAttendance" variant="badge" className="px-3 py-2.5">{t("attendance.report.colPerfectAttendance")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="belowThreshold" variant="badge" className="px-3 py-2.5">{t("attendance.report.colBelowThreshold")}</ModuleTableHeaderCell>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
@@ -108,12 +108,12 @@ export function AttendanceSummaryTable({
                     {summaryRow.class}
                   </TableCellLink>
                 </TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground">{summaryRow.total}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 text-muted-foreground">{summaryRow.total}</TableCell>
                 <TableCell className="px-3 py-2.5 w-36">{rateBar(summaryRow.avgRate)}</TableCell>
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   <Badge pill tone="success">{summaryRow.perfectAttendance}</Badge>
                 </TableCell>
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   <Badge pill tone="destructive">{summaryRow.belowThreshold}</Badge>
                 </TableCell>
               </TableRow>

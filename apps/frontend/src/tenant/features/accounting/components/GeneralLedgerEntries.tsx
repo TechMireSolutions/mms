@@ -53,19 +53,22 @@ export function GeneralLedgerEntries({
       {
         id: "date",
         label: t("accounting.ledger.columns.date"),
-        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground",
         render: (line) => formatDate(line.date),
       },
       {
         id: "ref",
         label: t("accounting.ledger.columns.ref"),
+        noWrap: true,
         cellClassName: "px-3 py-2.5 font-mono text-xs font-bold text-primary",
         render: (line) => line.ref,
       },
       {
         id: "description",
         label: t("accounting.ledger.columns.description"),
-        cellClassName: "px-3 py-2.5 text-foreground max-w-cell-md truncate",
+        truncate: true,
+        cellClassName: "px-3 py-2.5 text-foreground max-w-cell-md",
         render: (line) => line.description,
       },
       {
@@ -79,6 +82,7 @@ export function GeneralLedgerEntries({
         id: "debit",
         label: t("accounting.ledger.columns.debit"),
         headerClassName: "text-end",
+        noWrap: true,
         cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold text-info",
         render: (line) => (line.debit > 0 ? formatCurrency(line.debit) : "—"),
       },
@@ -86,6 +90,7 @@ export function GeneralLedgerEntries({
         id: "credit",
         label: t("accounting.ledger.columns.credit"),
         headerClassName: "text-end",
+        noWrap: true,
         cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold text-success",
         render: (line) => (line.credit > 0 ? formatCurrency(line.credit) : "—"),
       },
@@ -93,6 +98,7 @@ export function GeneralLedgerEntries({
         id: "balance",
         label: t("accounting.ledger.columns.balance"),
         headerClassName: "text-end",
+        noWrap: true,
         cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold",
         render: (line) => (
           <>
@@ -139,13 +145,13 @@ export function GeneralLedgerEntries({
           {t("accounting.ledger.closingBalance")}
         </TableCell>
         <TableCell className="hidden lg:table-cell" />
-        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info">
+        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-info">
           {formatCurrency(totalDebit)}
         </TableCell>
-        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success">
+        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-success">
           {formatCurrency(totalCredit)}
         </TableCell>
-        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground">
+        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-foreground">
           {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
         </TableCell>
       </FinancialDebitCreditFooterRow>

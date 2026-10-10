@@ -110,8 +110,8 @@ export function JournalEntryDetailLines({
             <FinancialDebitCreditHeaderRow>
               <ModuleTableHeaderCell columnKey="account" className="px-5 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="note" className="px-4 py-2 hidden sm:table-cell">{t("accounting.journal.detail.note")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="debit" className="px-4 py-2 text-end">{t("accounting.journal.detail.debit")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="credit" className="px-5 py-2 text-end">{t("accounting.journal.detail.credit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="debit" variant="currency" className="px-4 py-2">{t("accounting.journal.detail.debit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="credit" variant="currency" className="px-5 py-2">{t("accounting.journal.detail.credit")}</ModuleTableHeaderCell>
             </FinancialDebitCreditHeaderRow>
           </TableHeader>
           <TableBody className="divide-y divide-border">

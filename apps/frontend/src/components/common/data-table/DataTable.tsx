@@ -48,6 +48,10 @@ export function DataTable<TData extends { id: string | number }>({
     headerClassName: column.headerClassName,
     cellClassName: column.cellClassName,
     render: column.render,
+    noWrap: column.noWrap,
+    truncate: column.truncate,
+    align: column.align,
+    variant: column.variant,
   }));
 
   const sourceEmpty = !isLoading && data.length === 0;

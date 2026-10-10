@@ -112,23 +112,23 @@ export function CashFlowStatementPanel({
             <TableBody className="divide-y divide-border/50">
               <TableRow className="bg-muted/10">
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</TableCell>
-                <TableCell className="px-3 py-2.5 text-end font-mono font-semibold">{formatCurrency(netSurplus)}</TableCell>
+                <TableCell variant="currency" noWrap className="px-3 py-2.5">{formatCurrency(netSurplus)}</TableCell>
               </TableRow>
               {adjustments.map((item) => (
                 <TableRow key={item.label}>
                   <TableCell className="px-3 py-2.5 text-muted-foreground ps-8">{item.label}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono text-muted-foreground">{formatCurrency(item.amount)}</TableCell>
+                  <TableCell variant="currency" noWrap className="px-3 py-2.5 text-muted-foreground">{formatCurrency(item.amount)}</TableCell>
                 </TableRow>
               ))}
               <TableRow className="bg-muted/10">
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</TableCell>
-                <TableCell className="px-3 py-2.5 text-end font-mono font-semibold text-foreground">{formatCurrency(netCashFlowIndirect)}</TableCell>
+                <TableCell variant="currency" noWrap className="px-3 py-2.5 text-foreground">{formatCurrency(netCashFlowIndirect)}</TableCell>
               </TableRow>
             </TableBody>
             <TableFooter>
               <TableRow>
                 <TableCell className="px-3 py-2.5 font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</TableCell>
-                <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground text-base">
+                <TableCell variant="currency" noWrap className="px-3 py-2.5 text-foreground text-base font-bold">
                   {formatCurrency(Math.abs(netCashFlow))}
                   <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { TableCell } from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
@@ -99,8 +99,12 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
         return (
           <TableCell
             key={col.id}
+            noWrap={col.noWrap}
+            truncate={col.truncate}
+            align={col.align}
+            variant={col.variant}
             className={cn(
-              "px-4 py-3 text-sm text-foreground transition-colors text-wrap break-words",
+              "px-4 py-3 text-sm text-foreground transition-colors",
               isSticky && "sticky start-12 z-elevated border-e border-border/30",
               isSticky ? workTableStickyCellBg(isSelected) : undefined,
               customCellClass,
@@ -114,6 +118,7 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
       {/* Actions Menu */}
       {renderRowActions && (
         <TableCell
+          noWrap
           className={cn("text-end", actionsCellClassName ?? "w-12 min-w-12 px-2 py-3")}
           onClick={(e) => e.stopPropagation()}
         >
@@ -130,9 +135,9 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
       {cells}
     </motion.tr>
   ) : (
-    <tr key={idStr} {...trProps}>
+    <TableRow key={idStr} {...trProps}>
       {cells}
-    </tr>
+    </TableRow>
   );
 }
 

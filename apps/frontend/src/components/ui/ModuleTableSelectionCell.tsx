@@ -33,6 +33,7 @@ export const ModuleTableSelectionCell = React.memo(function ModuleTableSelection
 
   return (
     <TableCell
+      noWrap
       onClick={stopPropagation || onClick ? handleClick : undefined}
       className={cn(
         "w-12 min-w-12 px-4 py-3 transition-colors",

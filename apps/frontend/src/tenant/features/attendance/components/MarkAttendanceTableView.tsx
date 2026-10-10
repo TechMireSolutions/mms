@@ -83,9 +83,12 @@ export function MarkAttendanceTableView({
           ) : isVirtualized ? (
             <>
               {desktopVirtualizer.getVirtualItems().length > 0 && (
-                <tr style={{ height: `${desktopVirtualizer.getVirtualItems()[0].start}px` }}>
-                  <td colSpan={enabledFields.length + 2} />
-                </tr>
+                <TableRow
+                  style={{ height: `${desktopVirtualizer.getVirtualItems()[0].start}px` }}
+                  className="border-0 hover:bg-transparent"
+                >
+                  <TableCell colSpan={enabledFields.length + 2} className="p-0 border-0" />
+                </TableRow>
               )}
               {desktopVirtualizer.getVirtualItems().map((virtualRow) => {
                 const row = rows[virtualRow.index];
@@ -96,10 +99,10 @@ export function MarkAttendanceTableView({
                     {...rowMotion()}
                     className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}
                   >
-                    <TableCell className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
+                    <TableCell noWrap className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
                       {row.rollNo}
                     </TableCell>
-                    <TableCell className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">
+                    <TableCell noWrap className="px-3 py-2.5 font-semibold text-foreground">
                       {row.name}
                     </TableCell>
                     {enabledFields.map((field) => (
@@ -118,7 +121,7 @@ export function MarkAttendanceTableView({
                 );
               })}
               {desktopVirtualizer.getVirtualItems().length > 0 && (
-                <tr
+                <TableRow
                   style={{
                     height: `${Math.max(
                       0,
@@ -128,9 +131,10 @@ export function MarkAttendanceTableView({
                         ]?.end ?? 0),
                     )}px`,
                   }}
+                  className="border-0 hover:bg-transparent"
                 >
-                  <td colSpan={enabledFields.length + 2} />
-                </tr>
+                  <TableCell colSpan={enabledFields.length + 2} className="p-0 border-0" />
+                </TableRow>
               )}
             </>
           ) : (
@@ -142,10 +146,10 @@ export function MarkAttendanceTableView({
                   {...rowMotion()}
                   className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}
                 >
-                  <TableCell className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
+                  <TableCell noWrap className="px-3 py-2.5 text-xs text-muted-foreground font-mono">
                     {row.rollNo}
                   </TableCell>
-                  <TableCell className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">
+                  <TableCell noWrap className="px-3 py-2.5 font-semibold text-foreground">
                     {row.name}
                   </TableCell>
                   {enabledFields.map((field) => (
