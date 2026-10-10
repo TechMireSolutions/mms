@@ -97,14 +97,14 @@ export function ObligationsRepDuesSection({
           ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
-              <TableHeader>
+              <TableHeader sticky>
                 <MutedTableHeaderRow>
                   <ModuleTableHeaderCell columnKey="representative" className="px-3 py-2.5">{t("obligations.summary.rep.colRepresentative")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="mujtahid" className="px-3 py-2.5">{t("obligations.summary.rep.colMujtahid")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="byType" className="px-3 py-2.5">{t("obligations.summary.rep.colByType")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="collections" className="px-3 py-2.5 text-end">{t("obligations.summary.rep.colCollections")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="totalCollected" className="px-3 py-2.5 text-end">{t("obligations.summary.rep.colTotalCollectedShort")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="dueToRep" className="px-3 py-2.5 text-end text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="collections" variant="number" className="px-3 py-2.5">{t("obligations.summary.rep.colCollections")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="totalCollected" variant="currency" className="px-3 py-2.5">{t("obligations.summary.rep.colTotalCollectedShort")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="dueToRep" variant="currency" className="px-3 py-2.5 text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</ModuleTableHeaderCell>
                 </MutedTableHeaderRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/50">
@@ -128,13 +128,13 @@ export function ObligationsRepDuesSection({
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{representativeSummary.count}</TableCell>
+                    <TableCell variant="number" className="px-3 py-2.5 text-sm font-semibold text-foreground">{representativeSummary.count}</TableCell>
                     <MoneyTableCell value={formatCurrency(representativeSummary.total)} variant="neutral" />
                     <MoneyTableCell value={formatCurrency(representativeSummary.due)} variant="negative" />
                   </TableRow>
                 ))}
               </TableBody>
-              <TableFooter>
+              <TableFooter sticky>
                 <TableRow>
                   <TableCell colSpan={4} className="table-footer-label">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</TableCell>
                   <MoneyTableCell value={formatCurrency(totalAmount)} variant="neutral" isFooter />

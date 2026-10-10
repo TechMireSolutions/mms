@@ -38,12 +38,12 @@ export const AcademicReportResultsBody = (function AcademicReportResultsBody({
 }: AcademicReportResultsBodyProps): React.JSX.Element {
   const { t } = useTranslation();
   const headers = (() => [
-    { key: "rank", label: t("examinations.report.colRank") },
-    { key: "student", label: t("examinations.report.colStudent") },
-    { key: "class", label: t("examinations.report.colClass") },
-    { key: "subject", label: t("examinations.report.colSubject") },
-    { key: "marks", label: t("examinations.report.colMarks") },
-    { key: "grade", label: t("examinations.report.colGrade") },
+    { key: "rank", label: t("examinations.report.colRank"), variant: "badge" as const },
+    { key: "student", label: t("examinations.report.colStudent"), variant: "text" as const },
+    { key: "class", label: t("examinations.report.colClass"), variant: "text" as const },
+    { key: "subject", label: t("examinations.report.colSubject"), variant: "text" as const },
+    { key: "marks", label: t("examinations.report.colMarks"), variant: "number" as const },
+    { key: "grade", label: t("examinations.report.colGrade"), variant: "badge" as const },
   ])();
 
   const exportColumns = (() => [
@@ -130,7 +130,7 @@ export const AcademicReportResultsBody = (function AcademicReportResultsBody({
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {headers.map((header) => (
-                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} variant={header.variant} className="px-3 py-2.5">
                   {header.label}
                 </ModuleTableHeaderCell>
               ))}
@@ -139,9 +139,9 @@ export const AcademicReportResultsBody = (function AcademicReportResultsBody({
           <TableBody className="divide-y divide-border/50">
             {pagedAcademicResults.map((academicResult) => (
               <TableRow key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/20 transition-colors">
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   {academicResult.rank === 1 ? (
-                    <Trophy className="w-4 h-4 text-warning" />
+                    <Trophy className="w-4 h-4 text-warning inline-block" />
                   ) : (
                     <span className="text-muted-foreground">{academicResult.rank}</span>
                   )}
@@ -149,10 +149,10 @@ export const AcademicReportResultsBody = (function AcademicReportResultsBody({
                 <TableCell className="px-3 py-2.5 font-medium">{academicResult.studentName}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground">{academicResult.class}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground">{academicResult.subject}</TableCell>
-                <TableCell className="px-3 py-2.5 font-semibold">
+                <TableCell variant="number" noWrap className="px-3 py-2.5 font-semibold">
                   {academicResult.marks}/{academicResult.total}
                 </TableCell>
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   <StatusBadge
                     status={academicResult.grade}
                     size="sm"

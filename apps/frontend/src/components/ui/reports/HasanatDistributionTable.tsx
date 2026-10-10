@@ -31,12 +31,12 @@ export const HasanatDistributionTable = (function HasanatDistributionTable({
 }: HasanatDistributionTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const headers = (() => [
-    { key: "student", label: t("hasanat.report.colStudent") },
-    { key: "class", label: t("hasanat.report.colClass") },
-    { key: "faculty", label: t("hasanat.report.colFaculty") },
-    { key: "distributed", label: t("hasanat.report.colDistributed") },
-    { key: "redeemed", label: t("hasanat.report.colRedeemed") },
-    { key: "balance", label: t("hasanat.report.colBalance") },
+    { key: "student", label: t("hasanat.report.colStudent"), variant: "text" as const },
+    { key: "class", label: t("hasanat.report.colClass"), variant: "text" as const },
+    { key: "faculty", label: t("hasanat.report.colFaculty"), variant: "text" as const },
+    { key: "distributed", label: t("hasanat.report.colDistributed"), variant: "number" as const },
+    { key: "redeemed", label: t("hasanat.report.colRedeemed"), variant: "number" as const },
+    { key: "balance", label: t("hasanat.report.colBalance"), variant: "badge" as const },
   ])();
 
   const exportColumns = (() => [
@@ -137,7 +137,7 @@ export const HasanatDistributionTable = (function HasanatDistributionTable({
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {headers.map((header) => (
-                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} variant={header.variant} className="px-3 py-2.5">
                   {header.label}
                 </ModuleTableHeaderCell>
               ))}
@@ -158,9 +158,9 @@ export const HasanatDistributionTable = (function HasanatDistributionTable({
                     {hasanatRow.faculty}
                   </TableCellLink>
                 </TableCell>
-                <TableCell className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</TableCell>
-                <TableCell className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</TableCell>
-                <TableCell className="px-3 py-2.5">
+                <TableCell variant="number" noWrap className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</TableCell>
+                <TableCell variant="badge" noWrap className="px-3 py-2.5">
                   <Badge as="span" pill tone={hasanatRow.balance > 0 ? "warning" : "muted"}>
                     {hasanatRow.balance}
                   </Badge>

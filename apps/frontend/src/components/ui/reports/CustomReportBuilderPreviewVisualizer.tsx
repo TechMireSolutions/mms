@@ -71,7 +71,7 @@ export function CustomReportBuilderPreviewVisualizer({
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
                   {selectedFields.map((selectedField) => (
-                    <ModuleTableHeaderCell key={selectedField} columnKey={selectedField} className="px-4 py-3.5 whitespace-nowrap">
+                    <ModuleTableHeaderCell key={selectedField} columnKey={selectedField} noWrap className="px-4 py-3.5">
                       {resolveFieldLabel(selectedField)}
                     </ModuleTableHeaderCell>
                   ))}
@@ -84,7 +84,7 @@ export function CustomReportBuilderPreviewVisualizer({
                       const fieldLabel = resolveFieldLabel(selectedField);
                       const cellValue = previewRow[fieldLabel];
                       return (
-                        <TableCell key={selectedField} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
+                        <TableCell key={selectedField} className="px-4 py-3 text-foreground font-semibold group-hover:text-primary transition-colors">
                           {cellValue !== undefined && cellValue !== null
                             ? String(cellValue)
                             : <span className="text-muted-foreground text-xs italic">—</span>

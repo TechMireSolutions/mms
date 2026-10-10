@@ -69,9 +69,9 @@ export function FinancialLedgerTable({
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader>
           <TableRow className="border-b border-border bg-surface-table-header">
-            <TableHead className="table-header-cell text-start">{labels.account}</TableHead>
-            <TableHead className="table-header-cell text-end">{labels.debit}</TableHead>
-            <TableHead className="table-header-cell text-end">{labels.credit}</TableHead>
+            <TableHead className="table-header-cell">{labels.account}</TableHead>
+            <TableHead noWrap align="end" className="table-header-cell">{labels.debit}</TableHead>
+            <TableHead noWrap align="end" className="table-header-cell">{labels.credit}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -84,6 +84,7 @@ export function FinancialLedgerTable({
                   {row.account}
                 </TableCell>
                 <TableCell
+                  noWrap
                   className={cn(
                     'table-amount-cell',
                     variant === 'debit' ? 'text-info' : 'text-muted-foreground',
@@ -92,6 +93,7 @@ export function FinancialLedgerTable({
                   {row.debit ?? PLACEHOLDER}
                 </TableCell>
                 <TableCell
+                  noWrap
                   className={cn(
                     'table-amount-cell',
                     variant === 'credit' ? 'text-success' : 'text-muted-foreground',

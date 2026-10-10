@@ -1,4 +1,5 @@
 import type React from "react";
+import type { TableCellAlign, TableCellVariant } from "@/components/ui/table";
 
 /**
  * Computes allSelected / someSelected from a list of items and a selection set.
@@ -33,6 +34,14 @@ export interface WorkBatchTableColumn<TData> {
   headerClassName?: string;
   cellClassName?: string | ((row: TData) => string | undefined);
   render: (row: TData, index: number) => React.ReactNode;
+  /** Prevents text wrapping; ideal for fixed-width columns (IDs, dates, badges, actions). */
+  noWrap?: boolean;
+  /** Truncates overflowing text with an ellipsis. */
+  truncate?: boolean;
+  /** Standardized text alignment: right for numbers/currency, left for text, center for badges/actions. */
+  align?: TableCellAlign;
+  /** Column data variant automatically configuring alignment and formatting. */
+  variant?: TableCellVariant;
 }
 
 export interface WorkBatchTableFooterCell {

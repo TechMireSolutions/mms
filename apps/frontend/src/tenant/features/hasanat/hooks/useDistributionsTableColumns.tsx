@@ -37,13 +37,14 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "card",
         label: t("hasanat.columns.distribution.card"),
+        noWrap: true,
         render: (distribution) => {
           const denomination = getDistributionDenomination(denomsById, distribution.denominationId);
           return (
             <div className="flex items-center gap-2">
               <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
               <div>
-                <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{distribution.denominationName}</p>
+                <p className="text-sm font-semibold text-foreground m-0">{distribution.denominationName}</p>
                 {denomination && (
                   <p className="text-xs font-bold m-0" style={{ color: denomination.color }}>
                     {t("hasanat.form.pointsShort", { points: denomination.points })}
@@ -60,8 +61,9 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "recipient",
         label: t("hasanat.columns.distribution.recipient"),
+        noWrap: true,
         render: (distribution) => (
-          <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
+          <span className="text-sm font-semibold text-foreground">{distribution.recipientName}</span>
         ),
       });
     }
@@ -70,6 +72,7 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "recipientType",
         label: t("hasanat.columns.distribution.recipientType"),
+        noWrap: true,
         render: (distribution) => (
           <div className="flex items-center gap-1.5">
             {distribution.recipientType === "faculty" ? (
@@ -77,7 +80,7 @@ export function useDistributionsTableColumns({
             ) : (
               <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             )}
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
+            <span className="text-sm text-muted-foreground">
               {distribution.recipientType === "faculty"
                 ? t("hasanat.form.recipientType.faculty")
                 : t("hasanat.form.recipientType.student")}
@@ -100,6 +103,7 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "quantity",
         label: t("hasanat.columns.distribution.quantity"),
+        noWrap: true,
         render: (distribution) => <span className="text-sm font-bold text-foreground">{distribution.quantity}</span>,
       });
     }
@@ -108,8 +112,9 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "reason",
         label: t("hasanat.columns.distribution.reason"),
+        truncate: true,
         cellClassName: "max-w-cell-sm",
-        render: (distribution) => <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>,
+        render: (distribution) => <p className="text-sm text-muted-foreground m-0">{distribution.reason}</p>,
       });
     }
 
@@ -117,7 +122,8 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "issuedDate",
         label: t("hasanat.columns.distribution.issuedDate"),
-        cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "text-xs text-muted-foreground",
         render: (distribution) => distribution.issuedDate,
       });
     }
@@ -126,7 +132,8 @@ export function useDistributionsTableColumns({
       cols.push({
         id: "issuedBy",
         label: t("hasanat.columns.distribution.issuedBy"),
-        cellClassName: "text-sm text-muted-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "text-sm text-muted-foreground",
         render: (distribution) => distribution.issuedBy || "—",
       });
     }

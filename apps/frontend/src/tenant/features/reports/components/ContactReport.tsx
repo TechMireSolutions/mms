@@ -11,10 +11,10 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 const ContactReportCharts = lazy(() =>
@@ -122,17 +122,23 @@ const ContactReport = (function ContactReport(_props: ContactReportProps = {}): 
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="px-4 py-2.5 font-bold">{t("common.label")}</TableHead>
-                    <TableHead className="px-4 py-2.5 font-bold text-center">{t("common.details")}</TableHead>
-                    <TableHead className="px-4 py-2.5 font-bold text-end">{t("reports.kpi.growthRate")}</TableHead>
+                    <ModuleTableHeaderCell columnKey="metric" className="px-4 py-2.5">
+                      {t("common.label")}
+                    </ModuleTableHeaderCell>
+                    <ModuleTableHeaderCell columnKey="value" variant="badge" className="px-4 py-2.5">
+                      {t("common.details")}
+                    </ModuleTableHeaderCell>
+                    <ModuleTableHeaderCell columnKey="rate" variant="number" className="px-4 py-2.5">
+                      {t("reports.kpi.growthRate")}
+                    </ModuleTableHeaderCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {summaryRows.map((row) => (
                     <TableRow key={row.metric}>
                       <TableCell className="px-4 py-2.5 font-medium">{row.metric}</TableCell>
-                      <TableCell className="px-4 py-2.5 text-center font-mono">{row.value}</TableCell>
-                      <TableCell className="px-4 py-2.5 text-end font-mono text-primary font-bold">{row.rate}</TableCell>
+                      <TableCell variant="badge" noWrap className="px-4 py-2.5 font-mono">{row.value}</TableCell>
+                      <TableCell variant="number" noWrap className="px-4 py-2.5 text-primary font-bold">{row.rate}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -68,6 +68,7 @@ export function RedemptionTracker({
       id: "student",
       label: t("hasanat.columns.redemption.student"),
       fixed: true,
+      noWrap: true,
       searchValue: (r) => r.studentName,
       render: (r) => <span className="text-sm font-semibold text-foreground">{r.studentName || "—"}</span>,
     },
@@ -75,6 +76,7 @@ export function RedemptionTracker({
     {
       id: "pointsUsed",
       label: t("hasanat.columns.redemption.pointsUsed"),
+      noWrap: true,
       render: (r) => (
         <span className="inline-flex items-center gap-1 text-sm font-bold text-warning">
           <Star className="w-3 h-3" aria-hidden="true" />
@@ -85,8 +87,9 @@ export function RedemptionTracker({
     {
       id: "date",
       label: t("hasanat.columns.redemption.date"),
+      noWrap: true,
       searchValue: (r) => formatDate(r.date),
-      render: (r) => <span className="text-muted-foreground whitespace-nowrap">{formatDate(r.date)}</span>,
+      render: (r) => <span className="text-muted-foreground">{formatDate(r.date)}</span>,
     },
     {
       id: "approvedBy",

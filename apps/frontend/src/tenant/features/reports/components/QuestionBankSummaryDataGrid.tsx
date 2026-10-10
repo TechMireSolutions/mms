@@ -38,10 +38,10 @@ export function QuestionBankSummaryDataGrid({
             <MutedTableHeaderRow>
               <TableHead className="px-4 py-2.5 font-bold">{t('common.type')}</TableHead>
               <TableHead className="px-4 py-2.5 font-bold">{t('common.label')}</TableHead>
-              <TableHead className="px-4 py-2.5 font-bold text-center">
+              <TableHead variant="badge" className="px-4 py-2.5 font-bold">
                 {t('questionBank.questions')}
               </TableHead>
-              <TableHead className="px-4 py-2.5 font-bold text-center">
+              <TableHead variant="badge" className="px-4 py-2.5 font-bold">
                 {t('questionBank.report.generatedTests')}
               </TableHead>
             </MutedTableHeaderRow>
@@ -58,10 +58,10 @@ export function QuestionBankSummaryDataGrid({
                 <TableCell className="px-4 py-2.5 font-medium text-foreground">
                   {row.name}
                 </TableCell>
-                <TableCell className="px-4 py-2.5 text-center font-mono font-semibold text-primary">
+                <TableCell variant="badge" noWrap className="px-4 py-2.5 font-semibold text-primary">
                   {row.questions}
                 </TableCell>
-                <TableCell className="px-4 py-2.5 text-center font-mono text-muted-foreground">
+                <TableCell variant="badge" noWrap className="px-4 py-2.5 text-muted-foreground">
                   {row.tests}
                 </TableCell>
               </TableRow>

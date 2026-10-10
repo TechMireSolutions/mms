@@ -24,6 +24,8 @@ export interface MoneyTableCellProps {
   variant?: MoneyVariant;
   /** Whether to use footer-weight styling (`table-footer-label` sizing). Default false. */
   isFooter?: boolean;
+  /** Prevents text wrapping. Defaults to true for numeric currency. */
+  noWrap?: boolean;
   className?: string;
 }
 
@@ -44,10 +46,13 @@ export function MoneyTableCell({
   value,
   variant = 'neutral',
   isFooter = false,
+  noWrap = true,
   className,
 }: MoneyTableCellProps): JSX.Element {
   return (
     <TableCell
+      variant="currency"
+      noWrap={noWrap}
       className={cn(
         'table-amount-cell',
         VARIANT_CLASS[variant],

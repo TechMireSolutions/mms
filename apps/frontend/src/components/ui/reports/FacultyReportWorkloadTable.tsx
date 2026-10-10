@@ -90,12 +90,12 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {[
-                { key: "faculty", label: t("faculty.report.colFaculty") },
-                { key: "classes", label: t("faculty.report.colClasses") },
-                { key: "sessions", label: t("faculty.report.colSessions") },
-                { key: "students", label: t("faculty.report.colStudents") },
+                { key: "faculty", label: t("faculty.report.colFaculty"), variant: "text" as const },
+                { key: "classes", label: t("faculty.report.colClasses"), variant: "text" as const },
+                { key: "sessions", label: t("faculty.report.colSessions"), variant: "number" as const },
+                { key: "students", label: t("faculty.report.colStudents"), variant: "number" as const },
               ].map((header) => (
-                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} variant={header.variant} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
@@ -124,8 +124,8 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
                     labelClassName="text-foreground"
                   />
                 </TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground">{faculty.sessions}</TableCell>
-                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{faculty.totalStudents}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 text-muted-foreground">{faculty.sessions}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 font-semibold text-foreground">{faculty.totalStudents}</TableCell>
               </TableRow>
             ))}
           </TableBody>

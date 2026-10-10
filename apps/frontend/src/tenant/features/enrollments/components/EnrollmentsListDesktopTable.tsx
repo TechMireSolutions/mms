@@ -62,7 +62,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       cols.push({
         id: "student",
         label: t("enrollments.columns.student"),
-        cellClassName: "px-3 py-2.5 whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "px-3 py-2.5",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "student", columnOptions),
       });
     }
@@ -71,7 +72,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       cols.push({
         id: "session",
         label: t("enrollments.columns.session"),
-        cellClassName: "px-3 py-2.5 text-xs text-foreground max-w-cell-sm truncate",
+        truncate: true,
+        cellClassName: "px-3 py-2.5 text-xs text-foreground max-w-cell-sm",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "session", columnOptions),
       });
     }
@@ -80,7 +82,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       cols.push({
         id: "class",
         label: t("enrollments.columns.class"),
-        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "class", columnOptions),
       });
     }
@@ -89,7 +92,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       cols.push({
         id: "enrolledDate",
         label: t("enrollments.columns.enrolledDate"),
-        cellClassName: "px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "px-3 py-2.5 font-mono text-xs text-muted-foreground",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "enrolledDate", columnOptions),
       });
     }
@@ -99,7 +103,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
         id: "finalFee",
         label: t("enrollments.columns.finalFee"),
         headerClassName: "text-end",
-        cellClassName: "px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap",
+        noWrap: true,
+        cellClassName: "px-3 py-2.5 text-end font-semibold text-foreground",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "finalFee", columnOptions),
       });
     }
@@ -126,7 +131,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       cols.push({
         id: "notes",
         label: t("enrollments.columns.notes"),
-        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground max-w-cell-sm truncate",
+        truncate: true,
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground max-w-cell-sm",
         render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "notes", columnOptions),
       });
     }

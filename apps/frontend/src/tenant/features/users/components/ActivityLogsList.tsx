@@ -40,7 +40,8 @@ function useActivityLogColumns(
       {
         id: 'time',
         label: t('users.activityColTime'),
-        cellClassName: 'whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground',
+        noWrap: true,
+        cellClassName: 'px-3 py-2.5 text-xs text-muted-foreground',
         render: (log) => fmtTs(log.ts),
       },
       {
@@ -64,6 +65,7 @@ function useActivityLogColumns(
       {
         id: 'ip',
         label: t('users.activityColIp'),
+        noWrap: true,
         cellClassName: 'px-3 py-2.5 font-mono text-xs text-muted-foreground',
         render: (log) => log.ip,
       },

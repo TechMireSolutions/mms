@@ -1,12 +1,28 @@
 import React, { type JSX } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  TableHead,
+  TableHeader,
+  TableRow,
+  type TableCellAlign,
+  type TableCellVariant,
+} from "@/components/ui/table";
 import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export interface ModuleWorkTableHeaderProps<
-  TCol extends { id: string; label: string; sortField?: string; width?: number; headerClassName?: string }
+  TCol extends {
+    id: string;
+    label: string;
+    sortField?: string;
+    width?: number;
+    headerClassName?: string;
+    noWrap?: boolean;
+    truncate?: boolean;
+    align?: TableCellAlign;
+    variant?: TableCellVariant;
+  }
 > {
   columns: TCol[];
   sortField?: string;
@@ -31,7 +47,17 @@ export interface ModuleWorkTableHeaderProps<
 }
 
 export function ModuleWorkTableHeader<
-  TCol extends { id: string; label: string; sortField?: string; width?: number; headerClassName?: string }
+  TCol extends {
+    id: string;
+    label: string;
+    sortField?: string;
+    width?: number;
+    headerClassName?: string;
+    noWrap?: boolean;
+    truncate?: boolean;
+    align?: TableCellAlign;
+    variant?: TableCellVariant;
+  }
 >({
   columns,
   sortField,
@@ -49,6 +75,7 @@ export function ModuleWorkTableHeader<
       <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
         {selection && (
           <TableHead
+            noWrap
             className={cn(
               "w-12 min-w-12 px-4 py-3 sticky start-0 z-sticky border-e border-border/30 h-auto",
               WORK_STICKY_HEAD,
@@ -89,7 +116,11 @@ export function ModuleWorkTableHeader<
               onSort={onSort}
               width={width}
               onResize={setColumnWidth}
-              className={cn("px-4 py-3 text-wrap break-words", stickyClass, col.headerClassName)}
+              noWrap={col.noWrap}
+              truncate={col.truncate}
+              align={col.align}
+              variant={col.variant}
+              className={cn("px-4 py-3", stickyClass, col.headerClassName)}
             >
               {col.label}
             </ModuleTableHeaderCell>
@@ -97,7 +128,7 @@ export function ModuleWorkTableHeader<
         })}
         
         {actionsLabel && (
-          <TableHead className={cn("px-4 py-3 h-auto", actionsClassName)}>
+          <TableHead noWrap className={cn("px-4 py-3 h-auto", actionsClassName)}>
             <span>{actionsLabel}</span>
           </TableHead>
         )}

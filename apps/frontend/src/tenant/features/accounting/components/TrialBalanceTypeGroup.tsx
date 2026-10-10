@@ -125,14 +125,14 @@ export function TrialBalanceTypeGroup({
               <ModuleTableHeaderCell columnKey="code" className="px-3 py-2.5 w-20">{t("accounting.columns.account.code")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("accounting.columns.account.name")}</ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="subtype" className="px-3 py-2.5 hidden md:table-cell">{t("accounting.columns.account.subtype")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.debit")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.credit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="debit" variant="currency" className="px-3 py-2.5">{t("accounting.columns.journal.debit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="credit" variant="currency" className="px-3 py-2.5">{t("accounting.columns.journal.credit")}</ModuleTableHeaderCell>
             </MutedTableHeaderRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
             {sortedRows.map((trialBalanceRow) => (
               <TableRow key={trialBalanceRow.id} className="hover:bg-muted/20 transition-colors">
-                <TableCell className="px-3 py-2.5 font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</TableCell>
+                <TableCell variant="number" noWrap className="px-3 py-2.5 text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</TableCell>
                 <TableCell className="px-3 py-2.5 font-medium text-foreground">{trialBalanceRow.name}</TableCell>
                 <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{trialBalanceRow.subtype || "—"}</TableCell>
                 <MoneyTableCell value={formatPositiveNumber(trialBalanceRow.totalDebit)} variant="debit" />

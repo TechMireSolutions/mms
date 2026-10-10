@@ -50,12 +50,14 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string, v
     {
       id: "date",
       label: t("accounting.columns.journal.date"),
-      cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
+      noWrap: true,
+      cellClassName: "text-xs text-muted-foreground",
       render: (row) => formatDate(row.date),
     },
     {
       id: "type",
       label: t("accounting.columns.journal.type"),
+      noWrap: true,
       render: (row) => (
         <div className="inline-flex items-center gap-1.5">
           {flowIcon(row.flowType)}
@@ -66,7 +68,8 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string, v
     {
       id: "description",
       label: t("accounting.columns.journal.description"),
-      cellClassName: "text-foreground max-w-cell-trunc truncate",
+      truncate: true,
+      cellClassName: "text-foreground max-w-cell-trunc",
       render: (row) => (
         <>
           <p className="font-medium m-0">{row.description}</p>
@@ -78,6 +81,7 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string, v
       id: "moneyIn",
       label: t("accounting.cashbook.moneyIn"),
       headerClassName: "text-end text-success",
+      noWrap: true,
       cellClassName: "text-end",
       render: (row) => row.flowType === "in" ? (
         <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
@@ -87,6 +91,7 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string, v
       id: "moneyOut",
       label: t("accounting.cashbook.moneyOut"),
       headerClassName: "text-end text-destructive",
+      noWrap: true,
       cellClassName: "text-end",
       render: (row) => row.flowType === "out" ? (
         <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
@@ -97,6 +102,7 @@ export function useCashbookColumns(formatCurrency: (amount: number) => string, v
           id: "voucher",
           label: t("accounting.journal.voucher.title"),
           headerClassName: "text-end",
+          noWrap: true,
           cellClassName: "text-end",
           render: (row: CashbookRow) => voucher.canPrint(row) ? (
             <PaymentVoucherPrintButton entry={row} onPrint={voucher.onPrint} />

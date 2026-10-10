@@ -68,7 +68,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       cols.push({
         id: "baseFee",
         label: t("finance.columns.baseFee"),
-        cellClassName: "whitespace-nowrap",
+        noWrap: true,
         render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "baseFee", columnContext),
       });
     }
@@ -77,6 +77,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       cols.push({
         id: "discount",
         label: t("finance.columns.discount"),
+        noWrap: true,
         render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "discount", columnContext),
       });
     }
@@ -85,7 +86,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       cols.push({
         id: "final",
         label: t("finance.columns.final"),
-        cellClassName: "whitespace-nowrap",
+        noWrap: true,
         render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "final", columnContext),
       });
     }
@@ -94,6 +95,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       cols.push({
         id: "status",
         label: t("finance.columns.status"),
+        noWrap: true,
         render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "status", columnContext),
       });
     }
@@ -102,7 +104,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       cols.push({
         id: "dueDate",
         label: t("finance.columns.dueDate"),
-        cellClassName: "whitespace-nowrap",
+        noWrap: true,
         render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "dueDate", columnContext),
       });
     }

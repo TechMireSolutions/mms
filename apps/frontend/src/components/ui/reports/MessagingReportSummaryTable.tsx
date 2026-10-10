@@ -47,19 +47,21 @@ export function MessagingReportSummaryTable({
           <TableHeader>
             <TableRow>
               <TableHead className="px-4 py-2.5 font-bold">{title}</TableHead>
-              <TableHead className="px-4 py-2.5 font-bold text-center">{detailsHeader}</TableHead>
-              <TableHead className="px-4 py-2.5 font-bold text-end">{growthRateHeader}</TableHead>
+              <TableHead variant="badge" className="px-4 py-2.5 font-bold">{detailsHeader}</TableHead>
+              <TableHead variant="number" className="px-4 py-2.5 font-bold">{growthRateHeader}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell className="px-4 py-2.5 font-medium flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${getSolidBgClass(row.accent)}`} />
-                  {row.channel}
+                <TableCell className="px-4 py-2.5 font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${getSolidBgClass(row.accent)}`} />
+                    {row.channel}
+                  </div>
                 </TableCell>
-                <TableCell className="px-4 py-2.5 text-center font-mono font-bold">{row.count}</TableCell>
-                <TableCell className="px-4 py-2.5 text-end font-mono text-primary font-bold">{row.rate}</TableCell>
+                <TableCell variant="badge" noWrap className="px-4 py-2.5 font-bold">{row.count}</TableCell>
+                <TableCell variant="number" noWrap className="px-4 py-2.5 text-primary font-bold">{row.rate}</TableCell>
               </TableRow>
             ))}
           </TableBody>

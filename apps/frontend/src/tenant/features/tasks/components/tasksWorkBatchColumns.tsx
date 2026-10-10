@@ -66,12 +66,14 @@ export function buildTasksWorkBatchColumns(
       id: 'priority',
       label: t('tasks.priority'),
       width: widthOf?.('priority') ?? 120,
+      noWrap: true,
       render: (task) => <TaskPriorityBadge priority={task.priority} />,
     },
     {
       id: 'status',
       label: t('tasks.status'),
       width: widthOf?.('status') ?? 140,
+      noWrap: true,
       render: (task) => (
         <TaskStatusBadge
           status={task.status}
@@ -83,6 +85,7 @@ export function buildTasksWorkBatchColumns(
       id: 'assignees',
       label: t('tasks.assignees'),
       width: widthOf?.('assignees'),
+      truncate: true,
       render: (task) =>
         task.assignees?.length ? (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -101,6 +104,7 @@ export function buildTasksWorkBatchColumns(
       id: 'dueAt',
       label: t('tasks.dueAt'),
       width: widthOf?.('dueAt') ?? 120,
+      noWrap: true,
       render: (task) => {
         if (!task.dueAt) return <span className="text-muted-foreground/60 text-xs">—</span>;
         const isOverdue =

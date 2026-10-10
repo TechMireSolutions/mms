@@ -48,6 +48,9 @@ export function AccountingDashboardCharts({
                 </BarChart>
               </SafeResponsiveContainer>
             </div>
+            {/* intentional: sr-only accessible data table for the Recharts BarChart (WCAG 1.1.1).
+                Do NOT migrate to WorkBatchTable — this is an invisible a11y annotation that must
+                remain co-located with the chart and visually hidden via the .sr-only class. */}
             <table className="sr-only">
               <caption>{t('accounting.dashboard.revenueVsExpensesTable')}</caption>
               <thead>

@@ -94,13 +94,13 @@ export function ObligationsWakalaSummarySection({
           ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
-              <TableHeader>
+              <TableHeader sticky>
                 <MutedTableHeaderRow>
                   <ModuleTableHeaderCell columnKey="repWakala" className="px-3 py-2.5">{t("obligations.summary.wakala.colRepWakala")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="mujtahid" className="px-3 py-2.5">{t("obligations.summary.wakala.colMujtahid")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="obligation" className="px-3 py-2.5">{t("obligations.summary.wakala.colObligation")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="collections" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colCollections")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="totalAmount" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colTotalAmountShort")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="collections" variant="number" className="px-3 py-2.5">{t("obligations.summary.wakala.colCollections")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="totalAmount" variant="currency" className="px-3 py-2.5">{t("obligations.summary.wakala.colTotalAmountShort")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="distributions" className="px-3 py-2.5">{t("obligations.summary.wakala.colDistributions")}</ModuleTableHeaderCell>
                 </MutedTableHeaderRow>
               </TableHeader>
@@ -119,7 +119,7 @@ export function ObligationsWakalaSummarySection({
                     <TableCell className="px-3 py-2.5">
                       <Badge as="span" pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>
                     </TableCell>
-                    <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</TableCell>
+                    <TableCell variant="number" className="px-3 py-2.5 text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</TableCell>
                     <MoneyTableCell value={formatCurrency(wakalaSummaryItem.total)} variant="credit" />
                     <TableCell className="px-3 py-2.5">
                       {wakalaSummaryItem.distributions.length > 0 ? (
@@ -135,7 +135,7 @@ export function ObligationsWakalaSummarySection({
                   </TableRow>
                 ))}
               </TableBody>
-              <TableFooter>
+              <TableFooter sticky>
                 <TableRow>
                   <TableCell colSpan={4} className="table-footer-label">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</TableCell>
                   <MoneyTableCell value={formatCurrency(totalAmount)} variant="credit" isFooter />

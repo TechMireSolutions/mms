@@ -57,11 +57,12 @@ export function UsersListDesktopTable({
         id: 'user',
         label: t('users.colUser'),
         headerClassName: 'px-3 py-2.5',
+        noWrap: true,
         cellClassName: 'px-3 py-2.5',
         render: (user) => (
           <div className="flex items-center gap-2.5">
             <UsersListAvatar user={user} />
-            <p className="whitespace-nowrap text-sm font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {user.name?.trim() || user.email || ""}
             </p>
           </div>
@@ -104,7 +105,8 @@ export function UsersListDesktopTable({
         id: 'lastLogin',
         label: t('users.colLastLogin'),
         headerClassName: 'px-3 py-2.5',
-        cellClassName: 'whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground',
+        noWrap: true,
+        cellClassName: 'px-3 py-2.5 text-xs text-muted-foreground',
         render: (user) => renderUserWorkColumnValue(user, 'lastLogin', columnContext),
       });
     }
@@ -114,7 +116,8 @@ export function UsersListDesktopTable({
         id: 'created',
         label: t('users.colCreated'),
         headerClassName: 'px-3 py-2.5',
-        cellClassName: 'whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground',
+        noWrap: true,
+        cellClassName: 'px-3 py-2.5 font-mono text-xs text-muted-foreground',
         render: (user) => renderUserWorkColumnValue(user, 'created', columnContext),
       });
     }

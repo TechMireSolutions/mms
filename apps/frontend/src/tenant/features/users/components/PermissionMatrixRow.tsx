@@ -69,7 +69,7 @@ export function PermissionMatrixRow({
       {PERMISSION_ACTIONS.map((permissionAction) => {
         const isActionActive = currentActions.includes(permissionAction);
         return (
-          <TableCell key={permissionAction} className="px-2 py-2.5">
+          <TableCell key={permissionAction} variant="action" noWrap className="px-2 py-2.5">
             {readOnly ? (
               <div
                 role="status"
@@ -95,7 +95,7 @@ export function PermissionMatrixRow({
         );
       })}
       {!readOnly ? (
-        <TableCell className="px-2 py-2.5">
+        <TableCell variant="action" noWrap className="px-2 py-2.5">
           <Button
             type="button"
             variant="ghost"

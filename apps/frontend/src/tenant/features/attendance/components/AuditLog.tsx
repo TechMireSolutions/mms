@@ -94,12 +94,14 @@ export function AuditLog({ filters, viewMode }: AuditLogProps): React.JSX.Elemen
       id: "time",
       label: t("attendance.audit.colTime"),
       width: 180,
+      noWrap: true,
       searchValue: (row) => formatDateTime(row.entry.ts),
-      render: (row) => <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(row.entry.ts)}</span>,
+      render: (row) => <span className="text-xs font-mono text-muted-foreground">{formatDateTime(row.entry.ts)}</span>,
     },
     {
       id: "action",
       label: t("attendance.audit.colAction"),
+      noWrap: true,
       searchValue: actionLabel,
       hideInCard: true,
       render: (row) => <StatusBadge status={row.entry.action} config={actionConfig} size="sm" />,
@@ -115,6 +117,7 @@ export function AuditLog({ filters, viewMode }: AuditLogProps): React.JSX.Elemen
     {
       id: "by",
       label: t("attendance.audit.colBy"),
+      noWrap: true,
       searchValue: (row) => row.entry.by,
       render: (row) => <span className="text-xs font-semibold text-muted-foreground capitalize">{row.entry.by || "—"}</span>,
     },

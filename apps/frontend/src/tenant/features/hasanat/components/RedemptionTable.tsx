@@ -60,6 +60,7 @@ export function RedemptionTable({
             {columnVisible("pointsUsed") && (
               <ModuleTableHeaderCell
                 columnKey="pointsUsed"
+                variant="number"
                 width={getColumnWidth?.("pointsUsed")}
                 onResize={onColumnResize}
                 className="px-3 py-2.5"
@@ -97,7 +98,7 @@ export function RedemptionTable({
               className="hover:bg-muted/20 transition-colors"
             >
               {columnVisible("student") && (
-                <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">
+                <TableCell noWrap className="px-3 py-2.5 text-sm font-semibold text-foreground">
                   {redemption.studentName || "—"}
                 </TableCell>
               )}
@@ -107,8 +108,8 @@ export function RedemptionTable({
                 </TableCell>
               )}
               {columnVisible("pointsUsed") && (
-                <TableCell className="px-3 py-2.5">
-                  <div className="flex items-center gap-1">
+                <TableCell variant="number" noWrap className="px-3 py-2.5">
+                  <div className="flex items-center justify-end gap-1">
                     <Star className="w-3 h-3 text-warning" aria-hidden="true" />
                     <span className="text-sm font-bold text-warning">
                       {redemption.pointsUsed}
@@ -117,7 +118,7 @@ export function RedemptionTable({
                 </TableCell>
               )}
               {columnVisible("date") && (
-                <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">
+                <TableCell noWrap className="px-3 py-2.5 text-sm text-muted-foreground">
                   {formatDate(redemption.date)}
                 </TableCell>
               )}

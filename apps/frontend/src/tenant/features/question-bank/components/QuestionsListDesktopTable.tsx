@@ -105,7 +105,8 @@ export function QuestionsListDesktopTable({
       cols.push({
         id: 'language',
         label: t('questionBank.columns.language'),
-        cellClassName: 'whitespace-nowrap text-muted-foreground',
+        noWrap: true,
+        cellClassName: 'text-muted-foreground',
         render: (question) => config.questionLanguageLabel(question.questionLanguage),
       });
     }
@@ -114,7 +115,7 @@ export function QuestionsListDesktopTable({
       cols.push({
         id: 'type',
         label: t('questionBank.columns.type'),
-        cellClassName: 'whitespace-nowrap',
+        noWrap: true,
         render: (question) => <StatusBadge status={question.type} config={typeConfig} size="sm" />,
       });
     }
@@ -123,6 +124,7 @@ export function QuestionsListDesktopTable({
       cols.push({
         id: 'difficulty',
         label: t('questionBank.columns.difficulty'),
+        noWrap: true,
         render: (question) => <StatusBadge status={question.difficulty} config={difficultyConfig} size="sm" />,
       });
     }
@@ -131,7 +133,8 @@ export function QuestionsListDesktopTable({
       cols.push({
         id: 'source',
         label: t('questionBank.columns.source'),
-        cellClassName: 'max-w-cell-lg truncate text-xs text-muted-foreground',
+        truncate: true,
+        cellClassName: 'max-w-cell-lg text-xs text-muted-foreground',
         render: (question) => formatQuestionSourcesCitation(question, t, config.sourceBooks) || '—',
       });
     }

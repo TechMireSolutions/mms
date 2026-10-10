@@ -3,14 +3,24 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { clampModuleColumnWidth } from '@mms/shared';
 import { measureColumnAutoFitWidth } from '@/components/ui/measureColumnAutoFitWidth';
+import {
+  getTableCellAlignClass,
+  getTableCellWrapClass,
+  type TableCellAlign,
+  type TableCellVariant,
+} from '@/components/ui/table';
 
 export interface ResizableTableHeadProps
-  extends Omit<React.ThHTMLAttributes<HTMLTableCellElement>, 'children'> {
+  extends Omit<React.ThHTMLAttributes<HTMLTableCellElement>, 'children' | 'align'> {
   columnKey: string;
   width?: number;
   onResize?: (columnKey: string, width: number) => void;
   minWidth?: number;
   maxWidth?: number;
+  noWrap?: boolean;
+  truncate?: boolean;
+  align?: TableCellAlign;
+  variant?: TableCellVariant;
   children: React.ReactNode;
 }
 
@@ -23,6 +33,10 @@ export function ResizableTableHead({
   onResize,
   minWidth = 80,
   maxWidth = 640,
+  noWrap,
+  truncate,
+  align,
+  variant,
   children,
   className,
   style,
@@ -108,7 +122,14 @@ export function ResizableTableHead({
   return (
     <th
       ref={thRef}
-      className={cn('relative', className)}
+      scope="col"
+      role="columnheader"
+      className={cn(
+        'relative',
+        getTableCellAlignClass(align, variant),
+        getTableCellWrapClass(noWrap, truncate),
+        className,
+      )}
       style={{
         ...style,
         ...(typeof resolvedWidth === 'number'

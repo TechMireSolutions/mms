@@ -83,25 +83,25 @@ export function OverdueObligationsWidgetList({
 
       <div className="hidden overflow-x-auto md:block">
         <Table className="w-full text-sm">
-          <TableHeader>
-            <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
+          <TableHeader sticky>
+            <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-muted/30">
               <ModuleTableHeaderCell columnKey="student" className="px-5 py-3 select-none">
                 {t("hasanat.columns.redemption.student")}
               </ModuleTableHeaderCell>
               <ModuleTableHeaderCell columnKey="obligation" className="px-3 py-3 select-none">
                 {t("nav.obligations")}
               </ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="dueDate" className="px-3 py-3 select-none">
+              <ModuleTableHeaderCell columnKey="dueDate" noWrap className="px-3 py-3 select-none">
                 {t("finance.columns.dueDate")}
               </ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="amount" className="px-3 py-3 text-end select-none">
+              <ModuleTableHeaderCell columnKey="amount" noWrap variant="currency" className="px-3 py-3 select-none">
                 {t("finance.columns.amount")}
               </ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="status" className="px-3 py-3 text-center select-none">
+              <ModuleTableHeaderCell columnKey="status" noWrap variant="badge" className="px-3 py-3 select-none">
                 {t("hasanat.columns.distribution.status")}
               </ModuleTableHeaderCell>
               {canWriteMessaging && (
-                <ModuleTableHeaderCell columnKey="actions" className="px-3 py-3 text-center select-none">
+                <ModuleTableHeaderCell columnKey="actions" noWrap variant="action" className="px-3 py-3 select-none">
                   {t("hasanat.columns.actions")}
                 </ModuleTableHeaderCell>
               )}
@@ -132,13 +132,13 @@ export function OverdueObligationsWidgetList({
                         <span className="font-semibold text-foreground text-xs truncate">{overdueStudent.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 py-3">
+                    <TableCell truncate className="px-3 py-3">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <Scale className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
                         <span className="text-xs text-foreground font-medium truncate max-w-36">{overdueStudent.obligationType}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 py-3">
+                    <TableCell noWrap className="px-3 py-3">
                       <div>
                         <p className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</p>
                         <p className="text-xs text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
@@ -146,16 +146,16 @@ export function OverdueObligationsWidgetList({
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="px-3 py-3 text-end">
-                      <span className="text-xs font-bold text-foreground tabular-nums">
+                    <TableCell variant="currency" noWrap className="px-3 py-3">
+                      <span className="text-xs font-bold text-foreground">
                         {formatMoney(overdueStudent.amount, overdueStudent.currency || activeCurrencyCode)}
                       </span>
                     </TableCell>
-                    <TableCell className="px-3 py-3 text-center">
+                    <TableCell variant="badge" noWrap className="px-3 py-3">
                       <OverdueUrgencyBadge daysOverdue={overdueStudent.daysOverdue} t={t} />
                     </TableCell>
                     {canWriteMessaging && (
-                      <TableCell className="px-3 py-3 text-center">
+                      <TableCell variant="action" noWrap className="px-3 py-3">
                         <OverdueRemindButton
                           overdueStudent={overdueStudent}
                           reminded={reminded}
