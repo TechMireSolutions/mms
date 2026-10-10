@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { syncFacultyLinkedUserRole } from '../faculty/use-cases/facultyLinkedUserRoleSync.js';
 
 const mockFindTenantUserRowByContactId = vi.fn();
 const mockUpsertTenantUserRow = vi.fn();
@@ -61,9 +62,6 @@ describe('syncFacultyLinkedUserRole (composite)', () => {
       { id: 'd2', status: 'active', assignableRoles: ['accountant'] },
     ]);
 
-    const { syncFacultyLinkedUserRole } = await import(
-      '../faculty/use-cases/facultyLinkedUserRoleSync.js'
-    );
     const result = await syncFacultyLinkedUserRole('demo', {
       contactId: 'c1',
       employDesignations: [
@@ -104,9 +102,6 @@ describe('syncFacultyLinkedUserRole (composite)', () => {
       { id: 'd1', status: 'active', assignableRoles: ['teacher'] },
     ]);
 
-    const { syncFacultyLinkedUserRole } = await import(
-      '../faculty/use-cases/facultyLinkedUserRoleSync.js'
-    );
     const result = await syncFacultyLinkedUserRole('demo', {
       contactId: 'c1',
       employDesignations: [
@@ -136,9 +131,6 @@ describe('syncFacultyLinkedUserRole (composite)', () => {
       { id: 'd1', status: 'active', assignableRoles: [] },
     ]);
 
-    const { syncFacultyLinkedUserRole } = await import(
-      '../faculty/use-cases/facultyLinkedUserRoleSync.js'
-    );
     const result = await syncFacultyLinkedUserRole('demo', {
       contactId: 'c1',
       employDesignations: [

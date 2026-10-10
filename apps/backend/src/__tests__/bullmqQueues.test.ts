@@ -1,17 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { logger } from '../lib/logger.js';
-import {
-  QUEUE_PDF_RENDERING,
-  QUEUE_BULK_EXPORT,
-  QUEUE_MESSAGING_BROADCAST,
-  QUEUE_SETTINGS,
-  DEFAULT_JOB_OPTIONS,
-  WORKER_HEAP_LIMIT_BYTES,
-  resolveQueueNameForJob,
-  handleDeadLetterJob,
-  getQueue,
-  closeAllQueues,
-} from '../worker/queues/index.js';
+import { QUEUE_PDF_RENDERING, QUEUE_BULK_EXPORT, QUEUE_MESSAGING_BROADCAST, QUEUE_SETTINGS, DEFAULT_JOB_OPTIONS, WORKER_HEAP_LIMIT_BYTES, resolveQueueNameForJob, handleDeadLetterJob, getQueue, closeAllQueues, dispatchJobToQueue } from '../worker/queues/index.js';
 
 describe('BullMQ Queue Architecture (Phase 5)', () => {
   it('defines correct queue names and concurrencies', () => {
@@ -104,7 +93,6 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
     vi.spyOn(queue, 'add').mockRejectedValueOnce(new Error('Redis connection refused'));
     const warnSpy = vi.spyOn(logger, 'warn').mockImplementation((() => {}) as any);
 
-    const { dispatchJobToQueue } = await import('../worker/queues/index.js');
     const result = await dispatchJobToQueue('alpha', 'user-1', {
       id: 'job-err-1',
       moduleId: 'contacts',

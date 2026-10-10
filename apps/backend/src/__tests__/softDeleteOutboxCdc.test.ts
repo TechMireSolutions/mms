@@ -12,26 +12,30 @@ import type { SearchIndexAdapter } from '../worker/adapters/searchIndexAdapter.j
 import type { SoftDeletedPayload } from '../services/outboxEventService.js';
 import { buildStudentForensicSnapshot } from '../services/forensicSnapshotService.js';
 import { buildContactForensicSnapshot } from '../services/forensicSnapshotService.js';
+import { redisGet, redisSet, redisDelPattern } from '../lib/redis.js';
+import { emitOutboxEvent } from '../services/outboxEventService.js';
 
 // ---------------------------------------------------------------------------
-// Module mocks — must be hoisted before any dynamic imports
+// Module mocks (factory state is created in vi.hoisted)
 // ---------------------------------------------------------------------------
 
-const mockInsert = vi.fn().mockReturnValue({
-  values: vi.fn().mockResolvedValue([]),
+const { mockInsert, mockUpdate, mockSelect, mockActiveDb } = vi.hoisted(() => {
+  const mockInsert = vi.fn().mockReturnValue({
+    values: vi.fn().mockResolvedValue([]),
+  });
+  const mockUpdate = vi.fn().mockReturnValue({
+    set: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue([]),
+    }),
+  });
+  const mockSelect = vi.fn();
+  const mockActiveDb = vi.fn(() => ({
+    insert: mockInsert,
+    update: mockUpdate,
+    select: mockSelect,
+  }));
+  return { mockInsert, mockUpdate, mockSelect, mockActiveDb };
 });
-const mockUpdate = vi.fn().mockReturnValue({
-  set: vi.fn().mockReturnValue({
-    where: vi.fn().mockResolvedValue([]),
-  }),
-});
-const mockSelect = vi.fn();
-
-const mockActiveDb = vi.fn(() => ({
-  insert: mockInsert,
-  update: mockUpdate,
-  select: mockSelect,
-}));
 
 vi.mock('../db/dbConnection.js', () => ({
   activeDb: mockActiveDb,
@@ -98,7 +102,6 @@ async function runCdcBatch(
   searchAdapter: SearchIndexAdapter,
   redisVersionOverrides: Record<string, string> = {},
 ): Promise<{ processed: number; skipped: number }> {
-  const { redisGet, redisSet, redisDelPattern } = await import('../lib/redis.js');
 
   // Seed any override versions
   for (const [k, v] of Object.entries(redisVersionOverrides)) {
@@ -159,7 +162,6 @@ describe('Outbox CDC — soft-delete / restore pipeline', () => {
 
   describe('1. Atomic outbox emission within soft-delete transaction', () => {
     it('emitOutboxEvent inserts into outbox_events using the activeDb transaction', async () => {
-      const { emitOutboxEvent } = await import('../services/outboxEventService.js');
 
       const payload: SoftDeletedPayload = {
         entityType: 'students',
@@ -188,7 +190,6 @@ describe('Outbox CDC — soft-delete / restore pipeline', () => {
     });
 
     it('emitOutboxEvent can be called with an explicit tx overload', async () => {
-      const { emitOutboxEvent } = await import('../services/outboxEventService.js');
 
       const fakeTx = {
         insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([]) }),
@@ -246,7 +247,6 @@ describe('Outbox CDC — soft-delete / restore pipeline', () => {
     });
 
     it('snapshot is included in the entity.soft_deleted outbox payload', async () => {
-      const { emitOutboxEvent } = await import('../services/outboxEventService.js');
 
       const snapshot = { notes: 'Last note before archive.' };
       const payload: SoftDeletedPayload = {

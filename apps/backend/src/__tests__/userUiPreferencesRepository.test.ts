@@ -3,6 +3,7 @@ import {
   listAllUserUiPreferencesByWorkspace,
   replaceUserUiPreferencesForWorkspace,
 } from '../db/repositories/userUiPreferencesRepository.js';
+import { withTenant } from '../db/tenant-context.js';
 
 vi.mock('../db/tenant-context.js', () => ({
   withTenant: vi.fn(async (_tenant: string, cb: (tx: any) => Promise<unknown>) => {
@@ -24,7 +25,6 @@ describe('userUiPreferencesRepository', () => {
   });
 
   it('lists user UI preferences formatted as records', async () => {
-    const { withTenant } = await import('../db/tenant-context.js');
     const mockRows = [
       {
         userId: 'u-1',
@@ -54,7 +54,6 @@ describe('userUiPreferencesRepository', () => {
   });
 
   it('replaces user UI preferences filtering out orphaned users', async () => {
-    const { withTenant } = await import('../db/tenant-context.js');
     const insertedValues: any[] = [];
 
     (withTenant as any).mockImplementationOnce(async (_tenant: string, cb: (tx: any) => Promise<unknown>) => {

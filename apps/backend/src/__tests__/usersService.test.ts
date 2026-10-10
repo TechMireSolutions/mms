@@ -1,9 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWithTenant } from '../lib/tenantContext.js';
 import { verifyPassword } from '../services/auth/passwordService.js';
+import { findTenantUserRowById, verifyTenantUserEmailRow, resetTenantUserPasswordRow } from '../db/repositories/tenantUserRepository.js';
+import { upsertLogs, verifyUserEmailById, resetUserPasswordById, deleteUserById, upsertWorkspaceUsers } from '../services/usersService.js';
+import { broadcastCollection } from '../services/websocketService.js';
+import { assertPasswordMeetsPolicy } from '../services/globalSettingsService.js';
+import { deleteRefreshTokensForUser } from '../services/auth/authArtifactService.js';
+import { revokeAllUserSessions } from '../services/session.service.js';
 
-const bulkSaveActivityLogs = vi.fn();
-const replaceActivityLogsForWorkspace = vi.fn();
+const { bulkSaveActivityLogs, replaceActivityLogsForWorkspace } = vi.hoisted(() => ({
+  bulkSaveActivityLogs: vi.fn(),
+  replaceActivityLogsForWorkspace: vi.fn(),
+}));
 
 vi.mock('../db/repositories/logsRepository.js', () => ({
   listActivityLogsByWorkspace: vi.fn().mockResolvedValue([]),
@@ -60,7 +68,6 @@ vi.mock('../db/tenant-context.js', () => ({
  * spuriously "pass" against a repository that returns anything.
  */
 async function mockUserRowForTenant(row: Record<string, unknown>): Promise<void> {
-  const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
   vi.mocked(findTenantUserRowById).mockImplementation(async (tenant: string, id: string) =>
     String(row.id) === id && row.workspaceSubdomain === tenant ? (row as never) : null,
   );
@@ -72,7 +79,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('bulk saves supplied logs without replacing the workspace collection', async () => {
-    const { upsertLogs } = await import('../services/usersService.js');
     const log = {
       id: 'log-1',
       userId: 'u-1',
@@ -92,11 +98,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('verifies user email and broadcasts collection update', async () => {
-    const { verifyUserEmailById } = await import('../services/usersService.js');
-    const { verifyTenantUserEmailRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
-    const { broadcastCollection } = await import('../services/websocketService.js');
 
     await mockUserRowForTenant({
       id: 'u-123',
@@ -116,14 +117,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('resets a user password, forces a change, and revokes every session', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const {
-      resetTenantUserPasswordRow,
-    } = await import('../db/repositories/tenantUserRepository.js');
-    const { assertPasswordMeetsPolicy } = await import('../services/globalSettingsService.js');
-    const { deleteRefreshTokensForUser } = await import('../services/auth/authArtifactService.js');
-    const { revokeAllUserSessions } = await import('../services/session.service.js');
-    const { broadcastCollection } = await import('../services/websocketService.js');
 
     await mockUserRowForTenant({
       id: 'u-123',
@@ -153,10 +146,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('does not report a completed password reset as failed when activity logging fails', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { resetTenantUserPasswordRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
     const auxiliaryError = new Error('activity log unavailable');
     const onAuxiliaryError = vi.fn();
 
@@ -188,11 +177,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('labels refresh-token revocation failures separately from credential updates', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { resetTenantUserPasswordRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
-    const { deleteRefreshTokensForUser } = await import('../services/auth/authArtifactService.js');
 
     await mockUserRowForTenant({
       id: 'u-123',
@@ -219,10 +203,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('labels credential update failures for server diagnostics', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { resetTenantUserPasswordRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
 
     await mockUserRowForTenant({
       id: 'u-123',
@@ -248,11 +228,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('labels Redis session revocation failures for server diagnostics', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { resetTenantUserPasswordRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
-    const { revokeAllUserSessions } = await import('../services/session.service.js');
 
     await mockUserRowForTenant({
       id: 'u-123',
@@ -279,10 +254,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('does not reset a user belonging to another tenant', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { resetTenantUserPasswordRow } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
 
     await mockUserRowForTenant({
       id: 'u-other',
@@ -303,7 +274,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('rejects password reset of a super_admin user by a regular admin', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
 
     await mockUserRowForTenant({
       id: 'u-super',
@@ -325,10 +295,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('allows password reset of a super_admin user by another super_admin', async () => {
-    const { resetUserPasswordById } = await import('../services/usersService.js');
-    const {
-      resetTenantUserPasswordRow,
-    } = await import('../db/repositories/tenantUserRepository.js');
 
     await mockUserRowForTenant({
       id: 'u-super',
@@ -348,7 +314,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('rejects deleting a super_admin user by a regular admin', async () => {
-    const { deleteUserById } = await import('../services/usersService.js');
 
     await mockUserRowForTenant({
       id: 'u-super',
@@ -366,7 +331,6 @@ describe('usersService activity log upsert', () => {
   });
 
   it('rejects assigning super_admin role by a regular admin in upsertWorkspaceUsers', async () => {
-    const { upsertWorkspaceUsers } = await import('../services/usersService.js');
     const superAdminUser = {
       id: 'u-new',
       contactId: 'c-1',

@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWithTenant } from '../lib/tenantContext.js';
+import { upsertAttendanceRecords } from '../services/attendanceService.js';
 
-const bulkSaveAttendanceRecords = vi.fn();
-const replaceAttendanceRecordsForWorkspace = vi.fn();
+const { bulkSaveAttendanceRecords, replaceAttendanceRecordsForWorkspace } = vi.hoisted(() => ({
+  bulkSaveAttendanceRecords: vi.fn(),
+  replaceAttendanceRecordsForWorkspace: vi.fn(),
+}));
 
 vi.mock('../db/repositories/attendanceRepository.js', () => ({
   listAttendanceRecordsByWorkspace: vi.fn().mockResolvedValue([]),
@@ -38,7 +41,6 @@ describe('attendanceService bulk upsert', () => {
   });
 
   it('bulk saves supplied records without replacing the workspace collection', async () => {
-    const { upsertAttendanceRecords } = await import('../services/attendanceService.js');
     const record = {
       id: 'class-a-2026-07-27-student-1',
       classId: 'class-a',

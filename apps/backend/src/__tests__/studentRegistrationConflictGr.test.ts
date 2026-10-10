@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { findStudentRegistrationConflictSql } from '../db/repositories/studentRepositoryWidgets.js';
 
 const mockWithTenantTransaction = vi.fn();
 
@@ -23,9 +24,6 @@ describe('findStudentRegistrationConflictSql GR', () => {
         fn({ select }),
     );
 
-    const { findStudentRegistrationConflictSql } = await import(
-      '../db/repositories/studentRepositoryWidgets.js'
-    );
     const reason = await findStudentRegistrationConflictSql('demo', {
       grNumber: '  GR-9  ',
       excludeId: 's-self',
@@ -45,9 +43,6 @@ describe('findStudentRegistrationConflictSql GR', () => {
         fn({ select }),
     );
 
-    const { findStudentRegistrationConflictSql } = await import(
-      '../db/repositories/studentRepositoryWidgets.js'
-    );
     const reason = await findStudentRegistrationConflictSql('demo', {
       email: 'student@example.com',
       excludeId: 's-self',
@@ -67,9 +62,6 @@ describe('findStudentRegistrationConflictSql GR', () => {
         fn({ select }),
     );
 
-    const { findStudentRegistrationConflictSql } = await import(
-      '../db/repositories/studentRepositoryWidgets.js'
-    );
     const reason = await findStudentRegistrationConflictSql('demo', {
       email: 'unique@example.com',
       contactId: 'c-unique',
@@ -89,9 +81,6 @@ describe('findStudentRegistrationConflictSql GR', () => {
         fn({ select }),
     );
 
-    const { findStudentRegistrationConflictSql } = await import(
-      '../db/repositories/studentRepositoryWidgets.js'
-    );
     const reason = await findStudentRegistrationConflictSql('demo', {
       name: 'Ali Ahmed',
       dob: '2012-05-15',

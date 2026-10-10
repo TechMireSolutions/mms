@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { issuePlatformSession } from '../services/platform/platformAuthService.js';
 
 const mockSetCsrfCookie = vi.fn();
 const mockClearAuthCookies = vi.fn();
@@ -42,7 +43,6 @@ describe('issuePlatformSession', () => {
   });
 
   it('clears tenant cookies then re-issues CSRF for platform mutations', async () => {
-    const { issuePlatformSession } = await import('../services/platform/platformAuthService.js');
     const reply = { setCookie: vi.fn() } as never;
     const jwtSigner = { sign: vi.fn().mockReturnValue('signed.jwt') } as never;
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { syncFacultyEmployDesignationsTx } from '../db/repositories/facultyEmployDesignationSync.js';
 
 const mockUpsert = vi.fn();
 
@@ -25,9 +26,6 @@ describe('syncFacultyEmployDesignationsTx concurrent tenures', () => {
   });
 
   it('keeps multiple active open-ended tenures without closing siblings', async () => {
-    const { syncFacultyEmployDesignationsTx } = await import(
-      '../db/repositories/facultyEmployDesignationSync.js'
-    );
     const primaryId = await syncFacultyEmployDesignationsTx(tx as never, 'demo', 'emp-1', {
       id: 'f1',
       contactId: 'c1',
@@ -55,9 +53,6 @@ describe('syncFacultyEmployDesignationsTx concurrent tenures', () => {
   });
 
   it('rejects duplicate active open designations in one payload', async () => {
-    const { syncFacultyEmployDesignationsTx } = await import(
-      '../db/repositories/facultyEmployDesignationSync.js'
-    );
     await expect(syncFacultyEmployDesignationsTx(tx as never, 'demo', 'emp-1', {
       id: 'f1',
       contactId: 'c1',
