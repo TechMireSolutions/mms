@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createStudent } from '../students/use-cases/studentUseCases.js';
+import { StudentPermissionError } from '../students/use-cases/studentNormalizeUseCases.js';
 
 const mockGetRequestTenant = vi.fn(() => 'demo');
 const mockSave = vi.fn();
@@ -84,8 +86,6 @@ describe('createStudent restore-on-create permission gate', () => {
   });
 
   it('throws StudentPermissionError when a write-only user re-registers an archived student', async () => {
-    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
-    const { StudentPermissionError } = await import('../students/use-cases/studentNormalizeUseCases.js');
     await expect(
       createStudent({ contactId: 'c-1', status: 'active' } as never, { user: teacher } as never),
     ).rejects.toBeInstanceOf(StudentPermissionError);
@@ -93,8 +93,6 @@ describe('createStudent restore-on-create permission gate', () => {
   });
 
   it('throws StudentPermissionError when restore-on-create has no user (fail closed)', async () => {
-    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
-    const { StudentPermissionError } = await import('../students/use-cases/studentNormalizeUseCases.js');
     await expect(
       createStudent({ contactId: 'c-1', status: 'active' } as never),
     ).rejects.toBeInstanceOf(StudentPermissionError);
@@ -102,7 +100,6 @@ describe('createStudent restore-on-create permission gate', () => {
   });
 
   it('restores the archived student when the user has delete permission', async () => {
-    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
     const result = await createStudent(
       { contactId: 'c-1', status: 'active', grNumber: 'GR-1' } as never,
       { user: admin } as never,

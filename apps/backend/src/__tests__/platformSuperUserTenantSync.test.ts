@@ -3,6 +3,13 @@ import type { StoredPlatformUser } from '@mms/shared';
 import type { Workspace } from '@mms/shared';
 import type { TenantUserRow } from '../db/repositories/tenantUserRepositoryHydrate.js';
 import { runWithTenant } from '../lib/tenantContext.js';
+import { hashPassword } from '../services/auth/passwordService.js';
+import { findActivePlatformSuperUser, syncPlatformSuperUserToTenants } from '../services/platform/platformSuperUserTenantSyncService.js';
+import { createWorkspace } from '../services/workspaceService.js';
+import { listTenantUsersByWorkspace } from '../db/repositories/tenantUserRepository.js';
+import { updatePlatformUserPassword } from '../services/platform/platformUserServicePassword.js';
+import { validateCredentials } from '../services/auth/userServiceAuth.js';
+import { deleteUserById, resetUserPasswordById, updateWorkspaceUser } from '../services/usersService.js';
 
 const {
   mockPlatformUsers,
@@ -291,7 +298,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
     mockWorkspaces.length = 0;
     mockTenantUsers.length = 0;
 
-    const { hashPassword } = await import('../services/auth/passwordService.js');
     const passwordHash = await hashPassword(testPassword);
 
     mockPlatformUsers.push({
@@ -308,9 +314,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('findActivePlatformSuperUser returns the seeded platform superuser', async () => {
-    const { findActivePlatformSuperUser } = await import(
-      '../services/platform/platformSuperUserTenantSyncService.js'
-    );
     const superUser = await findActivePlatformSuperUser();
     expect(superUser).not.toBeNull();
     expect(superUser?.email).toBe(testSuperEmail);
@@ -318,10 +321,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('automatically syncs platform superuser to newly created workspaces', async () => {
-    const { createWorkspace } = await import('../services/workspaceService.js');
-    const { listTenantUsersByWorkspace } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
 
     const subdomain = 'darululoom';
     await createWorkspace({
@@ -339,13 +338,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('syncPlatformSuperUserToTenants syncs across multiple workspaces', async () => {
-    const { createWorkspace } = await import('../services/workspaceService.js');
-    const { syncPlatformSuperUserToTenants } = await import(
-      '../services/platform/platformSuperUserTenantSyncService.js'
-    );
-    const { listTenantUsersByWorkspace } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
 
     const sub1 = 'madrasa-one';
     const sub2 = 'madrasa-two';
@@ -364,19 +356,11 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('updates all tenant user records when platform superuser password changes', async () => {
-    const { createWorkspace } = await import('../services/workspaceService.js');
-    const { updatePlatformUserPassword } = await import(
-      '../services/platform/platformUserServicePassword.js'
-    );
-    const { validateCredentials } = await import(
-      '../services/auth/userServiceAuth.js'
-    );
 
     const subdomain = 'jamia-test';
     await createWorkspace({ subdomain, madrasaName: 'Jamia Test' });
 
     const newPassword = 'NewSuperSecret456!';
-    const { hashPassword } = await import('../services/auth/passwordService.js');
     const newHash = await hashPassword(newPassword);
     await updatePlatformUserPassword(platformSuperId, newHash);
 
@@ -389,10 +373,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('allows platform superuser to authenticate on any tenant workspace seamlessly', async () => {
-    const { createWorkspace } = await import('../services/workspaceService.js');
-    const { validateCredentials } = await import(
-      '../services/auth/userServiceAuth.js'
-    );
 
     const subdomain = 'al-noor';
     await createWorkspace({ subdomain, madrasaName: 'Al Noor' });
@@ -407,15 +387,6 @@ describe('Platform Superuser to Tenant Synchronization', () => {
   });
 
   it('prevents regular tenant admins from deleting or mutating the platform super user in a tenant', async () => {
-    const { createWorkspace } = await import('../services/workspaceService.js');
-    const { listTenantUsersByWorkspace } = await import(
-      '../db/repositories/tenantUserRepository.js'
-    );
-    const {
-      deleteUserById,
-      resetUserPasswordById,
-      updateWorkspaceUser,
-    } = await import('../services/usersService.js');
 
     const subdomain = 'protection-test';
     await createWorkspace({ subdomain, madrasaName: 'Protection Test' });

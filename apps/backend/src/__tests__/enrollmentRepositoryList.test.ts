@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { listEnrollmentsPage, aggregateEnrollmentsCommandMetrics } from '../db/repositories/enrollmentRepositoryList.js';
 
 const mockWithTenantTransaction = vi.fn();
 
@@ -61,7 +62,6 @@ describe('enrollmentRepositoryList', () => {
         fn({ select }),
     );
 
-    const { listEnrollmentsPage } = await import('../db/repositories/enrollmentRepositoryList.js');
     const result = await listEnrollmentsPage('Demo', {
       page: 1,
       limit: 1,
@@ -92,7 +92,6 @@ describe('enrollmentRepositoryList', () => {
         fn({ select }),
     );
 
-    const { listEnrollmentsPage } = await import('../db/repositories/enrollmentRepositoryList.js');
     await listEnrollmentsPage('demo', { includeDeleted: true, page: 1, limit: 12 });
 
     expect(where).toHaveBeenCalled();
@@ -119,9 +118,6 @@ describe('enrollmentRepositoryList', () => {
         fn({ select }),
     );
 
-    const { aggregateEnrollmentsCommandMetrics } = await import(
-      '../db/repositories/enrollmentRepositoryList.js'
-    );
     const metrics = await aggregateEnrollmentsCommandMetrics('demo');
 
     expect(metrics).toEqual({

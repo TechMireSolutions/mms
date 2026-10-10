@@ -22,6 +22,11 @@ import type { EnrollmentsRepository } from '../enrollments/repository/enrollment
 import { runWithTenant } from '../lib/tenantContext.js';
 import { withTenant, withTenantRead } from '../db/tenant-context.js';
 import { z } from 'zod';
+import { bulkSoftDeleteInvoices, findInvoicesByIds } from '../db/repositories/financeInvoicesRepository.js';
+import { bulkSoftDeleteAccounts } from '../db/repositories/accountingAccountsRepository.js';
+import { softDeleteSessionWithCascade, restoreSessionWithCascade } from '../db/repositories/sessionRepositoryPersist.js';
+import { findPaymentsByIds } from '../db/repositories/financePaymentsRepository.js';
+import { findEnrollmentsByIds } from '../db/repositories/enrollmentRepositoryHydrate.js';
 
 vi.mock('../db/database.js', () => ({
   runInTransaction: vi.fn((cb: () => unknown) => cb()),
@@ -360,7 +365,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
 
   describe('3. Restrict Guard (Default Referential Integrity)', () => {
     it('throws ValidationError (400) when archiving invoice with active payments', async () => {
-      const { bulkSoftDeleteInvoices } = await import('../db/repositories/financeInvoicesRepository.js');
 
       const fakeTx = {
         $count: vi.fn().mockResolvedValue(2),
@@ -379,7 +383,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     });
 
     it('throws ValidationError (400) when archiving account with active journal lines', async () => {
-      const { bulkSoftDeleteAccounts } = await import('../db/repositories/accountingAccountsRepository.js');
 
       const fakeTx = {
         $count: vi.fn().mockResolvedValue(5),
@@ -400,7 +403,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
 
   describe('4. Programmatic Atomic Cascade & Row Lock (Sessions & Enrollments)', () => {
     it('softDeleteSessionWithCascade locks parent row FOR UPDATE and sets deletedWithCascade: true on enrollments', async () => {
-      const { softDeleteSessionWithCascade } = await import('../db/repositories/sessionRepositoryPersist.js');
 
       const selectForUpdateSpy = vi.fn().mockResolvedValue([{ id: 'sess-1' }]);
       const updateReturningSpy = vi.fn().mockResolvedValue([{ id: 'sess-1' }]);
@@ -441,7 +443,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     });
 
     it('restoreSessionWithCascade only restores enrollments that were deleted with cascade', async () => {
-      const { restoreSessionWithCascade } = await import('../db/repositories/sessionRepositoryPersist.js');
 
       let sessionRestored = false;
       let enrollmentsRestored = false;
@@ -482,9 +483,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     });
 
     it('archiving a session cascades deletedWithCascade: true to its enrollments, and independent archived enrollments remain deleted when restored', async () => {
-      const { softDeleteSessionWithCascade, restoreSessionWithCascade } = await import(
-        '../db/repositories/sessionRepositoryPersist.js'
-      );
 
       const mockSessions = [
         { id: 'sess-1', workspaceSubdomain: 'demo', deletedAt: null as Date | null, deletedWithCascade: false },
@@ -935,7 +933,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       };
       vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
-      const { findInvoicesByIds } = await import('../db/repositories/financeInvoicesRepository.js');
       await findInvoicesByIds('demo', ['inv-1']);
       expect(fakeTx.select).toHaveBeenCalled();
 
@@ -953,7 +950,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       };
       vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
-      const { findPaymentsByIds } = await import('../db/repositories/financePaymentsRepository.js');
       await findPaymentsByIds('demo', ['pay-1']);
       expect(fakeTx.select).toHaveBeenCalled();
 
@@ -971,7 +967,6 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       };
       vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
-      const { findEnrollmentsByIds } = await import('../db/repositories/enrollmentRepositoryHydrate.js');
       await findEnrollmentsByIds('demo', ['enr-1']);
       expect(fakeTx.select).toHaveBeenCalled();
 

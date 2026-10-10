@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWithTenant } from '../lib/tenantContext.js';
+import { getObject, saveObject, getAllData } from '../db/database.js';
 
 const inMemoryStore = new Map<string, unknown>();
 
@@ -22,7 +23,6 @@ describe('custom tabs relational migration and operations', () => {
   });
 
   it('saves, hydrates, and gets custom tabs dynamically', async () => {
-    const { getObject, saveObject, getAllData } = await import('../db/database.js');
 
     await runWithTenant('demo', async () => {
       const configKey = 'contact_field_config';

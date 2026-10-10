@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getPlatformSettings, updatePlatformSettings } from '../services/platform/platformSettingsService.js';
 
 vi.mock('../db/dbClient.js', () => {
   const mockRows: Record<string, unknown>[] = [];
@@ -57,9 +58,6 @@ describe('platformSettingsService', () => {
   });
 
   it('returns platform settings and updates cache on update', async () => {
-    const { getPlatformSettings, updatePlatformSettings } = await import(
-      '../services/platform/platformSettingsService.js'
-    );
 
     const initial = getPlatformSettings();
     expect(initial.id).toBe('global');

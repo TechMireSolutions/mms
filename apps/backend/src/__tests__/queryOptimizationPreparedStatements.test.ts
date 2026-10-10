@@ -10,6 +10,7 @@ import {
   loadContactChildMapsAggregated,
   loadContactSummaryChildMapsAggregated,
 } from '../db/repositories/contactRepositoryHydrateChildren.js';
+import { hydrateSessionsListAggregated } from '../db/repositories/sessionRepositoryHydrate.js';
 
 describe('Drizzle Query Optimization & Prepared Statements', () => {
   it('compiles prepared statements on mock or real client', () => {
@@ -121,9 +122,6 @@ describe('Drizzle Query Optimization & Prepared Statements', () => {
   });
 
   it('hydrateSessionsListAggregated executes single SQL query for session hydration', async () => {
-    const { hydrateSessionsListAggregated } = await import(
-      '../db/repositories/sessionRepositoryHydrate.js'
-    );
 
     const mockTx = {
       execute: vi.fn().mockResolvedValue([

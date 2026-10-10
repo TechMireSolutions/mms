@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveUploadedImage, sniffImageFormat } from '../services/imageAssetService.js';
+import { Readable } from 'node:stream';
 
 // Minimal valid container headers (magic bytes only).
 const AVIF_BYTES = Buffer.from('\x00\x00\x00\x1cftypavif\x00\x00\x00\x00avifmif1', 'latin1');
@@ -68,7 +69,6 @@ describe('saveUploadedImage', () => {
   });
 
   it('persists streaming image uploads without buffering', async () => {
-    const { Readable } = await import('node:stream');
     const stream = Readable.from([AVIF_BYTES]);
     const url = await saveUploadedImage(stream, 'image/avif', 'logo');
     expect(url).toMatch(/^\/uploads\/branding\/[0-9a-f-]+\.avif$/);
