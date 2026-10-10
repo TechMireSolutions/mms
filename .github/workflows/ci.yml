@@ -109,28 +109,31 @@ jobs:
           advanced-security: false
           min-severity: medium
 
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  # Lint & Typecheck used to be one serial ~4 min job (setup, typecheck, lint,
+  # build, gitleaks, ratchets) and the slowest path through CI. It is split
+  # into three parallel jobs; ci-gate requires all of them.
+  typecheck-lint:
+    name: Typecheck, Lint & Ratchets
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    # id-token/attestations are only exercised on push to main, where the
-    # release tarball is built once, attested, and promoted by deploy.yml.
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
 
       - name: Setup Environment
         uses: ./.github/actions/setup-mms
+        with:
+          turbo-cache-scope: typecheck-lint
 
       - name: Run Typecheck
         run: pnpm typecheck
+
+      # Lints every package that has a lint script (frontend, backend,
+      # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
+      - name: Lint (all packages)
+        run: pnpm lint
 
       # Fails on high/critical advisories. One moderate finding is a reviewed,
       # documented exception (ts-deepmerge via @ts-rest/open-api) — see the
@@ -150,34 +153,6 @@ jobs:
       # one transaction) — use `pnpm --filter mms-backend index:concurrent`.
       - name: Migration index lock safety
         run: pnpm run check:migration-indexes
-
-      # Scans the FULL git history: a credential that was committed and later
-      # deleted is still recoverable from the repository and must be treated as
-      # compromised. Image is pinned by digest (not `latest`) so the scanner
-      # cannot change under us between runs. `--redact` keeps any finding out of
-      # the CI log. Reviewed false positives live in .gitleaks.toml.
-      - name: Secret scan (gitleaks)
-        run: |
-          docker run --rm -v "$PWD:/repo" \
-            zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
-            detect --source=/repo --config=/repo/.gitleaks.toml \
-            --no-banner --redact --exit-code 1
-
-      # Lints every package that has a lint script (frontend, backend,
-      # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
-      - name: Lint (all packages)
-        run: pnpm lint
-
-      # Production build of all packages (validates Vite rollup build & backend compilation).
-      # On push to main this is the release build, so it bakes the production domain.
-      - name: Build (all packages)
-        env:
-          VITE_APP_DOMAIN: ${{ github.event_name == 'push' && secrets.MMS_APP_DOMAIN || '' }}
-        run: pnpm build
-
-      # Frontend bundle budget gate: catches chunk bloat and un-lazy-loaded dependencies
-      - name: Frontend bundle budget
-        run: pnpm run check:bundle
 
       # Ratchet: declared-but-unenforced norms (no `any` in source, no raw hex
       # colours outside @theme, file-size bands). Baselines live in the script.
@@ -199,6 +174,38 @@ jobs:
           bash .agent/scripts/sync-all.sh
           git diff --exit-code -- .agent .cursor .claude || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
           node scripts/verify-rules-integrity.mjs
+
+  build:
+    name: Build & Release Artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # id-token/attestations are only exercised on push to main, where the
+    # release tarball is built once, attested, and promoted by deploy.yml.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
+        with:
+          turbo-cache-scope: build
+
+      # Production build of all packages (validates Vite rollup build & backend compilation).
+      # On push to main this is the release build, so it bakes the production domain.
+      - name: Build (all packages)
+        env:
+          VITE_APP_DOMAIN: ${{ github.event_name == 'push' && secrets.MMS_APP_DOMAIN || '' }}
+        run: pnpm build
+
+      # Frontend bundle budget gate: catches chunk bloat and un-lazy-loaded dependencies
+      - name: Frontend bundle budget
+        run: pnpm run check:bundle
 
       # Build once, promote the same bytes: deploy.yml downloads this artifact
       # from the triggering CI run and verifies the provenance attestation.
@@ -222,6 +229,29 @@ jobs:
             mms-dist.tar.gz.sha256
           retention-days: 14
           if-no-files-found: error
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Scans the FULL git history: a credential that was committed and later
+      # deleted is still recoverable from the repository and must be treated as
+      # compromised. Image is pinned by digest (not `latest`) so the scanner
+      # cannot change under us between runs. `--redact` keeps any finding out of
+      # the CI log. Reviewed false positives live in .gitleaks.toml.
+      - name: Secret scan (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" \
+            zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            detect --source=/repo --config=/repo/.gitleaks.toml \
+            --no-banner --redact --exit-code 1
 
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
@@ -487,7 +517,7 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, dependency-review, workflow-lint, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e, merge-reports]
+    needs: [changes, dependency-review, workflow-lint, typecheck-lint, build, secret-scan, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e, merge-reports]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -496,7 +526,9 @@ jobs:
           echo "==================== CI Gate Summary ===================="
           echo "Dependency Review:     ${{ needs.dependency-review.result }}"
           echo "Workflow Lint:         ${{ needs.workflow-lint.result }}"
-          echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
+          echo "Typecheck & Lint:       ${{ needs.typecheck-lint.result }}"
+          echo "Build & Release:        ${{ needs.build.result }}"
+          echo "Secret Scan:            ${{ needs.secret-scan.result }}"
           echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
           echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
@@ -517,8 +549,18 @@ jobs:
             failed=1
           fi
 
-          if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
-            echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
+          if [ "${{ needs.typecheck-lint.result }}" != "success" ]; then
+            echo "::error::typecheck-lint failed or was cancelled (result: ${{ needs.typecheck-lint.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::error::build failed or was cancelled (result: ${{ needs.build.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.secret-scan.result }}" != "success" ]; then
+            echo "::error::secret-scan failed or was cancelled (result: ${{ needs.secret-scan.result }})"
             failed=1
           fi
 
@@ -565,7 +607,9 @@ jobs:
           |---|---|---|
           | **Dependency Review** | \`${{ needs.dependency-review.result }}\` | High/Critical Advisory Check (PRs) |
           | **Workflow Lint** | \`${{ needs.workflow-lint.result }}\` | actionlint + zizmor |
-          | **Lint & Typecheck** | \`${{ needs.lint-and-typecheck.result }}\` | Turbo Cache Concurrent |
+          | **Typecheck, Lint & Ratchets** | \`${{ needs.typecheck-lint.result }}\` | Turbo Cache (parallel job) |
+          | **Build & Release Artifact** | \`${{ needs.build.result }}\` | Build + Bundle Budget (parallel job) |
+          | **Secret Scan** | \`${{ needs.secret-scan.result }}\` | gitleaks, full history (parallel job) |
           | **Frontend Tests** | \`${{ needs.test-frontend.result }}\` | 2-Way Sharded Parallel Matrix |
           | **Frontend Coverage** | \`${{ needs.test-frontend-coverage.result }}\` | Merged Blob Reports & Coverage Enforcement |
           | **Backend Unit Tests** | \`${{ needs.test-backend-unit.result }}\` | In-Memory Fast Unit + Coverage Gate |
