@@ -26,6 +26,6 @@ for entry in "${PACKAGES[@]}"; do
   [[ ${#list[@]} -eq 0 ]] && continue
   echo "lint-changed: $pkg (${#list[@]} files)"
   (cd "$pkg" && node -r "$up/scripts/eslint-ts-compat.cjs" node_modules/eslint/bin/eslint.js --quiet --no-warn-ignored \
-    --cache --cache-location node_modules/.cache/eslint/ "${list[@]}") || STATUS=1
+    --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ "${list[@]}") || STATUS=1
 done
 exit "$STATUS"
