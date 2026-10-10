@@ -141,7 +141,6 @@ export function UsersListDesktopTable({
       columns={columns}
       className="table-fixed"
       tableBodyClassName="divide-y divide-border"
-      bordered={false}
       selection={
         canDelete
           ? {

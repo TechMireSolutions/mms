@@ -1,6 +1,5 @@
 import { formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
 import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
@@ -10,6 +9,7 @@ import { resolveVisibleColumns, toColumnResize, type DataTableColumnLayout } fro
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { buildCashbookFooterCells, type CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
+import type { WorkBatchTableFooterRow } from "@/components/common/work/workBatchTableTypes";
 import { useCashbookColumns, type CashbookVoucherAction } from "@/tenant/features/accounting/components/useCashbookColumns";
 import { PaymentVoucherPrintButton } from "@/tenant/features/accounting/components/PaymentVoucherPrintButton";
 
@@ -105,20 +105,19 @@ export function CashbookViewTable({
   }
 
   const visibleColumns = columnLayout ? resolveVisibleColumns(columns, columnLayout.columnRegistry) : columns;
-  const footerCells = buildCashbookFooterCells(visibleColumns.map((column) => column.id)).map((cell, index) =>
-    cell.kind === "label" || cell.kind === "blank" ? (
-      <TableCell key={index} colSpan={cell.span} className="table-footer-label">
-        {cell.kind === "label" ? t("accounting.cashbook.transactionCount", { count: rows.length }) : null}
-      </TableCell>
-    ) : (
-      <TableCell
-        key={index}
-        className={`table-amount-cell text-xs ${cell.kind === "moneyIn" ? "text-success" : "text-destructive"}`}
-      >
-        {formatCurrency(cell.kind === "moneyIn" ? totalIn : totalOut)}
-      </TableCell>
-    ),
-  );
+  const footerRow: WorkBatchTableFooterRow = {
+    cells: buildCashbookFooterCells(visibleColumns.map((column) => column.id)).map((cell, index) => ({
+      colSpan: cell.span,
+      className: cell.kind === "label" || cell.kind === "blank"
+        ? "table-footer-label"
+        : `table-amount-cell text-xs ${cell.kind === "moneyIn" ? "text-success" : "text-destructive"}`,
+      content: cell.kind === "label"
+        ? t("accounting.cashbook.transactionCount", { count: rows.length })
+        : cell.kind === "blank"
+        ? null
+        : formatCurrency(cell.kind === "moneyIn" ? totalIn : totalOut),
+    })),
+  };
 
   return (
     <WorkBatchTable
@@ -126,11 +125,7 @@ export function CashbookViewTable({
       columns={visibleColumns}
       caption={t("accounting.cashbook.tableCaption")}
       columnResize={toColumnResize(columnLayout)}
-      tableFooter={
-        <TableFooter>
-          <TableRow>{footerCells}</TableRow>
-        </TableFooter>
-      }
+      footerRow={footerRow}
     />
   );
 }

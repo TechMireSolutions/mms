@@ -1,13 +1,9 @@
 import React, { useMemo } from "react";
 import { formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { TableCell } from "@/components/ui/table";
-import {
-  FinancialDebitCreditFooter,
-  FinancialDebitCreditFooterRow,
-} from "@/components/ui/reports/FinancialDebitCreditTableChrome";
+
 import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import type { WorkBatchTableFooterRow } from "@/components/common/work/workBatchTableTypes";
 import { GeneralLedgerCardsView } from "./GeneralLedgerCardsView";
 import { type Account } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
@@ -138,35 +134,43 @@ export function GeneralLedgerEntries({
     );
   }
 
-  const tableFooter = (
-    <FinancialDebitCreditFooter>
-      <FinancialDebitCreditFooterRow>
-        <TableCell colSpan={3} className="table-footer-label">
-          {t("accounting.ledger.closingBalance")}
-        </TableCell>
-        <TableCell className="hidden lg:table-cell" />
-        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-info">
-          {formatCurrency(totalDebit)}
-        </TableCell>
-        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-success">
-          {formatCurrency(totalCredit)}
-        </TableCell>
-        <TableCell noWrap className="px-3 py-2.5 text-end font-mono font-bold text-foreground">
-          {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
-        </TableCell>
-      </FinancialDebitCreditFooterRow>
-    </FinancialDebitCreditFooter>
-  );
+  const footerRow: WorkBatchTableFooterRow = {
+    className: "border-t-2 border-border bg-muted/30",
+    cells: [
+      {
+        colSpan: 3,
+        className: "table-footer-label",
+        content: t("accounting.ledger.closingBalance"),
+      },
+      {
+        className: "hidden lg:table-cell",
+        content: null,
+      },
+      {
+        className: "px-3 py-2.5 text-end font-mono font-bold text-info",
+        content: formatCurrency(totalDebit),
+      },
+      {
+        className: "px-3 py-2.5 text-end font-mono font-bold text-success",
+        content: formatCurrency(totalCredit),
+      },
+      {
+        className: "px-3 py-2.5 text-end font-mono font-bold text-foreground",
+        content: (
+          <>
+            {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
+          </>
+        ),
+      },
+    ],
+  };
 
   return (
-    <div className={WORK_SURFACE}>
-      <WorkBatchTable
-        data={rows}
-        columns={columns}
-        caption={t("accounting.ledger.entriesCaption", { name: activeAccount.name })}
-        bordered={false}
-        tableFooter={tableFooter}
-      />
-    </div>
+    <WorkBatchTable
+      data={rows}
+      columns={columns}
+      caption={t("accounting.ledger.entriesCaption", { name: activeAccount.name })}
+      footerRow={footerRow}
+    />
   );
 }

@@ -9,14 +9,10 @@ import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHeader,
 } from '@/components/ui/table';
-import {
-  FinancialDebitCreditFooter,
-  FinancialDebitCreditFooterRow,
-  FinancialDebitCreditHeaderRow,
-} from '@/components/ui/reports/FinancialDebitCreditTableChrome';
+import { MutedTableHeaderRow } from '@/components/ui/reports/FinancialDebitCreditTableChrome';
+import { WorkBatchTableFooter } from '@/components/common/work/WorkBatchTableFooter';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { balanceToneClass } from '@/lib/semanticTone';
@@ -102,13 +98,13 @@ export function JournalEntryLinesEditor({
             <Table>
               <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
               <TableHeader>
-                <FinancialDebitCreditHeaderRow>
+                <MutedTableHeaderRow>
                   <ModuleTableHeaderCell columnKey="account" className="px-3 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="lineNote" className="px-3 py-2 hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="debit" variant="currency" className="px-3 py-2 w-28">{t("accounting.ledger.columns.debit")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="credit" variant="currency" className="px-3 py-2 w-28">{t("accounting.ledger.columns.credit")}</ModuleTableHeaderCell>
                   <ModuleTableHeaderCell columnKey="actions" variant="action" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></ModuleTableHeaderCell>
-                </FinancialDebitCreditHeaderRow>
+                </MutedTableHeaderRow>
               </TableHeader>
               <TableBody className="divide-y divide-border">
                 {lines.map((line, lineIndex) => (
@@ -131,15 +127,34 @@ export function JournalEntryLinesEditor({
                   />
                 ))}
               </TableBody>
-              <FinancialDebitCreditFooter>
-                <FinancialDebitCreditFooterRow>
-                  <TableCell className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</TableCell>
-                  <TableCell className="hidden md:table-cell" />
-                  <TableCell variant="currency" noWrap className="px-3 py-2 text-info font-bold">{formatCurrency(totalDebit)}</TableCell>
-                  <TableCell variant="currency" noWrap className="px-3 py-2 text-success font-bold">{formatCurrency(totalCredit)}</TableCell>
-                  <TableCell />
-                </FinancialDebitCreditFooterRow>
-              </FinancialDebitCreditFooter>
+              <WorkBatchTableFooter
+                footerRow={{
+                  className: "border-t-2 border-border bg-muted/30",
+                  cells: [
+                    {
+                      className: "px-3 py-2 text-xs font-bold text-muted-foreground uppercase",
+                      content: t("accounting.journal.form.totals"),
+                    },
+                    {
+                      className: "hidden md:table-cell",
+                      content: null,
+                    },
+                    {
+                      className: "table-amount-cell px-3 py-2 text-info font-bold",
+                      content: formatCurrency(totalDebit),
+                      align: "end",
+                    },
+                    {
+                      className: "table-amount-cell px-3 py-2 text-success font-bold",
+                      content: formatCurrency(totalCredit),
+                      align: "end",
+                    },
+                    {
+                      content: null,
+                    },
+                  ],
+                }}
+              />
             </Table>
           )}
         </div>

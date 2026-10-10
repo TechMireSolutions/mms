@@ -3,12 +3,8 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableCell,
-  TableFooter,
-  TableRow,
-} from "@/components/ui/table";
+import { Table } from "@/components/ui/table";
+import { WorkBatchTableFooter } from "@/components/common/work/WorkBatchTableFooter";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { moneyToCents } from '@mms/shared';
@@ -153,17 +149,27 @@ export function TrialBalance({ fiscalYears }: TrialBalanceProps) {
             ) : (
               <Table>
                 <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3} className="px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</TableCell>
-                    <TableCell variant="currency" noWrap className="px-3 py-2.5 text-info text-base font-bold">
-                      {formatCurrency(grandDebit)}
-                    </TableCell>
-                    <TableCell variant="currency" noWrap className="px-3 py-2.5 text-success text-base font-bold">
-                      {formatCurrency(grandCredit)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
+                <WorkBatchTableFooter
+                  footerRow={{
+                    cells: [
+                      {
+                        colSpan: 3,
+                        className: "px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide",
+                        content: t("accounting.tb.grandTotal"),
+                      },
+                      {
+                        className: "table-amount-cell px-3 py-2.5 text-info text-base",
+                        content: formatCurrency(grandDebit),
+                        align: "end",
+                      },
+                      {
+                        className: "table-amount-cell px-3 py-2.5 text-success text-base",
+                        content: formatCurrency(grandCredit),
+                        align: "end",
+                      },
+                    ]
+                  }}
+                />
               </Table>
             )}
           </div>

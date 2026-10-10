@@ -26,7 +26,7 @@ export function ObligationsRepDuesCardsView({
   const { t } = useTranslation();
 
   return (
-    <ReportMoneyCardsGrid>
+    <ReportMoneyCardsGrid surface>
       {repSummary.map((representativeSummary) => (
         <ReportMoneyCard
           key={representativeSummary.key}

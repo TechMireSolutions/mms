@@ -141,7 +141,6 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
       caption={t("examinations.exams")}
       className="table-fixed"
       tableBodyClassName="divide-y divide-border/50"
-      bordered={false}
       onRowClick={props.onRowClick ? (exam) => props.onRowClick?.(exam.id) : undefined}
       selection={
         canDelete

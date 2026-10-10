@@ -2,7 +2,6 @@ import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { type ObligationDistribution } from '@/lib/data/obligationsData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import {
   DataTable,
   DataTableRowActions,
@@ -59,9 +58,8 @@ export function WakalaDistributionList({
   ];
 
   return (
-    <div className={`${WORK_SURFACE} p-3`}>
-      <DataTable
-        tableId="obligations.wakalaDistributions"
+    <DataTable
+      tableId="obligations.wakalaDistributions"
         defaultViewMode={viewMode}
         label={t("obligations.wakala.distTableCaption")}
         data={distributions}
@@ -89,6 +87,5 @@ export function WakalaDistributionList({
           />
         )}
       />
-    </div>
   );
 }

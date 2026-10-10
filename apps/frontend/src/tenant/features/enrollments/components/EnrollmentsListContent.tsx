@@ -1,8 +1,6 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentsListCards } from "@/tenant/features/enrollments/components/EnrollmentsListCards";
 import { EnrollmentsListDesktopTable } from "@/tenant/features/enrollments/components/EnrollmentsListDesktopTable";
@@ -26,9 +24,7 @@ export function EnrollmentsListContent(props: EnrollmentListContentProps): React
       ) : props.viewMode === "cards" ? (
         <EnrollmentsListCards {...props} />
       ) : (
-        <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-          <EnrollmentsListDesktopTable {...props} />
-        </div>
+        <EnrollmentsListDesktopTable {...props} />
       )}
 
       <ListPagination

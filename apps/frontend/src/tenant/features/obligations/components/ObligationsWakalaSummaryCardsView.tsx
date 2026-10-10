@@ -23,7 +23,7 @@ export function ObligationsWakalaSummaryCardsView({
   const { t } = useTranslation();
 
   return (
-    <ReportMoneyCardsGrid>
+    <ReportMoneyCardsGrid surface>
       {wakalaSummary.map((wakalaSummaryItem) => (
         <ReportMoneyCard
           key={wakalaSummaryItem.key}

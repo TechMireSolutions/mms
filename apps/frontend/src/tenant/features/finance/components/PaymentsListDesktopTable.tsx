@@ -137,7 +137,6 @@ export function PaymentsListDesktopTable({
       data={payments}
       columns={columns}
       caption={t("finance.paymentLog")}
-      bordered={false}
       selection={
         canDelete
           ? {

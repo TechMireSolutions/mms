@@ -6,7 +6,6 @@ import {
 } from '@mms/shared';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
@@ -143,15 +142,13 @@ export function QuestionsListDesktopTable({
   }, [categoryMap, config, difficultyConfig, isColumnVisible, t, typeConfig]);
 
   return (
-    <div className={WORK_SURFACE}>
-      <WorkBatchTable
-        data={questions}
-        columns={columns}
-        caption={t('questionBank.questions')}
-        className="table-fixed"
-        tableBodyClassName="divide-y divide-border/50"
-        bordered={false}
-        stickyColumnId="text"
+    <WorkBatchTable
+      data={questions}
+      columns={columns}
+      caption={t('questionBank.questions')}
+      className="table-fixed"
+      tableBodyClassName="divide-y divide-border/50"
+      stickyColumnId="text"
         onRowClick={onRowClick ? (q) => onRowClick(q.id) : undefined}
         selection={
           canDelete
@@ -186,6 +183,5 @@ export function QuestionsListDesktopTable({
         )}
         actionsLabel={t('questionBank.columns.actions')}
       />
-    </div>
   );
 }

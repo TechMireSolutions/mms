@@ -1,8 +1,6 @@
 import React from "react";
 import { School } from "lucide-react";
 import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmpty";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FacultyListCards } from "@/tenant/features/faculty/components/FacultyListCards";
 import { FacultyListDesktopTable } from "@/tenant/features/faculty/components/FacultyListDesktopTable";
@@ -55,11 +53,7 @@ export function FacultyListContent(props: FacultyListContentInput): React.JSX.El
     return <FacultyListCards {...contentProps} />;
   }
 
-  return (
-    <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-      <FacultyListDesktopTable {...contentProps} />
-    </div>
-  );
+  return <FacultyListDesktopTable {...contentProps} />;
 }
 
 

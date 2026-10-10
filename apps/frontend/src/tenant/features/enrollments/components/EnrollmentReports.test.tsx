@@ -50,7 +50,7 @@ describe("EnrollmentReports Component", () => {
       <EnrollmentReports aggregates={EMPTY_ENROLLMENTS_REPORT_AGGREGATES} />,
     );
 
-    expect(html).toContain("enrollments.metrics.total");
+    expect(html).toContain("enrollments.reports.noData");
     expect(html).toContain("enrollments.reports.revenueBySession");
   });
 

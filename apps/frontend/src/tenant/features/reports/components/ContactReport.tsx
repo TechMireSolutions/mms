@@ -7,14 +7,7 @@ import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
 import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 const ContactReportCharts = lazy(() =>
@@ -119,30 +112,33 @@ const ContactReport = (function ContactReport(_props: ContactReportProps = {}): 
             hideExport={summaryRows.length === 0}
           >
             <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <ModuleTableHeaderCell columnKey="metric" className="px-4 py-2.5">
-                      {t("common.label")}
-                    </ModuleTableHeaderCell>
-                    <ModuleTableHeaderCell columnKey="value" variant="badge" className="px-4 py-2.5">
-                      {t("common.details")}
-                    </ModuleTableHeaderCell>
-                    <ModuleTableHeaderCell columnKey="rate" variant="number" className="px-4 py-2.5">
-                      {t("reports.kpi.growthRate")}
-                    </ModuleTableHeaderCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {summaryRows.map((row) => (
-                    <TableRow key={row.metric}>
-                      <TableCell className="px-4 py-2.5 font-medium">{row.metric}</TableCell>
-                      <TableCell variant="badge" noWrap className="px-4 py-2.5 font-mono">{row.value}</TableCell>
-                      <TableCell variant="number" noWrap className="px-4 py-2.5 text-primary font-bold">{row.rate}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <WorkBatchTable
+                data={summaryRows.map(row => ({ ...row, id: row.metric }))}
+                columns={[
+                  {
+                    id: "metric",
+                    label: t("common.label"),
+                    render: (row) => <span className="font-medium">{row.metric}</span>,
+                  },
+                  {
+                    id: "value",
+                    label: t("common.details"),
+                    align: "center",
+                    cellClassName: "font-mono",
+                    noWrap: true,
+                    render: (row) => row.value,
+                  },
+                  {
+                    id: "rate",
+                    label: t("reports.kpi.growthRate"),
+                    align: "right",
+                    cellClassName: "text-primary font-bold",
+                    noWrap: true,
+                    render: (row) => row.rate,
+                  },
+                ]}
+                bordered={false}
+              />
             </div>
             <div className="divide-y divide-border/50 md:hidden" role="list">
               {summaryRows.map((row) => (

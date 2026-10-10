@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ObligationCollectionsListCards } from "@/tenant/features/obligations/components/ObligationCollectionsListCards";
 import { ObligationCollectionsListDesktopTable } from "@/tenant/features/obligations/components/ObligationCollectionsListDesktopTable";
@@ -41,8 +40,6 @@ export function ObligationCollectionsListContent(props: ObligationCollectionList
   return props.viewMode === "cards" ? (
     <ObligationCollectionsListCards {...props} />
   ) : (
-    <div className={WORK_SURFACE}>
-      <ObligationCollectionsListDesktopTable {...props} />
-    </div>
+    <ObligationCollectionsListDesktopTable {...props} />
   );
 }

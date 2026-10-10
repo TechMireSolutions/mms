@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableRow,
-} from "@/components/ui/table";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
 import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
 import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
@@ -67,7 +60,7 @@ export function CashFlowStatementPanel({
 
   return (
     <section aria-label={t('accounting.reports.views.cashflow')} className="space-y-4">
-      <div className={WORK_SURFACE}>
+      <div>
         <header className="px-4 py-2.5 bg-info/10 border-b border-border">
           <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{t('accounting.reports.cashflow.title')}</SectionLabel>
         </header>
@@ -107,36 +100,51 @@ export function CashFlowStatementPanel({
             />
           </ReportMoneyCardsGrid>
         ) : (
-          <Table>
-            <caption className="sr-only">{t('accounting.reports.cashflow.breakdownCaption')}</caption>
-            <TableBody className="divide-y divide-border/50">
-              <TableRow className="bg-muted/10">
-                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</TableCell>
-                <TableCell variant="currency" noWrap className="px-3 py-2.5">{formatCurrency(netSurplus)}</TableCell>
-              </TableRow>
-              {adjustments.map((item) => (
-                <TableRow key={item.label}>
-                  <TableCell className="px-3 py-2.5 text-muted-foreground ps-8">{item.label}</TableCell>
-                  <TableCell variant="currency" noWrap className="px-3 py-2.5 text-muted-foreground">{formatCurrency(item.amount)}</TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="bg-muted/10">
-                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</TableCell>
-                <TableCell variant="currency" noWrap className="px-3 py-2.5 text-foreground">{formatCurrency(netCashFlowIndirect)}</TableCell>
-              </TableRow>
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell className="px-3 py-2.5 font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</TableCell>
-                <TableCell variant="currency" noWrap className="px-3 py-2.5 text-foreground text-base font-bold">
-                  {formatCurrency(Math.abs(netCashFlow))}
-                  <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
-                  </span>
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+          <WorkBatchTable
+            caption={t('accounting.reports.cashflow.breakdownCaption')}
+            className="[&_thead]:hidden border-t-0"
+            data={[
+              { id: "netSurplus", label: t('accounting.reports.cashflow.netSurplusOrDeficit'), amount: netSurplus, type: "header" },
+              ...adjustments.map((a) => ({ id: a.label, label: a.label, amount: a.amount, type: "indent" })),
+              { id: "netCashOperations", label: t('accounting.reports.cashflow.netCashOperations'), amount: netCashFlowIndirect, type: "header" },
+            ]}
+            columns={[
+              {
+                id: "label",
+                label: "Label",
+                cellClassName: (row) => row.type === "header" ? "font-semibold text-foreground" : "text-muted-foreground ps-8",
+                render: (row) => row.label,
+              },
+              {
+                id: "amount",
+                label: "Amount",
+                variant: "currency",
+                cellClassName: (row) => row.type === "header" ? "" : "text-muted-foreground",
+                render: (row) => formatCurrency(row.amount),
+              },
+            ]}
+            rowClassName={(row) => row.type === "header" ? "bg-muted/10" : ""}
+            footerRow={{
+              cells: [
+                {
+                  className: "font-bold text-foreground",
+                  content: t('accounting.reports.cashflow.netCashFlow'),
+                },
+                {
+                  className: "table-amount-cell text-foreground text-base",
+                  align: "end",
+                  content: (
+                    <>
+                      {formatCurrency(Math.abs(netCashFlow))}
+                      <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
+                      </span>
+                    </>
+                  ),
+                }
+              ]
+            }}
+          />
         )}
       </div>
 

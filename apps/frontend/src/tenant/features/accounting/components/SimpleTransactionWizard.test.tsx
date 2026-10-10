@@ -24,7 +24,10 @@ vi.mock("@/tenant/features/accounting/hooks/useVoucherNumbering", () => ({
 }));
 
 vi.mock("framer-motion", () => ({
-  motion: { div: ({ children, ...props }: any) => <div {...props}>{children}</div> },
+  motion: { 
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    tr: ({ children, ...props }: any) => <tr {...props}>{children}</tr>
+  },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 

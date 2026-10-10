@@ -52,7 +52,6 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
       caption={t("hasanat.distribution.aria")}
       className="table-fixed"
       tableBodyClassName="divide-y divide-border/50"
-      bordered={false}
       onRowClick={onRowClick ? (d) => onRowClick(d.id) : undefined}
       selection={
         canDelete

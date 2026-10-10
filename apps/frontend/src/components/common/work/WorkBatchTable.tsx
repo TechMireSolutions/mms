@@ -11,6 +11,7 @@ import type { WorkBatchTableColumn, WorkBatchTableProps } from "./workBatchTable
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { useWorkBatchTableInternalState } from "./useWorkBatchTableInternalState";
 import { cn } from "@/lib/utils";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 export type { WorkBatchTableColumn, WorkBatchTableProps };
 
@@ -106,7 +107,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
         className={cn(
           "overflow-x-auto",
           isVirtualized && cn(maxHeightClassName, "overflow-y-auto"),
-          bordered && "rounded-lg border border-border/60 bg-card",
+          bordered && WORK_SURFACE,
         )}
       >
         <Table className={cn("table-fixed w-full", className)}>

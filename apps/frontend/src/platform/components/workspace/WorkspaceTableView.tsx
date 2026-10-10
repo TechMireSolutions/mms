@@ -176,7 +176,6 @@ export function WorkspaceTableView({
         )
       }
       containerClassName={WORK_TABLE_CONTAINER_CLASS}
-      bordered={false}
       virtualize={workspaces.length > 10}
       estimateRowSize={density === 'compact' ? 38 : density === 'comfortable' ? 64 : 48}
     />

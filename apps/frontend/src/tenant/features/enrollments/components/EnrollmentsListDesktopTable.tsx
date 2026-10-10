@@ -144,7 +144,6 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
     <WorkBatchTable
       data={enrollments}
       columns={columns}
-      bordered={false}
       stickyColumnId={canSelectEnrollments ? "student" : undefined}
       selection={
         canSelectEnrollments

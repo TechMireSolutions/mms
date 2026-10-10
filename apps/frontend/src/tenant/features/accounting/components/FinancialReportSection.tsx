@@ -1,14 +1,8 @@
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableRow,
-} from "@/components/ui/table";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+
 import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
 import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
 import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
@@ -59,7 +53,7 @@ export function ReportSection({
   );
 
   return (
-    <section aria-label={title} className={WORK_SURFACE}>
+    <section aria-label={title}>
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
         <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{title}</SectionLabel>
       </header>
@@ -95,15 +89,17 @@ export function ReportSection({
           <ReportMoneySummaryTile label={totalLabel} value={formatCurrency(total)} />
         </ReportMoneyCardsGrid>
       ) : (
-        <Table>
-          <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
-          <TableBody className="divide-y divide-border/50">
-            {rows.map((reportRow) => {
-              const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
-              const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
-              return (
-                <TableRow key={reportRow.id} className="hover:bg-muted/10">
-                  <TableCell className="px-3 py-2.5">
+        <WorkBatchTable
+          data={rows}
+          columns={[
+            {
+              id: "report",
+              label: "Report",
+              render: (reportRow) => {
+                const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
+                const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
+                return (
+                  <div className="py-1 w-full">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-foreground">{reportRow.name}</span>
                       <span className="font-mono font-semibold text-foreground ms-2">{formatCurrency(Math.abs(rowAmount))}</span>
@@ -117,20 +113,28 @@ export function ReportSection({
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono m-0">
                       {reportRow.code} · {reportRow.subtype || reportRow.type}
                     </p>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell className="px-3 py-2.5 flex items-center justify-between">
-                <span className="font-bold text-foreground">{totalLabel}</span>
-                <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+                  </div>
+                );
+              }
+            }
+          ]}
+          caption={t("accounting.reports.sectionDataCaption", { title })}
+          className="[&_thead]:hidden border-t-0"
+          rowClassName={() => "hover:bg-muted/10"}
+          footerRow={{
+            cells: [
+              {
+                className: "flex items-center justify-between",
+                content: (
+                  <>
+                    <span className="font-bold text-foreground">{totalLabel}</span>
+                    <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
+                  </>
+                ),
+              }
+            ]
+          }}
+        />
       )}
     </section>
   );
