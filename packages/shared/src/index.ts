@@ -38,6 +38,7 @@ export * from './erdCatalog.js';
 export * from './serverPorts.js';
 export * from './schemas/uiState.dto.js';
 export * from './schemas/platformAi.dto.js';
+export * from './schemas/moduleImport.dto.js';
 
 // ---------------------------------------------------------------------------
 // 3. Global Settings, Theme & Branding
@@ -148,6 +149,7 @@ export * from './csvParserCore.js';
 export * from './contactsCsvParser.js';
 export * from './contactsCsvHeaderMap.js';
 export * from './contactsCsvRowParser.js';
+export * from './contactsTransferSchema.js';
 
 
 // ---------------------------------------------------------------------------

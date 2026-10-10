@@ -1,4 +1,4 @@
-import { UserPlus, Download } from "lucide-react";
+import { UserPlus, Download, Upload } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -8,6 +8,7 @@ export interface StudentsPageHeaderActionsProps {
   viewingDeleted: boolean;
   onExport: () => void;
   onAddStudent: () => void;
+  onImport?: () => void;
 }
 
 export function StudentsPageHeaderActions({
@@ -16,6 +17,7 @@ export function StudentsPageHeaderActions({
   viewingDeleted,
   onExport,
   onAddStudent,
+  onImport,
 }: StudentsPageHeaderActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -24,6 +26,11 @@ export function StudentsPageHeaderActions({
       {canExport && !viewingDeleted ? (
         <ActionButton variant="ghost" icon={Download} onClick={onExport}>
           {t("common.export")}
+        </ActionButton>
+      ) : null}
+      {canWrite && !viewingDeleted && onImport ? (
+        <ActionButton variant="secondary" icon={Upload} onClick={onImport}>
+          {t("common.import")}
         </ActionButton>
       ) : null}
       {canWrite && !viewingDeleted ? (

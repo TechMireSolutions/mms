@@ -85,3 +85,12 @@ export const usersCsvExportBodySchema = csvExportBodySchema(usersListQuerySchema
 const emptyListQuerySchema = z.object({}).passthrough();
 export const facultyDepartmentsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
 export const facultyDesignationsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const questionBankCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const accountingCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const financeCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const attendanceCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const examinationsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const hasanatCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const obligationsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const tasksCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ClipboardList, Plus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
@@ -30,54 +30,24 @@ const EnrollmentsSetupTier = lazy(() =>
  */
 export default function EnrollmentsPage() {
   const pageState = useEnrollmentsPageState();
+  const [importOpen, setImportOpen] = useState(false);
   const {
-    t,
-    SUB_TABS,
-    TABS,
-    tab,
-    setTab,
-    activeSubTab,
-    setActiveSubTab,
-    canWriteEnrollments,
-    canDelete,
-    canExport,
-    canSelectEnrollments,
-    directoryFilters,
-    enrollments,
-    filteredCount,
-    isWorkPageError,
-    refetchWorkPage,
-    setViewing,
-    setShowWizard,
-    setPendingDeleteId,
-    setConfirmBulkDeleteOpen,
-    setConfirmBulkRestoreOpen,
-    columnLayout,
-    selection,
-    exportActions,
-    pageActions,
+    t, SUB_TABS, TABS, tab, setTab, activeSubTab, setActiveSubTab,
+    canWriteEnrollments, canDelete, canExport, canSelectEnrollments,
+    directoryFilters, enrollments, filteredCount, isWorkPageError,
+    refetchWorkPage, setViewing, setShowWizard, setPendingDeleteId,
+    setConfirmBulkDeleteOpen, setConfirmBulkRestoreOpen,
+    columnLayout, selection, exportActions, pageActions,
   } = pageState;
 
   const {
-    listPage,
-    setListPage,
-    showDeleted,
-    setShowDeleted,
-    search,
-    setSearch,
-    statusFilter,
-    setStatusFilter,
-    sessionFilter,
-    setSessionFilter,
+    listPage, setListPage, showDeleted, setShowDeleted,
+    search, setSearch, statusFilter, setStatusFilter, sessionFilter, setSessionFilter,
   } = directoryFilters;
 
   const {
-    selectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
-    toggleSelectAll,
-    toggleSelectedEnrollment,
-    clearSelection,
+    selectedIds, allVisibleSelected, someVisibleSelected,
+    toggleSelectAll, toggleSelectedEnrollment, clearSelection,
   } = selection;
 
   const { handleExportCSV, handleBulkExport } = exportActions;
@@ -97,6 +67,7 @@ export default function EnrollmentsPage() {
           showDeleted={showDeleted}
           t={t}
           onExport={() => void handleExportCSV()}
+          onImport={() => setImportOpen(true)}
           onNew={() => {
             setTab("work");
             setShowWizard(true);
@@ -205,7 +176,11 @@ export default function EnrollmentsPage() {
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <EnrollmentsPageModals pageState={pageState} />
+      <EnrollmentsPageModals
+        pageState={pageState}
+        importOpen={importOpen}
+        onCloseImport={() => setImportOpen(false)}
+      />
     </ModulePageShell>
   );
 }

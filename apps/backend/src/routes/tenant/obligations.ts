@@ -19,6 +19,7 @@ import {
 
 import { obligationContractRouter } from './obligations/obligationContractRouter.js';
 import { obligationReportRoutes } from './obligations/obligationReportRoutes.js';
+import { obligationsExportRoutes } from './obligations/obligationsExportRoutes.js';
 import { obligationsUseCases } from '../../obligations/use-cases/obligationsUseCases.js';
 
 const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_MANIFEST.collectionKey;
@@ -107,6 +108,7 @@ export default async function obligationsRoutes(
         errorMessagePrefix: 'obligation',
       });
 
+      await sub.register(obligationsExportRoutes);
       await sub.register(obligationReportRoutes);
     },
     { prefix: '/api/obligations' },

@@ -31,6 +31,7 @@ paths:
 - **Formats & Lazy Loading:** Support Print (`@media print`), Excel (`xlsx` dynamic `import()`), and PDF (`jspdf` + `jspdf-autotable`). Charts use `lazy` + `SafeResponsiveContainer`.
 - **Export Toolbar:** Standardize on `ExportToolbar` / `ExportToolbarCompact` (`exportToolbarUtils.ts`). Exports exceeding interactive thresholds offload to BullMQ worker process (`mms-module-architecture.md` §5).
 - **Formula Injection Mitigation:** Prefix untrusted cell values starting with `=`, `+`, `-`, or `@` with a single quote (`'`) in CSV/Excel outputs; preserve legitimate negative numbers.
+- **Field Whitelist & Bidirectional Data Transfer SSOT:** Form module CSV exports/imports must use `@mms/shared` transfer schemas (`createModuleTransferSchema`, `buildExportGrid`). All internal system metadata (`_id`, `id`, `tenantId`, `created_at`, `updated_at`, etc.) is stripped. Exported headers match primary import headers 1:1 for symmetric round-trips.
 
 ## 4. Visualizations & Chart Rules
 - **Design Tokens:** Recharts must bind to semantic Tailwind tokens (`@theme`, `StatusBadge`). Export/print labels via `t()`.

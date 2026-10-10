@@ -1,6 +1,6 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Plus, Calendar, Download } from 'lucide-react';
+import { Plus, Calendar, Download, Upload } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
@@ -24,6 +24,7 @@ const SessionsSetupTier = lazy(() =>
 
 export default function Sessions() {
   const c = useSessionsPageController();
+  const [importOpen, setImportOpen] = useState(false);
 
   return (
     <ModulePageShell
@@ -37,6 +38,11 @@ export default function Sessions() {
           {c.canExport && !c.showDeleted ? (
             <ActionButton variant="ghost" icon={Download} onClick={() => void c.handleExportCSV()}>
               {c.t('common.export')}
+            </ActionButton>
+          ) : null}
+          {c.canWrite && !c.showDeleted ? (
+            <ActionButton variant="secondary" icon={Upload} onClick={() => setImportOpen(true)}>
+              {c.t('common.import')}
             </ActionButton>
           ) : null}
           {c.canWrite && !c.showDeleted ? (
@@ -140,6 +146,9 @@ export default function Sessions() {
         confirmBulkDeleteOpen={c.confirmBulkDeleteOpen}
         confirmBulkRestoreOpen={c.confirmBulkRestoreOpen}
         selectedCount={c.selectedIds.length}
+        importOpen={importOpen}
+        onCloseImport={() => setImportOpen(false)}
+        canWrite={c.canWrite}
         onCloseForm={c.closeForm}
         onSave={c.handleSave}
         onCloseDetail={() => c.setDetailSession(null)}

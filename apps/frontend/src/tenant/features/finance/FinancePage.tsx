@@ -1,32 +1,31 @@
 import React from "react";
 import { useFinancePageController } from "@/tenant/features/finance/hooks/useFinancePageController";
 import { AnimatePresence } from "framer-motion";
-import { Plus, DollarSign, CalendarRange, Bell, AlarmClock } from "lucide-react";
+import { Plus, DollarSign } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleEntityIoToolbar } from "@/components/ui/ModuleEntityIoToolbar";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { ActionButton } from "@/components/ui/ActionButton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { InvoicesList } from "@/tenant/features/finance/components/InvoicesList";
 import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { type Invoice } from '@/lib/data/financeData';
+import { financeTransferSchema } from "@mms/shared";
+import { useGenericModuleExport } from "@/lib/backgroundJobs/useGenericModuleExport";
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
 import { FinanceOverlays } from "@/tenant/features/finance/components/FinanceOverlays";
+import { FinanceCsvImportDialog } from "@/tenant/features/finance/components/FinanceCsvImportDialog";
+import { FinancePageHeaderActions } from "@/tenant/features/finance/components/FinancePageHeaderActions";
 
 const FinanceSetupTier = React.lazy(() =>
-  import("@/tenant/features/finance/components/FinanceSetupTier").then((m) => ({
-    default: m.FinanceSetupTier,
-  }))
+  import("@/tenant/features/finance/components/FinanceSetupTier").then((m) => ({ default: m.FinanceSetupTier }))
 );
 const FinanceReportsTier = React.lazy(() =>
-  import("@/tenant/features/finance/components/FinanceReportsTier").then((m) => ({
-    default: m.FinanceReportsTier,
-  }))
+  import("@/tenant/features/finance/components/FinanceReportsTier").then((m) => ({ default: m.FinanceReportsTier }))
 );
 
 /**
@@ -35,6 +34,14 @@ const FinanceReportsTier = React.lazy(() =>
 export default function Finance(): React.JSX.Element {
   const c = useFinancePageController();
   const [receiptInvoices, setReceiptInvoices] = React.useState<Invoice[]>([]);
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: "/api/finance/export/csv",
+    filename: "finance-invoices.csv",
+    auditPath: "/api/finance/export-audit",
+    columns: financeTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
 
   return (
     <ModulePageShell
@@ -44,32 +51,20 @@ export default function Finance(): React.JSX.Element {
       headerTitle={c.t("nav.finance")}
       headerSubtitle={c.t("page.finance.subtitle")}
       headerActions={
-        c.canWrite && !c.showDeleted ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <ActionButton
-              variant="secondary"
-              icon={AlarmClock}
-              loading={c.collectPending}
-              onClick={() => void c.handleCollectOverdue()}
-            >
-              {c.t("finance.collect.action")}
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              icon={Bell}
-              loading={c.remindPending}
-              onClick={() => void c.handleRemindInvoices()}
-            >
-              {c.t("finance.collect.remindAction")}
-            </ActionButton>
-            <ActionButton variant="secondary" icon={CalendarRange} onClick={() => c.setGeneratingInvoices(true)}>
-              {c.t("finance.generate.action")}
-            </ActionButton>
-            <ActionButton variant="primary" icon={Plus} onClick={c.openCreateInvoice}>
-              {c.t("finance.newInvoice")}
-            </ActionButton>
-          </div>
-        ) : undefined
+        <FinancePageHeaderActions
+          canWrite={c.canWrite}
+          canExport={c.canWrite}
+          showDeleted={c.showDeleted}
+          isExporting={isExporting}
+          collectPending={c.collectPending}
+          remindPending={c.remindPending}
+          onCollectOverdue={() => void c.handleCollectOverdue()}
+          onRemindInvoices={() => void c.handleRemindInvoices()}
+          onGenerateInvoices={() => c.setGeneratingInvoices(true)}
+          onCreateInvoice={c.openCreateInvoice}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
+        />
       }
       metricsStrip={<FinanceCommandMetrics invoiceTotal={c.invoices.length} />}
     >
@@ -143,12 +138,7 @@ export default function Finance(): React.JSX.Element {
                   isColumnVisible={c.invoiceColumnLayout.isColumnVisible}
                   getColumnWidth={c.invoiceColumnLayout.getColumnWidth}
                   onColumnResize={c.invoiceColumnLayout.setColumnWidth}
-                  columnCustomizer={{
-                    columnRegistry: c.invoiceColumnLayout.columnRegistry,
-                    updateUserColumnLayout: c.invoiceColumnLayout.updateUserColumnLayout,
-                    onResetLayout: c.invoiceColumnLayout.resetColumnLayout,
-                    labels: c.invoiceColumnLayout.customizerLabels,
-                  }}
+                  columnCustomizer={{ columnRegistry: c.invoiceColumnLayout.columnRegistry, updateUserColumnLayout: c.invoiceColumnLayout.updateUserColumnLayout, onResetLayout: c.invoiceColumnLayout.resetColumnLayout, labels: c.invoiceColumnLayout.customizerLabels }}
                 />
               )}
               {c.activeTab === "work" && c.activeSubTab === "payments" && c.paymentsResult.isError ? (
@@ -173,12 +163,7 @@ export default function Finance(): React.JSX.Element {
                   isColumnVisible={c.paymentColumnLayout.isColumnVisible}
                   getColumnWidth={c.paymentColumnLayout.getColumnWidth}
                   onColumnResize={c.paymentColumnLayout.setColumnWidth}
-                  columnCustomizer={{
-                    columnRegistry: c.paymentColumnLayout.columnRegistry,
-                    updateUserColumnLayout: c.paymentColumnLayout.updateUserColumnLayout,
-                    onResetLayout: c.paymentColumnLayout.resetColumnLayout,
-                    labels: c.paymentColumnLayout.customizerLabels,
-                  }}
+                  columnCustomizer={{ columnRegistry: c.paymentColumnLayout.columnRegistry, updateUserColumnLayout: c.paymentColumnLayout.updateUserColumnLayout, onResetLayout: c.paymentColumnLayout.resetColumnLayout, labels: c.paymentColumnLayout.customizerLabels }}
                   onRowClick={(id: string) => {
                     const p = c.payments.find((x) => x.id === id);
                     if (p) c.setActivePayment(p);
@@ -195,6 +180,12 @@ export default function Finance(): React.JSX.Element {
         receiptInvoices={receiptInvoices}
         onCloseReceipts={() => setReceiptInvoices([])}
         onSetReceiptInvoices={setReceiptInvoices}
+      />
+
+      <FinanceCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWrite}
       />
     </ModulePageShell>
   );

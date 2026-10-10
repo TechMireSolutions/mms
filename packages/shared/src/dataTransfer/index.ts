@@ -21,6 +21,30 @@ export {
   ImportValidationError,
   UnknownFormatError,
 } from './core/transferErrors.js';
+export {
+  SYSTEM_METADATA_KEYS,
+  isSystemMetadataKey,
+  filterNonMetadataKeys,
+  filterNonMetadataColumns,
+} from './core/systemMetadata.js';
+export type {
+  TransferFieldDefinition,
+  ModuleTransferConfig,
+} from './core/transferFieldDef.js';
+export {
+  createModuleTransferSchema,
+  type ModuleTransferSchema,
+} from './core/moduleTransferSchema.js';
+export {
+  registerModuleTransferSchema,
+  getAllModuleTransferCoverage,
+  getModuleTransferCoverage,
+  getModuleTransferSchema,
+  isModuleTransferImplemented,
+  type ModuleTransferCoverageRecord,
+  type ModuleTransferStatus,
+  type MigrationPriority,
+} from './registry/moduleTransferRegistry.js';
 
 // Export pipeline
 export {
@@ -57,3 +81,6 @@ export {
   generateCsvTemplate,
   type CsvTemplateColumn,
 } from '../csvTemplateGenerator.js';
+
+// Schemas
+export * from './schemas/index.js';

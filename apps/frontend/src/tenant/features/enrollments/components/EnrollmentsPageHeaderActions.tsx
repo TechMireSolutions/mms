@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 
 import { type useTranslation } from "@/hooks/useTranslation";
@@ -11,6 +11,7 @@ export interface EnrollmentsPageHeaderActionsProps {
   t: ReturnType<typeof useTranslation>["t"];
   onExport: () => void;
   onNew: () => void;
+  onImport?: () => void;
 }
 
 export function EnrollmentsPageHeaderActions({
@@ -20,6 +21,7 @@ export function EnrollmentsPageHeaderActions({
   t,
   onExport,
   onNew,
+  onImport,
 }: EnrollmentsPageHeaderActionsProps): React.JSX.Element {
   return (
     <div className="flex items-center gap-2">
@@ -28,6 +30,11 @@ export function EnrollmentsPageHeaderActions({
           {t("common.export")}
         </ActionButton>
       ) : null}
+      {canWriteEnrollments && !showDeleted && onImport && (
+        <ActionButton variant="secondary" icon={Upload} onClick={onImport}>
+          {t("common.import")}
+        </ActionButton>
+      )}
       {canWriteEnrollments && !showDeleted && (
         <ActionButton variant="primary" icon={Plus} onClick={onNew}>
           {t("enrollments.new")}

@@ -6,6 +6,7 @@ import {
   type CsvImportFieldMapping,
   type CsvTemplateColumn,
   type BackgroundJobRecord,
+  type ModuleTransferSchema,
 } from "@mms/shared";
 import { triggerFileDownload } from "@/lib/download";
 import { notify } from "@/lib/notify";
@@ -13,9 +14,10 @@ import { startServerModuleCsvImport } from "@/lib/backgroundJobs/startServerModu
 
 export interface UseModuleCsvImportActionsOptions<TRow = Record<string, unknown>> {
   apiPath: string;
-  moduleId: string;
-  mappings: CsvImportFieldMapping<TRow>[];
-  templateColumns: CsvTemplateColumn[];
+  moduleId?: string;
+  schema?: ModuleTransferSchema<TRow>;
+  mappings?: CsvImportFieldMapping<TRow>[];
+  templateColumns?: CsvTemplateColumn[];
   defaultLabel?: string;
   onSuccess?: () => void;
 }
@@ -23,7 +25,13 @@ export interface UseModuleCsvImportActionsOptions<TRow = Record<string, unknown>
 export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
   options: UseModuleCsvImportActionsOptions<TRow>,
 ) {
-  const { apiPath, moduleId, mappings, templateColumns, defaultLabel, onSuccess } = options;
+  const { apiPath, schema, onSuccess } = options;
+  const effectiveModuleId = schema?.moduleId ?? options.moduleId ?? "module";
+  const effectiveMappings = schema?.importMappings ?? options.mappings ?? [];
+  const effectiveTemplateColumns = schema?.templateColumns ?? options.templateColumns ?? [];
+  const defaultLabel =
+    options.defaultLabel ||
+    (schema ? `Importing ${schema.entityNounPlural}` : `Importing ${effectiveModuleId}`);
   const [isOpen, setIsOpen] = useState(false);
   const [fileName, setFileName] = useState("");
   const [parsedRows, setParsedRows] = useState<TRow[]>([]);
@@ -44,10 +52,13 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
   }, []);
 
   const handleDownloadTemplate = useCallback(() => {
-    const csvContent = generateCsvTemplate(templateColumns);
+    const csvContent = schema
+      ? schema.generateTemplate()
+      : generateCsvTemplate(effectiveTemplateColumns);
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    triggerFileDownload(blob, `${moduleId}_import_template.csv`);
-  }, [moduleId, templateColumns]);
+    const filename = schema?.defaultFilename ?? `${effectiveModuleId}_import_template.csv`;
+    triggerFileDownload(blob, filename);
+  }, [effectiveModuleId, effectiveTemplateColumns, schema]);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
@@ -55,8 +66,9 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
       setFileName(file.name);
       try {
         const text = await file.text();
-        const grid = parseCsvRows(text);
-        const result = mapCsvGridToObjects<TRow>(grid, mappings);
+        const result = schema
+          ? schema.fromImportCsv(text)
+          : mapCsvGridToObjects<TRow>(parseCsvRows(text), effectiveMappings);
 
         setMissingHeaders(result.missingHeaders);
         setRowErrors(result.rowErrors);
@@ -66,7 +78,7 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
         setRowErrors([{ row: 0, error: `Failed to read CSV: ${msg}` }]);
       }
     },
-    [mappings, resetState],
+    [effectiveMappings, resetState, schema],
   );
 
   const handleStartImport = useCallback(async () => {
@@ -79,7 +91,7 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
         path: apiPath,
         body: {
           rows: parsedRows,
-          label: defaultLabel || `Importing ${moduleId}`,
+          label: defaultLabel,
         },
         onProgress: (updatedJob) => {
           if (updatedJob.progress) {
@@ -89,7 +101,7 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
       });
 
       setCompletedJob(job);
-      notify.success(job.label || `Successfully imported ${moduleId}`);
+      notify.success(job.label || `Successfully imported ${effectiveModuleId}`);
       onSuccess?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -97,7 +109,7 @@ export function useModuleCsvImportActions<TRow = Record<string, unknown>>(
     } finally {
       setIsImporting(false);
     }
-  }, [apiPath, defaultLabel, isImporting, moduleId, onSuccess, parsedRows]);
+  }, [apiPath, defaultLabel, effectiveModuleId, isImporting, onSuccess, parsedRows]);
 
   return {
     isOpen,

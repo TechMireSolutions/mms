@@ -16,6 +16,7 @@ import { examinationsUseCases } from '../../examinations/use-cases/examinationsU
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
 import { examinationsReportRoutes } from './examinations/examinationsReportRoutes.js';
 import { examinationContractRouter } from './examinations/examinationContractRouter.js';
+import { examinationsExportRoutes } from './examinations/examinationsExportRoutes.js';
 
 const EXAMS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.collectionKey;
 const RESULTS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.resultsCollectionKey;
@@ -34,6 +35,7 @@ export default async function examinationsRoutes(
     async (sub) => {
       await sub.register(examinationSetupConfigRoutes);
       await sub.register(examinationsReportRoutes);
+      await sub.register(examinationsExportRoutes);
 
       registerMetricsRoute(sub, {
         collection: EXAMS_COLLECTION,

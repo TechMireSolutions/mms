@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { CheckSquare } from 'lucide-react';
-import { TASKS_MODULE_MANIFEST, type TaskRecord, type TaskInsert, type TaskStatus } from '@mms/shared';
+import { TASKS_MODULE_MANIFEST, tasksTransferSchema, type TaskRecord, type TaskInsert, type TaskStatus } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
@@ -23,22 +24,28 @@ import { TasksWorkTab } from './components/TasksWorkTab';
 import { TasksReportsTab } from './components/TasksReportsTab';
 import { TasksSetupTab } from './components/TasksSetupTab';
 import { TaskFormModal } from './components/TaskFormModal';
+import { TasksCsvImportDialog } from './components/TasksCsvImportDialog';
+import { TasksPageHeaderActions } from './components/TasksPageHeaderActions';
 
 export default function TasksPage(): React.JSX.Element {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
   const [viewingDeleted, setViewingDeleted] = useDirectoryTrashState();
-  const {
-    selectedIds,
-    toggleSelected,
-    toggleSelectAll,
-    clearSelection,
-  } = useWorkSelection<string>();
+  const { selectedIds, toggleSelected, toggleSelectAll, clearSelection } = useWorkSelection<string>();
 
   const { canRead, canWrite, canDelete, canEditSetup, canViewSetup } =
     useModulePermissions(TASKS_MODULE_MANIFEST);
+
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/tasks/export/csv',
+    filename: 'tasks.csv',
+    auditPath: '/api/tasks/export-audit',
+    columns: tasksTransferSchema.exportColumns,
+    canExport: canRead,
+  });
 
   const { data: tasksData, isLoading: tasksLoading } = useTasks({
     includeDeleted: viewingDeleted,
@@ -54,28 +61,20 @@ export default function TasksPage(): React.JSX.Element {
   const tasks = tasksData?.tasks ?? [];
 
   const handleOpenCreate = () => {
-    if (viewingDeleted) return;
-    setEditingTask(null);
-    setFormOpen(true);
+    if (!viewingDeleted) { setEditingTask(null); setFormOpen(true); }
   };
 
   const handleOpenEdit = (task: TaskRecord) => {
-    if (viewingDeleted) return;
-    setEditingTask(task);
-    setFormOpen(true);
+    if (!viewingDeleted) { setEditingTask(task); setFormOpen(true); }
   };
 
   const handleSave = async (data: TaskInsert) => {
-    if (editingTask) {
-      await updateTaskMutation.mutateAsync({ id: editingTask.id, data });
-    } else {
-      await createTaskMutation.mutateAsync(data);
-    }
+    if (editingTask) await updateTaskMutation.mutateAsync({ id: editingTask.id, data });
+    else await createTaskMutation.mutateAsync(data);
   };
 
   const handleUpdateStatus = (id: string, status: TaskStatus) => {
-    if (viewingDeleted) return;
-    updateStatusMutation.mutate({ id, status });
+    if (!viewingDeleted) updateStatusMutation.mutate({ id, status });
   };
 
   const handleDelete = (id: string) => {
@@ -113,6 +112,17 @@ export default function TasksPage(): React.JSX.Element {
       headerIcon={CheckSquare}
       headerTitle={t('nav.tasks')}
       headerSubtitle={t('page.tasks.subtitle')}
+      headerActions={
+        <TasksPageHeaderActions
+          canWrite={canWrite}
+          canExport={canRead}
+          showDeleted={viewingDeleted}
+          isExporting={isExporting}
+          onCreate={handleOpenCreate}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
+        />
+      }
       metricsStrip={
         <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
           <span>
@@ -175,6 +185,12 @@ export default function TasksPage(): React.JSX.Element {
         onClose={() => setFormOpen(false)}
         initialData={editingTask}
         onSave={handleSave}
+      />
+
+      <TasksCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={canWrite}
       />
     </ModulePageShell>
   );

@@ -6,9 +6,12 @@ import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { questionBankTransferSchema } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { QuestionBankCommandMetrics } from '@/tenant/features/question-bank/components/QuestionBankCommandMetrics';
 import { QuestionBankModalLayer } from '@/tenant/features/question-bank/components/QuestionBankModalLayer';
 import { QuestionBankPageActions } from '@/tenant/features/question-bank/components/QuestionBankPageActions';
+import { QuestionBankCsvImportDialog } from '@/tenant/features/question-bank/components/QuestionBankCsvImportDialog';
 import { QuestionBankWorkTier } from '@/tenant/features/question-bank/components/QuestionBankWorkTier';
 import { QuestionBankDetail } from '@/tenant/features/question-bank/components/QuestionBankDetail';
 import { useQuestionBankPageController } from '@/tenant/features/question-bank/hooks/useQuestionBankPageController';
@@ -29,6 +32,14 @@ const QuestionBankSetupTier = lazy(() =>
  */
 export default function QuestionBankPage(): JSX.Element {
   const c = useQuestionBankPageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/question-bank/export/csv',
+    filename: 'question-bank.csv',
+    auditPath: '/api/question-bank/export-audit',
+    columns: questionBankTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
 
   return (
     <ModulePageShell
@@ -40,9 +51,13 @@ export default function QuestionBankPage(): JSX.Element {
       headerActions={
         <QuestionBankPageActions
           canWrite={c.canWrite}
+          canExport={c.canWrite}
+          isExporting={isExporting}
           showDeleted={c.showDeleted}
           onCreatePaper={c.openCreatePaper}
           onAddQuestion={c.openAddQuestion}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
         />
       }
       metricsStrip={
@@ -151,6 +166,11 @@ export default function QuestionBankPage(): JSX.Element {
         onSaveTest={c.handleSaveTest}
         onCloseQuestion={c.closeQuestionModal}
         onSaveQuestion={c.handleQuestionSave}
+      />
+      <QuestionBankCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWrite}
       />
     </ModulePageShell>
   );

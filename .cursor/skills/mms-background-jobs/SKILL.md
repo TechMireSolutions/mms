@@ -33,6 +33,10 @@ For report packs use a cutoff-consistent dataset and retain evidence per [closin
 - Runners: `apps/backend/src/services/backgroundJobRunnerService.ts`
 - Artifacts: `apps/backend/src/services/exportArtifactService.ts`
 - Frontend API/store: `apps/frontend/src/lib/backgroundJobs/`
+- Data transfer SSOT: `packages/shared/src/dataTransfer/` (`createModuleTransferSchema`, `buildExportGrid`, `moduleTransferRegistry`)
+- Frontend transfer actions: `apps/frontend/src/lib/backgroundJobs/useModuleCsvImportActions.ts`, `useModuleServerCsvExportActions.ts`
+- Generic import dialog: `apps/frontend/src/components/ui/ModuleImportDialog.tsx`
+- Backend route helpers: `apps/backend/src/lib/registerModuleCsvImportRoutes.ts`, `registerModuleCsvExportRoutes.ts`
 - Tray: `apps/frontend/src/components/ui/BackgroundJobsTray.tsx`
 - Hook: `apps/frontend/src/tenant/hooks/useBackgroundJobs.ts`
 
@@ -69,6 +73,7 @@ For report packs use a cutoff-consistent dataset and retain evidence per [closin
 - [ ] Progress/result/failure are user-visible
 - [ ] Download requires current user ownership
 - [ ] Export respects field visibility and soft-delete policy
+- [ ] Module CSV import/export adheres to @mms/shared data transfer schemas (Field Whitelist, 1:1 header symmetry)
 - [ ] Sensitive job is audited
 - [ ] W3C traceparent propagated as correlation ID in audit events
 - [ ] Scheduled verification runner registered for audit integrity

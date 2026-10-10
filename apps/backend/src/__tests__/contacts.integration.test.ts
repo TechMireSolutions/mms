@@ -182,7 +182,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 import { buildApp } from '../app.js';
 import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { accountantToken, adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
-import { DEFAULT_CONTACT_EXPORT_COLUMNS } from '@mms/shared';
+import { DEFAULT_CONTACT_EXPORT_COLUMNS, filterNonMetadataColumns } from '@mms/shared';
 
 
 const sampleContact = {
@@ -869,7 +869,7 @@ describe('contacts REST routes', () => {
       'u-accountant',
       expect.objectContaining({ moduleId: 'contacts', kind: 'export', label: 'Full Contacts CSV' }),
       expect.objectContaining({
-        columns: DEFAULT_CONTACT_EXPORT_COLUMNS,
+        columns: filterNonMetadataColumns(DEFAULT_CONTACT_EXPORT_COLUMNS),
       }),
     );
     await app.close();

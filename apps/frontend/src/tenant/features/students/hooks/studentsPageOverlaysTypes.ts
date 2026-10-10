@@ -35,6 +35,8 @@ export type StudentsPageOverlaysProps = {
   onPrintIdCard?: (student: Student) => void;
   onViewStudent?: (student: Student) => void;
   onViewContact?: (contactId: string | number) => void;
+  importOpen?: boolean;
+  onCloseImport?: () => void;
 };
 
 /** Work-tier interaction slice of page-owned overlays (list + bulk bar). */

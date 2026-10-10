@@ -20,6 +20,22 @@ describe("EnrollmentsPageHeaderActions Component", () => {
     expect(html).toContain("enrollments.new");
   });
 
+  it("renders import button when onImport is provided and canWriteEnrollments is true", () => {
+    const html = renderToStaticMarkup(
+      <EnrollmentsPageHeaderActions
+        canExport={true}
+        canWriteEnrollments={true}
+        showDeleted={false}
+        t={((k: string) => k) as any}
+        onExport={vi.fn()}
+        onNew={vi.fn()}
+        onImport={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("common.import");
+  });
+
   it("hides buttons when in trash/deleted view", () => {
     const html = renderToStaticMarkup(
       <EnrollmentsPageHeaderActions

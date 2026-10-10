@@ -6,10 +6,13 @@ import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { examinationsTransferSchema } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { ExaminationsCommandMetrics } from '@/tenant/features/examinations/components/ExaminationsCommandMetrics';
 import { ExaminationsModalLayer } from '@/tenant/features/examinations/components/ExaminationsModalLayer';
 import { ExaminationsPageActions } from '@/tenant/features/examinations/components/ExaminationsPageActions';
 import { ExaminationsWorkTier } from '@/tenant/features/examinations/components/ExaminationsWorkTier';
+import { ExaminationsCsvImportDialog } from '@/tenant/features/examinations/components/ExaminationsCsvImportDialog';
 import { useExaminationsPageController } from '@/tenant/features/examinations/hooks/useExaminationsPageController';
 
 const ExaminationDetail = React.lazy(() =>
@@ -34,6 +37,14 @@ const ExaminationsSetupTier = React.lazy(() =>
  */
 export default function Examinations(): React.JSX.Element {
   const c = useExaminationsPageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/examinations/export/csv',
+    filename: 'examinations.csv',
+    auditPath: '/api/examinations/export-audit',
+    columns: examinationsTransferSchema.exportColumns,
+    canExport: c.canWrite,
+  });
 
   return (
     <ModulePageShell
@@ -45,9 +56,13 @@ export default function Examinations(): React.JSX.Element {
       headerActions={
         <ExaminationsPageActions
           canWrite={c.canWrite}
+          canExport={c.canWrite}
+          isExporting={isExporting}
           showDeleted={c.showDeleted}
           onEnterMarks={() => c.setShowMarksModal(true)}
           onCreateExam={c.openCreateExam}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
         />
       }
       metricsStrip={
@@ -82,6 +97,7 @@ export default function Examinations(): React.JSX.Element {
                 <ModuleEntityIoToolbar
                   canWrite={c.canWrite}
                   viewingDeleted={c.showDeleted}
+                  onImport={() => setImportOpen(true)}
                   onAdd={c.openCreateExam}
                   addLabel={c.t('examinations.newExam')}
                   addIcon={Plus}
@@ -158,6 +174,12 @@ export default function Examinations(): React.JSX.Element {
         onSaveExam={c.handleSaveExam}
         onCloseMarks={() => c.setShowMarksModal(false)}
         onSaveResults={c.handleSaveResults}
+      />
+
+      <ExaminationsCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWrite}
       />
     </ModulePageShell>
   );

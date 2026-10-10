@@ -18,6 +18,7 @@ import { questionBankUseCases } from '../../questionBank/use-cases/questionBankU
 
 import { questionBankSetupConfigRoutes } from './questionBankSetupConfigRoutes.js';
 import { questionBankContractRouter } from './questionBank/questionBankContractRouter.js';
+import { questionBankExportRoutes } from './questionBank/questionBankExportRoutes.js';
 
 const QUESTIONS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.collectionKey;
 const TESTS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey;
@@ -36,6 +37,7 @@ export default async function questionBankRoutes(
   await fastify.register(
     async (sub) => {
       await sub.register(questionBankSetupConfigRoutes);
+      await sub.register(questionBankExportRoutes);
 
       registerMetricsRoute(sub, {
         collection: QUESTIONS_COLLECTION,

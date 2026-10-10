@@ -1,3 +1,4 @@
+import { isSystemMetadataKey } from '@mms/shared';
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 
 export interface GridExportColumn {
@@ -13,12 +14,15 @@ export function runGridCsvExportJob(options: {
   columns: GridExportColumn[];
   rows: Record<string, unknown>[];
 }): void {
-  const colCount = options.columns.length;
+  const safeColumns = options.columns.filter(
+    (c) => !isSystemMetadataKey(c.key) && !isSystemMetadataKey(c.header),
+  );
+  const colCount = safeColumns.length;
   const header = new Array<string>(colCount);
   const keys = new Array<string>(colCount);
   for (let j = 0; j < colCount; j++) {
-    header[j] = options.columns[j].header;
-    keys[j] = options.columns[j].key;
+    header[j] = safeColumns[j].header;
+    keys[j] = safeColumns[j].key;
   }
 
   const rowCount = options.rows.length;

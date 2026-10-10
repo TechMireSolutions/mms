@@ -167,6 +167,8 @@ export function ModuleImportDialog<TRow = Record<string, unknown>>({
             title="Drop CSV file here"
             description="or click to browse from your device (.csv format)"
             inputAriaLabel="Upload CSV file"
+            inputId="module-csv-file-input"
+            inputName="file"
             accept=".csv,text/csv"
             className="bg-card"
           />

@@ -4,10 +4,13 @@ import { UserCheck, ClipboardEdit } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleEntityIoToolbar } from '@/components/ui/ModuleEntityIoToolbar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { ActionButton } from '@/components/ui/ActionButton';
 import { AttendanceCommandMetrics } from '@/tenant/features/attendance/components/AttendanceCommandMetrics';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { attendanceTransferSchema } from '@mms/shared';
+import { useGenericModuleExport } from '@/lib/backgroundJobs/useGenericModuleExport';
 import { AttendanceWorkTier } from '@/tenant/features/attendance/components/AttendanceWorkTier';
+import { AttendanceCsvImportDialog } from '@/tenant/features/attendance/components/AttendanceCsvImportDialog';
+import { AttendancePageHeaderActions } from '@/tenant/features/attendance/components/AttendancePageHeaderActions';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useAttendancePageController } from '@/tenant/features/attendance/hooks/useAttendancePageController';
@@ -26,44 +29,19 @@ const AttendanceSetupTier = React.lazy(() =>
 const MessageComposer = React.lazy(() => import('@/tenant/components/messaging/TenantMessageComposer'));
 
 export default function Attendance() {
-  const {
-    t,
-    can,
-    role,
-    filters,
-    setFilters,
-    showDeleted,
-    setShowDeleted,
-    setActiveTab,
-    setActiveOpsTab,
-    setActiveAnalyticsTab,
-    attendanceCollectionQuery,
-    activeAttendanceRecords,
-    shownCount,
-    setShownCount,
-    columnLayout,
-    messagingTarget,
-    closeComposer,
-    handleMessageAttendance,
-    persistRecords,
-    handleUpdateRecord,
-    handleDeleteRecord,
-    handleRestoreRecord,
-    handleBulkDeleteRecords,
-    handleBulkRestoreRecords,
-    canWriteAttendance,
-    canDeleteAttendance,
-    visibleTopTabs,
-    visibleOperationsTabs,
-    visibleAnalyticsTabs,
-    effectiveTab,
-    effectiveOpsTab,
-    effectiveAnalyticsTab,
-  } = useAttendancePageController();
+  const c = useAttendancePageController();
+  const [importOpen, setImportOpen] = React.useState(false);
+  const { handleExport, isExporting } = useGenericModuleExport({
+    path: '/api/attendance/export/csv',
+    filename: 'attendance.csv',
+    auditPath: '/api/attendance/export-audit',
+    columns: attendanceTransferSchema.exportColumns,
+    canExport: c.canWriteAttendance,
+  });
 
   const renderContent = () => {
-    if (!effectiveTab) return null;
-    if (effectiveTab === 'setup') {
+    if (!c.effectiveTab) return null;
+    if (c.effectiveTab === 'setup') {
       return (
         <React.Suspense fallback={<RouteStatusFallback />}>
           <AttendanceSetupTier />
@@ -71,15 +49,15 @@ export default function Attendance() {
       );
     }
 
-    if (effectiveTab === 'reports') {
+    if (c.effectiveTab === 'reports') {
       return (
         <React.Suspense fallback={<RouteStatusFallback />}>
           <AttendanceReportsTier
-            role={role}
-            filters={filters}
-            analyticsTabs={visibleAnalyticsTabs}
-            activeAnalyticsTab={effectiveAnalyticsTab}
-            onAnalyticsTabChange={setActiveAnalyticsTab}
+            role={c.role}
+            filters={c.filters}
+            analyticsTabs={c.visibleAnalyticsTabs}
+            activeAnalyticsTab={c.effectiveAnalyticsTab}
+            onAnalyticsTabChange={c.setActiveAnalyticsTab}
           />
         </React.Suspense>
       );
@@ -88,107 +66,108 @@ export default function Attendance() {
     return (
       <div className="space-y-5">
         <ModuleEntityIoToolbar
-          canWrite={canWriteAttendance}
-          viewingDeleted={showDeleted}
+          canWrite={c.canWriteAttendance}
+          viewingDeleted={c.showDeleted}
+          onImport={() => setImportOpen(true)}
           onAdd={() => {
-            setActiveTab('work');
-            setActiveOpsTab('mark');
+            c.setActiveTab('work');
+            c.setActiveOpsTab('mark');
           }}
-          addLabel={t('attendance.tabs.mark')}
+          addLabel={c.t('attendance.tabs.mark')}
           addIcon={ClipboardEdit}
         />
         <AttendanceWorkTier
-        filters={filters}
-        role={role}
-        activeRecords={activeAttendanceRecords}
-        activeOpsTab={effectiveOpsTab}
-        operationsTabs={visibleOperationsTabs}
-        showDeleted={showDeleted}
-        canDeleteAttendance={canDeleteAttendance}
-        showRoleBanner={!can('users.manage')}
-        roleLabel={t('attendance.roleBanner.label', { role })}
-        teacherRoleText={can('attendance.write') && !can('finance.write') && t('attendance.roleBanner.teacher')}
-        accountantRoleText={can('finance.write') && !can('attendance.write') && t('attendance.roleBanner.accountant')}
-        showActiveLabel={t('attendance.showActive')}
-        showDeletedLabel={t('attendance.showDeleted')}
-        onFiltersChange={setFilters}
-        onOpsTabChange={setActiveOpsTab}
-        onShowDeletedToggle={() => setShowDeleted((current) => !current)}
-        onPersistRecords={persistRecords}
-        onUpdateRecord={handleUpdateRecord}
-        onDeleteRecord={handleDeleteRecord}
-        onRestoreRecord={handleRestoreRecord}
-        onBulkDeleteRecords={handleBulkDeleteRecords}
-        onBulkRestoreRecords={handleBulkRestoreRecords}
-        onMessage={handleMessageAttendance}
-        onTotalChange={setShownCount}
-        columnProps={{
-          isColumnVisible: columnLayout.isColumnVisible,
-          getColumnWidth: columnLayout.getColumnWidth,
-          onColumnResize: columnLayout.setColumnWidth,
-          columnCustomizer: {
-            columnRegistry: columnLayout.columnRegistry,
-            updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-            onResetLayout: columnLayout.resetColumnLayout,
-            labels: columnLayout.customizerLabels,
-          },
-        }}
-      />
+          filters={c.filters}
+          role={c.role}
+          activeRecords={c.activeAttendanceRecords}
+          activeOpsTab={c.effectiveOpsTab}
+          operationsTabs={c.visibleOperationsTabs}
+          showDeleted={c.showDeleted}
+          canDeleteAttendance={c.canDeleteAttendance}
+          showRoleBanner={!c.can('users.manage')}
+          roleLabel={c.t('attendance.roleBanner.label', { role: c.role })}
+          teacherRoleText={c.can('attendance.write') && !c.can('finance.write') && c.t('attendance.roleBanner.teacher')}
+          accountantRoleText={c.can('finance.write') && !c.can('attendance.write') && c.t('attendance.roleBanner.accountant')}
+          showActiveLabel={c.t('attendance.showActive')}
+          showDeletedLabel={c.t('attendance.showDeleted')}
+          onFiltersChange={c.setFilters}
+          onOpsTabChange={c.setActiveOpsTab}
+          onShowDeletedToggle={() => c.setShowDeleted((current) => !current)}
+          onPersistRecords={c.persistRecords}
+          onUpdateRecord={c.handleUpdateRecord}
+          onDeleteRecord={c.handleDeleteRecord}
+          onRestoreRecord={c.handleRestoreRecord}
+          onBulkDeleteRecords={c.handleBulkDeleteRecords}
+          onBulkRestoreRecords={c.handleBulkRestoreRecords}
+          onMessage={c.handleMessageAttendance}
+          onTotalChange={c.setShownCount}
+          columnProps={{
+            isColumnVisible: c.columnLayout.isColumnVisible,
+            getColumnWidth: c.columnLayout.getColumnWidth,
+            onColumnResize: c.columnLayout.setColumnWidth,
+            columnCustomizer: {
+              columnRegistry: c.columnLayout.columnRegistry,
+              updateUserColumnLayout: c.columnLayout.updateUserColumnLayout,
+              onResetLayout: c.columnLayout.resetColumnLayout,
+              labels: c.columnLayout.customizerLabels,
+            },
+          }}
+        />
       </div>
     );
   };
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t('nav.attendance')}`}
-      seoDescription={t('page.attendance.subtitle')}
+      seoTitle={`MMS - ${c.t('nav.attendance')}`}
+      seoDescription={c.t('page.attendance.subtitle')}
       headerIcon={UserCheck}
-      headerTitle={t('nav.attendance')}
-      headerSubtitle={t('page.attendance.subtitle')}
+      headerTitle={c.t('nav.attendance')}
+      headerSubtitle={c.t('page.attendance.subtitle')}
       headerActions={
-        canWriteAttendance && !showDeleted ? (
-          <ActionButton
-            variant="primary"
-            icon={ClipboardEdit}
-            onClick={() => {
-              setActiveTab('work');
-              setActiveOpsTab('mark');
-            }}
-          >
-            {t('attendance.tabs.mark')}
-          </ActionButton>
-        ) : undefined
+        <AttendancePageHeaderActions
+          canWrite={c.canWriteAttendance}
+          canExport={c.canWriteAttendance}
+          showDeleted={c.showDeleted}
+          isExporting={isExporting}
+          onMarkAttendance={() => {
+            c.setActiveTab('work');
+            c.setActiveOpsTab('mark');
+          }}
+          onImport={() => setImportOpen(true)}
+          onExport={handleExport}
+        />
       }
       metricsStrip={
         <AttendanceCommandMetrics
-          total={shownCount}
-          shown={shownCount}
-          selectedDate={filters.date}
+          total={c.shownCount}
+          shown={c.shownCount}
+          selectedDate={c.filters.date}
         />
       }
     >
       <ResponsiveAccordionTabs
-        tabs={visibleTopTabs}
-        activeTab={effectiveTab}
-        onTabChange={setActiveTab}
+        tabs={c.visibleTopTabs}
+        activeTab={c.effectiveTab}
+        onTabChange={c.setActiveTab}
         hideWhenSingle
         panelIdPrefix="attendance-tab"
       >
         <AnimatePresence mode="wait">
           <motion.div
-            key={effectiveTab + '-' + effectiveOpsTab + '-' + role}
+            key={c.effectiveTab + '-' + c.effectiveOpsTab + '-' + c.role}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <ErrorBoundary>
-              {attendanceCollectionQuery.isError ? (
+              {c.attendanceCollectionQuery.isError ? (
                 <ErrorState
-                  title={t('attendance.toast.loadFailed')}
-                  description={t('attendance.loadFailedHint')}
+                  title={c.t('attendance.toast.loadFailed')}
+                  description={c.t('attendance.loadFailedHint')}
                   onRetry={() => {
-                    void attendanceCollectionQuery.refetch();
+                    void c.attendanceCollectionQuery.refetch();
                   }}
                 />
               ) : renderContent()}
@@ -197,15 +176,21 @@ export default function Attendance() {
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      {messagingTarget && (
+      {c.messagingTarget && (
         <React.Suspense fallback={null}>
           <MessageComposer
-            channel={messagingTarget.channel}
-            recipients={messagingTarget.recipients}
-            onClose={closeComposer}
+            channel={c.messagingTarget.channel}
+            recipients={c.messagingTarget.recipients}
+            onClose={c.closeComposer}
           />
         </React.Suspense>
       )}
+
+      <AttendanceCsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        canWrite={c.canWriteAttendance}
+      />
     </ModulePageShell>
   );
 }
