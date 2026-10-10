@@ -1,7 +1,7 @@
 import { and, eq, gte, ilike, isNull, lte, or, sql, desc } from 'drizzle-orm';
 import { messageLogs } from '../schema.js';
 import type { Message } from '@mms/shared';
-import { MESSAGE_LOGS_DEFAULT_PAGE_SIZE } from '@mms/shared';
+import { MESSAGE_LOGS_DEFAULT_PAGE_SIZE, toSqlSearchPattern } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 import { logRowToRecord } from './messagingLogsRepository.js';
 
@@ -82,7 +82,7 @@ export async function queryFilteredMessageLogs(
     }
 
     if (query.search?.trim()) {
-      const s = `%${query.search.trim()}%`;
+      const s = toSqlSearchPattern(query.search.trim());
       conditions.push(
         or(
           ilike(messageLogs.body, s),

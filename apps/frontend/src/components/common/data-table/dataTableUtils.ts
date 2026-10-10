@@ -72,7 +72,24 @@ function matchesFilters<TData>(
   });
 }
 
-/** Search across visible columns (case/locale-insensitive) and apply facet filters. */
+/** Tests if haystack matches a search term, supporting wildcards (* and ?). */
+export function matchesSearchPattern(haystack: string, term: string): boolean {
+  if (!term) return true;
+  if (term.includes("*") || term.includes("?")) {
+    const regexPattern = term
+      .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, ".*")
+      .replace(/\?/g, ".");
+    try {
+      return new RegExp(regexPattern, "i").test(haystack);
+    } catch {
+      return haystack.includes(term);
+    }
+  }
+  return haystack.includes(term);
+}
+
+/** Search across visible columns with wildcards (case/locale-insensitive) and apply facet filters. */
 export function filterDataTableRows<TData>(
   rows: readonly TData[],
   visibleColumns: readonly DataTableColumn<TData>[],
@@ -88,6 +105,35 @@ export function filterDataTableRows<TData>(
       .map((column) => toSearchText(column.searchValue ? column.searchValue(row) : defaultSearchValue(row, column.id)))
       .join(" ")
       .toLocaleLowerCase();
-    return terms.every((term) => haystack.includes(term));
+    return terms.every((term) => matchesSearchPattern(haystack, term));
+  });
+}
+
+function compareSearchValues(a: unknown, b: unknown): number {
+  if (a === b) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  const strA = String(a).trim();
+  const strB = String(b).trim();
+  return strA.localeCompare(strB, undefined, { numeric: true, sensitivity: "base" });
+}
+
+/** Sort rows by active sort field and direction. */
+export function sortDataTableRows<TData>(
+  rows: readonly TData[],
+  visibleColumns: readonly DataTableColumn<TData>[],
+  sortField?: string,
+  sortDir: "asc" | "desc" = "asc",
+): TData[] {
+  if (!sortField) return [...rows];
+  const col = visibleColumns.find((c) => (c.sortField || c.id) === sortField);
+  const key = col?.sortField || col?.id || sortField;
+
+  return [...rows].sort((a, b) => {
+    const valA = col?.searchValue ? col.searchValue(a) : defaultSearchValue(a, key);
+    const valB = col?.searchValue ? col.searchValue(b) : defaultSearchValue(b, key);
+    const diff = compareSearchValues(valA, valB);
+    return sortDir === "desc" ? -diff : diff;
   });
 }

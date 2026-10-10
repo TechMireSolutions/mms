@@ -1,5 +1,5 @@
 import { eq, ilike, or, isNull, isNotNull, exists, type SQL, type AnyColumn, desc, asc, sql } from 'drizzle-orm';
-import { isQueryFlagTrue, type AccountingListQuery } from '@mms/shared';
+import { isQueryFlagTrue, toSqlSearchPattern, type AccountingListQuery } from '@mms/shared';
 import {
   accountingAccounts,
   accountingEntries,
@@ -19,7 +19,7 @@ export function buildAccountListConditions(subdomain: string, query: AccountingL
 
   const search = query.search?.trim();
   if (search) {
-    const searchPattern = `%${search}%`;
+    const searchPattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(accountingAccounts.id, searchPattern),
@@ -53,7 +53,7 @@ export function buildEntryListConditions(subdomain: string, query: AccountingLis
 
   const search = query.search?.trim();
   if (search) {
-    const searchPattern = `%${search}%`;
+    const searchPattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(accountingEntries.id, searchPattern),
@@ -126,7 +126,7 @@ export function buildFiscalYearListConditions(subdomain: string, query: Accounti
 
   const search = query.search?.trim();
   if (search) {
-    const searchPattern = `%${search}%`;
+    const searchPattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(accountingFiscalYears.id, searchPattern),

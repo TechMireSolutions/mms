@@ -3,6 +3,7 @@ import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
   OPEN_INVOICE_STATUSES,
+  toSqlSearchPattern,
   type FinanceCommandMetricsSnapshot,
   type FinanceListQuery,
   type FinanceInvoicesListPageResult,
@@ -24,7 +25,7 @@ function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery):
   
   const search = query.search?.trim();
   if (search) {
-    const searchPattern = `%${search}%`;
+    const searchPattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(financeInvoices.id, searchPattern),
@@ -50,7 +51,7 @@ function buildPaymentListConditions(subdomain: string, query: FinanceListQuery):
   
   const search = query.search?.trim();
   if (search) {
-    const searchPattern = `%${search}%`;
+    const searchPattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(financePayments.id, searchPattern),

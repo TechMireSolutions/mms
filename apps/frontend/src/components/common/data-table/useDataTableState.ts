@@ -12,6 +12,7 @@ import {
   countActiveFilters,
   filterDataTableRows,
   resolveVisibleColumns,
+  sortDataTableRows,
 } from "./dataTableUtils";
 
 export interface UseDataTableStateOptions<TData> {
@@ -47,9 +48,28 @@ export function useDataTableState<TData>({
     [columns, layout.columnRegistry],
   );
 
-  const rows = useMemo(
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const handleSort = useCallback((field: string) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        return field;
+      }
+      setSortDir("asc");
+      return field;
+    });
+  }, []);
+
+  const filteredRows = useMemo(
     () => filterDataTableRows(data, visibleColumns, search, filters, filterSelection),
     [data, visibleColumns, search, filters, filterSelection],
+  );
+
+  const rows = useMemo(
+    () => sortDataTableRows(filteredRows, visibleColumns, sortField, sortDir),
+    [filteredRows, visibleColumns, sortField, sortDir],
   );
 
   const toggleFilterValue = useCallback((filterId: string, value: string) => {
@@ -79,6 +99,9 @@ export function useDataTableState<TData>({
     setViewMode,
     visibleColumns,
     rows,
+    sortField,
+    sortDir,
+    handleSort,
     layout,
   };
 }

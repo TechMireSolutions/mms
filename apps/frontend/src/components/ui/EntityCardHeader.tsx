@@ -54,7 +54,7 @@ export const EntityCardHeader = (function EntityCardHeader({
       <div className="min-w-0 flex-1">
         <BiDiText
           as="h4"
-          className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors"
+          className="text-sm font-black text-foreground tracking-tight text-wrap break-words group-hover:text-primary transition-colors"
           titleFromContent
         >
           {displayName}

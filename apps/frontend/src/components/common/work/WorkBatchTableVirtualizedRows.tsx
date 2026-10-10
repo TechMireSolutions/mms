@@ -5,7 +5,7 @@ import type { WorkBatchTableColumn } from "./workBatchTableTypes";
 
 export interface WorkBatchTableVirtualizedRowsProps<TData extends { id: string | number }> {
   virtualItems: VirtualItem[];
-  activeRows: TData[];
+  activeRows: readonly TData[];
   selectedSet: Set<string | number>;
   totalColSpan: number;
   totalSize: number;

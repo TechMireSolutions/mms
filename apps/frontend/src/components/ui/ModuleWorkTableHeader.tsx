@@ -89,7 +89,7 @@ export function ModuleWorkTableHeader<
               onSort={onSort}
               width={width}
               onResize={setColumnWidth}
-              className={cn("px-4 py-3 whitespace-nowrap", stickyClass, col.headerClassName)}
+              className={cn("px-4 py-3 text-wrap break-words", stickyClass, col.headerClassName)}
             >
               {col.label}
             </ModuleTableHeaderCell>
