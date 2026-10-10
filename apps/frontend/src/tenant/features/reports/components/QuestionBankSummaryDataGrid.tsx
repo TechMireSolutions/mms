@@ -2,15 +2,7 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { ReportDataGridContainer } from '@/components/ui/reports/ReportDataGridContainer';
-import { MutedTableHeaderRow } from '@/components/ui/reports/FinancialDebitCreditTableChrome';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
 import type { QuestionBankSummaryRow } from '@/tenant/features/reports/controllers/useQuestionBankReportData';
 
 export interface QuestionBankSummaryDataGridProps {
@@ -33,41 +25,44 @@ export function QuestionBankSummaryDataGrid({
       hideExport={summaryRows.length === 0}
     >
       <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <MutedTableHeaderRow>
-              <TableHead className="px-4 py-2.5 font-bold">{t('common.type')}</TableHead>
-              <TableHead className="px-4 py-2.5 font-bold">{t('common.label')}</TableHead>
-              <TableHead variant="badge" className="px-4 py-2.5 font-bold">
-                {t('questionBank.questions')}
-              </TableHead>
-              <TableHead variant="badge" className="px-4 py-2.5 font-bold">
-                {t('questionBank.report.generatedTests')}
-              </TableHead>
-            </MutedTableHeaderRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-border/50">
-            {summaryRows.map((row) => (
-              <TableRow
-                key={`${row.type}-${row.name}`}
-                className="hover:bg-muted/20 transition-colors"
-              >
-                <TableCell className="px-4 py-2.5 text-xs text-muted-foreground uppercase font-bold">
-                  {row.type}
-                </TableCell>
-                <TableCell className="px-4 py-2.5 font-medium text-foreground">
-                  {row.name}
-                </TableCell>
-                <TableCell variant="badge" noWrap className="px-4 py-2.5 font-semibold text-primary">
-                  {row.questions}
-                </TableCell>
-                <TableCell variant="badge" noWrap className="px-4 py-2.5 text-muted-foreground">
-                  {row.tests}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <WorkBatchTable
+          data={summaryRows.map(row => ({ ...row, id: `${row.type}-${row.name}` }))}
+          columns={[
+            {
+              id: "type",
+              label: t('common.type'),
+              headerClassName: "font-bold",
+              cellClassName: "text-xs text-muted-foreground uppercase font-bold",
+              render: (row) => row.type,
+            },
+            {
+              id: "name",
+              label: t('common.label'),
+              headerClassName: "font-bold",
+              cellClassName: "font-medium text-foreground",
+              render: (row) => row.name,
+            },
+            {
+              id: "questions",
+              label: t('questionBank.questions'),
+              headerClassName: "font-bold",
+              cellClassName: "font-semibold text-primary",
+              align: "center",
+              noWrap: true,
+              render: (row) => row.questions,
+            },
+            {
+              id: "tests",
+              label: t('questionBank.report.generatedTests'),
+              headerClassName: "font-bold",
+              cellClassName: "text-muted-foreground",
+              align: "center",
+              noWrap: true,
+              render: (row) => row.tests,
+            },
+          ]}
+          bordered={false}
+        />
       </div>
       <div className="divide-y divide-border/50 md:hidden" role="list">
         {summaryRows.map((row) => (

@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { WorkBatchTable } from '@/components/common/work/WorkBatchTable';
 import { cn } from '@/lib/utils';
 import type { FinancialLedgerRow } from '@mms/shared';
 
@@ -63,49 +55,43 @@ export function FinancialLedgerTable({
     credit: columnLabels?.credit ?? 'Credit',
   };
 
+  const dataWithIds = rows.map((r, i) => ({ ...r, id: String(i) }));
+
   return (
-    <div className={cn('overflow-x-auto rounded-xl border border-border', className)}>
-      <Table className="min-w-review-panel w-full">
-        <TableCaption className="sr-only">{caption}</TableCaption>
-        <TableHeader>
-          <TableRow className="border-b border-border bg-surface-table-header">
-            <TableHead className="table-header-cell">{labels.account}</TableHead>
-            <TableHead noWrap align="end" className="table-header-cell">{labels.debit}</TableHead>
-            <TableHead noWrap align="end" className="table-header-cell">{labels.credit}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row, i) => {
-            const variant = row.variant ?? 'neutral';
-            const rowClass = ROW_VARIANT_CLASS[variant];
-            return (
-              <TableRow key={i} className={rowClass}>
-                <TableCell className="px-3 py-2 font-semibold text-foreground">
-                  {row.account}
-                </TableCell>
-                <TableCell
-                  noWrap
-                  className={cn(
-                    'table-amount-cell',
-                    variant === 'debit' ? 'text-info' : 'text-muted-foreground',
-                  )}
-                >
-                  {row.debit ?? PLACEHOLDER}
-                </TableCell>
-                <TableCell
-                  noWrap
-                  className={cn(
-                    'table-amount-cell',
-                    variant === 'credit' ? 'text-success' : 'text-muted-foreground',
-                  )}
-                >
-                  {row.credit ?? PLACEHOLDER}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <WorkBatchTable
+      caption={caption}
+      data={dataWithIds}
+      className={className}
+      bordered={true}
+      rowClassName={(row) => ROW_VARIANT_CLASS[row.variant ?? 'neutral']}
+      columns={[
+        {
+          id: 'account',
+          label: labels.account,
+          cellClassName: 'px-3 py-2 font-semibold text-foreground',
+          render: (row) => row.account,
+        },
+        {
+          id: 'debit',
+          label: labels.debit,
+          variant: 'currency',
+          cellClassName: (row) => cn(
+            'table-amount-cell',
+            row.variant === 'debit' ? 'text-info' : 'text-muted-foreground',
+          ),
+          render: (row) => row.debit ?? PLACEHOLDER,
+        },
+        {
+          id: 'credit',
+          label: labels.credit,
+          variant: 'currency',
+          cellClassName: (row) => cn(
+            'table-amount-cell',
+            row.variant === 'credit' ? 'text-success' : 'text-muted-foreground',
+          ),
+          render: (row) => row.credit ?? PLACEHOLDER,
+        },
+      ]}
+    />
   );
 }

@@ -4,8 +4,8 @@ import { MESSAGING_MODULE_MANIFEST, type MessageTemplate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { DirectoryCard } from "@/components/ui/DirectoryCard";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
@@ -83,14 +83,13 @@ export const MessagingTemplateList = (function MessagingTemplateList({
   ];
 
   return (
-    <div className={`${WORK_SURFACE} space-y-4 p-4 md:col-span-2`}>
-      <div className="space-y-1">
-        <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-          <Tag className="h-4 w-4 text-muted-foreground" aria-hidden />
-          {t("messaging.configuredPresets")}
-        </h4>
-        <p className="text-xs text-muted-foreground">{t("messaging.configuredPresetsDesc")}</p>
-      </div>
+    <div className="md:col-span-2">
+      <SectionHeader
+        align="start"
+        icon={<Tag className="w-3.5 h-3.5 text-primary" aria-hidden="true" />}
+        title={t("messaging.configuredPresets")}
+        subtitle={t("messaging.configuredPresetsDesc")}
+      />
 
       <DataTable
         tableId={`${MESSAGING_MODULE_MANIFEST.moduleId}_templates`}

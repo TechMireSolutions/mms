@@ -128,7 +128,6 @@ export function PlatformAdminsTableView({
       }
       columnResize={toColumnResize(columnLayout)}
       containerClassName={WORK_TABLE_CONTAINER_CLASS}
-      bordered={false}
     />
   );
 }

@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ExaminationsListCards } from "@/tenant/features/examinations/components/ExaminationsListCards";
 import { ExaminationsListDesktopTable } from "@/tenant/features/examinations/components/ExaminationsListDesktopTable";
 import type { ExaminationsListContentProps } from "@/tenant/features/examinations/components/examinationsListContentShared";
@@ -26,8 +25,6 @@ export function ExaminationsListContent(props: ExaminationsListContentProps): Re
   return props.viewMode === "cards" ? (
     <ExaminationsListCards {...props} />
   ) : (
-    <div className={WORK_SURFACE}>
-      <ExaminationsListDesktopTable {...props} />
-    </div>
+    <ExaminationsListDesktopTable {...props} />
   );
 }

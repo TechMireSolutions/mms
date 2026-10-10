@@ -16,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { MutedTableHeaderRow } from '@/components/ui/reports/FinancialDebitCreditTableChrome';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PermissionMatrixRow } from '@/tenant/features/users/components/PermissionMatrixRow';
 
@@ -95,7 +94,7 @@ export function PermissionMatrixDesktopTable({
       <Table>
         <caption className="sr-only">{t('users.permissions.matrixCaption')}</caption>
         <TableHeader>
-          <MutedTableHeaderRow>
+          <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
             <ModuleTableHeaderCell columnKey="module" className="min-w-input-filter px-3 py-2.5">
               <span>{t('users.permissions.colModule')}</span>
             </ModuleTableHeaderCell>
@@ -139,7 +138,7 @@ export function PermissionMatrixDesktopTable({
                 </Button>
               </ModuleTableHeaderCell>
             ) : null}
-          </MutedTableHeaderRow>
+          </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-border">
           {groups.map((group) => {

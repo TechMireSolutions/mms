@@ -11,9 +11,7 @@ import {
 import { ListPagination } from '@/components/ui/ListPagination';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { PlatformDashboardFleetRowMenu } from '@/platform/components/dashboard/PlatformDashboardFleetRowMenu';
-import { cn } from '@/lib/utils';
 
 export interface PlatformDashboardFleetTableProps {
   rows: PlatformWorkspaceRow[];
@@ -84,7 +82,6 @@ export function PlatformDashboardFleetTable({
       icon={Building2}
       title={t('platform.fleetEmptyTitle')}
       description={t('platform.fleetEmptyHint')}
-      className={WORK_SURFACE}
     />
   );
 
@@ -113,7 +110,7 @@ export function PlatformDashboardFleetTable({
   );
 
   return (
-    <div className={cn(WORK_SURFACE, 'overflow-hidden')} data-testid="dashboard-fleet-table">
+    <div className="overflow-hidden" data-testid="dashboard-fleet-table">
       <WorkBatchTable<FleetRow>
         data={data}
         columns={columns}
@@ -147,7 +144,6 @@ export function PlatformDashboardFleetTable({
           })
         }
         tableFooter={footer}
-        bordered={false}
       />
     </div>
   );

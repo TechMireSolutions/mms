@@ -52,7 +52,6 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
       data={collections}
       columns={columns}
       caption={t("obligations.collectionsList")}
-      bordered={false}
       selection={
         canDelete ? {
           selectedIds,

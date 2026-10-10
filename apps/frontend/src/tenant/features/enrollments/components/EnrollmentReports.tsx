@@ -2,15 +2,8 @@ import React, { lazy, Suspense } from "react";
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableEmpty,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { EnrollmentsReportAggregates } from "@mms/shared";
@@ -88,32 +81,38 @@ export function EnrollmentReports({
         moduleId="enrollments"
       >
         {viewMode === "table" ? (
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow className="border-b border-border/60 hover:bg-muted/30">
-                <TableHead className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.columns.session")}</TableHead>
-                <TableHead variant="badge" className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.metrics.total")}</TableHead>
-                <TableHead variant="currency" className="px-4 py-2.5 font-bold text-foreground">{t("enrollments.columns.finalFee")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/50">
-              {bySession.length === 0 ? (
-                <TableEmpty colSpan={3} title={t("enrollments.reports.noData")} />
-              ) : (
-                bySession.map((sessionStats) => (
-                  <TableRow key={`${sessionStats.sessionId}:${sessionStats.name}`} className="transition-colors hover:bg-muted/20">
-                    <TableCell className="px-4 py-3 font-semibold text-foreground">{sessionStats.name}</TableCell>
-                    <TableCell variant="badge" noWrap className="px-4 py-3 text-muted-foreground">
-                      {sessionStats.count}
-                    </TableCell>
-                    <TableCell variant="currency" noWrap className="px-4 py-3 font-bold text-primary">
-                      {formatCurrency(sessionStats.revenue)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <WorkBatchTable
+            data={bySession.map(s => ({ ...s, id: `${s.sessionId}:${s.name}` }))}
+            columns={[
+              {
+                id: "session",
+                label: t("enrollments.columns.session"),
+                headerClassName: "font-bold text-foreground",
+                cellClassName: "font-semibold text-foreground",
+                render: (row) => row.name,
+              },
+              {
+                id: "count",
+                label: t("enrollments.metrics.total"),
+                headerClassName: "font-bold text-foreground",
+                cellClassName: "text-muted-foreground",
+                align: "center",
+                noWrap: true,
+                render: (row) => row.count,
+              },
+              {
+                id: "revenue",
+                label: t("enrollments.columns.finalFee"),
+                headerClassName: "font-bold text-foreground",
+                cellClassName: "font-bold text-primary",
+                align: "right",
+                noWrap: true,
+                render: (row) => formatCurrency(row.revenue),
+              },
+            ]}
+            emptyState={<EmptyState title={t("enrollments.reports.noData")} compact />}
+            bordered={false}
+          />
         ) : (
           <div className="divide-y divide-border/50" role="list">
             {bySession.length === 0 ? (

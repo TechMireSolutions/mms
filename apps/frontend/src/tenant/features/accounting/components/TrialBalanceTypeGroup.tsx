@@ -1,25 +1,13 @@
 import React from "react";
 import { ACCOUNT_TYPE_META, type AccountType } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { MoneyTableCell } from "@/components/ui/MoneyTableCell";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
+
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { ReportMoneyCard } from "@/components/ui/reports/ReportMoneyCard";
 import { ReportMoneyCardsGrid } from "@/components/ui/reports/ReportMoneyCardsGrid";
 import { ReportMoneySummaryTile } from "@/components/ui/reports/ReportMoneySummaryTile";
-import {
-  MutedTableHeaderRow,
-} from "@/components/ui/reports/FinancialDebitCreditTableChrome";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AppTranslationKey } from "@mms/shared";
 
@@ -60,7 +48,7 @@ export function TrialBalanceTypeGroup({
   const sortedRows = [...accountTypeRows].sort((firstRow, secondRow) => firstRow.code.localeCompare(secondRow.code));
 
   return (
-    <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className={WORK_SURFACE}>
+    <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}>
       <header className={`px-4 py-2 border-b border-border ${typeMeta?.color} flex min-w-0 items-center justify-between gap-2`}>
         <SectionLabel as="h3" weight="bold" tracking="wide" tone="inherit" className="min-w-0 truncate m-0">
           {typeMeta?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {t(`accounting.reports.views.${typeMeta?.group}` as AppTranslationKey)}
@@ -118,36 +106,69 @@ export function TrialBalanceTypeGroup({
           </ReportMoneySummaryTile>
         </ReportMoneyCardsGrid>
       ) : (
-        <Table>
-          <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-          <TableHeader>
-            <MutedTableHeaderRow>
-              <ModuleTableHeaderCell columnKey="code" className="px-3 py-2.5 w-20">{t("accounting.columns.account.code")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("accounting.columns.account.name")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="subtype" className="px-3 py-2.5 hidden md:table-cell">{t("accounting.columns.account.subtype")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="debit" variant="currency" className="px-3 py-2.5">{t("accounting.columns.journal.debit")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="credit" variant="currency" className="px-3 py-2.5">{t("accounting.columns.journal.credit")}</ModuleTableHeaderCell>
-            </MutedTableHeaderRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-border/50">
-            {sortedRows.map((trialBalanceRow) => (
-              <TableRow key={trialBalanceRow.id} className="hover:bg-muted/20 transition-colors">
-                <TableCell variant="number" noWrap className="px-3 py-2.5 text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</TableCell>
-                <TableCell className="px-3 py-2.5 font-medium text-foreground">{trialBalanceRow.name}</TableCell>
-                <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{trialBalanceRow.subtype || "—"}</TableCell>
-                <MoneyTableCell value={formatPositiveNumber(trialBalanceRow.totalDebit)} variant="debit" />
-                <MoneyTableCell value={formatPositiveNumber(trialBalanceRow.totalCredit)} variant="credit" />
-              </TableRow>
-            ))}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={3} className="table-footer-label">{t("accounting.tb.subTotal")}</TableCell>
-              <MoneyTableCell value={formatPositiveNumber(groupDebit)} variant="debit" isFooter />
-              <MoneyTableCell value={formatPositiveNumber(groupCredit)} variant="credit" isFooter />
-            </TableRow>
-          </TableFooter>
-        </Table>
+        <WorkBatchTable
+          data={sortedRows}
+          columns={[
+            {
+              id: "code",
+              label: t("accounting.columns.account.code"),
+              width: 80,
+              cellClassName: "text-xs font-bold text-muted-foreground",
+              variant: "number",
+              render: (row) => row.code,
+            },
+            {
+              id: "name",
+              label: t("accounting.columns.account.name"),
+              cellClassName: "font-medium text-foreground",
+              render: (row) => row.name,
+            },
+            {
+              id: "subtype",
+              label: t("accounting.columns.account.subtype"),
+              headerClassName: "hidden md:table-cell",
+              cellClassName: "text-xs text-muted-foreground hidden md:table-cell",
+              render: (row) => row.subtype || "—",
+            },
+            {
+              id: "debit",
+              label: t("accounting.columns.journal.debit"),
+              variant: "currency",
+              cellClassName: "table-amount-cell text-info",
+              render: (row) => formatPositiveNumber(row.totalDebit),
+            },
+            {
+              id: "credit",
+              label: t("accounting.columns.journal.credit"),
+              variant: "currency",
+              cellClassName: "table-amount-cell text-success",
+              render: (row) => formatPositiveNumber(row.totalCredit),
+            },
+          ]}
+          caption={t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}
+          className="border-t-0"
+          rowClassName={() => "hover:bg-muted/20 transition-colors"}
+          footerRow={{
+            className: "border-t border-border bg-[--color-surface-table-footer]",
+            cells: [
+              {
+                colSpan: 3,
+                className: "table-footer-label",
+                content: t("accounting.tb.subTotal"),
+              },
+              {
+                className: "table-amount-cell text-xs text-info",
+                align: "end",
+                content: formatPositiveNumber(groupDebit),
+              },
+              {
+                className: "table-amount-cell text-xs text-success",
+                align: "end",
+                content: formatPositiveNumber(groupCredit),
+              },
+            ],
+          }}
+        />
       )}
     </section>
   );

@@ -1,5 +1,5 @@
 import type React from "react";
-import { Card } from "@/components/ui/card";
+
 import { EmptyState } from "@/components/ui/EmptyState";
 import { InvoicesListCards } from "@/tenant/features/finance/components/InvoicesListCards";
 import { InvoicesListDesktopTable } from "@/tenant/features/finance/components/InvoicesListDesktopTable";
@@ -20,10 +20,10 @@ export function InvoicesListContent(props: InvoicesListContentProps): React.JSX.
           description={t("finance.empty.invoicesSubtitle")}
           compact
         />
+      ) : props.viewMode === "cards" ? (
+        <InvoicesListCards {...props} />
       ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden">
-          {props.viewMode === "cards" ? <InvoicesListCards {...props} /> : <InvoicesListDesktopTable {...props} />}
-        </Card>
+        <InvoicesListDesktopTable {...props} />
       )}
     </>
   );

@@ -6,7 +6,7 @@ import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { Payment } from '@/lib/data/financeData';
 import { PaymentsListCards } from '@/tenant/features/finance/components/PaymentsListCards';
 import { PaymentsListDesktopTable } from '@/tenant/features/finance/components/PaymentsListDesktopTable';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
+
 
 export const PAYMENT_TRACKER_COLUMN_KEYS = [
   "date",
@@ -73,7 +73,7 @@ export function PaymentsListContent({
   };
 
   return (
-    <div className={WORK_SURFACE}>
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3">
         <PaymentLogHeader totalPaid={totalPaid} formatCurrency={formatCurrency} columnCustomizer={columnCustomizer} />
         <WorkViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />

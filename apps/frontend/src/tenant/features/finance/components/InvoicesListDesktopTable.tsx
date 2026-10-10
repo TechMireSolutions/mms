@@ -117,7 +117,6 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       data={invoices}
       columns={columns}
       caption={t("finance.invoices")}
-      bordered={false}
       selection={
         canSelectInvoices
           ? {

@@ -94,7 +94,6 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
       columns={columns}
       caption={t("accounting.journal.dashboard.tableCaption")}
       className="table-fixed"
-      bordered={false}
       selection={
         canDelete
           ? {

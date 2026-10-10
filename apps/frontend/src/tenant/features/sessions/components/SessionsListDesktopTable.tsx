@@ -2,9 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import type { SessionSortField } from "@/tenant/features/sessions/components/sessionPageTypes";
 import type { Session } from "@/lib/data/sessionsData";
 import type { SessionsWorkColumnLayout } from "@/tenant/features/sessions/components/sessionsWorkListViewsShared";
@@ -167,14 +165,12 @@ export function SessionsListDesktopTable({
   }, [columnOptions, isColumnVisible, onOpenDetail, t]);
 
   return (
-    <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-      <WorkBatchTable
-        data={sessions}
-        columns={columns}
-        className="table-fixed"
-        tableBodyClassName="divide-y divide-border/50"
-        bordered={false}
-        stickyColumnId="name"
+    <WorkBatchTable
+      data={sessions}
+      columns={columns}
+      className="table-fixed"
+      tableBodyClassName="divide-y divide-border/50"
+      stickyColumnId="name"
         sort={{
           field: sortField,
           dir: sortDir,
@@ -213,6 +209,5 @@ export function SessionsListDesktopTable({
         }
         actionsLabel={canDelete ? t("common.actions") : undefined}
       />
-    </div>
   );
 }

@@ -2,7 +2,6 @@ import type React from "react";
 import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { JournalEntriesListCards } from "@/tenant/features/accounting/components/JournalEntriesListCards";
@@ -39,9 +38,7 @@ export function JournalEntriesList(props: JournalEntriesListWithPagingProps): Re
       ) : props.viewMode === "cards" ? (
         <JournalEntriesListCards {...props} />
       ) : (
-        <div className={WORK_SURFACE}>
-          <JournalEntriesListDesktopTable {...props} />
-        </div>
+        <JournalEntriesListDesktopTable {...props} />
       )}
 
       {/*

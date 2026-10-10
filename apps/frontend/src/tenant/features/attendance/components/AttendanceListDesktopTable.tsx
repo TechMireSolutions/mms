@@ -1,6 +1,5 @@
 import React from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { WorkBatchTable } from '@/components/common/work';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
@@ -63,12 +62,10 @@ export function AttendanceListDesktopTable({
   });
 
   return (
-    <article className={WORK_SURFACE}>
-      <WorkBatchTable
-        data={paginatedRecords}
-        columns={columns}
-        bordered={false}
-        selection={
+    <WorkBatchTable
+      data={paginatedRecords}
+      columns={columns}
+      selection={
           canDelete
             ? {
                 selectedIds,
@@ -100,6 +97,5 @@ export function AttendanceListDesktopTable({
           pageCountLabel: recordsCountLabel,
         }}
       />
-    </article>
   );
 }

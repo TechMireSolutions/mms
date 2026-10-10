@@ -46,7 +46,6 @@ export function MarkAttendanceGrid({
           enabledFields={enabledFields}
           statuses={statuses}
           onFieldChange={onFieldChange}
-          rowMotion={() => rowMotion()}
         />
       )}
     </Card>

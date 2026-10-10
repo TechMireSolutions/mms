@@ -2,7 +2,6 @@ import { Pencil, Trash2 } from "lucide-react";
 import { type ObligationType } from '@/lib/data/obligationsData';
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import {
   DataTable,
   DataTableRowActions,
@@ -67,7 +66,7 @@ export function ObligationTypeManagerList({
   ];
 
   return (
-    <section aria-label={t("obligations.types")} className={`${WORK_SURFACE} p-3`}>
+    <section aria-label={t("obligations.types")}>
       <DataTable
         tableId="obligations.types"
         defaultViewMode={viewMode}

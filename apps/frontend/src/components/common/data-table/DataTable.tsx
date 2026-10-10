@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { toColumnCustomizer, toColumnResize } from "./columnLayoutAdapters";
 import { DataTableCards } from "./DataTableCards";
 import { DataTableFiltersMenu } from "./DataTableFiltersMenu";
@@ -70,7 +71,7 @@ export function DataTable<TData extends { id: string | number }>({
   );
 
   return (
-    <div className={cn("space-y-3", className)} aria-busy={isLoading || undefined}>
+    <div className={cn(WORK_SURFACE, "p-4 space-y-4", className)} aria-busy={isLoading || undefined}>
       <WorkTaskToolbar
         regionLabel={label}
         shownCountLabel={t("common.dataTable.shownCount", { count: state.rows.length })}
@@ -115,6 +116,7 @@ export function DataTable<TData extends { id: string | number }>({
         />
       ) : (
         <WorkBatchTable
+          bordered={false}
           sort={tableProps.sort ?? { field: state.sortField, dir: state.sortDir, onSort: state.handleSort }}
           {...tableProps}
           data={[...state.rows]}
