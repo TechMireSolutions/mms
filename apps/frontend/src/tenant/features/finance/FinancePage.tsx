@@ -1,7 +1,7 @@
 import React from "react";
 import { useFinancePageController } from "@/tenant/features/finance/hooks/useFinancePageController";
 import { AnimatePresence } from "framer-motion";
-import { Plus, DollarSign } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";

@@ -1,6 +1,5 @@
 import React from "react";
 import { AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";

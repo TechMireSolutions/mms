@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { Users, UserPlus } from "lucide-react";
+import { Users } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/ContactsCommandMetrics";

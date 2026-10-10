@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { UserCog, Download, Mail, Plus, UserPlus, Upload } from 'lucide-react';
+import { UserCog, Download, Mail, Plus, Upload } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';

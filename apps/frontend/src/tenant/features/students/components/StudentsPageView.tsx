@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState } from "react";
-import { GraduationCap, UserPlus } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
