@@ -283,7 +283,9 @@ jobs:
             --no-banner --redact --exit-code 1
 
   test-frontend:
-    name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    # No matrix values in the name: a skipped matrix job is never expanded, so
+    # GitHub would show the raw template. Running jobs get "(index, total)" appended.
+    name: Frontend Tests
     needs: [changes]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04
@@ -378,7 +380,9 @@ jobs:
           fi
 
   test-backend-unit:
-    name: Backend Unit Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    # No matrix values in the name: a skipped matrix job is never expanded, so
+    # GitHub would show the raw template. Running jobs get "(index, total)" appended.
+    name: Backend Unit Tests
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_unit == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04
