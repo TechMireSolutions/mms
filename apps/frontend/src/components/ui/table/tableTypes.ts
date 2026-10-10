@@ -35,8 +35,14 @@ export interface TableHeadProps extends Omit<React.ThHTMLAttributes<HTMLTableCel
   align?: TableCellAlign;
   variant?: TableCellVariant;
   isFocusable?: boolean;
+  /** Whether this column can be sorted */
+  sortable?: boolean;
+  /** The field identifier used for sorting */
+  sortKey?: string;
+  /** The current sort direction */
   sortDirection?: TableSortDirection | boolean | null;
-  onSort?: () => void;
+  /** Callback fired when the header is clicked for sorting */
+  onSort?: ((key: string, direction: "asc" | "desc" | null) => void) | (() => void);
 }
 
 export type TableHeadCellProps = TableHeadProps;

@@ -144,9 +144,9 @@ describe("table SSOT system", () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead sortDirection="asc">Ascending Col</TableHead>
-              <TableHead sortDirection="desc">Descending Col</TableHead>
-              <TableHead sortDirection="none">Neutral Col</TableHead>
+              <TableHead sortDirection="asc" sortable>Ascending Col</TableHead>
+              <TableHead sortDirection="desc" sortable>Descending Col</TableHead>
+              <TableHead sortDirection="none" sortable>Neutral Col</TableHead>
             </TableRow>
           </TableHeader>
         </Table>
