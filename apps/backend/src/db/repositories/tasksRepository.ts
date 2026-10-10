@@ -4,7 +4,7 @@
  */
 
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
-import type { TaskListQuery, TaskRecord } from '@mms/shared';
+import { toSqlSearchPattern, type TaskListQuery, type TaskRecord } from '@mms/shared';
 import { taskAssignees, tasks } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { fetchAssigneesByTaskIds } from './tasksAssigneesRepository.js';
@@ -29,7 +29,7 @@ export async function listTasks(
     if (query.priority) conditions.push(eq(tasks.priority, query.priority));
     if (query.createdById) conditions.push(eq(tasks.createdByUserId, query.createdById));
     if (query.search) {
-      const term = `%${query.search.trim()}%`;
+      const term = toSqlSearchPattern(query.search);
       conditions.push(or(ilike(tasks.title, term), ilike(tasks.description, term))!);
     }
 

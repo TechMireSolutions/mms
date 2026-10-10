@@ -5,6 +5,7 @@ import {
   countActiveFilters,
   filterDataTableRows,
   resolveVisibleColumns,
+  sortDataTableRows,
 } from "./dataTableUtils";
 
 interface Row {
@@ -74,5 +75,24 @@ describe("filterDataTableRows", () => {
       filterDataTableRows(rows, visible, "", filters, { status: ["active", "inactive"], tags: ["admin"] }).map((r) => r.id),
     ).toEqual(["1", "2"]);
     expect(countActiveFilters({ status: ["active", "inactive"], tags: ["admin"] })).toBe(3);
+  });
+
+  it("supports wildcard search using * and ?", () => {
+    expect(filterDataTableRows(rows, visible, "Libr*", [], {}).map((r) => r.id)).toEqual(["3"]);
+    expect(filterDataTableRows(rows, visible, "*cher", [], {}).map((r) => r.id)).toEqual(["1"]);
+    expect(filterDataTableRows(rows, visible, "H?", [], {}).map((r) => r.id)).toEqual(["1"]);
+    expect(filterDataTableRows(rows, visible, "?B", [], {}).map((r) => r.id)).toEqual(["3"]);
+  });
+});
+
+describe("sortDataTableRows", () => {
+  const visible = resolveVisibleColumns(columns, buildDataTableRegistry(columns));
+
+  it("sorts rows ascending and descending by column key", () => {
+    const asc = sortDataTableRows(rows, visible, "name", "asc");
+    expect(asc.map((r) => r.name)).toEqual(["Assistant", "Head Teacher", "Librarian"]);
+
+    const desc = sortDataTableRows(rows, visible, "name", "desc");
+    expect(desc.map((r) => r.name)).toEqual(["Librarian", "Head Teacher", "Assistant"]);
   });
 });

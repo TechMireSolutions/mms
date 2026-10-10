@@ -3,6 +3,7 @@ import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+  toSqlSearchPattern,
   type UsersCommandMetricsSnapshot,
   type UsersListQuery,
 } from '@mms/shared';
@@ -11,10 +12,7 @@ import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { rowToTenantUser, type TenantUserRow } from './tenantUserRepository.js';
 
-// List-page projection excludes the bcrypt `passwordHash` so credential hashes
-// are never pulled off the DB (or carried/hydrated) for Work list reads. The
-// per-row mapper (rowToTenantUser) treats a missing column as `undefined`, which
-// the global preSerialization trimmer then strips from the response.
+// List-page projection excludes bcrypt passwordHash so credential hashes are never pulled.
 const TENANT_USER_LIST_COLUMNS = {
   id: tenantUsers.id,
   workspaceSubdomain: tenantUsers.workspaceSubdomain,
@@ -33,13 +31,7 @@ const TENANT_USER_LIST_COLUMNS = {
 } as const;
 
 const USER_SORT_FIELDS = new Set([
-  'name',
-  'email',
-  'role',
-  'status',
-  'createdDate',
-  'lastLogin',
-  'createdAt',
+  'name', 'email', 'role', 'status', 'createdDate', 'lastLogin', 'createdAt',
 ]);
 
 function statusExpr(): SQL {
@@ -49,7 +41,7 @@ function statusExpr(): SQL {
 function buildSearchSql(search: string): SQL | null {
   const normalized = search.trim().toLowerCase();
   if (!normalized) return null;
-  const pattern = `%${normalized}%`;
+  const pattern = toSqlSearchPattern(normalized);
   return sql`(
     lower(${tenantUsers.name}) LIKE ${pattern}
     OR lower(${tenantUsers.loginEmail}) LIKE ${pattern}

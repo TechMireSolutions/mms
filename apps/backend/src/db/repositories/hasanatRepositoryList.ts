@@ -15,6 +15,7 @@ import {
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
+  toSqlSearchPattern,
   type Distribution,
   type HasanatCommandMetricsSnapshot,
   type HasanatListQuery,
@@ -40,7 +41,7 @@ function buildDistributionsListConditions(
 
   const search = query.search?.trim();
   if (search) {
-    const pattern = `%${search}%`;
+    const pattern = toSqlSearchPattern(search);
     conditions.push(
       or(
         ilike(hasanatDistributions.recipientName, pattern),

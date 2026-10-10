@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { clampModuleColumnWidth } from '@mms/shared';
+import { measureColumnAutoFitWidth } from '@/components/ui/measureColumnAutoFitWidth';
 
 export interface ResizableTableHeadProps
   extends Omit<React.ThHTMLAttributes<HTMLTableCellElement>, 'children'> {
@@ -95,6 +96,15 @@ export function ResizableTableHead({
     window.addEventListener('pointerup', handlePointerUp);
   };
 
+  const handleDoubleClick = (event: React.MouseEvent<HTMLSpanElement>) => {
+    if (!onResize || !thRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const optimalWidth = measureColumnAutoFitWidth(thRef.current, minWidth, maxWidth);
+    setDraftWidth(null);
+    onResize(columnKey, optimalWidth);
+  };
+
   return (
     <th
       ref={thRef}
@@ -113,8 +123,10 @@ export function ResizableTableHead({
           role="separator"
           aria-orientation="vertical"
           aria-label={t('table.resizeColumn')}
+          title={t('table.resizeColumn')}
           onPointerDown={handlePointerDown}
           onClick={(event) => event.stopPropagation()}
+          onDoubleClick={handleDoubleClick}
           className="absolute inset-y-0 end-0 z-elevated flex w-11 min-w-11 cursor-col-resize select-none items-stretch justify-end after:absolute after:inset-y-1 after:end-0 after:w-px after:bg-border/70 hover:after:bg-primary/60"
         />
       ) : null}

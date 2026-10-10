@@ -3,6 +3,7 @@ import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+  toSqlSearchPattern,
   type StudentsListQuery,
 } from '@mms/shared';
 import {
@@ -45,7 +46,7 @@ export function grNumberExpr(): SQL {
 function buildSearchSql(search: string, useJoinedContacts = false): SQL | null {
   const normalized = search.trim().toLowerCase();
   if (!normalized) return null;
-  const pattern = `%${normalized}%`;
+  const pattern = toSqlSearchPattern(normalized);
   const contactMatch = useJoinedContacts
     ? sql`(${contacts.id} IS NOT NULL AND (
         lower(COALESCE(${contacts.name}, '')) LIKE ${pattern}

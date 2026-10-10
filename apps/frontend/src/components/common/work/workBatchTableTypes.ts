@@ -47,6 +47,17 @@ export interface WorkBatchTableFooterRow {
   className?: string;
 }
 
+export interface WorkBatchTableSort {
+  field?: string;
+  dir?: "asc" | "desc";
+  onSort: (field: string) => void;
+}
+
+export interface WorkBatchTableColumnResize {
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
+}
+
 export interface WorkBatchTableProps<TData extends { id: string | number }> {
   data: TData[];
   columns: WorkBatchTableColumn<TData>[];
@@ -68,17 +79,10 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
   };
 
   // Sorting
-  sort?: {
-    field?: string;
-    dir?: "asc" | "desc";
-    onSort: (field: string) => void;
-  };
+  sort?: WorkBatchTableSort;
 
   // Column Resizing
-  columnResize?: {
-    getColumnWidth?: (key: string) => number | undefined;
-    onColumnResize?: (key: string, width: number) => void;
-  };
+  columnResize?: WorkBatchTableColumnResize;
 
   // Row Actions
   renderRowActions?: (row: TData, index: number) => React.ReactNode;
