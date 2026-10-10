@@ -20,6 +20,8 @@ export default defineConfig({
     // (~5–7s per test file on Windows) and drops to ~1s once bundled. `force`
     // re-bundles once per run: Vite's cache key ignores linked workspace builds,
     // so a cached bundle would serve a stale @mms/shared after a rebuild.
+    // recharts stays out: tests replace it with factory `vi.mock('recharts')`
+    // stubs, and the pre-bundled interop reads a `default` export they lack.
     deps: {
       optimizer: {
         client: {
@@ -29,7 +31,6 @@ export default defineConfig({
             'framer-motion',
             'lucide-react',
             'react-day-picker',
-            'recharts',
           ],
           force: true,
         },
